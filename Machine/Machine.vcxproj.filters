@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="BitTwiddling.cpp" />
+    <ClCompile Include="CountLastFlip.cpp" />
+    <ClCompile Include="Flips.cpp" />
+    <ClCompile Include="PossibleMoves.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BitTwiddling.h" />
+    <ClInclude Include="CountLastFlip.h" />
+    <ClInclude Include="Flips.h" />
+    <ClInclude Include="MacrosHell.h" />
+    <ClInclude Include="PossibleMoves.h" />
+  </ItemGroup>
+</Project>
