@@ -3,7 +3,20 @@
 
 uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 {
+	#if defined(HAS_AVX512)
+		return PossibleMoves_AVX512(P, O);
+	#elif defined(HAS_AVX2)
+		return PossibleMoves_AVX2(P, O);
+	#elif defined(HAS_SSE2)
+		return PossibleMoves_SSE2(P, O);
+	#else
+		return PossibleMoves_x64(P, O);
+	#endif
+}
+
 #if defined(HAS_AVX512)
+uint64_t PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
+{
 	// 6 x SHIFT, 7 x AND, 5 x OR, 1 x NOT
 	// = 19 OPs
 
@@ -25,8 +38,12 @@ uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 
 	// 1 x NOT, 2 x OR, 1 x AND
 	return ~(P | O) & _mm512_reduce_or_epi64(flip);
+}
+#endif
 
-#elif defined(HAS_AVX2)
+#if defined(HAS_AVX2)
+uint64_t PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
+{
 	// 10 x SHIFT, 11 x AND, 10 x OR, 1 x NOT
 	// = 32 OPs
 
@@ -68,8 +85,12 @@ uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 
 	// 1 x NOT, 2 x OR, 1 x AND
 	return ~(P | O) & (_mm_extract_epi64(flip, 0) | _mm_extract_epi64(flip, 1));
+}
+#endif
 
-#elif defined(HAS_SSE2)
+#if defined(HAS_SSE2)
+uint64_t PossibleMoves_SSE2(const uint64_t P, const uint64_t O)
+{
 	// 30 x SHIFT, 28 x AND, 21 x OR, 1 x NOT, 2 x BSWAP
 	// = 82 OPs
 	uint64_t mask1, mask2, mask6, mask7, mask8;
@@ -130,8 +151,11 @@ uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 
 	// 1 x AND, 4 x OR, 1 x NOT
 	return ~(P | O) & (flip1 | flip2 | BSwap(_mm_extract_epi64(flip3, 1)) | _mm_extract_epi64(flip3, 0));
+}
+#endif
 
-#else
+uint64_t PossibleMoves_x64(const uint64_t P, const uint64_t O)
+{
 	// 48 x SHIFT, 42 x AND, 32 x OR, 1 x NOT
 	// = 123 OPs
 
@@ -199,5 +223,4 @@ uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 
 	// 1 x AND, 8 x OR, 1 x NOT
 	return ~(P | O) & (flip1 | flip2 | flip3 | flip4 | flip5 | flip6 | flip7 | flip8);
-#endif
 }
