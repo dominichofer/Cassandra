@@ -21,17 +21,14 @@ uint64_t PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
 	// = 19 OPs
 
 	// 1 x AND
-	const __m512i PP = _mm512_set1_epi64(P);
 	const __m512i maskO = _mm512_set1_epi64(O) & _mm512_set_epi64(0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64, 0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64);
 	const __m512i shift1 = _mm512_set_epi64(1, 8, 7, 9, -1, -8, -7, -9);
 	const __m512i shift2 = shift1 + shift1;
-	__m512i mask;
-	__m512i flip;
 
 	// 6 x SHIFT, 5 x AND, 3 x OR
-	flip = maskO & _mm512_rolv_epi64(PP, shift1);
+	__m512i flip = maskO & _mm512_rolv_epi64(_mm512_set1_epi64(P), shift1);
+	__m512i mask = maskO & _mm512_rolv_epi64(maskO, shift1);
 	flip |= maskO & _mm512_rolv_epi64(flip, shift1);
-	mask = maskO & _mm512_rolv_epi64(maskO, shift1);
 	flip |= mask & _mm512_rolv_epi64(flip, shift2);
 	flip |= mask & _mm512_rolv_epi64(flip, shift2);
 	flip = _mm512_rolv_epi64(flip, shift1);
@@ -48,24 +45,22 @@ uint64_t PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 	// = 32 OPs
 
 	// 1 x AND
-	const __m256i PP = _mm256_set1_epi64x(P);
+	//const __m256i PP = _mm256_set1_epi64x(P);
 	const __m256i maskO = _mm256_set1_epi64x(O) & _mm256_set_epi64x(0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64);
-	const __m256i shift1 = _mm256_set_epi64x(1, 8, 7, 9);
-	const __m256i shift2 = shift1 + shift1;
-	__m256i mask1, mask2;
-	__m256i flip1, flip2;
+	const __m256i shift = _mm256_set_epi64x(1, 8, 7, 9);
+	const __m256i shift2 = shift + shift;
 
 	// 2 x SHIFT, 2 x AND
-	flip1 = maskO & _mm256_sllv_epi64(PP, shift1);
-	flip2 = maskO & _mm256_srlv_epi64(PP, shift1);
+	__m256i flip1 = maskO & _mm256_sllv_epi64(_mm256_set1_epi64x(P), shift);
+	__m256i flip2 = maskO & _mm256_srlv_epi64(_mm256_set1_epi64x(P), shift);
 
 	// 2 x SHIFT, 2 x AND, 2 x OR
-	flip1 |= maskO & _mm256_sllv_epi64(flip1, shift1);
-	flip2 |= maskO & _mm256_srlv_epi64(flip2, shift1);
+	flip1 |= maskO & _mm256_sllv_epi64(flip1, shift);
+	flip2 |= maskO & _mm256_srlv_epi64(flip2, shift);
 
 	// 2 x SHIFT, 1 x AND
-	mask1 = maskO & _mm256_sllv_epi64(maskO, shift1);
-	mask2 = _mm256_srlv_epi64(mask1, shift1);
+	__m256i mask1 = maskO & _mm256_sllv_epi64(maskO, shift);
+	__m256i mask2 = _mm256_srlv_epi64(mask1, shift);
 
 	// 2 x SHIFT, 2 x AND, 2 x OR
 	flip1 |= mask1 & _mm256_sllv_epi64(flip1, shift2);
@@ -76,8 +71,8 @@ uint64_t PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 	flip2 |= mask2 & _mm256_srlv_epi64(flip2, shift2);
 
 	// 2 x SHIFT
-	flip1 = _mm256_sllv_epi64(flip1, shift1);
-	flip2 = _mm256_srlv_epi64(flip2, shift1);
+	flip1 = _mm256_sllv_epi64(flip1, shift);
+	flip2 = _mm256_srlv_epi64(flip2, shift);
 
 	// 2 x OR
 	flip1 |= flip2;
@@ -93,10 +88,6 @@ uint64_t PossibleMoves_SSE2(const uint64_t P, const uint64_t O)
 {
 	// 30 x SHIFT, 28 x AND, 21 x OR, 1 x NOT, 2 x BSWAP
 	// = 82 OPs
-	uint64_t mask1, mask2, mask6, mask7, mask8;
-	uint64_t flip1, flip2, flip6, flip7, flip8;
-	__m128i mask3, mask4, mask5;
-	__m128i flip3, flip4, flip5;
 
 	// 2 x MOV, 2 x BSWAP
 	const __m128i PP = _mm_set_epi64x(BSwap(P), P);
@@ -107,11 +98,11 @@ uint64_t PossibleMoves_SSE2(const uint64_t P, const uint64_t O)
 	const __m128i  maskOO = OO & _mm_set1_epi64x(0x7E7E7E7E7E7E7E7Eui64);
 
 	// 5 x SHIFT, 5 x AND
-	flip1 = maskO & (P << 1);
-	flip2 = maskO & (P >> 1);
-	flip3 = OO & _mm_slli_epi64(PP, 8);
-	flip4 = maskOO & _mm_slli_epi64(PP, 7);
-	flip5 = maskOO & _mm_srli_epi64(PP, 7);
+	uint64_t flip1 = maskO & (P << 1);
+	uint64_t flip2 = maskO & (P >> 1);
+	__m128i flip3 = OO & _mm_slli_epi64(PP, 8);
+	__m128i flip4 = maskOO & _mm_slli_epi64(PP, 7);
+	__m128i flip5 = maskOO & _mm_srli_epi64(PP, 7);
 
 	// 5 x SHIFT, 5 x AND, 5 x OR
 	flip1 |= maskO & (flip1 << 1);
@@ -121,9 +112,11 @@ uint64_t PossibleMoves_SSE2(const uint64_t P, const uint64_t O)
 	flip5 |= maskOO & _mm_srli_epi64(flip5, 7);
 
 	// 5 x SHIFT, 5 x AND
-	mask1 = maskO & (maskO << 1);              mask2 = (mask1 >> 1);
-	mask3 = OO & _mm_slli_epi64(OO, 8);
-	mask4 = maskOO & _mm_slli_epi64(maskOO, 7); mask5 = _mm_srli_epi64(mask4, 7);
+	uint64_t mask1 = maskO & (maskO << 1);
+	uint64_t mask2 = (mask1 >> 1);
+	__m128i mask3 = OO & _mm_slli_epi64(OO, 8);
+	__m128i mask4 = maskOO & _mm_slli_epi64(maskOO, 7);
+	__m128i mask5 = _mm_srli_epi64(mask4, 7);
 
 	// 5 x SHIFT, 5 x AND, 5 x OR
 	flip1 |= mask1 & (flip1 << 2);
@@ -158,22 +151,19 @@ uint64_t PossibleMoves_x64(const uint64_t P, const uint64_t O)
 {
 	// 48 x SHIFT, 42 x AND, 32 x OR, 1 x NOT
 	// = 123 OPs
-
-	uint64_t mask1, mask2, mask3, mask4, mask5, mask6, mask7, mask8;
-	uint64_t flip1, flip2, flip3, flip4, flip5, flip6, flip7, flip8;
-
+	
 	// 1 x AND
 	const uint64_t maskO = O & 0x7E7E7E7E7E7E7E7Eui64;
 
 	// 8 x SHIFT, 8 x AND
-	flip1 = maskO & (P << 1);
-	flip2 = maskO & (P >> 1);
-	flip3 = O & (P << 8);
-	flip4 = O & (P >> 8);
-	flip5 = maskO & (P << 7);
-	flip6 = maskO & (P >> 7);
-	flip7 = maskO & (P << 9);
-	flip8 = maskO & (P >> 9);
+	uint64_t flip1 = maskO & (P << 1);
+	uint64_t flip2 = maskO & (P >> 1);
+	uint64_t flip3 = O & (P << 8);
+	uint64_t flip4 = O & (P >> 8);
+	uint64_t flip5 = maskO & (P << 7);
+	uint64_t flip6 = maskO & (P >> 7);
+	uint64_t flip7 = maskO & (P << 9);
+	uint64_t flip8 = maskO & (P >> 9);
 
 	// 8 x SHIFT, 8 x AND, 8 x OR
 	flip1 |= maskO & (flip1 << 1);
@@ -186,10 +176,14 @@ uint64_t PossibleMoves_x64(const uint64_t P, const uint64_t O)
 	flip8 |= maskO & (flip8 >> 9);
 
 	// 8 x SHIFT, 8 x AND
-	mask1 = maskO & (maskO << 1); mask2 = mask1 >> 1;
-	mask3 = O & (O << 8); mask4 = mask3 >> 8;
-	mask5 = maskO & (maskO << 7); mask6 = mask5 >> 7;
-	mask7 = maskO & (maskO << 9); mask8 = mask7 >> 9;
+	uint64_t mask1 = maskO & (maskO << 1);
+	uint64_t mask2 = mask1 >> 1;
+	uint64_t mask3 = O & (O << 8);
+	uint64_t mask4 = mask3 >> 8;
+	uint64_t mask5 = maskO & (maskO << 7);
+	uint64_t mask6 = mask5 >> 7;
+	uint64_t mask7 = maskO & (maskO << 9);
+	uint64_t mask8 = mask7 >> 9;
 
 	// 8 x SHIFT, 8 x AND, 8 x OR
 	flip1 |= mask1 & (flip1 << 2);
