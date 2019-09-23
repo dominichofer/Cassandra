@@ -8,4 +8,3 @@
 #include "Machine/PossibleMoves.h"
 
 #include <random>
-#include <functional>
