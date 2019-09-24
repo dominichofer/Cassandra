@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_PropertySheetDisplayName>GoogleMicrobenchmark_Rel</_PropertySheetDisplayName>
+    <_PropertySheetDisplayName>GoogleMicrobenchmark</_PropertySheetDisplayName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link />
