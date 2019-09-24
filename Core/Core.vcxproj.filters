@@ -13,5 +13,6 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
+    <ClInclude Include="HashTable.h" />
   </ItemGroup>
 </Project>

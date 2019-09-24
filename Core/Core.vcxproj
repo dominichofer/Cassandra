@@ -79,6 +79,7 @@
     <ClCompile Include="PositionGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HashTable.h" />
     <ClInclude Include="Machine.h" />
     <ClInclude Include="Moves.h" />
     <ClInclude Include="Player.h" />
