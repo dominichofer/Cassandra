@@ -1,11 +1,4 @@
 #include "PositionGenerator.h"
-#include "Machine.h"
-
-#include <stack>
-#include <set>
-#include <functional>
-#include <tuple>
-#include <iterator>
 
 // TODO: Remove!
 //#include <algorithm>
@@ -84,7 +77,7 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 	{
 		try
 		{
-			player.Play(pos);
+			pos = player.Play(pos);
 		}
 		catch (const no_moves_exception&)
 		{
@@ -94,19 +87,19 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 	return pos;
 }
 
-std::vector<Position> PositionGenerator::Played(Player& player, std::size_t size, std::size_t empty_count, Position start)
-{
-	// TODO: Benchmark if unordered_set is faster!
-	//auto hash = [](const Position& pos) { return (pos.GetP() ^ (pos.GetP() >> 36)) * (pos.GetO() ^ (pos.GetO() >> 21)); };
-
-	auto less = [](const Position& l, const Position& r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
-	std::set<Position, decltype(less)> c;
-
-	while (c.size() < size)
-		std::generate_n(std::inserter(c, c.end()), size - c.size(), [&]() { return Played(player, empty_count, start); });
-
-	return { c.begin(), c.end() };
-}
+//std::vector<Position> PositionGenerator::Played(Player& player, std::size_t size, std::size_t empty_count, Position start)
+//{
+//	// TODO: Benchmark if unordered_set is faster!
+//	//auto hash = [](const Position& pos) { return (pos.GetP() ^ (pos.GetP() >> 36)) * (pos.GetO() ^ (pos.GetO() >> 21)); };
+//
+//	auto less = [](const Position& l, const Position& r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
+//	std::set<Position, decltype(less)> c;
+//
+//	while (c.size() < size)
+//		std::generate_n(std::inserter(c, c.end()), size - c.size(), [&]() { return Played(player, empty_count, start); });
+//
+//	return { c.begin(), c.end() };
+//}
 
 // Not taking symmetrie into account.
 //void GenerateAll(Position pos, std::unordered_set<Position>& pos_set, const uint8_t depth)
@@ -160,38 +153,19 @@ std::vector<Position> PositionGenerator::Played(Player& player, std::size_t size
 //	}
 //}
 
-std::vector<Position> PositionGenerator::All(std::size_t empty_count, Position start)
-{
-	// TODO: Benchmark to see if unordered_set is faster!
 
-	auto less = [](const Position& l, const Position& r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
-	std::set<Position, decltype(less)> c;
-
-	struct pair { Position pos; Moves moves; };
-	std::stack<pair> stack;
-
-	stack.push({ start, PossibleMoves(start) });
-	while (!stack.empty())
-	{
-		auto& top = stack.top();
-		if (top.moves.empty())
-			stack.pop();
-		else
-		{
-			Position new_pos = Play(top.pos, top.moves.Extract());
-			if (new_pos.EmptyCount() == empty_count)
-				c.insert(new_pos);
-			else
-				stack.push({ new_pos, PossibleMoves(new_pos) });
-		}
-	}
-	return { c.begin(), c.end() };
-}
-
-std::vector<Position> PositionGenerator::AllSymmetricUnique(std::size_t empty_count, Position start)
-{
-	return {};
-}
+//std::vector<Position> PositionGenerator::AllUnique(std::size_t empty_count, Position start)
+//{
+//	auto less = [](const Position& l, const Position& r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
+//	std::set<Position, decltype(less)> set;
+//	All(std::inserter(set, set.end()), empty_count, start);
+//	return { set.cbegin(), set.cend() };
+//}
+//
+//std::vector<Position> PositionGenerator::AllSymmetricUnique(std::size_t empty_count, Position start)
+//{
+//	return {};
+//}
 
 //Position PositionGenerator::GenerateRandomPosition(uint8_t EmptiesCount)
 //{
