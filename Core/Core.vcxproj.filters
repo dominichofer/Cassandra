@@ -6,6 +6,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
+    <ClCompile Include="Search.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Machine.h" />
@@ -14,5 +15,6 @@
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="HashTable.h" />
+    <ClInclude Include="Search.h" />
   </ItemGroup>
 </Project>
