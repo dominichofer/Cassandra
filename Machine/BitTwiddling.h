@@ -101,17 +101,32 @@ inline uint64_t GetLSB(const uint64_t b) noexcept
 
 inline uint64_t GetMSB(const uint64_t b) noexcept
 {
-	if (b != 0u)
-		return 0x8000000000000000ui64 >> CountLeadingZeros(b);
-	return 0;
+	if (b == 0u) // TODO: Can we get rid of this?
+		return 0;
+	return 0x8000000000000000ui64 >> CountLeadingZeros(b);
+}
+
+namespace detail
+{
+#ifdef HAS_BLSR
+	inline void RemoveLSB_intrinsic(uint64_t& b) noexcept
+	{
+		b = _blsr_u64(b);
+	}
+#endif
+
+	inline void RemoveLSB_generic(uint64_t& b) noexcept
+	{
+		b &= b - 1;
+	}
 }
 
 inline void RemoveLSB(uint64_t & b) noexcept
 {
 	#ifdef HAS_BLSR
-		b = _blsr_u64(b);
+		detail::RemoveLSB_intrinsic(b);
 	#else
-		b &= b - 1;
+		detail::RemoveLSB_generic(b);
 	#endif
 }
 
@@ -120,19 +135,34 @@ inline void RemoveMSB(uint64_t& b) noexcept
 	b ^= GetMSB(b);
 }
 
-inline uint64_t PopCount(uint64_t b) noexcept
+namespace detail
 {
-	#ifdef HAS_POPCNT
+#ifdef HAS_POPCNT
+	inline uint64_t PopCount_intrinsic(uint64_t b) noexcept
+	{
 		#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			return _mm_popcnt_u64(b);
 		#else
 			return __builtin_popcountll(b);
 		#endif
-	#else
+	}
+#endif
+
+	inline uint64_t PopCount_generic(uint64_t b) noexcept
+	{
 		b -= (b >> 1) & 0x5555555555555555ui64;
 		b = ((b >> 2) & 0x3333333333333333ui64) + (b & 0x3333333333333333ui64);
 		b = ((b >> 4) + b) & 0x0F0F0F0F0F0F0F0Fui64;
 		return (b * 0x0101010101010101ui64) >> 56;
+	}
+}
+
+inline uint64_t PopCount(uint64_t b) noexcept
+{
+	#ifdef HAS_POPCNT
+		return detail::PopCount_intrinsic(b);
+	#else
+		return detail::PopCount_generic(b);
 	#endif
 }
 
@@ -153,7 +183,6 @@ inline uint64_t BZHI(const uint64_t src, const uint32_t index) noexcept
 		return src & ((1ui64 << index) - 1);
 	#endif
 }
-
 
 inline uint64_t PDep(uint64_t src, uint64_t mask) noexcept
 {
