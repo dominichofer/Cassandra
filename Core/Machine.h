@@ -1,13 +1,15 @@
 #pragma once
 #include "Moves.h"
 #include "Position.h"
-#include <cstdint>
-#include <cstddef>
 
-int CountLastFlip(Position pos, Field move);
+[[nodiscard]]
+int CountLastFlip(Position, Field move);
 
-Position Play(Position pos, Field move);
+[[nodiscard]]
+Position Play(Position, Field move);
 
-Position PlayPass(Position pos);
+[[nodiscard]]
+Position PlayPass(Position);
 
-Moves PossibleMoves(Position pos);
+[[nodiscard]]
+Moves PossibleMoves(Position);

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 
+[[nodiscard]]
 constexpr uint64_t Bit(const uint64_t position) noexcept
 {
 	assert(position < 64);
@@ -21,22 +22,25 @@ constexpr void ResetBit(uint64_t& bit_field, const uint64_t position) noexcept
 	bit_field &= ~Bit(position);
 }
 
+[[nodiscard]]
 constexpr bool TestBit(const uint64_t bit_field, const uint64_t position) noexcept
 {
 	assert(position < 64);
 	return (bit_field & Bit(position)) != 0;
 }
 
+[[nodiscard]]
 constexpr bool TestBits(const uint64_t bit_field, const uint64_t mask) noexcept
 {
 	return (bit_field & mask) == mask;
 }
 
-uint64_t FlipCodiagonal(uint64_t) noexcept;
-uint64_t FlipDiagonal(uint64_t) noexcept;
-uint64_t FlipHorizontal(uint64_t) noexcept;
-uint64_t FlipVertical(uint64_t) noexcept;
+[[nodiscard]] uint64_t FlipCodiagonal(uint64_t) noexcept;
+[[nodiscard]] uint64_t FlipDiagonal(uint64_t) noexcept;
+[[nodiscard]] uint64_t FlipHorizontal(uint64_t) noexcept;
+[[nodiscard]] uint64_t FlipVertical(uint64_t) noexcept;
 
+[[nodiscard]]
 inline unsigned int BitScanLSB(const uint64_t mask) noexcept
 {
 	// BitScanLSB(0) may be undefined.
@@ -50,7 +54,8 @@ inline unsigned int BitScanLSB(const uint64_t mask) noexcept
 		return __builtin_ctzll(mask); // __builtin_ctzll(0) is undefined
 	#endif
 }
-	
+
+[[nodiscard]]
 inline unsigned int BitScanMSB(const uint64_t mask) noexcept
 {
 	// BitScanMSB(0) may be undefined.
@@ -65,7 +70,8 @@ inline unsigned int BitScanMSB(const uint64_t mask) noexcept
 	#endif
 }
 
-inline uint64_t CountLeadingZeros(const uint64_t mask) noexcept
+[[nodiscard]]
+inline std::size_t CountLeadingZeros(const uint64_t mask) noexcept
 {
 	// CountLeadingZeros(0) may be undefined.
 	assert(mask);
@@ -77,7 +83,8 @@ inline uint64_t CountLeadingZeros(const uint64_t mask) noexcept
 	#endif
 }
 
-inline uint64_t CountTrailingZeros(const uint64_t mask) noexcept
+[[nodiscard]]
+inline std::size_t CountTrailingZeros(const uint64_t mask) noexcept
 {
 	// CountTrailingZeros(0) may be undefined.
 	assert(mask);
@@ -138,7 +145,8 @@ inline void RemoveMSB(uint64_t& b) noexcept
 namespace detail
 {
 #ifdef HAS_POPCNT
-	inline uint64_t PopCount_intrinsic(uint64_t b) noexcept
+	[[nodiscard]]
+	inline std::size_t PopCount_intrinsic(uint64_t b) noexcept
 	{
 		#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			return _mm_popcnt_u64(b);
@@ -148,7 +156,8 @@ namespace detail
 	}
 #endif
 
-	inline uint64_t PopCount_generic(uint64_t b) noexcept
+	[[nodiscard]]
+	inline std::size_t PopCount_generic(uint64_t b) noexcept
 	{
 		b -= (b >> 1) & 0x5555555555555555ui64;
 		b = ((b >> 2) & 0x3333333333333333ui64) + (b & 0x3333333333333333ui64);
@@ -157,7 +166,8 @@ namespace detail
 	}
 }
 
-inline uint64_t PopCount(uint64_t b) noexcept
+[[nodiscard]]
+inline std::size_t PopCount(uint64_t b) noexcept
 {
 	#ifdef HAS_POPCNT
 		return detail::PopCount_intrinsic(b);
@@ -166,6 +176,7 @@ inline uint64_t PopCount(uint64_t b) noexcept
 	#endif
 }
 
+[[nodiscard]]
 inline uint64_t BExtr(const uint64_t src, const unsigned int start, unsigned int len) noexcept
 {
 	#if defined(HAS_BEXTR) || defined(HAS_TBM)
@@ -175,6 +186,7 @@ inline uint64_t BExtr(const uint64_t src, const unsigned int start, unsigned int
 	#endif
 }
 
+[[nodiscard]]
 inline uint64_t BZHI(const uint64_t src, const uint32_t index) noexcept
 {
 	#ifdef HAS_BZHI
@@ -184,6 +196,7 @@ inline uint64_t BZHI(const uint64_t src, const uint32_t index) noexcept
 	#endif
 }
 
+[[nodiscard]]
 inline uint64_t PDep(uint64_t src, uint64_t mask) noexcept
 {
 	#ifdef HAS_PDEP
@@ -200,6 +213,7 @@ inline uint64_t PDep(uint64_t src, uint64_t mask) noexcept
 	#endif
 }
 
+[[nodiscard]]
 inline uint64_t PExt(uint64_t src, uint64_t mask) noexcept
 {
 	#ifdef HAS_PEXT
@@ -216,6 +230,7 @@ inline uint64_t PExt(uint64_t src, uint64_t mask) noexcept
 	#endif
 }
 
+[[nodiscard]]
 inline uint64_t BSwap(const uint64_t b) noexcept
 {
 	#if defined(_MSC_VER)
@@ -227,15 +242,15 @@ inline uint64_t BSwap(const uint64_t b) noexcept
 
 #if defined(_MSC_VER)
     #ifdef HAS_SSE2
-        inline __m128i operator~(const __m128i& a) noexcept { return _mm_andnot_si128(a, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFui64)); }
+        [[nodiscard]] inline __m128i operator~(const __m128i& a) noexcept { return _mm_andnot_si128(a, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFui64)); }
 
-        inline __m128i operator+(const __m128i& a, const __m128i& b) noexcept { return _mm_add_epi64(a, b); }
-        inline __m128i operator-(const __m128i& a, const __m128i& b) noexcept { return _mm_sub_epi64(a, b); }
-        inline __m128i operator&(const __m128i& a, const __m128i& b) noexcept { return _mm_and_si128(a, b); }
-        inline __m128i operator|(const __m128i& a, const __m128i& b) noexcept { return _mm_or_si128(a, b); }
-        inline __m128i operator^(const __m128i& a, const __m128i& b) noexcept { return _mm_xor_si128(a, b); }
-        inline __m128i operator<<(const __m128i& a, const int b) noexcept { return _mm_slli_epi64(a, b); }
-        inline __m128i operator>>(const __m128i& a, const int b) noexcept { return _mm_srli_epi64(a, b); }
+        [[nodiscard]] inline __m128i operator+(const __m128i& a, const __m128i& b) noexcept { return _mm_add_epi64(a, b); }
+        [[nodiscard]] inline __m128i operator-(const __m128i& a, const __m128i& b) noexcept { return _mm_sub_epi64(a, b); }
+        [[nodiscard]] inline __m128i operator&(const __m128i& a, const __m128i& b) noexcept { return _mm_and_si128(a, b); }
+        [[nodiscard]] inline __m128i operator|(const __m128i& a, const __m128i& b) noexcept { return _mm_or_si128(a, b); }
+        [[nodiscard]] inline __m128i operator^(const __m128i& a, const __m128i& b) noexcept { return _mm_xor_si128(a, b); }
+        [[nodiscard]] inline __m128i operator<<(const __m128i& a, const int b) noexcept { return _mm_slli_epi64(a, b); }
+        [[nodiscard]] inline __m128i operator>>(const __m128i& a, const int b) noexcept { return _mm_srli_epi64(a, b); }
 
         inline __m128i operator+=(__m128i& a, const __m128i& b) noexcept { return a = a + b; }
         inline __m128i operator-=(__m128i& a, const __m128i& b) noexcept { return a = a - b; }
@@ -246,24 +261,24 @@ inline uint64_t BSwap(const uint64_t b) noexcept
         inline __m128i operator>>=(__m128i& a, const int b) noexcept { return a = a >> b; }
     #endif
     #ifdef HAS_SSE4_1
-        inline __m128i operator==(const __m128i& a, const __m128i& b) noexcept { return _mm_cmpeq_epi64(a, b); }
+		[[nodiscard]] inline __m128i operator==(const __m128i& a, const __m128i& b) noexcept { return _mm_cmpeq_epi64(a, b); }
     #endif
     #ifdef HAS_SSE4_2
-        inline __m128i operator>(const __m128i& a, const __m128i& b) noexcept { return _mm_cmpgt_epi64(a, b); }
-        inline __m128i operator<(const __m128i& a, const __m128i& b) noexcept { return b > a; }
-        inline __m128i operator>=(const __m128i& a, const __m128i& b) noexcept { return ~(a < b); }
-        inline __m128i operator<=(const __m128i& a, const __m128i& b) noexcept { return ~(a > b); }
+        [[nodiscard]] inline __m128i operator>(const __m128i& a, const __m128i& b) noexcept { return _mm_cmpgt_epi64(a, b); }
+        [[nodiscard]] inline __m128i operator<(const __m128i& a, const __m128i& b) noexcept { return b > a; }
+        [[nodiscard]] inline __m128i operator>=(const __m128i& a, const __m128i& b) noexcept { return ~(a < b); }
+        [[nodiscard]] inline __m128i operator<=(const __m128i& a, const __m128i& b) noexcept { return ~(a > b); }
     #endif
     #ifdef HAS_AVX2
-		inline __m256i operator~(const __m256i& a) noexcept { return _mm256_xor_si256(a, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFui64)); }
+		[[nodiscard]] inline __m256i operator~(const __m256i& a) noexcept { return _mm256_xor_si256(a, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFui64)); }
 
-        inline __m256i operator+(const __m256i& a, const __m256i& b) noexcept { return _mm256_add_epi64(a, b); }
-        inline __m256i operator-(const __m256i& a, const __m256i& b) noexcept { return _mm256_sub_epi64(a, b); }
-        inline __m256i operator&(const __m256i& a, const __m256i& b) noexcept { return _mm256_and_si256(a, b); }
-        inline __m256i operator|(const __m256i& a, const __m256i& b) noexcept { return _mm256_or_si256(a, b); }
-        inline __m256i operator^(const __m256i& a, const __m256i& b) noexcept { return _mm256_xor_si256(a, b); }
-        inline __m256i operator<<(const __m256i& a, const int b) noexcept { return _mm256_slli_epi64(a, b); }
-        inline __m256i operator>>(const __m256i& a, const int b) noexcept { return _mm256_srli_epi64(a, b); }
+        [[nodiscard]] inline __m256i operator+(const __m256i& a, const __m256i& b) noexcept { return _mm256_add_epi64(a, b); }
+        [[nodiscard]] inline __m256i operator-(const __m256i& a, const __m256i& b) noexcept { return _mm256_sub_epi64(a, b); }
+        [[nodiscard]] inline __m256i operator&(const __m256i& a, const __m256i& b) noexcept { return _mm256_and_si256(a, b); }
+        [[nodiscard]] inline __m256i operator|(const __m256i& a, const __m256i& b) noexcept { return _mm256_or_si256(a, b); }
+        [[nodiscard]] inline __m256i operator^(const __m256i& a, const __m256i& b) noexcept { return _mm256_xor_si256(a, b); }
+        [[nodiscard]] inline __m256i operator<<(const __m256i& a, const int b) noexcept { return _mm256_slli_epi64(a, b); }
+        [[nodiscard]] inline __m256i operator>>(const __m256i& a, const int b) noexcept { return _mm256_srli_epi64(a, b); }
 
         inline __m256i operator+=(__m256i& a, const __m256i& b) noexcept { return a = a + b; }
         inline __m256i operator-=(__m256i& a, const __m256i& b) noexcept { return a = a - b; }
@@ -274,15 +289,15 @@ inline uint64_t BSwap(const uint64_t b) noexcept
         inline __m256i operator>>=(__m256i& a, const int b) noexcept { return a = a >> b; }
     #endif
 	#ifdef HAS_AVX512
-		inline __m512i operator~(const __m512i& a) noexcept { return _mm512_xor_si512(a, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFui64)); }
+		[[nodiscard]] inline __m512i operator~(const __m512i& a) noexcept { return _mm512_xor_si512(a, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFui64)); }
 
-		inline __m512i operator+(const __m512i& a, const __m512i& b) noexcept { return _mm512_add_epi64(a, b); }
-		inline __m512i operator-(const __m512i& a, const __m512i& b) noexcept { return _mm512_sub_epi64(a, b); }
-		inline __m512i operator&(const __m512i& a, const __m512i& b) noexcept { return _mm512_and_si512(a, b); }
-		inline __m512i operator|(const __m512i& a, const __m512i& b) noexcept { return _mm512_or_si512(a, b); }
-		inline __m512i operator^(const __m512i& a, const __m512i& b) noexcept { return _mm512_xor_si512(a, b); }
-		inline __m512i operator<<(const __m512i& a, const int b) noexcept { return _mm512_slli_epi64(a, b); }
-		inline __m512i operator>>(const __m512i& a, const int b) noexcept { return _mm512_srli_epi64(a, b); }
+		[[nodiscard]] inline __m512i operator+(const __m512i& a, const __m512i& b) noexcept { return _mm512_add_epi64(a, b); }
+		[[nodiscard]] inline __m512i operator-(const __m512i& a, const __m512i& b) noexcept { return _mm512_sub_epi64(a, b); }
+		[[nodiscard]] inline __m512i operator&(const __m512i& a, const __m512i& b) noexcept { return _mm512_and_si512(a, b); }
+		[[nodiscard]] inline __m512i operator|(const __m512i& a, const __m512i& b) noexcept { return _mm512_or_si512(a, b); }
+		[[nodiscard]] inline __m512i operator^(const __m512i& a, const __m512i& b) noexcept { return _mm512_xor_si512(a, b); }
+		[[nodiscard]] inline __m512i operator<<(const __m512i& a, const int b) noexcept { return _mm512_slli_epi64(a, b); }
+		[[nodiscard]] inline __m512i operator>>(const __m512i& a, const int b) noexcept { return _mm512_srli_epi64(a, b); }
 
 		inline __m512i operator+=(__m512i& a, const __m512i& b) noexcept { return a = a + b; }
 		inline __m512i operator-=(__m512i& a, const __m512i& b) noexcept { return a = a - b; }
