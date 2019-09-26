@@ -27,9 +27,9 @@ public:
 	std::size_t size() const;
 	bool empty() const;
 
-	bool Has(Field) const;
-	Field Peek() const;
-	void Pop();
+	bool contains(Field) const;
+	Field front() const;
+	void pop_front();
 	Field Extract();
 
 	void Remove(Field);

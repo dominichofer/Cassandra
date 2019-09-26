@@ -21,27 +21,27 @@ bool Moves::empty() const
 	return m_moves == 0;
 }
 
-bool Moves::Has(const Field move) const
+bool Moves::contains(const Field move) const
 {
 	return TestBit(m_moves, move);
 }
 
-Field Moves::Peek() const
+Field Moves::front() const
 {
 	return static_cast<Field>(BitScanLSB(m_moves));
 }
 
-void Moves::Pop()
+void Moves::pop_front()
 {
 	RemoveLSB(m_moves);
 }
 
-Field Moves::Extract()
-{
-	const auto LSB = Peek();
-	Pop();
-	return LSB;
-}
+//Field Moves::Extract()
+//{
+//	const auto LSB = front();
+//	pop_front();
+//	return LSB;
+//}
 
 void Moves::Remove(const Field move)
 {

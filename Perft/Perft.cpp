@@ -77,7 +77,7 @@ namespace Basic
 			return perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).Peek());
+		pos = Play(pos, PossibleMoves(pos).front());
 		return 4 * perft(pos, depth - 1);
 	}
 }
@@ -159,7 +159,7 @@ namespace Unrolled2
 			return perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).Peek());
+		pos = Play(pos, PossibleMoves(pos).front());
 		return 4 * perft(pos, depth - 1);
 	}
 }
@@ -289,7 +289,7 @@ namespace HashTableMap
 			return Unrolled2::perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).Peek());
+		pos = Play(pos, PossibleMoves(pos).front());
 		return 4 * perft(pos, depth, BytesRAM);
 	}
 }
