@@ -19,21 +19,40 @@ class Moves
 	uint64_t m_moves = 0;
 public:
 	Moves() noexcept = default;
-	constexpr Moves(uint64_t moves) noexcept : m_moves(moves) {}
+	constexpr explicit Moves(uint64_t moves) noexcept : m_moves(moves) {}
 
-	bool operator==(const Moves& o) const;
-
+	bool operator==(const Moves&) const;
+	bool operator!=(const Moves&) const;
+	
 	std::size_t size() const;
 	bool empty() const;
-	void clear();
 
 	bool Has(Field) const;
 	Field Peek() const;
+	void Pop();
 	Field Extract();
 
 	void Remove(Field);
 	void Remove(uint64_t moves);
 	void Filter(uint64_t moves);
+
+	class Iterator
+	{
+		uint64_t m_moves;
+	public:
+		explicit Iterator(const Moves& moves) : m_moves(moves.m_moves) {}
+		Iterator& operator++() { RemoveLSB(m_moves); return *this; }
+		Field operator*() const { return static_cast<Field>(BitScanLSB(m_moves)); }
+
+		bool operator==(const Iterator& o) { return m_moves == o.m_moves; }
+		bool operator!=(const Iterator& o) { return m_moves != o.m_moves; }
+	};
+
+
+	Iterator begin() const { return Iterator(*this); }
+	Iterator cbegin() const { return Iterator(*this); }
+	Iterator end() const { return Iterator(Moves(0)); }
+	Iterator cend() const { return Iterator(Moves(0)); }
 };
 
 constexpr Moves operator""_mov(const char* c, std::size_t size)
@@ -44,5 +63,5 @@ constexpr Moves operator""_mov(const char* c, std::size_t size)
 	for (int i = 0; i < 64; i++)
 		if (c[63 - i] != ' ')
 			SetBit(moves, i);
-	return moves;
+	return Moves(moves);
 }

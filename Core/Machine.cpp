@@ -28,5 +28,5 @@ Position PlayPass(Position pos)
 
 Moves PossibleMoves(Position pos)
 {
-	return PossibleMoves(pos.GetP(), pos.GetO());
+	return Moves(PossibleMoves(pos.GetP(), pos.GetO()));
 }

@@ -6,6 +6,11 @@ bool Moves::operator==(const Moves& o) const
 	return m_moves == o.m_moves;
 }
 
+bool Moves::operator!=(const Moves& o) const
+{
+	return m_moves != o.m_moves;
+}
+
 std::size_t Moves::size() const
 {
 	return PopCount(m_moves);
@@ -14,11 +19,6 @@ std::size_t Moves::size() const
 bool Moves::empty() const
 {
 	return m_moves == 0;
-}
-
-void Moves::clear()
-{
-	m_moves = 0;
 }
 
 bool Moves::Has(const Field move) const
@@ -31,16 +31,21 @@ Field Moves::Peek() const
 	return static_cast<Field>(BitScanLSB(m_moves));
 }
 
+void Moves::Pop()
+{
+	RemoveLSB(m_moves);
+}
+
 Field Moves::Extract()
 {
-	const auto LSB = static_cast<Field>(BitScanLSB(m_moves));
-	RemoveLSB(m_moves);
+	const auto LSB = Peek();
+	Pop();
 	return LSB;
 }
 
 void Moves::Remove(const Field move)
 {
-	if (move != Field::invalid)
+	if (move != Field::invalid) // TODO: Is this needed? Can it be an assert?
 		ResetBit(m_moves, move);
 }
 
