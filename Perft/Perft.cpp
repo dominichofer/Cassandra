@@ -63,8 +63,8 @@ namespace Basic
 		}
 
 		std::size_t sum = 0;
-		while (!moves.empty())
-			sum += perft(Play(pos, moves.Extract()), depth - 1);
+		for (auto move : moves)
+			sum += perft(Play(pos, move), depth - 1);
 
 		return sum;
 	}
@@ -77,7 +77,7 @@ namespace Basic
 			return perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).Extract());
+		pos = Play(pos, PossibleMoves(pos).Peek());
 		return 4 * perft(pos, depth - 1);
 	}
 }
@@ -105,14 +105,14 @@ namespace Unrolled2
 			return PossibleMoves(PlayPass(pos)).size();
 
 		std::size_t sum = 0;
-		while (!moves.empty())
+		for (auto move : moves)
 		{
-			const auto pos2 = Play(pos, moves.Extract());
-			const auto moves2 = PossibleMoves(pos2);
-			if (!moves2.empty())
-				sum += moves2.size();
+			const auto next_pos = Play(pos, move);
+			const auto next_moves = PossibleMoves(next_pos);
+			if (next_moves.empty())
+				sum += static_cast<std::size_t>(PossibleMoves(PlayPass(next_pos)).empty() ? 0 : 1);
 			else
-				sum += static_cast<std::size_t>(PossibleMoves(PlayPass(pos2)).empty() ? 0 : 1);
+				sum += next_moves.size();
 		}
 
 		return sum;
@@ -134,8 +134,8 @@ namespace Unrolled2
 		}
 
 		std::size_t sum = 0;
-		while (!moves.empty())
-			sum += perft_(Play(pos, moves.Extract()), depth - 1);
+		for (auto move : moves)
+			sum += perft_(Play(pos, move), depth - 1);
 
 		return sum;
 	}
@@ -159,7 +159,7 @@ namespace Unrolled2
 			return perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).Extract());
+		pos = Play(pos, PossibleMoves(pos).Peek());
 		return 4 * perft(pos, depth - 1);
 	}
 }
@@ -199,8 +199,8 @@ namespace HashTableMap
 			return;
 		}
 
-		while (!moves.empty())
-			fill(Play(pos, moves.Extract()), depth - 1, all);
+		for (auto move : moves)
+			fill(Play(pos, move), depth - 1, all);
 	}
 
 	struct PositionDegeneracy
@@ -256,8 +256,8 @@ namespace HashTableMap
 			return ret.value();
 
 		std::size_t sum = 0;
-		while (!moves.empty())
-			sum += perft(Play(pos, moves.Extract()), depth - 1);
+		for (auto move : moves)
+			sum += perft(Play(pos, move), depth - 1);
 
 		hash_table.Update({ pos, depth }, sum);
 		return sum;
@@ -289,7 +289,7 @@ namespace HashTableMap
 			return Unrolled2::perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).Extract());
+		pos = Play(pos, PossibleMoves(pos).Peek());
 		return 4 * perft(pos, depth, BytesRAM);
 	}
 }

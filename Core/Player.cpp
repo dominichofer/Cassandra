@@ -16,7 +16,7 @@ Position RandomPlayer::Play(Position pos) noexcept(false)
 
 	auto rnd = std::uniform_int_distribution<std::size_t>(0, moves.size())(rnd_engine);
 	for (std::size_t i = 0; i < rnd; i++)
-		moves.Extract();
+		moves.Pop();
 
-	return ::Play(pos, moves.Extract());
+	return ::Play(pos, moves.Peek());
 }
