@@ -71,7 +71,8 @@ inline Position FlipCodiagonal(Position p) { p.FlipCodiagonal(); return p; }
 inline Position FlipDiagonal  (Position p) { p.FlipDiagonal  (); return p; }
 inline Position FlipHorizontal(Position p) { p.FlipHorizontal(); return p; }
 inline Position FlipVertical  (Position p) { p.FlipVertical  (); return p; }
-//inline Position FlipToMinimum (Position p) { p.FlipToMinimum (); return p; }
+
+Position FlipToUnique(Position pos);
 
 //#include <functional>
 //namespace std

@@ -43,5 +43,20 @@ constexpr Position::Position(uint64_t P, uint64_t O) : Board{ P, O }
 Position::Position(Board b) : Position(b.P, b.O)
 {}
 
-Position Position::Start() { return Position(0x0000'0008'1000'0000ui64, 0x0000'0010'0800'0000ui64); }
-Position Position::StartETH() { return Position(0x0000'0018'0000'0000ui64, 0x0000'0000'1800'0000ui64); }
+Position Position::Start() { return { 0x0000'0008'1000'0000ui64, 0x0000'0010'0800'0000ui64 }; }
+Position Position::StartETH() { return { 0x0000'0018'0000'0000ui64, 0x0000'0000'1800'0000ui64 }; }
+
+Position FlipToUnique(Position pos)
+{
+	auto less = [](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
+
+	Position min = pos;
+	pos.FlipVertical();		if (less(pos, min)) min = pos;
+	pos.FlipHorizontal();	if (less(pos, min)) min = pos;
+	pos.FlipVertical();		if (less(pos, min)) min = pos;
+	pos.FlipCodiagonal();	if (less(pos, min)) min = pos;
+	pos.FlipVertical();		if (less(pos, min)) min = pos;
+	pos.FlipHorizontal();	if (less(pos, min)) min = pos;
+	pos.FlipVertical();		if (less(pos, min)) min = pos;
+	return min;
+}
