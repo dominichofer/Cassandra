@@ -168,24 +168,11 @@ namespace HashTableMap
 {
 	bool operator<(Position l, Position r) noexcept { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); }
 
-	Position FlipToMinimum(Position pos)
-	{
-		Position min = pos;
-		pos.FlipVertical();		if (pos < min) min = pos;
-		pos.FlipHorizontal();	if (pos < min) min = pos;
-		pos.FlipVertical();		if (pos < min) min = pos;
-		pos.FlipCodiagonal();	if (pos < min) min = pos;
-		pos.FlipVertical();		if (pos < min) min = pos;
-		pos.FlipHorizontal();	if (pos < min) min = pos;
-		pos.FlipVertical();		if (pos < min) min = pos;
-		return min;
-	}
-
 	void fill(Position pos, const uint8_t depth, std::vector<Position>& all)
 	{
 		if (depth == 0)
 		{
-			all.push_back(FlipToMinimum(pos));
+			all.push_back(FlipToUnique(pos));
 			return;
 		}
 
