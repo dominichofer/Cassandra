@@ -197,7 +197,8 @@ void TestAlgorithm(Search::Algorithm& alg, PosScore pos_score)
 
 	const auto result = alg.Eval(pos, Search::Intensity::Exact(pos));
 
-	ASSERT_EQ(result.score, correct);
+	ASSERT_EQ(result.window.lower, correct);
+	ASSERT_EQ(result.window.upper, correct);
 }
 
 class NegaMax : public ::testing::Test

@@ -18,12 +18,13 @@ namespace Search
 	class Window
 	{
 	public:
-		Window() = default;
-		Window(Score alpha, Score beta) : alpha(alpha), beta(beta) { assert(alpha < beta); }
-		
-		Score alpha{ -infinity }, beta{ +infinity };
+		// TODO: Because members are public, the constraint can be violated.
+		Score lower{ -infinity }, upper{ +infinity };
 
-		Window operator-() const { return { -beta, -alpha }; }
+		Window() = default;
+		Window(Score lower, Score upper);
+		
+		Window operator-() const { return { -upper, -lower }; }
 	};
 	
 	class Selectivity
@@ -74,18 +75,26 @@ namespace Search
 
 	struct Intensity
 	{
+		Window window;
 		unsigned int depth;
 		Selectivity selectivity;
-		Window window;
 
 		static Intensity Exact(Position);
 	};
 
-	struct Result
+	class Result
 	{
-		Score score;
+	public:
+		// TODO: Because members are public, the constraint can be violated.
+		Window window;
+		unsigned int depth;
+		Selectivity selectivity;
 		Field best_move;
 		std::size_t node_count;
+
+		static Result ExactScore(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
+		static Result MaxBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
+		static Result MinBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 	};
 
 	struct Algorithm

@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 		auto end_time = std::chrono::high_resolution_clock::now();
 
 		const std::size_t node_count = std::accumulate(puzzles.begin(), puzzles.end(), std::size_t{ 0 },
-			[](std::size_t sum, const Puzzle& puzzle) { return sum + puzzle.Result().node_count; });
+			[](std::size_t sum, const Puzzle& puzzle) { return sum + puzzle.Result().value().node_count; });
 
 		const auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end_time - start_time);
 		const auto duration_per_pos = duration / puzzles.size();

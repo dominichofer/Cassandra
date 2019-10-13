@@ -8,7 +8,7 @@ Result NegaMax::Eval(Position pos, Intensity)
 {
 	node_counter = 0;
 	Score score = Eval_triage(pos);
-	return { score, Field::invalid, node_counter };
+	return Result::ExactScore(score, pos.EmptyCount(), Selectivity::None, Field::invalid, node_counter);
 }
 
 Score NegaMax::Eval_triage(Position pos)
