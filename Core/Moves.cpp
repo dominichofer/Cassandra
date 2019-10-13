@@ -23,7 +23,7 @@ bool Moves::empty() const
 
 bool Moves::contains(const Field move) const
 {
-	return TestBit(m_moves, move);
+	return m_moves[move];
 }
 
 Field Moves::front() const
@@ -46,15 +46,15 @@ void Moves::pop_front()
 void Moves::Remove(const Field move)
 {
 	if (move != Field::invalid) // TODO: Is this needed? Can it be an assert?
-		ResetBit(m_moves, move);
+		m_moves[move] = false;
 }
 
-void Moves::Remove(uint64_t moves)
+void Moves::Remove(BitBoard moves)
 {
 	m_moves &= ~moves;
 }
 
-void Moves::Filter(uint64_t moves)
+void Moves::Filter(BitBoard moves)
 {
 	m_moves &= moves;
 }

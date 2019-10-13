@@ -1,4 +1,5 @@
 #include "Hashtable.h"
+#include <cassert>
 
 BigNode::LockGuard::LockGuard(std::atomic<value_type>& lock) : lock(lock)
 {
@@ -39,7 +40,7 @@ std::optional<BigNode::value_type> BigNode::LookUp(const PositionDepthPair& key)
 void BigNode::Clear()
 {
 	LockGuard lock_guard(m_value);
-	m_key = { { 0, 0 }, 0 };
+	m_key = { { BitBoard{ 0 }, BitBoard{ 0 } }, 0 }; // TODO: This is an illegal state of Position!
 	lock_guard.value = 0;
 }
 

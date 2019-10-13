@@ -1,4 +1,5 @@
 #include "Search.h"
+#include "Machine.h"
 #include <limits>
 
 using namespace Search;
@@ -23,5 +24,5 @@ const Selectivity Selectivity::None = Selectivity(std::numeric_limits<decltype(S
 
 Intensity Intensity::Exact(Position pos)
 {
-	return { static_cast<int>(pos.EmptyCount()), Selectivity::None, Window{} };
+	return { static_cast<unsigned int>(pos.EmptyCount()), Selectivity::None, Window{} };
 }

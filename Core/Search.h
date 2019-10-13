@@ -1,5 +1,8 @@
 #pragma once
 #include "Position.h"
+#include "Moves.h"
+
+#include <cassert>
 #include <cstdint>
 #include <cmath>
 #include <chrono>
@@ -16,9 +19,11 @@ namespace Search
 	{
 	public:
 		Window() = default;
-		Window(Score alpha, Score beta) : alpha(alpha), beta(beta) { assert(alpha <= beta); }
+		Window(Score alpha, Score beta) : alpha(alpha), beta(beta) { assert(alpha < beta); }
 		
 		Score alpha{ -infinity }, beta{ +infinity };
+
+		Window operator-() const { return { -beta, -alpha }; }
 	};
 	
 	class Selectivity
@@ -69,7 +74,7 @@ namespace Search
 
 	struct Intensity
 	{
-		int depth;
+		unsigned int depth;
 		Selectivity selectivity;
 		Window window;
 
@@ -79,18 +84,12 @@ namespace Search
 	struct Result
 	{
 		Score score;
+		Field best_move;
 		std::size_t node_count;
 	};
 
-	class Algorithm
+	struct Algorithm
 	{
-	protected:
-		std::size_t nodes = 0;
-
-	public:
 		virtual Result Eval(Position, Intensity) = 0;
-		virtual Result Eval(Position);
-
-		std::size_t NodeCount() const { return nodes; }
 	};
 }

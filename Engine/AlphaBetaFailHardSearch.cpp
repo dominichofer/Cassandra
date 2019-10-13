@@ -1,0 +1,234 @@
+#include "AlphaBetaFailHardSearch.h"
+#include "Core/Machine.h"
+#include <algorithm>
+
+using namespace Search;
+
+Score clamp(Score value, Window w)
+{
+	return std::clamp(value, w.alpha, w.beta);
+}
+
+Result AlphaBetaFailHard::Eval(Position pos, Intensity intensity)
+{
+	node_counter = 0;
+	Score score = Eval_triage(pos, intensity.window);
+	return { score, Field::invalid, node_counter };
+}
+
+Score AlphaBetaFailHard::Eval_triage(Position pos, Window w)
+{
+	auto moves = Moves(pos.Empties());
+	const auto move1 = moves.front(); moves.pop_front();
+	const auto move2 = moves.front(); moves.pop_front();
+	const auto move3 = moves.front(); moves.pop_front();
+	const auto move4 = moves.front(); moves.pop_front();
+	switch (pos.EmptyCount())
+	{
+		case 0: return Eval_0(pos, w);
+		case 1: return Eval_1(pos, w, move1);
+		case 2: return Eval_2(pos, w, move1, move2);
+		case 3: return Eval_3(pos, w, move1, move2, move3);
+		case 4: return Eval_4(pos, w, move1, move2, move3, move4);
+		default: return Eval_N(pos, w);
+	}
+}
+
+Score AlphaBetaFailHard::Eval_0(Position pos, const Window w)
+{
+	Score score = NegaMax::Eval_0(pos);
+	return clamp(score, w);
+}
+
+Score AlphaBetaFailHard::Eval_1(Position pos, const Window w, const Field move1)
+{
+	Score score = NegaMax::Eval_1(pos, move1);
+	return clamp(score, w);
+}
+
+Score AlphaBetaFailHard::Eval_2(Position pos, Window w, const Field move1, const Field move2)
+{
+	node_counter++;
+	Score score = infinity;
+
+	if (const auto flips = Flips(pos, move1)) {
+		score = -Eval_1(Play(pos, move1, flips), -w, move2);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	if (const auto flips = Flips(pos, move2)) {
+		score = -Eval_1(Play(pos, move2, flips), -w, move1);
+		if (score >= w.beta) return w.beta;
+		return std::max(score, w.alpha);
+	}
+
+	if (score != infinity)
+		return w.alpha;
+
+	const auto passed = PlayPass(pos);
+	node_counter++;
+
+	if (const auto flips = Flips(passed, move1)) {
+		score = Eval_1(Play(passed, move1, flips), w, move2);
+		if (score <= w.alpha) return w.alpha;
+		w.beta = std::min(w.beta, score);
+	}
+
+	if (const auto flips = Flips(passed, move2)) {
+		score = Eval_1(Play(passed, move2, flips), w, move1);
+		if (score <= w.alpha) return w.alpha;
+		return std::min(score, w.beta);
+	}
+
+	if (score != infinity)
+		return w.beta;
+
+	node_counter--;
+	return clamp(-EvalGameOver(passed), w);
+}
+
+Score AlphaBetaFailHard::Eval_3(Position pos, Window w, const Field move1, const Field move2, const Field move3)
+{
+	node_counter++;
+	Score score = infinity;
+
+	if (const auto flips = Flips(pos, move1)) {
+		score = -Eval_2(Play(pos, move1, flips), -w, move2, move3);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	if (const auto flips = Flips(pos, move2)) {
+		score = -Eval_2(Play(pos, move2, flips), -w, move1, move3);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	if (const auto flips = Flips(pos, move3)) {
+		score = -Eval_2(Play(pos, move3, flips), -w, move1, move2);
+		if (score >= w.beta) return w.beta;
+		return std::max(score, w.alpha);
+	}
+
+	if (score != infinity)
+		return w.alpha;
+
+	const auto passed = PlayPass(pos);
+	node_counter++;
+
+	if (const auto flips = Flips(passed, move1)) {
+		score = Eval_2(Play(passed, move1, flips), w, move2, move3);
+		if (score <= w.alpha) return w.alpha;
+		w.beta = std::min(w.beta, score);
+	}
+
+	if (const auto flips = Flips(passed, move2)) {
+		score = Eval_2(Play(passed, move2, flips), w, move1, move3);
+		if (score <= w.alpha) return w.alpha;
+		w.beta = std::min(w.beta, score);
+	}
+
+	if (const auto flips = Flips(passed, move3)) {
+		score = Eval_2(Play(passed, move3, flips), w, move1, move2);
+		if (score <= w.alpha) return w.alpha;
+		return std::min(score, w.beta);
+	}
+
+	if (score != infinity)
+		return w.beta;
+
+	node_counter--;
+	return clamp(-EvalGameOver(passed), w);
+}
+
+Score AlphaBetaFailHard::Eval_4(Position pos, Window w, const Field move1, const Field move2, const Field move3, const Field move4)
+{
+	node_counter++;
+	Score score = infinity;
+
+	if (const auto flips = Flips(pos, move1)) {
+		score = -Eval_3(Play(pos, move1, flips), -w, move2, move3, move4);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	if (const auto flips = Flips(pos, move2)) {
+		score = -Eval_3(Play(pos, move2, flips), -w, move1, move3, move4);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	if (const auto flips = Flips(pos, move3)) {
+		score = -Eval_3(Play(pos, move3, flips), -w, move1, move2, move4);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	if (const auto flips = Flips(pos, move4)) {
+		score = -Eval_3(Play(pos, move4, flips), -w, move1, move2, move3);
+		if (score >= w.beta) return w.beta;
+		return std::max(score, w.alpha);
+	}
+
+	if (score != infinity)
+		return w.alpha;
+
+	const auto passed = PlayPass(pos);
+
+	if (const auto flips = Flips(passed, move1)) {
+		score = Eval_3(Play(passed, move1, flips), w, move2, move3, move4);
+		if (score <= w.alpha) return w.alpha;
+		w.beta = std::min(w.beta, score);
+	}
+
+	if (const auto flips = Flips(passed, move2)) {
+		score = Eval_3(Play(passed, move2, flips), w, move1, move3, move4);
+		if (score <= w.alpha) return w.alpha;
+		w.beta = std::min(w.beta, score);
+	}
+
+	if (const auto flips = Flips(passed, move3)) {
+		score = Eval_3(Play(passed, move3, flips), w, move1, move2, move4);
+		if (score <= w.alpha) return w.alpha;
+		w.beta = std::min(w.beta, score);
+	}
+
+	if (const auto flips = Flips(passed, move4)) {
+		score = Eval_3(Play(passed, move4, flips), w, move1, move2, move3);
+		if (score <= w.alpha) return w.alpha;
+		return std::min(score, w.beta);
+	}
+
+	if (score != infinity)
+		return w.beta;
+	
+	node_counter--;
+	return clamp(-EvalGameOver(passed), w);
+}
+
+Score AlphaBetaFailHard::Eval_N(Position pos, Window w)
+{
+	if (pos.EmptyCount() <= 4)
+		return Eval_triage(pos, w);
+
+	node_counter++;
+
+	Moves moves = PossibleMoves(pos);
+	if (moves.empty()) {
+		const auto passed = PlayPass(pos);
+		if (PossibleMoves(passed).empty())
+			return clamp(EvalGameOver(pos), w);
+		return -Eval_N(passed, -w);
+	}
+
+	for (auto move : moves)
+	{
+		const auto score = -Eval_N(Play(pos, move), -w);
+		if (score >= w.beta) return w.beta;
+		w.alpha = std::max(w.alpha, score);
+	}
+
+	return w.alpha;
+}
+

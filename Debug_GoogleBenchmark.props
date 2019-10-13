@@ -3,13 +3,13 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_PropertySheetDisplayName>GoogleMicrobenchmark</_PropertySheetDisplayName>
+    <_PropertySheetDisplayName>Debug_GoogleMicrobenchmark</_PropertySheetDisplayName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link />
     <ClCompile />
     <Link>
-      <AdditionalDependencies>..\benchmark\out\build\x64-Release\src\benchmark.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\benchmark\out\build\x64-Debug\src\benchmark.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>..\benchmark\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

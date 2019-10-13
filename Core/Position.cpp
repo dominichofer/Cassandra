@@ -1,12 +1,10 @@
 #include "Position.h"
 #include "Machine/BitTwiddling.h"
 
- Board::Board(const Position& pos) : P(pos.GetP()), O(pos.GetO()) {}
-
-void Board::FlipCodiagonal() { P = ::FlipCodiagonal(P); O = ::FlipCodiagonal(O); }
-void Board::FlipDiagonal  () { P = ::FlipDiagonal  (P); O = ::FlipDiagonal  (O); }
-void Board::FlipHorizontal() { P = ::FlipHorizontal(P); O = ::FlipHorizontal(O); }
-void Board::FlipVertical  () { P = ::FlipVertical  (P); O = ::FlipVertical  (O); }
+void Board::FlipCodiagonal() { P.FlipCodiagonal(); O.FlipCodiagonal(); }
+void Board::FlipDiagonal  () { P.FlipDiagonal  (); O.FlipDiagonal  (); }
+void Board::FlipHorizontal() { P.FlipHorizontal(); O.FlipHorizontal(); }
+void Board::FlipVertical  () { P.FlipVertical  (); O.FlipVertical  (); }
 
 //void Board::FlipToMinimum()
 //{
@@ -19,6 +17,8 @@ void Board::FlipVertical  () { P = ::FlipVertical  (P); O = ::FlipVertical  (O);
 //	copy.FlipHorizontal();		if (copy < *this) *this = copy;
 //	copy.FlipVertical();		if (copy < *this) *this = copy;
 //}
+
+Board::Board(Position pos) : P(pos.GetP()), O(pos.GetO()) {}
 
 uint64_t Board::ParityQuadrants() const
 {
@@ -34,29 +34,77 @@ uint64_t Board::ParityQuadrants() const
 }
 
 
-constexpr Position::Position(uint64_t P, uint64_t O) : Board{ P, O }
+constexpr Position::Position(BitBoard P, BitBoard O) noexcept : Board{ P, O }
 {
 	assert((P & O) == 0);
-	assert(TestBits(~Empties(), Board::middle));
+	assert((~Empties() & BitBoard::Middle()) == BitBoard::Middle());
 }
 
 Position::Position(Board b) : Position(b.P, b.O)
 {}
 
-Position Position::Start() { return { 0x0000'0008'1000'0000ui64, 0x0000'0010'0800'0000ui64 }; }
-Position Position::StartETH() { return { 0x0000'0018'0000'0000ui64, 0x0000'0000'1800'0000ui64 }; }
+Position Position::Start()
+{
+	return
+		"               "
+		"               "
+		"               "
+		"      O X      "
+		"      X O      "
+		"               "
+		"               "
+		"               "_pos;
+}
+
+Position Position::StartETH()
+{
+	return
+		"               "
+		"               "
+		"               "
+		"      X X      "
+		"      O O      "
+		"               "
+		"               "
+		"               "_pos;
+}
 
 Position FlipToUnique(Position pos)
 {
-	auto less = [](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
+	auto less = [](Board l, Board r) {
+		if (l.P == r.P)
+			return static_cast<uint64_t>(l.O) < static_cast<uint64_t>(r.O);
+		else
+			return static_cast<uint64_t>(l.P) < static_cast<uint64_t>(r.P);
+	};
 
-	Position min = pos;
-	pos.FlipVertical();		if (less(pos, min)) min = pos;
-	pos.FlipHorizontal();	if (less(pos, min)) min = pos;
-	pos.FlipVertical();		if (less(pos, min)) min = pos;
-	pos.FlipCodiagonal();	if (less(pos, min)) min = pos;
-	pos.FlipVertical();		if (less(pos, min)) min = pos;
-	pos.FlipHorizontal();	if (less(pos, min)) min = pos;
-	pos.FlipVertical();		if (less(pos, min)) min = pos;
+	Board candidate = pos;
+	Board min = candidate;
+	candidate.FlipVertical();		if (less(candidate, min)) min = candidate;
+	candidate.FlipHorizontal();		if (less(candidate, min)) min = candidate;
+	candidate.FlipVertical();		if (less(candidate, min)) min = candidate;
+	candidate.FlipCodiagonal();		if (less(candidate, min)) min = candidate;
+	candidate.FlipVertical();		if (less(candidate, min)) min = candidate;
+	candidate.FlipHorizontal();		if (less(candidate, min)) min = candidate;
+	candidate.FlipVertical();		if (less(candidate, min)) min = candidate;
 	return min;
+}
+
+Position operator""_pos(const char* c, std::size_t size)
+{
+	assert(size == 120);
+
+	BitBoard P(0);
+	BitBoard O(0);
+	for (int i = 0; i < 8; i++)
+		for (int j = 0; j < 8; j++)
+		{
+			auto field = static_cast<Field>(i * 8 + j);
+			char symbol = c[119 - 2 * j - 15 * i];
+			if (symbol == 'X')
+				P[field] = true;
+			else if (symbol == 'O')
+				O[field] = true;
+		}
+	return { P, O };
 }

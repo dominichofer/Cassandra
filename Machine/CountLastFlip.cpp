@@ -24,25 +24,23 @@ private:
 
 LastFlipCounter::LastFlipCounter()
 {
-	for (uint64_t P = 0; P < 256; P++)
+	for (uint64_t i = 0; i < 256; i++)
 	{
-		CLF_0[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 0)));
-		CLF_1[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 1)));
-		CLF_2[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 2)));
-		CLF_3[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 3)));
-		CLF_4[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 4)));
-		CLF_5[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 5)));
-		CLF_6[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 6)));
-		CLF_7[P] = static_cast<uint8_t>(2 * PopCount(Flips(P, 7)));
+		CLF_0[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 0)));
+		CLF_1[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 1)));
+		CLF_2[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 2)));
+		CLF_3[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 3)));
+		CLF_4[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 4)));
+		CLF_5[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 5)));
+		CLF_6[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 6)));
+		CLF_7[i] = static_cast<uint8_t>(2 * PopCount(Flips(i, 7)));
 	}
 }
 
 uint64_t LastFlipCounter::Flips(const uint64_t i, const uint8_t move)
 {
-	//if (TestBit(i, move))
-	//	return 0;
-	const uint64_t P = i & ~Bit(move);
-	const uint64_t O = ~i & ~Bit(move);
+	const uint64_t P = i & ~(1ui64 << move);
+	const uint64_t O = ~i & ~(1ui64 << move);
 	return ::Flips(P, O, move);
 }
 

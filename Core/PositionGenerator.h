@@ -17,7 +17,7 @@ public:
 	Position Random(uint64_t empty_count);
 
 	//Position RandomlyPlayed(Position start_pos = Position::Start());
-	Position Played(Player&, std::size_t empty_count, Position start = Position::Start());
+	static Position Played(Player&, std::size_t empty_count, Position start = Position::Start());
 
 	//std::unordered_set<Position> RandomlyPlayed(std::size_t count,                       Position start_pos = Position::Start());
 	//std::vector<Position> Played(Player&, std::size_t count, std::size_t empty_count, Position start = Position::Start());
@@ -25,25 +25,19 @@ public:
 	//std::unordered_set<Position> RandomlyPlayed(std::execution::sequenced_policy&&, std::size_t count, uint64_t empty_count, Position start_pos = Position::Start());
 	//std::unordered_set<Position> RandomlyPlayed(std::execution::parallel_policy&& , std::size_t count,                       Position start_pos = Position::Start());
 	//std::unordered_set<Position> RandomlyPlayed(std::execution::parallel_policy&& , std::size_t count, uint64_t empty_count, Position start_pos = Position::Start());
-
-
-	template <class Container>
-	void All(std::insert_iterator<Container> it, std::size_t empty_count, Position start = Position::Start())
+	
+	template <class Inserter>
+	static void All(Inserter it, std::size_t plies, std::size_t plies_per_pass, Position start = Position::Start())
 	{
-		all(it, empty_count, start);
+		all(start, plies, plies_per_pass, it);
 	}
 
-	template <class Container>
-	void All(std::back_insert_iterator<Container> it, std::size_t empty_count, Position start = Position::Start())
+	template <class Inserter>
+	static void All(Inserter it, std::size_t empty_count, Position start = Position::Start())
 	{
-		all(it, empty_count, start);
+		if (start.EmptyCount() >= empty_count)
+			all(start, start.EmptyCount() - empty_count, 0, it);
 	}
-
-	//// symmetrically identical positions are considered distinct.
-	//std::vector<Position> AllUnique(std::size_t empty_count, Position start = Position::Start());
-
-	//// symmetrically identical positions are considered identical.
-	//std::vector<Position> AllSymmetricUnique(std::size_t empty_count, Position start = Position::Start());
 
 private:
 	std::mt19937_64 rnd_engine;
@@ -51,33 +45,33 @@ private:
 	Board RandomMiddle();
 
 	template <class Inserter>
-	void all(Inserter inserter, std::size_t empty_count, Position start)
+	static void add(Position pos, const std::size_t plies, const std::size_t plies_per_pass, Inserter& inserter)
 	{
-		if (empty_count >= start.EmptyCount())
-			return;
-		if (empty_count == start.EmptyCount())
+		if (plies == 0)
 		{
-			inserter = start;
+			inserter = pos;
 			return;
 		}
 
-		struct pos_mov { Position pos; Moves moves; };
-		std::stack<pos_mov> stack;
-
-		stack.push({ start, PossibleMoves(start) });
-		while (!stack.empty())
+		Moves moves = PossibleMoves(pos);
+		if (moves.empty())
 		{
-			auto& top = stack.top();
-			if (top.moves.empty())
-				stack.pop();
-			else
-			{
-				Position new_pos = Play(top.pos, top.moves.Extract());
-				if (new_pos.EmptyCount() == empty_count)
-					inserter = new_pos;
-				else
-					stack.push({ new_pos, PossibleMoves(new_pos) });
-			}
+			pos = PlayPass(pos);
+			if (!PossibleMoves(pos).empty())
+				add(pos, plies - plies_per_pass, plies_per_pass, inserter);
+			return;
 		}
+
+		for (const auto move : moves)
+			add(Play(pos, move), plies - 1, plies_per_pass, inserter);
+	}
+
+	template <class Inserter>
+	static void all(const Position pos, const std::size_t plies, const std::size_t plies_per_pass, Inserter& inserter)
+	{
+		if (plies)
+			add(pos, plies, plies_per_pass, inserter);
+		else
+			inserter = pos;
 	}
 };

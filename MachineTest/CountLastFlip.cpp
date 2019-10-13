@@ -11,8 +11,8 @@ namespace CountLastFlip_test
 		for (unsigned int i = 0; i < 100'000; i++)
 		{
 			const auto r = rnd();
-			const auto P = r & ~Bit(move);
-			const auto O = ~P & ~Bit(move);
+			const auto P = r & ~(1ui64 << move);
+			const auto O = ~P & ~(1ui64 <<move);
 			ASSERT_EQ(2 * PopCount(Flips(P, O, move)), CountLastFlip(P, move));
 		}
 	}

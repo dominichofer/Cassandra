@@ -1,4 +1,5 @@
 #include "PositionGenerator.h"
+#include "Machine.h"
 
 // TODO: Remove!
 //#include <algorithm>
@@ -45,9 +46,9 @@ Position PositionGenerator::Random()
 	// 25% chance to belong to player
 	// 25% chance to belong to opponent
 
-	auto rnd = [this]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFui64)(rnd_engine); };
-	uint64_t p = rnd();
-	uint64_t o = rnd();
+	auto rnd = [this]() { return BitBoard(std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFui64)(rnd_engine)); };
+	BitBoard p = rnd() & ~BitBoard::Middle();
+	BitBoard o = rnd() & ~BitBoard::Middle();
 	Board middle = RandomMiddle();
 	return { (p & ~o) | middle.P, (o & ~p) | middle.O };
 }
@@ -60,7 +61,7 @@ Position PositionGenerator::Random(uint64_t empty_count)
 	while (board.EmptyCount() > empty_count)
 	{
 		auto rnd = std::uniform_int_distribution<std::size_t>(0, board.EmptyCount())(rnd_engine);
-		auto bit = PDep(Bit(rnd), board.Empties());
+		auto bit = BitBoard(PDep(1ui64 << rnd, board.Empties()));
 
 		if (dichotron())
 			board.P |= bit;
@@ -70,7 +71,7 @@ Position PositionGenerator::Random(uint64_t empty_count)
 	return board;
 }
 
-Position PositionGenerator::Played(Player& player, std::size_t empty_count, Position start)
+Position PositionGenerator::Played(Player& player, std::size_t empty_count, const Position start)
 {
 	Position pos = start;
 	while (pos.EmptyCount() > empty_count)
@@ -113,7 +114,7 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 //
 //	if (moves.empty())
 //	{
-//		pos = pos.PlayPass();
+//		pos = PlayPass(pos);
 //		if (pos.HasMoves())
 //			GenAll(pos, pos_set, depth);
 //		return;
@@ -122,7 +123,7 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 //	while (!moves.empty())
 //	{
 //		const auto move = moves.ExtractMove();
-//		GenAll(pos.Play(move), pos_set, depth - 1);
+//		GenAll(Play(pos, move), pos_set, depth - 1);
 //	}
 //}
 //
@@ -130,7 +131,7 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 //void GenerateAllSymmetricUnique(Position pos, std::unordered_set<Position>& pos_set, const uint8_t depth)
 //{
 //	if (depth == 0) {
-//		pos.FlipToMin();
+//		pos.FlipsToMin();
 //		pos_set.insert(pos);
 //		return;
 //	}
@@ -139,7 +140,7 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 //
 //	if (moves.empty())
 //	{
-//		pos = pos.PlayPass();
+//		pos = PlayPass(pos);
 //		if (pos.HasMoves())
 //			GenAllSym(pos, pos_set, depth);
 //		return;
@@ -149,7 +150,7 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 //	while (!moves.empty())
 //	{
 //		const auto move = moves.ExtractMove();
-//		GenAllSym(pos.Play(move), pos_set, depth - 1);
+//		GenAllSym(Play(pos, move), pos_set, depth - 1);
 //	}
 //}
 
@@ -176,14 +177,14 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 //		Moves moves = pos.PossibleMoves();
 //		if (moves.empty())
 //		{
-//			pos = pos.PlayPass();
+//			pos = PlayPass(pos);
 //			moves = pos.PossibleMoves();
 //			if (moves.empty())
 //				return GenerateRandomPosition(EmptiesCount); // Start again.
 //		}
 //		for (int i = rnd() % moves.size(); i > 0; i--)
 //			moves.ExtractMove();
-//		pos = pos.Play(moves.ExtractMove());
+//		pos = Play(pos, moves.ExtractMove());
 //	}
 //
 //	return pos;
@@ -253,6 +254,6 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, Posi
 
 Board PositionGenerator::RandomMiddle()
 {
-	uint64_t rnd = std::uniform_int_distribution<uint64_t>(0ui64, ~0ui64)(rnd_engine);
-	return { Board::middle & rnd, Board::middle & ~rnd };
+	auto rnd = BitBoard(std::uniform_int_distribution<uint64_t>(0ui64, ~0ui64)(rnd_engine));
+	return { BitBoard::Middle() & rnd, BitBoard::Middle() & ~rnd };
 }

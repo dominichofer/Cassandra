@@ -4,58 +4,11 @@
 #include "Machine/CountLastFlip.h"
 #include "Machine/Flips.h"
 #include "Machine/PossibleMoves.h"
+#include "Machine/Stability.h"
 
 #include <random>
 
 using namespace detail;
-
-void FlipCodiagonal(benchmark::State& state)
-{
-	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
-	const uint64_t b = dist(rng);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipCodiagonal(b));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(FlipCodiagonal);
-
-void FlipDiagonal(benchmark::State& state)
-{
-	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
-	const uint64_t b = dist(rng);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipDiagonal(b));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(FlipDiagonal);
-
-void FlipHorizontal(benchmark::State& state)
-{
-	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
-	const uint64_t b = dist(rng);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipHorizontal(b));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(FlipHorizontal);
-
-void FlipVertical(benchmark::State& state)
-{
-	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
-	const uint64_t b = dist(rng);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipVertical(b));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(FlipVertical);
 
 void BitScanLSB(benchmark::State& state)
 {
@@ -295,5 +248,39 @@ void CountLastFlip(benchmark::State& state)
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(CountLastFlip);
+
+void StableEdges(benchmark::State& state)
+{
+	std::mt19937_64 rng;
+	std::uniform_int_distribution<uint64_t> dist(0, 0xFFFFFFFFFFFFFFFFui64);
+	uint64_t P = dist(rng);
+	uint64_t O = dist(rng);
+
+	for (auto _ : state)
+	{
+		P = P * 16807 + 1;
+		O = O * 48271 + 3;
+		benchmark::DoNotOptimize(StableEdges(Position(BitBoard(P), BitBoard(O))));
+	}
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(StableEdges);
+
+void StableStones(benchmark::State& state)
+{
+	std::mt19937_64 rng;
+	std::uniform_int_distribution<uint64_t> dist(0, 0xFFFFFFFFFFFFFFFFui64);
+	uint64_t P = dist(rng);
+	uint64_t O = dist(rng);
+
+	for (auto _ : state)
+	{
+		P = P * 16807 + 1;
+		O = O * 48271 + 3;
+		benchmark::DoNotOptimize(StableStones(Position(BitBoard(P), BitBoard(O))));
+	}
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(StableStones);
 
 BENCHMARK_MAIN();

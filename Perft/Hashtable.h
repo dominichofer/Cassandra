@@ -6,7 +6,7 @@
 
 struct PositionDepthPair
 {
-	Position position{ 0, 0 };
+	Position position{ BitBoard{ 0 }, BitBoard{ 0 } }; // TODO: This is an illegal state of Position!
 	int depth;
 };
 
@@ -61,7 +61,7 @@ struct BigNodeHashTable : public HashTable<BigNode::key_type, BigNode::value_typ
 {
 	BigNodeHashTable(uint64_t buckets)
 		: HashTable(buckets,
-			[](const key_type& key) {
+			[](const HashTable::key_type& key) {
 				uint64_t P = key.position.GetP();
 				uint64_t O = key.position.GetO();
 				P ^= P >> 36;

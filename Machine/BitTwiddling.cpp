@@ -2,88 +2,91 @@
 #include "Machine/BitTwiddling.h"
 #include "MacrosHell.h"
 
-uint64_t FlipCodiagonal(uint64_t b) noexcept
+[[nodiscard]]
+unsigned int BitScanLSB(const uint64_t mask) noexcept
 {
-	// 9 x XOR, 6 x SHIFT, 3 x AND
-	// 18 OPs
+	return CountTrailingZeros(mask);
+	// BitScanLSB(0) may be undefined.
 
-	// # # # # # # # /
-	// # # # # # # / #
-	// # # # # # / # #
-	// # # # # / # # #
-	// # # # / # # # #
-	// # # / # # # # #
-	// # / # # # # # #
-	// / # # # # # # #<-LSB
-	uint64_t
-	t  =  b ^ (b << 36);
-	b ^= (t ^ (b >> 36)) & 0xF0F0F0F00F0F0F0Fui64;
-	t  = (b ^ (b << 18)) & 0xCCCC0000CCCC0000ui64;
-	b ^=  t ^ (t >> 18);
-	t  = (b ^ (b <<  9)) & 0xAA00AA00AA00AA00ui64;
-	b ^=  t ^ (t >>  9);
-	return b;
+	#if defined(_MSC_VER)
+		unsigned long index = 0;
+		_BitScanForward64(&index, mask);
+		return index;
+	#elif defined(__GNUC__)
+		return __builtin_ctzll(mask); // __builtin_ctzll(0) is undefined
+	#endif
 }
 
-uint64_t FlipDiagonal(uint64_t b) noexcept
+[[nodiscard]]
+uint64_t GetLSB(const uint64_t b) noexcept
 {
-	// 9 x XOR, 6 x SHIFT, 3 x AND
-	// 18 OPs
-
-	// \ # # # # # # #
-	// # \ # # # # # #
-	// # # \ # # # # #
-	// # # # \ # # # #
-	// # # # # \ # # #
-	// # # # # # \ # #
-	// # # # # # # \ #
-	// # # # # # # # \<-LSB
-	uint64_t 
-	t  = (b ^ (b >>  7)) & 0x00AA00AA00AA00AAui64;
-	b ^=  t ^ (t <<  7);
-	t  = (b ^ (b >> 14)) & 0x0000CCCC0000CCCCui64;
-	b ^=  t ^ (t << 14);
-	t  = (b ^ (b >> 28)) & 0x00000000F0F0F0F0ui64;
-	b ^=  t ^ (t << 28);
-	return b;
+	#ifdef HAS_BLSI
+		return _blsi_u64(b);
+	#else
+	#pragma warning(suppress : 4146)
+		return b & -b;
+	#endif
 }
 
-uint64_t FlipHorizontal(uint64_t b) noexcept
+void RemoveLSB(uint64_t& b) noexcept
 {
-	// 6 x SHIFT, 6 x AND, 3 x OR
-	// 15 OPs
-
-	// # # # #|# # # #
-	// # # # #|# # # #
-	// # # # #|# # # #
-	// # # # #|# # # #
-	// # # # #|# # # #
-	// # # # #|# # # #
-	// # # # #|# # # #
-	// # # # #|# # # #<-LSB
-	b = ((b >> 1) & 0x5555555555555555ui64) | ((b << 1) & 0xAAAAAAAAAAAAAAAAui64);
-	b = ((b >> 2) & 0x3333333333333333ui64) | ((b << 2) & 0xCCCCCCCCCCCCCCCCui64);
-	b = ((b >> 4) & 0x0F0F0F0F0F0F0F0Fui64) | ((b << 4) & 0xF0F0F0F0F0F0F0F0ui64);
-	return b;
+	#ifdef HAS_BLSR
+		detail::RemoveLSB_intrinsic(b);
+	#else
+		detail::RemoveLSB_generic(b);
+	#endif
 }
 
-uint64_t FlipVertical(uint64_t b) noexcept
+[[nodiscard]]
+std::size_t PopCount(uint64_t b) noexcept
 {
-	// 1 x BSwap
-	// 1 OPs
+	#ifdef HAS_POPCNT
+		return detail::PopCount_intrinsic(b);
+	#else
+		return detail::PopCount_generic(b);
+	#endif
+}
 
-	// # # # # # # # #
-	// # # # # # # # #
-	// # # # # # # # #
-	// # # # # # # # #
-	// ---------------
-	// # # # # # # # #
-	// # # # # # # # #
-	// # # # # # # # #
-	// # # # # # # # #<-LSB
-	return BSwap(b);
-	//b = ((b >>  8) & 0x00FF00FF00FF00FFui64) | ((b <<  8) & 0xFF00FF00FF00FF00ui64);
-	//b = ((b >> 16) & 0x0000FFFF0000FFFFui64) | ((b << 16) & 0xFFFF0000FFFF0000ui64);
-	//b = ((b >> 32) & 0x00000000FFFFFFFFui64) | ((b << 32) & 0xFFFFFFFF00000000ui64);
-	//return b;
+[[nodiscard]]
+uint64_t PDep(uint64_t src, uint64_t mask) noexcept
+{
+	#ifdef HAS_PDEP
+		return _pdep_u64(src, mask);
+	#else
+		uint64_t res = 0;
+		for (uint64_t bb = 1; mask != 0u; bb += bb)
+		{
+			if ((src & bb) != 0u)
+				res |= GetLSB(mask);
+			RemoveLSB(mask);
+		}
+		return res;
+	#endif
+}
+
+[[nodiscard]]
+uint64_t PExt(uint64_t src, uint64_t mask) noexcept
+{
+	#ifdef HAS_PEXT
+		return _pext_u64(src, mask);
+	#else
+		uint64_t res = 0;
+		for (uint64_t bb = 1; mask != 0u; bb += bb)
+		{
+			if ((src & GetLSB(mask)) != 0u)
+				res |= bb;
+			RemoveLSB(mask);
+		}
+		return res;
+	#endif
+}
+
+[[nodiscard]]
+uint64_t BSwap(const uint64_t b) noexcept
+{
+	#if defined(_MSC_VER)
+		return _byteswap_uint64(b);
+	#elif defined(__GNUC__)
+		return __builtin_bswap64(b);
+	#endif
 }

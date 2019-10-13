@@ -31,7 +31,7 @@ TEST(PossibleMoves, random_samples)
 			const uint64_t move = BitScanLSB(potential_moves);
 			RemoveLSB(potential_moves);
 			if (Flips(P, O, move))
-				SetBit(possible_moves, move);
+				possible_moves |=  1ui64 << move;
 		}
 
 		ASSERT_EQ(PossibleMoves(P, O), possible_moves);

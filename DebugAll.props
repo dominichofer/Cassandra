@@ -18,7 +18,8 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <AdditionalIncludeDirectories>C:\Users\Dominic\source\repos\Cassandra</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

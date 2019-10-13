@@ -10,10 +10,10 @@ namespace Flips_test
 
 		while ((x >= 0) && (x < 8) && (y >= 0) && (y < 8)) // In between boundaries
 		{
-			const auto field = x + 8 * y;
-			if (TestBit(O, field)) // The field belongs to the opponent
-				SetBit(flips, field); // Add to possible flips
-			else if (TestBit(P, field)) // The field belongs to the player
+			const uint64_t bit = 1ui64 << (x + 8 * y);
+			if (O & bit) // The field belongs to the opponent
+				flips |= bit; // Add to possible flips
+			else if (P & bit) // The field belongs to the player
 				return flips; // All possible flips become real flips
 			else // The field belongs to no player
 				return 0; // There are no possible flips
@@ -41,12 +41,12 @@ namespace Flips_test
 		std::mt19937_64 rnd_engine(seed);
 		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFui64)(rnd_engine); };
 
-		for (unsigned int i = 0; i < 100'000; i++)
+		for (unsigned int i = 0; i < 10'000; i++)
 		{
 			const uint64_t p = rnd();
 			const uint64_t o = rnd();
-			const uint64_t P = (p & ~o) & ~Bit(move);
-			const uint64_t O = (o & ~p) & ~Bit(move);
+			const uint64_t P = (p & ~o) & ~(1ui64 << move);
+			const uint64_t O = (o & ~p) & ~(1ui64 << move);
 
 			ASSERT_EQ(Flips(P, O, move), Flip_loop(P, O, move));
 		}
