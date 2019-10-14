@@ -4,10 +4,14 @@
     <ClCompile Include="NegaMaxSearch.cpp" />
     <ClCompile Include="AlphaBetaFailHardSearch.cpp" />
     <ClCompile Include="AlphaBetaFailSoftSearch.cpp" />
+    <ClCompile Include="PVSearch.cpp" />
+    <ClCompile Include="HashTablePVS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NegaMaxSearch.h" />
     <ClInclude Include="AlphaBetaFailHardSearch.h" />
     <ClInclude Include="AlphaBetaFailSoftSearch.h" />
+    <ClInclude Include="PVSearch.h" />
+    <ClInclude Include="HashTablePVS.h" />
   </ItemGroup>
 </Project>

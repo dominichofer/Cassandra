@@ -70,12 +70,16 @@
   <ItemGroup>
     <ClCompile Include="AlphaBetaFailHardSearch.cpp" />
     <ClCompile Include="AlphaBetaFailSoftSearch.cpp" />
+    <ClCompile Include="HashTablePVS.cpp" />
     <ClCompile Include="NegaMaxSearch.cpp" />
+    <ClCompile Include="PVSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlphaBetaFailHardSearch.h" />
     <ClInclude Include="AlphaBetaFailSoftSearch.h" />
+    <ClInclude Include="HashTablePVS.h" />
     <ClInclude Include="NegaMaxSearch.h" />
+    <ClInclude Include="PVSearch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
