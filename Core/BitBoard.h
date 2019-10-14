@@ -64,6 +64,8 @@ public:
 	constexpr reference operator[](Field f) noexcept { return { *this, f }; }
 	constexpr reference operator[](std::size_t i) noexcept { assert(i < 64); return { *this, static_cast<Field>(i) }; }
 
+	[[nodiscard]] constexpr bool isSubsetOf(BitBoard o) const noexcept { return (o.b & b) == b; }
+
 	[[nodiscard]] constexpr bool empty() const noexcept { return !b; }
 
 	[[nodiscard]] std::size_t PopCount() const noexcept;

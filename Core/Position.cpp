@@ -36,8 +36,8 @@ uint64_t Board::ParityQuadrants() const
 
 constexpr Position::Position(BitBoard P, BitBoard O) noexcept : Board{ P, O }
 {
-	assert((P & O) == 0);
-	assert((~Empties() & BitBoard::Middle()) == BitBoard::Middle());
+	assert((P & O) == 0); // Only one stone per field.
+	assert(BitBoard::Middle().isSubsetOf(~Empties())); // middle fields have to be taken.
 }
 
 Position::Position(Board b) : Position(b.P, b.O)
