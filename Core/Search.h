@@ -71,6 +71,9 @@ namespace Search
 
 		explicit Selectivity(float quantile);
 		static const Selectivity None;
+
+		[[nodiscard]] bool operator==(const Selectivity& o) const noexcept { return quantile == o.quantile; }
+		[[nodiscard]] bool operator!=(const Selectivity& o) const noexcept { return quantile != o.quantile; }
 	};
 
 	struct Intensity
