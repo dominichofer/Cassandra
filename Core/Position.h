@@ -10,6 +10,7 @@ struct Board
 	BitBoard P, O;
 
 	Board(Position);
+	constexpr Board() noexcept : P(0), O(0) {}
 	constexpr Board(BitBoard P, BitBoard O) noexcept : P(P), O(O) {}
 
 	bool operator==(const Board& o) const { return (P == o.P) && (O == o.O); }
@@ -34,6 +35,7 @@ inline Board FlipVertical  (Board b) { b.FlipVertical  (); return b; }
 class Position : private Board
 {
 public:
+	constexpr Position() noexcept = default;
 	constexpr Position(BitBoard P, BitBoard O) noexcept;
 	Position(Board);
 
