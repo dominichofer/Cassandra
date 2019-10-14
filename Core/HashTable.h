@@ -32,7 +32,7 @@ public:
 	using value_type = Value;
 	using node_type = Node;
 
-	HashTable(uint64_t bucket_count, std::function<std::size_t(const Key&)> hash = [](const Key& key) { return std::hash<Key>()(key); })
+	HashTable(uint64_t bucket_count, std::function<std::size_t(const Key&)> hash)
 		: hash(std::move(hash))
 		, buckets(bucket_count)
 	{}
