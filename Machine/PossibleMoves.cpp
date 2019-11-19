@@ -38,14 +38,24 @@ uint64_t detail::PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
 }
 #endif
 
+uint64_t _mm256_hor_uint64(__m256i x)
+{
+	// 1 x PERMUTE, 1 x SHUFFLE, 2 x OR
+	// = 4 OPs
+	__m256i x0 = _mm256_permute2x128_si256(x, x, 1);
+	__m256i x1 = _mm256_or_si256(x, x0);
+	__m256i x2 = _mm256_shuffle_epi32(x1, 0b01001110);
+	__m256i x3 = _mm256_or_si256(x1, x2);
+	return _mm_cvtsi128_si64x(_mm256_castsi256_si128(x3));
+}
+
 #if defined(HAS_AVX2)
 uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 {
-	// 10 x SHIFT, 11 x AND, 10 x OR, 1 x NOT
-	// = 32 OPs
+	// 1 x PERMUTE, 1 x SHUFFLE, 10 x OR, 12 x SHIFT, 11 x AND, 1 x NOT
+	// = 36 OPs
 
 	// 1 x AND
-	//const __m256i PP = _mm256_set1_epi64x(P);
 	const __m256i maskO = _mm256_set1_epi64x(O) & _mm256_set_epi64x(0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64);
 	const __m256i shift = _mm256_set_epi64x(1, 8, 7, 9);
 	const __m256i shift2 = shift + shift;
@@ -73,13 +83,9 @@ uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 	// 2 x SHIFT
 	flip1 = _mm256_sllv_epi64(flip1, shift);
 	flip2 = _mm256_srlv_epi64(flip2, shift);
-
-	// 2 x OR
-	flip1 |= flip2;
-	__m128i flip = _mm256_castsi256_si128(flip1) | _mm256_extracti128_si256(flip1, 1);
-
-	// 1 x NOT, 2 x OR, 1 x AND
-	return ~(P | O) & (_mm_extract_epi64(flip, 0) | _mm_extract_epi64(flip, 1));
+	
+	// 1 x NOT, 2 x OR, 1 x AND, 1 x function call
+	return ~(P | O) & _mm256_hor_uint64(flip1 | flip2);
 }
 #endif
 
