@@ -3,6 +3,8 @@
 
 uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 {
+	assert((P & O) == 0);
+
 	#if defined(HAS_AVX512)
 		return detail::PossibleMoves_AVX512(P, O);
 	#elif defined(HAS_AVX2)
@@ -37,17 +39,6 @@ uint64_t detail::PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
 	return ~(P | O) & _mm512_reduce_or_epi64(flip);
 }
 #endif
-
-uint64_t _mm256_hor_uint64(__m256i x)
-{
-	// 1 x PERMUTE, 1 x SHUFFLE, 2 x OR
-	// = 4 OPs
-	__m256i x0 = _mm256_permute2x128_si256(x, x, 1);
-	__m256i x1 = _mm256_or_si256(x, x0);
-	__m256i x2 = _mm256_shuffle_epi32(x1, 0b01001110);
-	__m256i x3 = _mm256_or_si256(x1, x2);
-	return _mm_cvtsi128_si64x(_mm256_castsi256_si128(x3));
-}
 
 #if defined(HAS_AVX2)
 uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
@@ -85,7 +76,7 @@ uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 	flip2 = _mm256_srlv_epi64(flip2, shift);
 	
 	// 1 x NOT, 2 x OR, 1 x AND, 1 x function call
-	return ~(P | O) & _mm256_hor_uint64(flip1 | flip2);
+	return ~(P | O) & _mm256_reduce_or_epi64(flip1 | flip2);
 }
 #endif
 

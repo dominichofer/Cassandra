@@ -215,6 +215,8 @@ uint64_t BSwap(const uint64_t b) noexcept;
         inline __m256i& operator^=(__m256i& a, const __m256i& b) noexcept { return a = a ^ b; }
         inline __m256i& operator<<=(__m256i& a, const int b) noexcept { return a = a << b; }
         inline __m256i& operator>>=(__m256i& a, const int b) noexcept { return a = a >> b; }
+
+		uint64_t _mm256_reduce_or_epi64(__m256i) noexcept;
     #endif
 	#ifdef HAS_AVX512
 		[[nodiscard]] inline __m512i operator~(const __m512i& a) noexcept { return _mm512_xor_si512(a, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFui64)); }
