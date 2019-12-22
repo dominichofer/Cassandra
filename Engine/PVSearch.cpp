@@ -69,7 +69,7 @@ void PVSearch::StatusQuo::ImproveWith(Result novum)
 		best_move = novum.best_move;
 	}
 	worst_depth = std::max(worst_depth, novum.depth + 1);
-	worst_selectivity = std::max(worst_selectivity, novum.selectivity);
+	worst_selectivity = std::min(worst_selectivity, novum.selectivity);
 	node_count += novum.node_count;
 }
 

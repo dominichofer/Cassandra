@@ -37,9 +37,9 @@ StabilityAnalyzer::StabilityAnalyzer()
 		for (uint64_t p = 0; p < 256; p++)
 			for (uint64_t o = 0; o < 256; o++)
 			{
-				if ((p & o) != 0u)
+				if (p & o)
 					continue;
-				if (PopCount(p | o) != empty_count)
+				if (8 - PopCount(p | o) != empty_count)
 					continue;
 
 				const Pos A{ p, o };

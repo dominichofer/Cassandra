@@ -113,7 +113,7 @@ constexpr BitBoard operator""_BitBoard(const char* c, std::size_t size)
 		for (int j = 0; j < 8; j++)
 		{
 			char symbol = c[119 - 2 * j - 15 * i];
-			bb[static_cast<Field>(i * 8 + j)] = (symbol != ' ');
+			bb[static_cast<Field>(i * 8 + j)] = (symbol != '-');
 		}
 	return bb;
 }
