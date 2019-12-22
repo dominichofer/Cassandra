@@ -33,8 +33,17 @@ public:
 
 struct Node
 {
-	Position key{};
-	PVS_Info value{ Search::Window{}, 0, Search::Selectivity::None, Field::invalid, 0 };
+	Position key =
+		"X X X X X X X X"
+		"X X X X X X X X"
+		"X X X X X X X X"
+		"X X X X X X X X"
+		"X X X X X X X X"
+		"X X X X X X X X"
+		"X X X X X X X X"
+		"X X X X X X X X"_pos;
+
+	PVS_Info value{ InclusiveInterval{ +64, +64 }, 0, Search::Selectivity::None, Field::invalid, 0 };
 };
 
 class OneNode
@@ -56,9 +65,9 @@ public:
 
 // TODO: Implement TwoNode. It may help.
 
-struct CHashTablePVS : public HashTable<Position, PVS_Info, OneNode>
+struct HashTablePVS : public HashTable<Position, PVS_Info, OneNode>
 {
-	CHashTablePVS(uint64_t buckets) 
+	HashTablePVS(uint64_t buckets) 
 		: HashTable(buckets, 
 			[](const Position& key)
 			{ 

@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
 	for (uint8_t d = 1; d <= depth; d++)
 	{
 		const auto start = std::chrono::high_resolution_clock::now();
-		std::size_t result = HashTableMap::perft(d, RAM);
+		std::size_t result = Unrolled2::perft(d);
 		const auto end = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		const auto milliseconds = duration.count();

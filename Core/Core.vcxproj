@@ -58,7 +58,6 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -87,6 +86,7 @@
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="Interval.h" />
     <ClInclude Include="Search.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

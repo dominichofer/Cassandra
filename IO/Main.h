@@ -10,7 +10,7 @@ std::wstring to_wstring(Field);
 Field ParseField(const std::wstring&);
 
 std::wstring SingleLine(Position);
-Board ParseBoard_SingleLine(const std::wstring&);
+Position ParsePosition_SingleLine(const std::wstring&);
 
 std::wstring MultiLine(Position);
 
@@ -26,7 +26,7 @@ std::wstring time_format(const std::chrono::milliseconds duration);
 
 // Format: "ddd:hh:mm:ss.ccc"
 template <class U, class V>
-std::string time_format(std::chrono::duration<U, V> duration)
+std::wstring time_format(std::chrono::duration<U, V> duration)
 {
 	return time_format(std::chrono::duration_cast<std::chrono::milliseconds>(duration));
 }

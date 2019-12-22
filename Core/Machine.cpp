@@ -7,24 +7,25 @@
 [[nodiscard]] int CountLastFlip(uint64_t P, uint8_t move);
 [[nodiscard]] uint64_t Flips(uint64_t P, uint64_t O, uint8_t move);
 [[nodiscard]] uint64_t PossibleMoves(uint64_t P, uint64_t O);
+[[nodiscard]] uint64_t StableStones(uint64_t P, uint64_t O);
 
 
-int CountLastFlip(Position pos, Field move)
+int CountLastFlip(const Position& pos, Field move)
 {
 	return CountLastFlip(pos.GetP(), static_cast<uint8_t>(move));
 }
 
-BitBoard Flips(Board board, Field move)
+BitBoard Flips(const Position& pos, Field move)
 {
-	return BitBoard{ Flips(board.P, board.O, static_cast<uint8_t>(move)) };
+	return BitBoard{ Flips(pos.GetP(), pos.GetO(), static_cast<uint8_t>(move)) };
 }
 
-Board Play(Board board, Field move, BitBoard flips)
+Position Play(const Position& pos, Field move, BitBoard flips)
 {
-	return { board.O ^ flips, board.P ^ flips ^ BitBoard{ move } };
+	return { pos.GetO() ^ flips, pos.GetP() ^ flips ^ BitBoard{ move } };
 }
 
-Position Play(Position pos, Field move)
+Position Play(const Position& pos, Field move)
 {
 	assert(pos.Empties()[move]); // move field is free.
 
@@ -36,12 +37,17 @@ Position Play(Position pos, Field move)
 	return Play(pos, move, flips);
 }
 
-Position PlayPass(Position pos)
+Position PlayPass(const Position& pos)
 {
 	return { pos.GetO(), pos.GetP() };
 }
 
-Moves PossibleMoves(Position pos)
+Moves PossibleMoves(const Position& board)
 {
-	return Moves{ BitBoard{ PossibleMoves(pos.GetP(), pos.GetO()) } };
+	return Moves{ BitBoard{ PossibleMoves(board.GetP(), board.GetO()) } };
+}
+
+BitBoard StableStones(const Position& pos)
+{
+	return StableStones(pos.GetP(), pos.GetO());
 }

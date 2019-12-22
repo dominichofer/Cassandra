@@ -17,6 +17,16 @@ Puzzle::Puzzle(::Position position, Search::Intensity intensity)
 	assert(intensity.depth <= position.EmptyCount());
 }
 
+Puzzle Puzzle::Exact(::Position pos)
+{
+	return Puzzle(pos, Search::Intensity::Exact(pos));
+}
+
+void Puzzle::Reset()
+{
+	result = {};
+}
+
 void Puzzle::Solve(Search::Algorithm& algorithm)
 {
 	result = algorithm.Eval(position, intensity);

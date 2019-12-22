@@ -21,7 +21,7 @@ uint64_t Pow_int(uint64_t base, uint64_t exponent)
 
 class SumPow3Cache
 {
-	std::array<int, (1ui64 << 15)> m_cache{};
+	std::array<int, (1ULL << 15)> m_cache{};
 
 	int sum_pow3(uint64_t exp)
 	{
@@ -44,40 +44,20 @@ public:
 
 static SumPow3Cache sum_pow_3_cache;
 
-int FullIndex(const Board board, const BitBoard pattern)
-{
-	return sum_pow_3_cache.SumPow3(PExt(board.P, pattern))
-		+ sum_pow_3_cache.SumPow3(PExt(board.O, pattern)) * 2;
-}
-
 int FullIndex(const Position pos, const BitBoard pattern)
 {
 	return sum_pow_3_cache.SumPow3(PExt(pos.GetP(), pattern))
 		+ sum_pow_3_cache.SumPow3(PExt(pos.GetO(), pattern)) * 2;
 }
 
-int ReducedIndex(const Board board, const BitBoard pattern_part)
+int ReducedIndex(const Position pos, const BitBoard pattern)
 {
-	const BitBoard inside_mid = pattern_part & BitBoard::Middle();
-	const BitBoard outside_mid = pattern_part & ~BitBoard::Middle();
-	const int upper_part = FullIndex(board, outside_mid) << PopCount(inside_mid);
-	const int lower_part = PExt(board.O, inside_mid);
-	return upper_part + lower_part;
+	return FullIndex(pos, pattern);
 }
 
-int ReducedIndex(const Position pos, const BitBoard pattern_part)
+void For_each_config(const BitBoard pattern, const std::function<void(Position)>& fkt)
 {
-	const BitBoard inside_mid = pattern_part & BitBoard::Middle();
-	const BitBoard outside_mid = pattern_part & ~BitBoard::Middle();
-	const int upper_part = FullIndex(pos, outside_mid) << PopCount(inside_mid);
-	const int lower_part = PExt(pos.GetO(), inside_mid);
-	return upper_part + lower_part;
-}
-
-void For_each_config(const BitBoard pattern, const std::function<void(Board)>& fkt)
-{
-	const std::size_t size = 1ui64 << PopCount(pattern);
-	const BitBoard extracted_center{ PExt(BitBoard::Middle(), pattern) };
+	const std::size_t size = 1ULL << PopCount(pattern);
 	for (uint64_t i = 0; i < size; i++)
 	{
 		const BitBoard P{ PDep(i, pattern) };
@@ -85,12 +65,10 @@ void For_each_config(const BitBoard pattern, const std::function<void(Board)>& f
 		{
 			if ((i & j) != 0u)
 				continue; // fields can only be taken by one player
-			if ((i | j) & extracted_center != extracted_center)
-				continue; // center fields can't be empty
 
 			const BitBoard O{ PDep(j, pattern) };
 
-			fkt(Board(P, O));
+			fkt(Position::TryCreate(P, O));
 		}
 	}
 }

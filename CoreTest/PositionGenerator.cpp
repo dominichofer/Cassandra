@@ -29,7 +29,7 @@ class MockPlayer : public Player
 	Position Play(Position in) noexcept(false) final
 	{
 		auto P = in.GetP();
-		P[BitScanLSB(in.Empties())] = true;
+		P[in.Empties().FirstField()] = true;
 		return { in.GetO(), P };
 	}
 };

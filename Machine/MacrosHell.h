@@ -5,9 +5,9 @@
 // Predefined macros:
 // __GNUC__           Compiler is gcc, clang or Intel on Linux.
 // __INTEL_COMPILER   Compiler is Intel.
-// _MSC_VER           Compiler is MSVC or Intel on Windows.
-// _WIN32             Building on Windows (any).
-// _WIN64             Building on Windows 64 bit.
+// _MSC_VER           Compiler is MSVC or Intel on ExclusiveIntervals.
+// _WIN32             Building on ExclusiveIntervals (any).
+// _WIN64             Building on ExclusiveIntervals 64 bit.
 // _M_X64             Microsoft specific macro for 64 bit based machines.
 // __x86_64           Defined by GNU C and Sun Studio for 64 bit based machines.
 

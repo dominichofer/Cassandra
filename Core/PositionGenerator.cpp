@@ -37,38 +37,33 @@
 
 Position PositionGenerator::Random()
 {
-	// middle fields
-	// 50% chance to belong to player
-	// 50% chance to belong to opponent
-
-	// non-middle fields
-	// 50% chance to be empty
 	// 25% chance to belong to player
 	// 25% chance to belong to opponent
+	// 50% chance to be empty
 
-	auto rnd = [this]() { return BitBoard(std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFui64)(rnd_engine)); };
-	BitBoard p = rnd() & ~BitBoard::Middle();
-	BitBoard o = rnd() & ~BitBoard::Middle();
-	Board middle = RandomMiddle();
-	return { (p & ~o) | middle.P, (o & ~p) | middle.O };
+	auto rnd = [this]() { return BitBoard(std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine)); };
+	BitBoard P = rnd();
+	BitBoard O = rnd();
+	return { P & ~O, O & ~P };
 }
 
-Position PositionGenerator::Random(uint64_t empty_count)
+Position PositionGenerator::Random(const std::size_t target_empty_count)
 {
 	auto dichotron = [this]() { return std::uniform_int_distribution<int>(0, 1)(rnd_engine) == 0; };
 
-	Board board = RandomMiddle();
-	while (board.EmptyCount() > empty_count)
+	BitBoard P = 0;
+	BitBoard O = 0;
+	for (std::size_t empty_count = Position{}.EmptyCount(); empty_count > target_empty_count; empty_count--)
 	{
-		auto rnd = std::uniform_int_distribution<std::size_t>(0, board.EmptyCount())(rnd_engine);
-		auto bit = BitBoard(PDep(1ui64 << rnd, board.Empties()));
+		auto rnd = std::uniform_int_distribution<std::size_t>(0, empty_count - 1)(rnd_engine);
+		auto bit = BitBoard(PDep(1ULL << rnd, Position(P, O).Empties()));
 
 		if (dichotron())
-			board.P |= bit;
+			P |= bit;
 		else
-			board.O |= bit;
+			O |= bit;
 	}
-	return board;
+	return { P, O };
 }
 
 Position PositionGenerator::Played(Player& player, std::size_t empty_count, const Position start)
@@ -251,9 +246,3 @@ Position PositionGenerator::Played(Player& player, std::size_t empty_count, cons
 //{
 //	return std::unordered_set<Position>();
 //}
-
-Board PositionGenerator::RandomMiddle()
-{
-	auto rnd = BitBoard(std::uniform_int_distribution<uint64_t>(0ui64, ~0ui64)(rnd_engine));
-	return { BitBoard::Middle() & rnd, BitBoard::Middle() & ~rnd };
-}

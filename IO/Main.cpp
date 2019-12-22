@@ -32,18 +32,15 @@ std::wstring SingleLine(Position pos)
 	std::wstring puzzle = L"---------------------------------------------------------------- X";
 	for (int i = 0; i < 64; i++)
 	{
-		const bool P_bit = pos.GetP()[63ui64 - i];
-		const bool O_bit = pos.GetO()[63ui64 - i];
-
-		if (P_bit)
+		if (pos.GetP()[63ULL - i])
 			puzzle[i] = L'X';
-		else if (O_bit)
+		else if (pos.GetO()[63ULL - i])
 			puzzle[i] = L'O';
 	}
 	return puzzle;
 }
 
-Board ParseBoard_SingleLine(const std::wstring& str)
+Position ParsePosition_SingleLine(const std::wstring& str)
 {
 	BitBoard P{ 0 }, O{ 0 };
 
@@ -62,7 +59,7 @@ Board ParseBoard_SingleLine(const std::wstring& str)
 
 std::wstring MultiLine(Position pos)
 {
-	const Moves moves = PossibleMoves(pos);
+	Moves moves = PossibleMoves(pos);
 	std::wstring puzzle =
 		L"  H G F E D C B A  \n"
 		L"8 - - - - - - - - 8\n"

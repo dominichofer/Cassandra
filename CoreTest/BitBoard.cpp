@@ -4,7 +4,7 @@ namespace Flip
 {
 	BitBoard Bit(const uint64_t i, const uint64_t j)
 	{
-		return BitBoard{ 1ui64 << (i * 8 + j) };
+		return BitBoard{ 1ULL << (i * 8 + j) };
 	}
 
 	TEST(FlipDiagonal, bitwise)

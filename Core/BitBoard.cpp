@@ -6,14 +6,14 @@ std::size_t BitBoard::PopCount() const noexcept
 	return ::PopCount(b);
 }
 
-void BitBoard::RemoveLSB() noexcept
+void BitBoard::RemoveFirstField() noexcept
 {
 	::RemoveLSB(b);
 }
 
-Field BitBoard::BitScanLSB() const noexcept
+Field BitBoard::FirstField() const noexcept
 {
-	return static_cast<Field>(::BitScanLSB(b));
+	return static_cast<Field>(::CountTrailingZeros(b));
 }
 
 void BitBoard::FlipCodiagonal() noexcept
@@ -31,10 +31,10 @@ void BitBoard::FlipCodiagonal() noexcept
 	// / # # # # # # #<-LSB
 	uint64_t
 	t  =  b ^ (b << 36);
-	b ^= (t ^ (b >> 36)) & 0xF0F0F0F00F0F0F0Fui64;
-	t  = (b ^ (b << 18)) & 0xCCCC0000CCCC0000ui64;
+	b ^= (t ^ (b >> 36)) & 0xF0F0F0F00F0F0F0FULL;
+	t  = (b ^ (b << 18)) & 0xCCCC0000CCCC0000ULL;
 	b ^=  t ^ (t >> 18);
-	t  = (b ^ (b <<  9)) & 0xAA00AA00AA00AA00ui64;
+	t  = (b ^ (b <<  9)) & 0xAA00AA00AA00AA00ULL;
 	b ^=  t ^ (t >>  9);
 }
 
@@ -52,11 +52,11 @@ void BitBoard::FlipDiagonal() noexcept
 	// # # # # # # \ #
 	// # # # # # # # \<-LSB
 	uint64_t 
-	t  = (b ^ (b >>  7)) & 0x00AA00AA00AA00AAui64;
+	t  = (b ^ (b >>  7)) & 0x00AA00AA00AA00AAULL;
 	b ^=  t ^ (t <<  7);
-	t  = (b ^ (b >> 14)) & 0x0000CCCC0000CCCCui64;
+	t  = (b ^ (b >> 14)) & 0x0000CCCC0000CCCCULL;
 	b ^=  t ^ (t << 14);
-	t  = (b ^ (b >> 28)) & 0x00000000F0F0F0F0ui64;
+	t  = (b ^ (b >> 28)) & 0x00000000F0F0F0F0ULL;
 	b ^=  t ^ (t << 28);
 }
 
@@ -73,9 +73,9 @@ void BitBoard::FlipHorizontal() noexcept
 	// # # # #|# # # #
 	// # # # #|# # # #
 	// # # # #|# # # #<-LSB
-	b = ((b >> 1) & 0x5555555555555555ui64) | ((b << 1) & 0xAAAAAAAAAAAAAAAAui64);
-	b = ((b >> 2) & 0x3333333333333333ui64) | ((b << 2) & 0xCCCCCCCCCCCCCCCCui64);
-	b = ((b >> 4) & 0x0F0F0F0F0F0F0F0Fui64) | ((b << 4) & 0xF0F0F0F0F0F0F0F0ui64);
+	b = ((b >> 1) & 0x5555555555555555ULL) | ((b << 1) & 0xAAAAAAAAAAAAAAAAULL);
+	b = ((b >> 2) & 0x3333333333333333ULL) | ((b << 2) & 0xCCCCCCCCCCCCCCCCULL);
+	b = ((b >> 4) & 0x0F0F0F0F0F0F0F0FULL) | ((b << 4) & 0xF0F0F0F0F0F0F0F0ULL);
 }
 
 void BitBoard::FlipVertical() noexcept
@@ -93,9 +93,9 @@ void BitBoard::FlipVertical() noexcept
 	// # # # # # # # #
 	// # # # # # # # #<-LSB
 	b = BSwap(b);
-	//b = ((b >>  8) & 0x00FF00FF00FF00FFui64) | ((b <<  8) & 0xFF00FF00FF00FF00ui64);
-	//b = ((b >> 16) & 0x0000FFFF0000FFFFui64) | ((b << 16) & 0xFFFF0000FFFF0000ui64);
-	//b = ((b >> 32) & 0x00000000FFFFFFFFui64) | ((b << 32) & 0xFFFFFFFF00000000ui64);
+	//b = ((b >>  8) & 0x00FF00FF00FF00FFULL) | ((b <<  8) & 0xFF00FF00FF00FF00ULL);
+	//b = ((b >> 16) & 0x0000FFFF0000FFFFULL) | ((b << 16) & 0xFFFF0000FFFF0000ULL);
+	//b = ((b >> 32) & 0x00000000FFFFFFFFULL) | ((b << 32) & 0xFFFFFFFF00000000ULL);
 	//return b;
 }
 

@@ -7,3 +7,4 @@
 #include "Core/Position.h"
 #include "Core/PositionGenerator.h"
 #include "Core/Search.h"
+#include "Core/Interval.h"

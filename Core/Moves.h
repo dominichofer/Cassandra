@@ -8,11 +8,10 @@ public:
 	Moves() noexcept = default;
 	constexpr explicit Moves(BitBoard moves) noexcept : m_moves(moves) {}
 
-	bool operator==(const Moves&) const;
-	bool operator!=(const Moves&) const;
+	[[nodiscard]] auto operator<=>(const Moves&) const noexcept = default;
 	
 	std::size_t size() const;
-	bool empty() const;
+	bool empty() const noexcept;
 
 	bool contains(Field) const;
 	Field front() const;
@@ -27,8 +26,8 @@ public:
 		BitBoard m_moves;
 	public:
 		explicit Iterator(const Moves& moves) : m_moves(moves.m_moves) {}
-		Iterator& operator++() { RemoveLSB(m_moves); return *this; }
-		Field operator*() const { return static_cast<Field>(BitScanLSB(m_moves)); }
+		Iterator& operator++() { m_moves.RemoveFirstField(); return *this; }
+		Field operator*() const { return m_moves.FirstField(); }
 
 		bool operator==(const Iterator& o) { return m_moves == o.m_moves; }
 		bool operator!=(const Iterator& o) { return m_moves != o.m_moves; }
@@ -50,8 +49,8 @@ constexpr Moves operator""_mov(const char* c, std::size_t size)
 		for (int j = 0; j < 8; j++)
 		{
 			char symbol = c[119 - 2 * j - 15 * i];
-			if (symbol != ' ')
-				moves[static_cast<Field>(i * 8 + j)] = true;
+			if (symbol == '#')
+				moves[i * 8 + j] = true;
 		}
 	return Moves(moves);
 }

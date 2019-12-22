@@ -6,13 +6,13 @@ namespace CountLastFlip_test
 	{
 		const auto seed = 13;
 		std::mt19937_64 rnd_engine(seed);
-		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFui64)(rnd_engine); };
+		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
 
 		for (unsigned int i = 0; i < 100'000; i++)
 		{
 			const auto r = rnd();
-			const auto P = r & ~(1ui64 << move);
-			const auto O = ~P & ~(1ui64 <<move);
+			const auto P = r & ~(1ULL << move);
+			const auto O = ~P & ~(1ULL <<move);
 			ASSERT_EQ(2 * PopCount(Flips(P, O, move)), CountLastFlip(P, move));
 		}
 	}

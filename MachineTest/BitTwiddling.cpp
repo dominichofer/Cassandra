@@ -7,7 +7,7 @@ namespace TrailingBits
 		ASSERT_EQ(BitScanLSB(1), 0u);
 		ASSERT_EQ(BitScanLSB(2), 1u);
 		ASSERT_EQ(BitScanLSB(3), 0u);
-		ASSERT_EQ(BitScanLSB(0x8000000000000000ui64), 63u);
+		ASSERT_EQ(BitScanLSB(0x8000000000000000ULL), 63u);
 	}
 
 	TEST(CountTrailingZeros, samples)
@@ -15,7 +15,7 @@ namespace TrailingBits
 		ASSERT_EQ(CountTrailingZeros(1), 0u);
 		ASSERT_EQ(CountTrailingZeros(2), 1u);
 		ASSERT_EQ(CountTrailingZeros(3), 0u);
-		ASSERT_EQ(CountTrailingZeros(0x8000000000000000ui64), 63u);
+		ASSERT_EQ(CountTrailingZeros(0x8000000000000000ULL), 63u);
 	}
 
 	TEST(GetLSB, samples)
@@ -24,7 +24,7 @@ namespace TrailingBits
 		ASSERT_EQ(GetLSB(1), 1u);
 		ASSERT_EQ(GetLSB(2), 2u);
 		ASSERT_EQ(GetLSB(3), 1u);
-		ASSERT_EQ(GetLSB(0x8000000000000000ui64), 0x8000000000000000ui64);
+		ASSERT_EQ(GetLSB(0x8000000000000000ULL), 0x8000000000000000ULL);
 	}
 
 	TEST(RemoveLSB, samples)
@@ -34,7 +34,7 @@ namespace TrailingBits
 		a = 1; RemoveLSB(a); ASSERT_EQ(a, 0u);
 		a = 2; RemoveLSB(a); ASSERT_EQ(a, 0u);
 		a = 3; RemoveLSB(a); ASSERT_EQ(a, 2u);
-		a = 0x8000000001000000ui64; RemoveLSB(a); ASSERT_EQ(a, 0x8000000000000000ui64);
+		a = 0x8000000001000000ULL; RemoveLSB(a); ASSERT_EQ(a, 0x8000000000000000ULL);
 	}
 }
 
@@ -45,7 +45,7 @@ namespace LeadingBits
 		ASSERT_EQ(BitScanMSB(1), 0u);
 		ASSERT_EQ(BitScanMSB(2), 1u);
 		ASSERT_EQ(BitScanMSB(3), 1u);
-		ASSERT_EQ(BitScanMSB(0x8000000000000000ui64), 63u);
+		ASSERT_EQ(BitScanMSB(0x8000000000000000ULL), 63u);
 	}
 
 	TEST(CountLeadingZeros, samples)
@@ -53,7 +53,7 @@ namespace LeadingBits
 		ASSERT_EQ(CountLeadingZeros(1), 63u);
 		ASSERT_EQ(CountLeadingZeros(2), 62u);
 		ASSERT_EQ(CountLeadingZeros(3), 62u);
-		ASSERT_EQ(CountLeadingZeros(0x8000000000000000ui64), 0u);
+		ASSERT_EQ(CountLeadingZeros(0x8000000000000000ULL), 0u);
 	}
 
 	TEST(GetMSB, samples)
@@ -62,7 +62,7 @@ namespace LeadingBits
 		ASSERT_EQ(GetMSB(1), 1u);
 		ASSERT_EQ(GetMSB(2), 2u);
 		ASSERT_EQ(GetMSB(3), 2u);
-		ASSERT_EQ(GetMSB(0x8000000000000000ui64), 0x8000000000000000ui64);
+		ASSERT_EQ(GetMSB(0x8000000000000000ULL), 0x8000000000000000ULL);
 	}
 
 	TEST(RemoveMSB, samples)
@@ -72,7 +72,7 @@ namespace LeadingBits
 		a = 1; RemoveMSB(a); ASSERT_EQ(a, 0u);
 		a = 2; RemoveMSB(a); ASSERT_EQ(a, 0u);
 		a = 3; RemoveMSB(a); ASSERT_EQ(a, 1u);
-		a = 0x8000000001000000ui64; RemoveMSB(a); ASSERT_EQ(a, 0x0000000001000000ui64);
+		a = 0x8000000001000000ULL; RemoveMSB(a); ASSERT_EQ(a, 0x0000000001000000ULL);
 	}
 }
 
@@ -84,7 +84,7 @@ namespace Intrinsics
 		ASSERT_EQ(PopCount(1), 1u);
 		ASSERT_EQ(PopCount(2), 1u);
 		ASSERT_EQ(PopCount(3), 2u);
-		ASSERT_EQ(PopCount(0xFFFFFFFFFFFFFFFFui64), 64u);
+		ASSERT_EQ(PopCount(0xFFFFFFFFFFFFFFFFULL), 64u);
 	}
 
 	// TODO: Add test for BExtr

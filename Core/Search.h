@@ -1,6 +1,7 @@
 #pragma once
 #include "Position.h"
 #include "Moves.h"
+#include "Interval.h"
 
 #include <cassert>
 #include <cstdint>
@@ -15,17 +16,31 @@ namespace Search
 {
 	constexpr Score infinity = +65;
 
-	class Window
-	{
-	public:
-		// TODO: Because members are public, the constraint can be violated.
-		Score lower{ -infinity }, upper{ +infinity };
+	// A window of scores \in (lower, upper). Does not include boundaries.
+	//class ExclusiveInterval
+	//{
+	//public:
+	//	// TODO: Because members are public, the constraint can be violated.
+	//	Score lower{ -infinity }, upper{ +infinity };
 
-		Window() = default;
-		Window(Score lower, Score upper);
-		
-		Window operator-() const { return { -upper, -lower }; }
-	};
+	//	ExclusiveInterval() = delete;
+	//	ExclusiveInterval(Score lower, Score upper) noexcept;
+
+	//	static const ExclusiveInterval Full;
+	//	
+	//	[[nodiscard]] bool operator==(ExclusiveInterval o) const noexcept { return (upper == o.upper) && (lower == o.lower); }
+	//	[[nodiscard]] bool operator!=(ExclusiveInterval o) const noexcept { return (upper != o.upper) || (lower != o.lower); }
+
+	//	// Inverts window.
+	//	[[nodiscard]] ExclusiveInterval operator-() const noexcept { return { -upper, -lower }; }
+
+	//	[[nodiscard]] bool Contains(Score) const noexcept;
+	//	[[nodiscard]] bool IsAbove(Score) const noexcept;
+	//	[[nodiscard]] bool IsBelow(Score) const noexcept;
+
+	//	[[nodiscard]] bool IsAbove(ExclusiveInterval) const noexcept;
+	//	[[nodiscard]] bool IsBelow(ExclusiveInterval) const noexcept;
+	//};
 	
 	class Selectivity
 	{
@@ -69,27 +84,45 @@ namespace Search
 	public:
 		float quantile;
 
+		Selectivity() = delete;
 		explicit Selectivity(float quantile);
 		static const Selectivity None;
+		static const Selectivity Infinit;
 
 		[[nodiscard]] bool operator==(const Selectivity& o) const noexcept { return quantile == o.quantile; }
 		[[nodiscard]] bool operator!=(const Selectivity& o) const noexcept { return quantile != o.quantile; }
+		[[nodiscard]] bool operator<(const Selectivity& o) const noexcept { return quantile > o.quantile; }
+		[[nodiscard]] bool operator>(const Selectivity& o) const noexcept { return quantile < o.quantile; }
+		[[nodiscard]] bool operator<=(const Selectivity& o) const noexcept { return quantile >= o.quantile; }
+		[[nodiscard]] bool operator>=(const Selectivity& o) const noexcept { return quantile <= o.quantile; }
 	};
+
+	[[nodiscard]] inline Selectivity min(Selectivity l, Selectivity r) noexcept { return (l < r) ? l : r; }
+	[[nodiscard]] inline Selectivity max(Selectivity l, Selectivity r) noexcept { return (l < r) ? r : l; }
 
 	struct Intensity
 	{
-		Window window;
+		ExclusiveInterval window;
 		unsigned int depth;
 		Selectivity selectivity;
 
 		static Intensity Exact(Position);
+
+		[[nodiscard]] bool operator==(const Intensity& o) const noexcept { return (window == o.window) && (depth == o.depth) && (selectivity == o.selectivity); }
+		[[nodiscard]] bool operator!=(const Intensity& o) const noexcept { return (window != o.window) || (depth != o.depth) || (selectivity != o.selectivity); }
+
+		// Intensity with inverted window.
+		[[nodiscard]] Intensity operator-() const;
+
+		// Subtracts depth.
+		[[nodiscard]] Intensity operator-(int depth) const;
 	};
 
 	class Result
 	{
 	public:
 		// TODO: Because members are public, the constraint can be violated.
-		Window window;
+		InclusiveInterval window;
 		unsigned int depth;
 		Selectivity selectivity;
 		Field best_move;
@@ -98,6 +131,19 @@ namespace Search
 		static Result ExactScore(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 		static Result MaxBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 		static Result MinBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
+		static Result FromScore(Score, ExclusiveInterval, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
+
+		static Result ExactScore(Score, Intensity, Field best_move, std::size_t node_count);
+		static Result MaxBound(Score, Intensity, Field best_move, std::size_t node_count);
+		static Result MinBound(Score, Intensity, Field best_move, std::size_t node_count);
+		static Result FromScore(Score, Intensity, Field best_move, std::size_t node_count);
+
+		//static Result MaxBound(Intensity, Result);
+		//static Result MinBound(Intensity, Result);
+
+		// Result with inverted window.
+		[[nodiscard]] Result operator-() const;
+		[[nodiscard]] bool Exceeds(ExclusiveInterval) const noexcept;
 	};
 
 	struct Algorithm

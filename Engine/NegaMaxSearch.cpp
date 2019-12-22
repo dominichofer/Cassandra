@@ -11,9 +11,9 @@ Result NegaMax::Eval(Position pos, Intensity)
 	return Result::ExactScore(score, pos.EmptyCount(), Selectivity::None, Field::invalid, node_counter);
 }
 
-Score NegaMax::Eval_triage(Position pos)
+Score NegaMax::Eval_triage(const Position& pos)
 {
-	auto moves = Moves(pos.Empties());
+	Moves moves = Moves(pos.Empties());
 	const auto move1 = moves.front(); moves.pop_front();
 	const auto move2 = moves.front(); moves.pop_front();
 	const auto move3 = moves.front(); moves.pop_front();
@@ -29,13 +29,13 @@ Score NegaMax::Eval_triage(Position pos)
 	}
 }
 
-Score NegaMax::Eval_0(Position pos)
+Score NegaMax::Eval_0(const Position& pos)
 {
 	node_counter++;
 	return EvalGameOver(pos);
 }
 
-Score NegaMax::Eval_1(Position pos, const Field move1)
+Score NegaMax::Eval_1(const Position& pos, const Field move1)
 {
 	const Score score = static_cast<Score>(2 * PopCount(pos.GetP())) - 63; // == PopCount(pos.GetP()) - PopCount(pos.GetO())
 
@@ -54,7 +54,7 @@ Score NegaMax::Eval_1(Position pos, const Field move1)
 	return (score > 0) ? score + 1 : score - 1;
 }
 
-Score NegaMax::Eval_2(Position pos, const Field move1, const Field move2)
+Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 {
 	node_counter++;
 	Score score = -infinity;
@@ -85,7 +85,7 @@ Score NegaMax::Eval_2(Position pos, const Field move1, const Field move2)
 	return -EvalGameOver(passed);
 }
 
-Score NegaMax::Eval_3(Position pos, const Field move1, const Field move2, const Field move3)
+Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2, const Field move3)
 {
 	node_counter++;
 	Score score = -infinity;
@@ -122,7 +122,7 @@ Score NegaMax::Eval_3(Position pos, const Field move1, const Field move2, const 
 	return -EvalGameOver(passed);
 }
 
-Score NegaMax::Eval_4(Position pos, const Field move1, const Field move2, const Field move3, const Field move4)
+Score NegaMax::Eval_4(const Position& pos, const Field move1, const Field move2, const Field move3, const Field move4)
 {
 	node_counter++;
 	Score score = -infinity;
@@ -165,7 +165,7 @@ Score NegaMax::Eval_4(Position pos, const Field move1, const Field move2, const 
 	return -EvalGameOver(passed);
 }
 
-Score NegaMax::Eval_N(Position pos)
+Score NegaMax::Eval_N(const Position& pos)
 {
 	if (pos.EmptyCount() <= 4)
 		return Eval_triage(pos);

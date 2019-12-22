@@ -8,9 +8,21 @@ unsigned int BitScanLSB(const uint64_t mask) noexcept
 	// BitScanLSB(0) may be undefined.
 
 	#if defined(_MSC_VER)
-		unsigned long index = 0;
+		unsigned long index;
 		_BitScanForward64(&index, mask);
 		return index;
+	#elif defined(__GNUC__)
+		return __builtin_ctzll(mask); // __builtin_ctzll(0) is undefined
+	#endif
+}
+
+[[nodiscard]]
+std::size_t CountTrailingZeros(const uint64_t mask) noexcept
+{
+	// CountTrailingZeros(0) may be undefined.
+
+	#if defined(_MSC_VER)
+		return _tzcnt_u64(mask); // _tzcnt_u64(0) is undefined
 	#elif defined(__GNUC__)
 		return __builtin_ctzll(mask); // __builtin_ctzll(0) is undefined
 	#endif

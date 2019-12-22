@@ -114,7 +114,7 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 	std::vector<Weights> weights(multiplicity);
 	for (auto& weight : weights)
 	{
-		std::size_t full_size = Pow_int(3, pattern.PopCount());
+		std::size_t full_size = Pow_int(3, PopCount(pattern));
 		weight.resize(full_size);
 	}
 
@@ -123,7 +123,9 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 	for (std::size_t i = 0; i < multiplicity; i++)
 	{
 		For_each_config(patterns[i],
-			[&](Board board) { weights[i][FullIndex(board, patterns[i])] = compressed[config->ReducedIndices(board)[i]]; }
+			[&](const Position& pos) {
+							weights[i][FullIndex(pos, patterns[i])] = 
+						compressed[config->ReducedIndices(pos)[i]]; }
 		);
 	}
 

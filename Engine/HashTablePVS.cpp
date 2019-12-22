@@ -1,4 +1,5 @@
 #include "HashTablePVS.h"
+#include <algorithm>
 #include <mutex>
 
 OneNode::OneNode(const OneNode& o) noexcept
@@ -65,5 +66,5 @@ void OneNode::Clear()
 
 std::size_t OneNode::NumberOfNonEmptyNodes() const
 {
-	return (node.key == Position{}) ? 0 : 1;
+	return (node.key == Node{}.key) ? 0 : 1;
 }

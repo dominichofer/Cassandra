@@ -23,7 +23,7 @@ uint64_t detail::PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
 	// = 19 OPs
 
 	// 1 x AND
-	const __m512i maskO = _mm512_set1_epi64(O) & _mm512_set_epi64(0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64, 0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64);
+	const __m512i maskO = _mm512_set1_epi64(O) & _mm512_set_epi64(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL, 0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
 	const __m512i shift1 = _mm512_set_epi64(1, 8, 7, 9, -1, -8, -7, -9);
 	const __m512i shift2 = shift1 + shift1;
 
@@ -47,7 +47,7 @@ uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 	// = 36 OPs
 
 	// 1 x AND
-	const __m256i maskO = _mm256_set1_epi64x(O) & _mm256_set_epi64x(0x7E7E7E7E7E7E7E7Eui64, 0x00FFFFFFFFFFFF00ui64, 0x007E7E7E7E7E7E00ui64, 0x007E7E7E7E7E7E00ui64);
+	const __m256i maskO = _mm256_set1_epi64x(O) & _mm256_set_epi64x(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
 	const __m256i shift = _mm256_set_epi64x(1, 8, 7, 9);
 	const __m256i shift2 = shift + shift;
 
@@ -91,8 +91,8 @@ uint64_t detail::PossibleMoves_SSE2(const uint64_t P, const uint64_t O)
 	const __m128i OO = _mm_set_epi64x(BSwap(O), O);
 
 	// 2 x AND
-	const uint64_t maskO = O & 0x7E7E7E7E7E7E7E7Eui64;
-	const __m128i  maskOO = OO & _mm_set1_epi64x(0x7E7E7E7E7E7E7E7Eui64);
+	const uint64_t maskO = O & 0x7E7E7E7E7E7E7E7EULL;
+	const __m128i  maskOO = OO & _mm_set1_epi64x(0x7E7E7E7E7E7E7E7EULL);
 
 	// 5 x SHIFT, 5 x AND
 	uint64_t flip1 = maskO & (P << 1);
@@ -150,7 +150,7 @@ uint64_t detail::PossibleMoves_x64(const uint64_t P, const uint64_t O)
 	// = 123 OPs
 	
 	// 1 x AND
-	const uint64_t maskO = O & 0x7E7E7E7E7E7E7E7Eui64;
+	const uint64_t maskO = O & 0x7E7E7E7E7E7E7E7EULL;
 
 	// 8 x SHIFT, 8 x AND
 	uint64_t flip1 = maskO & (P << 1);

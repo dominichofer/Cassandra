@@ -10,7 +10,7 @@ namespace Flips_test
 
 		while ((x >= 0) && (x < 8) && (y >= 0) && (y < 8)) // In between boundaries
 		{
-			const uint64_t bit = 1ui64 << (x + 8 * y);
+			const uint64_t bit = 1ULL << (x + 8 * y);
 			if (O & bit) // The field belongs to the opponent
 				flips |= bit; // Add to possible flips
 			else if (P & bit) // The field belongs to the player
@@ -39,14 +39,14 @@ namespace Flips_test
 	{
 		const auto seed = 14;
 		std::mt19937_64 rnd_engine(seed);
-		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFui64)(rnd_engine); };
+		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
 
 		for (unsigned int i = 0; i < 10'000; i++)
 		{
 			const uint64_t p = rnd();
 			const uint64_t o = rnd();
-			const uint64_t P = (p & ~o) & ~(1ui64 << move);
-			const uint64_t O = (o & ~p) & ~(1ui64 << move);
+			const uint64_t P = (p & ~o) & ~(1ULL << move);
+			const uint64_t O = (o & ~p) & ~(1ULL << move);
 
 			ASSERT_EQ(Flips(P, O, move), Flip_loop(P, O, move));
 		}

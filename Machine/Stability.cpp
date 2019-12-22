@@ -1,7 +1,6 @@
 #include "Stability.h"
 #include "Machine/BitTwiddling.h"
-#include "Core/Machine.h"
-#include "Core/Moves.h"
+#include "Machine/Flips.h"
 #include <array>
 
 class StabilityAnalyzer
@@ -9,8 +8,8 @@ class StabilityAnalyzer
 public:
 	StabilityAnalyzer();
 
-	uint64_t StableEdges(Position) const;
-	uint64_t StableStones(Position) const; // Stable stones of the opponent.
+	uint64_t StableEdges(uint64_t P, uint64_t O) const;
+	uint64_t StableStones(uint64_t P, uint64_t O) const; // Stable stones of the opponent.
 
 private:
 	static uint64_t FullLineHorizontal(uint64_t discs);
@@ -19,6 +18,17 @@ private:
 	static uint64_t FullLineCodiagonal(uint64_t discs);
 
 	std::array<std::array<uint8_t, 256>, 256> edge_stables{};
+};
+
+struct Pos
+{
+	uint64_t P, O;
+
+	[[nodiscard]] Pos Play(uint8_t move) const
+	{
+		auto flips = Flips(P, O, move);
+		return { O ^ flips, P ^ flips ^ (1ULL << move) };
+	}
 };
 
 StabilityAnalyzer::StabilityAnalyzer()
@@ -32,17 +42,18 @@ StabilityAnalyzer::StabilityAnalyzer()
 				if (PopCount(p | o) != empty_count)
 					continue;
 
-				Board A{ BitBoard{ p }, BitBoard{ o } };
-				Board B{ BitBoard{ o }, BitBoard{ p } };
+				const Pos A{ p, o };
+				const Pos B{ o, p };
 
 				uint8_t stables = 0xFF;
-				Moves moves(A.Empties() & BitBoard { 0xFFui64 });
-				for (auto move : moves)
+				uint64_t moves = ~(p | o) & 0xFFULL;
+				while (moves)
 				{
-					BitBoard A_flips = Flips(A, move);
-					BitBoard B_flips = Flips(B, move);
-					Board A_next = Play(A, move, A_flips);
-					Board B_next = Play(B, move, B_flips);
+					uint8_t move = BitScanLSB(moves);
+					RemoveLSB(moves);
+
+					Pos A_next = A.Play(move);
+					Pos B_next = B.Play(move);
 					uint64_t A_acquired = A_next.O ^ A.P;
 					uint64_t B_acquired = B_next.O ^ B.P;
 
@@ -56,48 +67,31 @@ StabilityAnalyzer::StabilityAnalyzer()
 			}
 }
 
-uint64_t StabilityAnalyzer::StableEdges(Position pos) const
+uint64_t StabilityAnalyzer::StableEdges(uint64_t P, uint64_t O) const
 {
 	// 2 x AND, 2 X SHIFT, 3 x OR, 4 x PEXT, 2 X PDEP
 	// 13 OPs
-	constexpr uint64_t L0_Left =
-		"#              "
-		"#              "
-		"#              "
-		"#              "
-		"#              "
-		"#              "
-		"#              "
-		"#              "_BitBoard;
+	constexpr uint64_t L0_Left = 0x8080808080808080ULL;
+	constexpr uint64_t L0_Right = 0x0101010101010101ULL;
 
-	constexpr uint64_t L0_Right =
-		"              #"
-		"              #"
-		"              #"
-		"              #"
-		"              #"
-		"              #"
-		"              #"
-		"              #"_BitBoard;
-
-	const auto stable_L0_Bottom = edge_stables[static_cast<uint8_t>(pos.GetP())][static_cast<uint8_t>(pos.GetO())];
-	const auto stable_L0_Top = static_cast<uint64_t>(edge_stables[pos.GetP() >> 56][pos.GetO() >> 56]) << 56;
-	const auto stable_L0_Left  = PDep(edge_stables[PExt(pos.GetP(), L0_Left )][PExt(pos.GetO(), L0_Left )], L0_Left );
-	const auto stable_L0_Right = PDep(edge_stables[PExt(pos.GetP(), L0_Right)][PExt(pos.GetO(), L0_Right)], L0_Right);
+	const auto stable_L0_Bottom = edge_stables[static_cast<uint8_t>(P)][static_cast<uint8_t>(O)];
+	const auto stable_L0_Top = static_cast<uint64_t>(edge_stables[P >> 56][O >> 56]) << 56;
+	const auto stable_L0_Left  = PDep(edge_stables[PExt(P, L0_Left )][PExt(O, L0_Left )], L0_Left );
+	const auto stable_L0_Right = PDep(edge_stables[PExt(P, L0_Right)][PExt(O, L0_Right)], L0_Right);
 
 	return stable_L0_Bottom | stable_L0_Top | stable_L0_Left | stable_L0_Right;
 }
 
-uint64_t StabilityAnalyzer::StableStones(Position pos) const
+uint64_t StabilityAnalyzer::StableStones(uint64_t P, uint64_t O) const
 {
-	const uint64_t discs = ~pos.Empties();
+	const uint64_t discs = (P | O);
 
 	const uint64_t full_h = FullLineHorizontal(discs);
 	const uint64_t full_v = FullLineVertival(discs);
 	const uint64_t full_d = FullLineDiagonal(discs);
 	const uint64_t full_c = FullLineCodiagonal(discs);
-	uint64_t new_stables = StableEdges(pos) & pos.GetO();
-	new_stables |= full_h & full_v & full_d & full_c & pos.GetO() & ~BitBoard::Edge();
+	uint64_t new_stables = StableEdges(P, O) & O;
+	new_stables |= full_h & full_v & full_d & full_c & O &  0x007E7E7E7E7E7E00ULL;
 
 	uint64_t stables = 0;
 	while ((new_stables & ~stables) != 0u)
@@ -107,7 +101,7 @@ uint64_t StabilityAnalyzer::StableStones(Position pos) const
 		const uint64_t stables_v = (stables >> 8) | (stables << 8) | full_v;
 		const uint64_t stables_d = (stables >> 9) | (stables << 9) | full_d;
 		const uint64_t stables_c = (stables >> 7) | (stables << 7) | full_c;
-		new_stables = stables_h & stables_v & stables_d & stables_c & pos.GetO() & ~BitBoard::Edge();
+		new_stables = stables_h & stables_v & stables_d & stables_c & O &  0x007E7E7E7E7E7E00ULL;
 	}
 	return stables;
 }
@@ -119,8 +113,8 @@ uint64_t StabilityAnalyzer::FullLineHorizontal(uint64_t discs)
 	discs &= discs >> 4;
 	discs &= discs >> 2;
 	discs &= discs >> 1;
-	discs &= 0x0001010101010100ui64;
-	return discs * 0xFFui64;
+	discs &= 0x0001010101010100ULL;
+	return discs * 0xFFULL;
 }
 
 uint64_t StabilityAnalyzer::FullLineVertival(uint64_t discs)
@@ -130,15 +124,15 @@ uint64_t StabilityAnalyzer::FullLineVertival(uint64_t discs)
 	discs &= discs >> 32;
 	discs &= discs >> 16;
 	discs &= discs >> 8;
-	discs &= 0x7Eui64;
-	return discs * 0x0101010101010101ui64;
+	discs &= 0x7EULL;
+	return discs * 0x0101010101010101ULL;
 }
 
 uint64_t StabilityAnalyzer::FullLineDiagonal(const uint64_t discs)
 {
 	// 5 x SHR, 5 x SHL, 7x AND, 10 x OR
 	// 27 OPs
-	constexpr uint64_t edge = BitBoard::Edge();
+	constexpr uint64_t edge = 0xFF818181818181FFULL;
 
 	uint64_t full_l = discs & (edge | (discs >> 9));
 	uint64_t full_r = discs & (edge | (discs << 9));
@@ -158,7 +152,7 @@ uint64_t StabilityAnalyzer::FullLineCodiagonal(const uint64_t discs)
 {
 	// 5 x SHR, 5 x SHL, 7x AND, 10 x OR
 	// 27 OPs
-	constexpr uint64_t edge = BitBoard::Edge();
+	constexpr uint64_t edge = 0xFF818181818181FFULL;
 
 	uint64_t full_l = discs & (edge | (discs >> 7));
 	uint64_t full_r = discs & (edge | (discs << 7));
@@ -176,12 +170,12 @@ uint64_t StabilityAnalyzer::FullLineCodiagonal(const uint64_t discs)
 
 static StabilityAnalyzer sa;
 
-BitBoard StableEdges(Position pos)
+uint64_t StableEdges(uint64_t P, uint64_t O)
 {
-	return BitBoard{ sa.StableEdges(pos) };
+	return sa.StableEdges(P, O);
 }
 
-BitBoard StableStones(Position pos)
+uint64_t StableStones(uint64_t P, uint64_t O)
 {
-	return BitBoard{ sa.StableStones(pos) };
+	return sa.StableStones(P, O);
 }

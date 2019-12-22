@@ -21,5 +21,6 @@
     <ClInclude Include="FForum.h" />
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Machine.h" />
+    <ClInclude Include="Interval.h" />
   </ItemGroup>
 </Project>

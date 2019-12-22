@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <utility>
+#include <compare>
 
 enum class Field : uint8_t
 {
@@ -41,13 +42,12 @@ public:
 	using reference = Bit_;
 
 	constexpr BitBoard() noexcept = default;
-	constexpr explicit BitBoard(uint64_t b) noexcept : b(b) {}
-	constexpr explicit BitBoard(Field f) noexcept : b(1ui64 << static_cast<uint8_t>(f)) { assert(f != Field::invalid); }
+	constexpr BitBoard(uint64_t b) noexcept : b(b) {}
+	constexpr explicit BitBoard(Field f) noexcept : b(1ULL << static_cast<uint8_t>(f)) { assert(f != Field::invalid); }
 
 	constexpr operator uint64_t() const noexcept { return b; }
 
-	[[nodiscard]] constexpr bool operator==(BitBoard o) const noexcept { return b == o.b; }
-	[[nodiscard]] constexpr bool operator!=(BitBoard o) const noexcept { return b != o.b; }
+	[[nodiscard]] auto operator<=>(const BitBoard&) const noexcept = default;
 
 	constexpr BitBoard& operator&=(BitBoard o) noexcept { b &= o.b; return *this; }
 	constexpr BitBoard& operator|=(BitBoard o) noexcept { b |= o.b; return *this; }
@@ -57,20 +57,29 @@ public:
 	friend constexpr BitBoard operator|(BitBoard l, BitBoard r) noexcept { return l |= r; }
 	friend constexpr BitBoard operator^(BitBoard l, BitBoard r) noexcept { return l ^= r; }
 
-	[[nodiscard]] constexpr BitBoard operator~() noexcept { return BitBoard(~b); }
+	friend constexpr BitBoard operator&(uint64_t l, BitBoard r) noexcept { return BitBoard(l) &= r; }
+	friend constexpr BitBoard operator|(uint64_t l, BitBoard r) noexcept { return BitBoard(l) |= r; }
+	friend constexpr BitBoard operator^(uint64_t l, BitBoard r) noexcept { return BitBoard(l) ^= r; }
+
+	friend constexpr BitBoard operator&(BitBoard l, uint64_t r) noexcept { return l &= BitBoard(r); }
+	friend constexpr BitBoard operator|(BitBoard l, uint64_t r) noexcept { return l |= BitBoard(r); }
+	friend constexpr BitBoard operator^(BitBoard l, uint64_t r) noexcept { return l ^= BitBoard(r); }
+
+	[[nodiscard]] constexpr BitBoard operator~() const noexcept { return ~b; }
 	
 	constexpr bool operator[](Field f) const noexcept { return (*this & BitBoard(f)); }
-	constexpr bool operator[](std::size_t i) const noexcept { assert(i < 64); return (*this & BitBoard(static_cast<Field>(i))); }
+	constexpr bool operator[](std::size_t i) const noexcept { assert(i < 64); return this->operator[](static_cast<Field>(i)); }
 	constexpr reference operator[](Field f) noexcept { return { *this, f }; }
-	constexpr reference operator[](std::size_t i) noexcept { assert(i < 64); return { *this, static_cast<Field>(i) }; }
+	constexpr reference operator[](std::size_t i) noexcept { assert(i < 64); return this->operator[](static_cast<Field>(i)); }
 
-	[[nodiscard]] constexpr bool isSubsetOf(BitBoard o) const noexcept { return (o.b & b) == b; }
+
+	[[nodiscard]] constexpr bool IsSubsetOf(BitBoard o) const noexcept { return (o.b & b) == b; }
 
 	[[nodiscard]] constexpr bool empty() const noexcept { return !b; }
 
 	[[nodiscard]] std::size_t PopCount() const noexcept;
-	void RemoveLSB() noexcept;
-	Field BitScanLSB() const noexcept;
+	void RemoveFirstField() noexcept;
+	[[nodiscard]] Field FirstField() const noexcept;
 
 	void FlipCodiagonal() noexcept;
 	void FlipDiagonal() noexcept;
@@ -83,16 +92,17 @@ public:
 
 [[nodiscard]]
 inline std::size_t PopCount(BitBoard bb) noexcept { return bb.PopCount(); }
-
-inline void RemoveLSB(BitBoard& bb) noexcept { bb.RemoveLSB(); }
-
-[[nodiscard]]
-inline Field BitScanLSB(BitBoard bb) noexcept { return bb.BitScanLSB(); }
+//
+//inline void RemoveFirstField(BitBoard& bb) noexcept { bb.RemoveFirstField(); }
+//
+//[[nodiscard]]
+//inline Field FirstField(const BitBoard& bb) noexcept { return bb.FirstField(); }
 
 [[nodiscard]] BitBoard FlipCodiagonal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipDiagonal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipHorizontal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipVertical(BitBoard) noexcept;
+
 
 constexpr BitBoard operator""_BitBoard(const char* c, std::size_t size)
 {
@@ -102,9 +112,8 @@ constexpr BitBoard operator""_BitBoard(const char* c, std::size_t size)
 	for (int i = 0; i < 8; i++)
 		for (int j = 0; j < 8; j++)
 		{
-			auto field = static_cast<Field>(i * 8 + j);
 			char symbol = c[119 - 2 * j - 15 * i];
-			bb[field] = (symbol != ' ');
+			bb[static_cast<Field>(i * 8 + j)] = (symbol != ' ');
 		}
 	return bb;
 }
@@ -126,25 +135,25 @@ constexpr Bit_::operator bool() const noexcept
 constexpr BitBoard BitBoard::Middle()
 {
 	return
-		"               "
-		"               "
-		"               "
-		"      # #      "
-		"      # #      "
-		"               "
-		"               "
-		"               "_BitBoard;
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - # # - - -"
+		"- - - # # - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"_BitBoard;
 }
 
 constexpr BitBoard BitBoard::Edge()
 {
 	return
 		"# # # # # # # #"
-		"#             #"
-		"#             #"
-		"#             #"
-		"#             #"
-		"#             #"
-		"#             #"
+		"# - - - - - - #"
+		"# - - - - - - #"
+		"# - - - - - - #"
+		"# - - - - - - #"
+		"# - - - - - - #"
+		"# - - - - - - #"
 		"# # # # # # # #"_BitBoard;
 }

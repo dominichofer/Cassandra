@@ -27,6 +27,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <SDLCheck>false</SDLCheck>
     </ClCompile>
     <Link>
       <OptimizeReferences>true</OptimizeReferences>

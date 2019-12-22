@@ -1,24 +1,14 @@
 #include "Moves.h"
 #include "Machine.h"
 
-bool Moves::operator==(const Moves& o) const
-{
-	return m_moves == o.m_moves;
-}
-
-bool Moves::operator!=(const Moves& o) const
-{
-	return m_moves != o.m_moves;
-}
-
 std::size_t Moves::size() const
 {
 	return PopCount(m_moves);
 }
 
-bool Moves::empty() const
+bool Moves::empty() const noexcept
 {
-	return m_moves == 0;
+	return m_moves.empty();
 }
 
 bool Moves::contains(const Field move) const
@@ -28,20 +18,13 @@ bool Moves::contains(const Field move) const
 
 Field Moves::front() const
 {
-	return static_cast<Field>(BitScanLSB(m_moves));
+	return static_cast<Field>(CountTrailingZeros(m_moves));
 }
 
 void Moves::pop_front()
 {
-	RemoveLSB(m_moves);
+	m_moves.RemoveFirstField();
 }
-
-//Field Moves::Extract()
-//{
-//	const auto LSB = front();
-//	pop_front();
-//	return LSB;
-//}
 
 void Moves::Remove(const Field move)
 {

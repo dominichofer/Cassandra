@@ -11,13 +11,12 @@ namespace Search
 	public:
 		Result Eval(Position, Intensity) override;
 	private:
-		Score Eval_triage(Position, Window);
-		Score Eval_0(Position, Window);
-		Score Eval_1(Position, Window, Field);
-		Score Eval_2(Position, Window, Field, Field);
-		Score Eval_3(Position, Window, Field, Field, Field);
-		Score Eval_4(Position, Window, Field, Field, Field, Field);
-		Score Eval_N(Position, Window);
-
+		Score Eval_triage(const Position&, ExclusiveInterval);
+		Score Eval_0(const Position&, ExclusiveInterval);
+		Score Eval_1(const Position&, ExclusiveInterval, Field);
+		Score Eval_2(const Position&, ExclusiveInterval, Field, Field);
+		Score Eval_3(const Position&, ExclusiveInterval, Field, Field, Field);
+		Score Eval_4(const Position&, ExclusiveInterval, Field, Field, Field, Field);
+		Score Eval_N(const Position&, ExclusiveInterval);
 	};
 }

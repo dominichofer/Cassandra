@@ -6,7 +6,7 @@
 void FlipCodiagonal(benchmark::State& state)
 {
 	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
+	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
@@ -18,7 +18,7 @@ BENCHMARK(FlipCodiagonal);
 void FlipDiagonal(benchmark::State& state)
 {
 	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
+	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
@@ -30,7 +30,7 @@ BENCHMARK(FlipDiagonal);
 void FlipHorizontal(benchmark::State& state)
 {
 	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
+	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
@@ -42,7 +42,7 @@ BENCHMARK(FlipHorizontal);
 void FlipVertical(benchmark::State& state)
 {
 	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFui64 };
+	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)

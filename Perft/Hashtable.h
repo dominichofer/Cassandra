@@ -40,7 +40,7 @@ private:
 	{
 		std::atomic<value_type>& lock;
 	public:
-		static inline value_type locked_marker = 0xFFFFFFFFFFFFFFFui64; // Reserved value to mark lock as locked.
+		static inline value_type locked_marker = 0xFFFFFFFFFFFFFFFULL; // Reserved value to mark lock as locked.
 		value_type value;
 
 		LockGuard(std::atomic<value_type>& lock); // locks

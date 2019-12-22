@@ -3,25 +3,27 @@
 #include "Core/Position.h"
 
 [[nodiscard]]
-int CountLastFlip(Position, Field move);
+int CountLastFlip(const Position&, Field move);
 
 [[nodiscard]]
-BitBoard Flips(Board, Field move);
+BitBoard Flips(const Position&, Field move);
+
+[[nodiscard]] Position Play(const Position&, Field move, BitBoard flips);
+
+[[nodiscard]] Position Play(const Position&, Field move);
+
+[[nodiscard]] Position PlayPass(const Position&);
 
 [[nodiscard]]
-Board Play(Board, Field move, BitBoard flips);
+Moves PossibleMoves(const Position&);
 
 [[nodiscard]]
-Position Play(Position, Field move);
-
-[[nodiscard]]
-Position PlayPass(Position);
-
-[[nodiscard]]
-Moves PossibleMoves(Position);
+BitBoard StableStones(const Position&);
 
 
 // Forward declarations
+[[nodiscard]]
+std::size_t CountTrailingZeros(uint64_t mask) noexcept;
 
 [[nodiscard]]
 unsigned int BitScanLSB(uint64_t) noexcept;

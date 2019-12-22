@@ -11,10 +11,12 @@ class Puzzle
 public:
 	Puzzle(Position, Search::Intensity, Search::Result);
 	Puzzle(Position, Search::Intensity);
+	static Puzzle Exact(Position);
 
 	auto Position() const { return position; }
 	auto Intensity() const { return intensity; }
 	auto Result() const { return result; }
 
+	void Reset();
 	void Solve(Search::Algorithm&);
 };

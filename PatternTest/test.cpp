@@ -2,9 +2,9 @@
 
 using namespace Pattern;
 
-constexpr BitBoard PatternH{ 0x00000000000000E7ui64 }; // HorizontalSymmetric
-constexpr BitBoard PatternD{ 0x8040201008040303ui64 }; // DiagonalSymmetric
-constexpr BitBoard PatternA{ 0x000000000000000Fui64 }; // Asymmetric
+constexpr BitBoard PatternH{ 0x00000000000000E7ULL }; // HorizontalSymmetric
+constexpr BitBoard PatternD{ 0x8040201008040303ULL }; // DiagonalSymmetric
+constexpr BitBoard PatternA{ 0x000000000000000FULL }; // Asymmetric
 static const auto WeightsH = Weights(CreateIndexMapper(PatternH)->ReducedSize(), 0);
 static const auto WeightsD = Weights(CreateIndexMapper(PatternD)->ReducedSize(), 0);
 static const auto WeightsA = Weights(CreateIndexMapper(PatternA)->ReducedSize(), 0);
@@ -31,7 +31,7 @@ TEST(IndexMapper, CreateIndexMapper_HorizontalSymmetric)
 
 	ASSERT_EQ(im->Multiplicity(), 4);
 	ASSERT_EQ(im->Pattern, PatternH);
-	ASSERT_EQ(im->ReducedIndices(Board(BitBoard{ 0 }, BitBoard{ 0 })).size(), 4);
+	ASSERT_EQ(im->ReducedIndices(Position::Start()).size(), 4);
 }
 
 TEST(IndexMapper, CreateIndexMapper_DiagonalSymmetric)
@@ -40,7 +40,7 @@ TEST(IndexMapper, CreateIndexMapper_DiagonalSymmetric)
 
 	ASSERT_EQ(im->Multiplicity(), 4);
 	ASSERT_EQ(im->Pattern, PatternD);
-	ASSERT_EQ(im->ReducedIndices(Board(BitBoard{ 0 }, BitBoard{ 0 })).size(), 4);
+	ASSERT_EQ(im->ReducedIndices(Position::Start()).size(), 4);
 }
 
 TEST(IndexMapper, CreateIndexMapper_Asymmetric)
@@ -49,7 +49,7 @@ TEST(IndexMapper, CreateIndexMapper_Asymmetric)
 
 	ASSERT_EQ(im->Multiplicity(), 8);
 	ASSERT_EQ(im->Pattern, PatternA);
-	ASSERT_EQ(im->ReducedIndices(Board(BitBoard{ 0 }, BitBoard{ 0 })).size(), 8);
+	ASSERT_EQ(im->ReducedIndices(Position::Start()).size(), 8);
 }
 
 TEST(Evaluator, CreateEvaluator_works_for_horizontal_symmetric_pattern)
@@ -79,22 +79,22 @@ void Test_SymmetryIndependance(const BitBoard pattern, const Weights& compressed
 
 	// Assert score's independance of flips
 	For_each_config(pattern,
-		[&](Board board) {
-			board.P |= ~board.O & BitBoard::Middle();
-			const auto score = eval->Eval(board);
+		[&](Position pos) {
+			pos = Position(pos.GetP() | ~pos.GetO() & BitBoard::Middle(), pos.GetO());
+			const auto score = eval->Eval(pos);
 			for (std::size_t i = 1; i < 8; i++)
 			{
 				switch (i)
 				{
-					case 1: board.FlipHorizontal(); break;
-					case 2: board.FlipVertical(); break;
-					case 3: board.FlipHorizontal(); break;
-					case 4: board.FlipDiagonal(); break;
-					case 5: board.FlipHorizontal(); break;
-					case 6: board.FlipVertical(); break;
-					case 7: board.FlipHorizontal(); break;
+					case 1: pos.FlipHorizontal(); break;
+					case 2: pos.FlipVertical(); break;
+					case 3: pos.FlipHorizontal(); break;
+					case 4: pos.FlipDiagonal(); break;
+					case 5: pos.FlipHorizontal(); break;
+					case 6: pos.FlipVertical(); break;
+					case 7: pos.FlipHorizontal(); break;
 				}
-				auto other_score = eval->Eval(board);
+				auto other_score = eval->Eval(pos);
 				ASSERT_EQ(score, other_score);
 			}
 		});
@@ -121,20 +121,19 @@ void Test_LegalWeights(BitBoard pattern)
 
 	Weights compressed(index_mapper->ReducedSize());
 	std::iota(compressed.begin(), compressed.end(), 1);
-	auto eval = CreateEvaluator(pattern, compressed);
+	auto evaluator = CreateEvaluator(pattern, compressed);
 	PositionGenerator pos_gen(78);
 
 	for (std::size_t i = 0; i < 100'000; i++)
 	{
 		const auto pos = pos_gen.Random();
-		const auto board = Board(pos.GetP(), pos.GetO());
 
-		auto configs = index_mapper->ReducedIndices(board);
+		auto configs = index_mapper->ReducedIndices(pos);
 		float sum = 0;
 		for (auto it : configs)
 			sum += compressed[it];
 
-		auto score = eval->Eval(board);
+		auto score = evaluator->Eval(pos);
 
 		ASSERT_EQ(sum, score);
 	}

@@ -41,8 +41,6 @@ public:
 
 private:
 	std::mt19937_64 rnd_engine;
-	
-	Board RandomMiddle();
 
 	template <class Inserter>
 	static void add(Position pos, const std::size_t plies, const std::size_t plies_per_pass, Inserter& inserter)

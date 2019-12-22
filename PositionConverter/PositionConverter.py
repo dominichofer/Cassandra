@@ -6,14 +6,14 @@ def HexToString(in_str):
     P = int(in_str[0:18], 16)
     O = int(in_str[24:42], 16)
     out_str = list(
-        '"               "\n'
-        '"               "\n'
-        '"               "\n'
-        '"               "\n'
-        '"               "\n'
-        '"               "\n'
-        '"               "\n'
-        '"               "_pos')
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"_pos')
     for i in range(8):
         for j in range(8):
             if TestBit(P, 63 - i * 8 - j):

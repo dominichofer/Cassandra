@@ -7,7 +7,7 @@
 //constexpr uint64_t Bit(const uint64_t position) noexcept
 //{
 //	assert(position < 64);
-//	return 1ui64 << position;
+//	return 1ULL << position;
 //}
 //
 //constexpr void SetBit(uint64_t& bit_field, const uint64_t position) noexcept
@@ -67,17 +67,7 @@ inline std::size_t CountLeadingZeros(const uint64_t mask) noexcept
 }
 
 [[nodiscard]]
-inline std::size_t CountTrailingZeros(const uint64_t mask) noexcept
-{
-	// CountTrailingZeros(0) may be undefined.
-	assert(mask);
-
-	#if defined(_MSC_VER)
-		return _tzcnt_u64(mask); // _tzcnt_u64(0) is undefined
-	#elif defined(__GNUC__)
-		return __builtin_ctzll(mask); // __builtin_ctzll(0) is undefined
-	#endif
-}
+std::size_t CountTrailingZeros(const uint64_t mask) noexcept;
 
 [[nodiscard]]
 uint64_t GetLSB(uint64_t) noexcept;
@@ -87,7 +77,7 @@ inline uint64_t GetMSB(const uint64_t b) noexcept
 {
 	if (b == 0u) // TODO: Can we get rid of this?
 		return 0;
-	return 0x8000000000000000ui64 >> CountLeadingZeros(b);
+	return 0x8000000000000000ULL >> CountLeadingZeros(b);
 }
 
 namespace detail
@@ -129,10 +119,10 @@ namespace detail
 	[[nodiscard]]
 	inline std::size_t PopCount_generic(uint64_t b) noexcept
 	{
-		b -= (b >> 1) & 0x5555555555555555ui64;
-		b = ((b >> 2) & 0x3333333333333333ui64) + (b & 0x3333333333333333ui64);
-		b = ((b >> 4) + b) & 0x0F0F0F0F0F0F0F0Fui64;
-		return (b * 0x0101010101010101ui64) >> 56;
+		b -= (b >> 1) & 0x5555555555555555ULL;
+		b = ((b >> 2) & 0x3333333333333333ULL) + (b & 0x3333333333333333ULL);
+		b = ((b >> 4) + b) & 0x0F0F0F0F0F0F0F0FULL;
+		return (b * 0x0101010101010101ULL) >> 56;
 	}
 }
 
@@ -145,7 +135,7 @@ inline uint64_t BExtr(const uint64_t src, const unsigned int start, unsigned int
 	#if defined(HAS_BEXTR) || defined(HAS_TBM)
 		return _bextr_u64(src, start, len);
 	#else
-		return (src >> start) & ((1ui64 << len) - 1);
+		return (src >> start) & ((1ULL << len) - 1);
 	#endif
 }
 
@@ -155,7 +145,7 @@ inline uint64_t BZHI(const uint64_t src, const uint32_t index) noexcept
 	#ifdef HAS_BZHI
 		return _bzhi_u64(src, index);
 	#else
-		return src & ((1ui64 << index) - 1);
+		return src & ((1ULL << index) - 1);
 	#endif
 }
 
@@ -170,7 +160,7 @@ uint64_t BSwap(const uint64_t b) noexcept;
 
 #if defined(_MSC_VER)
     #ifdef HAS_SSE2
-        [[nodiscard]] inline __m128i operator~(const __m128i& a) noexcept { return _mm_andnot_si128(a, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFui64)); }
+        [[nodiscard]] inline __m128i operator~(const __m128i& a) noexcept { return _mm_andnot_si128(a, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFULL)); }
 
         [[nodiscard]] inline __m128i operator+(const __m128i& a, const __m128i& b) noexcept { return _mm_add_epi64(a, b); }
         [[nodiscard]] inline __m128i operator-(const __m128i& a, const __m128i& b) noexcept { return _mm_sub_epi64(a, b); }
@@ -198,7 +188,7 @@ uint64_t BSwap(const uint64_t b) noexcept;
         [[nodiscard]] inline __m128i operator<=(const __m128i& a, const __m128i& b) noexcept { return ~(a > b); }
     #endif
     #ifdef HAS_AVX2
-		[[nodiscard]] inline __m256i operator~(const __m256i& a) noexcept { return _mm256_xor_si256(a, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFui64)); }
+		[[nodiscard]] inline __m256i operator~(const __m256i& a) noexcept { return _mm256_xor_si256(a, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL)); }
 
         [[nodiscard]] inline __m256i operator+(const __m256i& a, const __m256i& b) noexcept { return _mm256_add_epi64(a, b); }
         [[nodiscard]] inline __m256i operator-(const __m256i& a, const __m256i& b) noexcept { return _mm256_sub_epi64(a, b); }
@@ -219,7 +209,7 @@ uint64_t BSwap(const uint64_t b) noexcept;
 		uint64_t _mm256_reduce_or_epi64(__m256i) noexcept;
     #endif
 	#ifdef HAS_AVX512
-		[[nodiscard]] inline __m512i operator~(const __m512i& a) noexcept { return _mm512_xor_si512(a, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFui64)); }
+		[[nodiscard]] inline __m512i operator~(const __m512i& a) noexcept { return _mm512_xor_si512(a, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFULL)); }
 
 		[[nodiscard]] inline __m512i operator+(const __m512i& a, const __m512i& b) noexcept { return _mm512_add_epi64(a, b); }
 		[[nodiscard]] inline __m512i operator-(const __m512i& a, const __m512i& b) noexcept { return _mm512_sub_epi64(a, b); }

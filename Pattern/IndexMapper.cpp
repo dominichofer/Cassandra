@@ -21,7 +21,7 @@ HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
 	, m_pattern_C(FlipCodiagonal(pattern))
 	, m_pattern_V(FlipVertical(pattern))
 	, m_pattern_D(FlipDiagonal(pattern))
-	, m_half_size(Pow_int(3, PopCount(pattern & HALF & ~BitBoard::Middle())) * Pow_int(2, PopCount(pattern & HALF & BitBoard::Middle())))
+	, m_half_size(Pow_int(3, PopCount(pattern & HALF)))
 {
 	assert(pattern == FlipHorizontal(pattern));
 }
@@ -31,9 +31,9 @@ std::vector<BitBoard> HorizontalSymmetric::Patterns() const
 	return { Pattern, m_pattern_C, m_pattern_V, m_pattern_D };
 }
 
-std::vector<int> HorizontalSymmetric::ReducedIndices(Board board) const
+std::vector<int> HorizontalSymmetric::ReducedIndices(Position pos) const
 {
-	return { ReducedIndex0(board), ReducedIndex1(board), ReducedIndex2(board), ReducedIndex3(board) };
+	return { ReducedIndex0(pos), ReducedIndex1(pos), ReducedIndex2(pos), ReducedIndex3(pos) };
 }
 
 std::size_t HorizontalSymmetric::ReducedSize() const
@@ -41,33 +41,33 @@ std::size_t HorizontalSymmetric::ReducedSize() const
 	return m_half_size * (m_half_size + 1) / 2;
 }
 
-int HorizontalSymmetric::ReducedIndex0(Board board) const
+int HorizontalSymmetric::ReducedIndex0(Position pos) const
 {
-	int min = ReducedIndex(board, Pattern & HALF);
-	board.FlipHorizontal();
-	int max = ReducedIndex(board, Pattern & HALF);
+	int min = ReducedIndex(pos, Pattern & HALF);
+	pos.FlipHorizontal();
+	int max = ReducedIndex(pos, Pattern & HALF);
 	if (min > max)
 		std::swap(min, max);
 
 	return min * m_half_size + max - (min * (min + 1) / 2);
 }
 
-int HorizontalSymmetric::ReducedIndex1(Board board) const
+int HorizontalSymmetric::ReducedIndex1(Position pos) const
 {
-	board.FlipCodiagonal();
-	return ReducedIndex0(board);
+	pos.FlipCodiagonal();
+	return ReducedIndex0(pos);
 }
 
-int HorizontalSymmetric::ReducedIndex2(Board board) const
+int HorizontalSymmetric::ReducedIndex2(Position pos) const
 {
-	board.FlipVertical();
-	return ReducedIndex0(board);
+	pos.FlipVertical();
+	return ReducedIndex0(pos);
 }
 
-int HorizontalSymmetric::ReducedIndex3(Board board) const
+int HorizontalSymmetric::ReducedIndex3(Position pos) const
 {
-	board.FlipDiagonal();
-	return ReducedIndex0(board);
+	pos.FlipDiagonal();
+	return ReducedIndex0(pos);
 }
 
 DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
@@ -75,8 +75,8 @@ DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
 	, m_pattern_H(FlipHorizontal(pattern))
 	, m_pattern_C(FlipCodiagonal(pattern))
 	, m_pattern_V(FlipVertical(pattern))
-	, m_half_size(Pow_int(3, PopCount(pattern & HALF & ~BitBoard::Middle())) * Pow_int(2, PopCount(pattern & HALF & BitBoard::Middle())))
-	, m_diag_size(Pow_int(3, PopCount(pattern & DIAG & ~BitBoard::Middle())) * Pow_int(2, PopCount(pattern & DIAG & BitBoard::Middle())))
+	, m_half_size(Pow_int(3, PopCount(pattern & HALF)))
+	, m_diag_size(Pow_int(3, PopCount(pattern & DIAG)))
 {
 	assert(pattern == FlipDiagonal(pattern));
 }
@@ -86,9 +86,9 @@ std::vector<BitBoard> DiagonalSymmetric::Patterns() const
 	return { Pattern, m_pattern_H, m_pattern_C, m_pattern_V };
 }
 
-std::vector<int> DiagonalSymmetric::ReducedIndices(Board board) const
+std::vector<int> DiagonalSymmetric::ReducedIndices(Position pos) const
 {
-	return { ReducedIndex0(board), ReducedIndex1(board), ReducedIndex2(board), ReducedIndex3(board) };
+	return { ReducedIndex0(pos), ReducedIndex1(pos), ReducedIndex2(pos), ReducedIndex3(pos) };
 }
 
 std::size_t DiagonalSymmetric::ReducedSize() const
@@ -96,35 +96,35 @@ std::size_t DiagonalSymmetric::ReducedSize() const
 	return m_diag_size * m_half_size * (m_half_size + 1) / 2;
 }
 
-int DiagonalSymmetric::ReducedIndex0(Board board) const
+int DiagonalSymmetric::ReducedIndex0(Position pos) const
 {
-	int diag = ReducedIndex(board, Pattern & DIAG);
+	int diag = ReducedIndex(pos, Pattern & DIAG);
 
-	int min = ReducedIndex(board, Pattern & HALF);
-	board.FlipDiagonal();
-	int max = ReducedIndex(board, Pattern & HALF);
+	int min = ReducedIndex(pos, Pattern & HALF);
+	pos.FlipDiagonal();
+	int max = ReducedIndex(pos, Pattern & HALF);
 	if (min > max)
 		std::swap(min, max);
 
 	return (min * m_half_size + max - (min * (min + 1) / 2)) * m_diag_size + diag;
 }
 
-int DiagonalSymmetric::ReducedIndex1(Board board) const
+int DiagonalSymmetric::ReducedIndex1(Position pos) const
 {
-	board.FlipHorizontal();
-	return ReducedIndex0(board);
+	pos.FlipHorizontal();
+	return ReducedIndex0(pos);
 }
 
-int DiagonalSymmetric::ReducedIndex2(Board board) const
+int DiagonalSymmetric::ReducedIndex2(Position pos) const
 {
-	board.FlipCodiagonal();
-	return ReducedIndex0(board);
+	pos.FlipCodiagonal();
+	return ReducedIndex0(pos);
 }
 
-int DiagonalSymmetric::ReducedIndex3(Board board) const
+int DiagonalSymmetric::ReducedIndex3(Position pos) const
 {
-	board.FlipVertical();
-	return ReducedIndex0(board);
+	pos.FlipVertical();
+	return ReducedIndex0(pos);
 }
 
 Asymmetric::Asymmetric(BitBoard pattern)
@@ -143,65 +143,65 @@ std::vector<BitBoard> Asymmetric::Patterns() const
 	return { Pattern, m_pattern_H, m_pattern_V, m_pattern_D, m_pattern_C, m_patternHV, m_patternHD, m_patternHC };
 }
 
-std::vector<int> Asymmetric::ReducedIndices(Board board) const
+std::vector<int> Asymmetric::ReducedIndices(Position pos) const
 {
 	return {
-		ReducedIndex0(board), ReducedIndex1(board), ReducedIndex2(board), ReducedIndex3(board),
-		ReducedIndex4(board), ReducedIndex5(board), ReducedIndex6(board), ReducedIndex7(board)
+		ReducedIndex0(pos), ReducedIndex1(pos), ReducedIndex2(pos), ReducedIndex3(pos),
+		ReducedIndex4(pos), ReducedIndex5(pos), ReducedIndex6(pos), ReducedIndex7(pos)
 	};
 }
 
 std::size_t Asymmetric::ReducedSize() const
 {
-	return Pow_int(3, PopCount(Pattern & ~BitBoard::Middle())) * Pow_int(2, PopCount(Pattern & BitBoard::Middle()));
+	return Pow_int(3, PopCount(Pattern));
 }
 
-int Asymmetric::ReducedIndex0(Board board) const
+int Asymmetric::ReducedIndex0(Position pos) const
 {
-	return ReducedIndex(board, Pattern);
+	return ReducedIndex(pos, Pattern);
 }
 
-int Asymmetric::ReducedIndex1(Board board) const
+int Asymmetric::ReducedIndex1(Position pos) const
 {
-	board.FlipHorizontal();
-	return ReducedIndex0(board);
+	pos.FlipHorizontal();
+	return ReducedIndex0(pos);
 }
 
-int Asymmetric::ReducedIndex2(Board board) const
+int Asymmetric::ReducedIndex2(Position pos) const
 {
-	board.FlipVertical();
-	return ReducedIndex0(board);
+	pos.FlipVertical();
+	return ReducedIndex0(pos);
 }
 
-int Asymmetric::ReducedIndex3(Board board) const
+int Asymmetric::ReducedIndex3(Position pos) const
 {
-	board.FlipDiagonal();
-	return ReducedIndex0(board);
+	pos.FlipDiagonal();
+	return ReducedIndex0(pos);
 }
 
-int Asymmetric::ReducedIndex4(Board board) const
+int Asymmetric::ReducedIndex4(Position pos) const
 {
-	board.FlipCodiagonal();
-	return ReducedIndex0(board);
+	pos.FlipCodiagonal();
+	return ReducedIndex0(pos);
 }
 
-int Asymmetric::ReducedIndex5(Board board) const
+int Asymmetric::ReducedIndex5(Position pos) const
 {
-	board.FlipVertical();
-	board.FlipHorizontal();
-	return ReducedIndex0(board);
+	pos.FlipVertical();
+	pos.FlipHorizontal();
+	return ReducedIndex0(pos);
 }
 
-int Asymmetric::ReducedIndex6(Board board) const
+int Asymmetric::ReducedIndex6(Position pos) const
 {
-	board.FlipDiagonal();
-	board.FlipHorizontal();
-	return ReducedIndex0(board);
+	pos.FlipDiagonal();
+	pos.FlipHorizontal();
+	return ReducedIndex0(pos);
 }
 
-int Asymmetric::ReducedIndex7(Board board) const
+int Asymmetric::ReducedIndex7(Position pos) const
 {
-	board.FlipCodiagonal();
-	board.FlipHorizontal();
-	return ReducedIndex0(board);
+	pos.FlipCodiagonal();
+	pos.FlipHorizontal();
+	return ReducedIndex0(pos);
 }
