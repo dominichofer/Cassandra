@@ -110,5 +110,5 @@ uint64_t _mm256_reduce_or_epi64(__m256i x) noexcept
 	__m256i x1 = _mm256_or_si256(x, x0);
 	__m256i x2 = _mm256_shuffle_epi32(x1, 0b01001110);
 	__m256i x3 = _mm256_or_si256(x1, x2);
-	return _mm_cvtsi128_si64x(_mm256_castsi256_si128(x3));
+	return _mm_cvtsi128_si64(_mm256_castsi256_si128(x3));
 }
