@@ -6,16 +6,15 @@
 
 struct PositionDepthPair
 {
-	Position position{ BitBoard{ 0 }, BitBoard{ 0 } }; // TODO: This is an illegal state of Position!
-	int depth;
+	Position pos{ 0, 0 };
+	int depth = -1;
 };
 
 inline bool operator==(const PositionDepthPair& l, const PositionDepthPair& r) noexcept
 {
-	return (l.position == r.position) && (l.depth == r.depth);
+	return (l.pos == r.pos) && (l.depth == r.depth);
 }
 
-// 
 class BigNode
 {
 public:
@@ -29,9 +28,9 @@ public:
 	BigNode& operator=(BigNode&&) = delete;
 	~BigNode() = default;
 
-	void Update(const key_type& new_key, const value_type new_value);
+	void Update(const key_type& new_key, const value_type& new_value);
 
-	std::optional<value_type> LookUp(const PositionDepthPair& key) const;
+	std::optional<value_type> LookUp(const key_type&) const;
 
 	void Clear();
 
@@ -62,8 +61,8 @@ struct BigNodeHashTable : public HashTable<BigNode::key_type, BigNode::value_typ
 	BigNodeHashTable(uint64_t buckets)
 		: HashTable(buckets,
 			[](const HashTable::key_type& key) {
-				uint64_t P = key.position.GetP();
-				uint64_t O = key.position.GetO();
+				uint64_t P = key.pos.GetP();
+				uint64_t O = key.pos.GetO();
 				P ^= P >> 36;
 				O ^= O >> 21;
 				return (P * O + key.depth);

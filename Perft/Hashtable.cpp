@@ -17,7 +17,7 @@ BigNode::LockGuard::~LockGuard()
 	lock.store(value, std::memory_order_release);
 }
 
-void BigNode::Update(const key_type& new_key, const value_type new_value)
+void BigNode::Update(const key_type& new_key, const value_type& new_value)
 {
 	assert(new_value != LockGuard::locked_marker);
 
@@ -29,7 +29,7 @@ void BigNode::Update(const key_type& new_key, const value_type new_value)
 	}
 }
 
-std::optional<BigNode::value_type> BigNode::LookUp(const PositionDepthPair& key) const
+std::optional<BigNode::value_type> BigNode::LookUp(const key_type& key) const
 {
 	const auto pair = Get();
 	if (pair.key == key)
