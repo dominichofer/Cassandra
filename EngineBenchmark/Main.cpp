@@ -87,7 +87,6 @@ void Benchmark_serial(PuzzleLibrary& library, const std::size_t empty_count, std
 	}
 	auto stop = std::chrono::high_resolution_clock::now();
 
-	std::cout << (stop - start).count() << "  ";
 	print(stop - start, empty_count, sample_size, node_count);
 }
 template <>
@@ -95,7 +94,7 @@ void Benchmark_serial<Search::PVSearch>(PuzzleLibrary& library, const std::size_
 {
 	auto puzzles = library[empty_count];
 	std::size_t node_count = 0;
-	HashTablePVS tt{ 1 };
+	HashTablePVS tt{ 1'000'000 };
 
 	auto start = std::chrono::high_resolution_clock::now();
 	//#pragma omp parallel for reduction(+:node_count)
@@ -107,7 +106,6 @@ void Benchmark_serial<Search::PVSearch>(PuzzleLibrary& library, const std::size_
 	}
 	auto stop = std::chrono::high_resolution_clock::now();
 
-	std::cout << (stop - start).count() << "  ";
 	print(stop - start, empty_count, sample_size, node_count);
 }
 
@@ -117,48 +115,48 @@ int main(int argc, char* argv[])
 	PuzzleLibrary library(20);
 	std::wcout << L" done." << std::endl;
 
-	std::cout << "NegaMax serial\n";
-	Benchmark_serial<Search::NegaMax>(library, 0, 50'000'000);
-	Benchmark_serial<Search::NegaMax>(library, 1, 50'000'000);
-	Benchmark_serial<Search::NegaMax>(library, 2, 20'000'000);
-	Benchmark_serial<Search::NegaMax>(library, 3,  5'000'000);
-	Benchmark_serial<Search::NegaMax>(library, 4,  2'000'000);
-	Benchmark_serial<Search::NegaMax>(library, 5,    500'000);
-	Benchmark_serial<Search::NegaMax>(library, 6,    100'000);
-	Benchmark_serial<Search::NegaMax>(library, 7, 	  20'000);
-	Benchmark_serial<Search::NegaMax>(library, 8, 	   3'000);
-	Benchmark_serial<Search::NegaMax>(library, 9, 	     500);
-	Benchmark_serial<Search::NegaMax>(library, 10,       100);
+	//std::cout << "NegaMax serial\n";
+	//Benchmark_serial<Search::NegaMax>(library, 0, 50'000'000);
+	//Benchmark_serial<Search::NegaMax>(library, 1, 50'000'000);
+	//Benchmark_serial<Search::NegaMax>(library, 2, 20'000'000);
+	//Benchmark_serial<Search::NegaMax>(library, 3,  5'000'000);
+	//Benchmark_serial<Search::NegaMax>(library, 4,  2'000'000);
+	//Benchmark_serial<Search::NegaMax>(library, 5,    500'000);
+	//Benchmark_serial<Search::NegaMax>(library, 6,    100'000);
+	//Benchmark_serial<Search::NegaMax>(library, 7, 	  20'000);
+	//Benchmark_serial<Search::NegaMax>(library, 8, 	   3'000);
+	//Benchmark_serial<Search::NegaMax>(library, 9, 	     500);
+	//Benchmark_serial<Search::NegaMax>(library, 10,       100);
 
-	std::cout << "\nAlphaBetaFailHard serial\n";
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 0, 50'000'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 1, 50'000'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 2, 20'000'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 3,  5'000'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 4,  2'000'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 5,    500'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 6,    200'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 7,    100'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 8, 	20'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 9, 	 5'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 10,     2'000);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 11,       500);
-	Benchmark_serial<Search::AlphaBetaFailHard>(library, 12,       100);
+	//std::cout << "\nAlphaBetaFailHard serial\n";
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 0, 50'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 1, 50'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 2, 20'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 3,  5'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 4,  2'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 5,    500'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 6,    200'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 7,    100'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 8, 	20'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 9, 	 5'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 10,     2'000);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 11,       500);
+	//Benchmark_serial<Search::AlphaBetaFailHard>(library, 12,       100);
 
-	std::cout << "\nAlphaBetaFailSoft serial\n";
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 0, 50'000'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 1, 50'000'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 2, 20'000'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 3,  5'000'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 4,  2'000'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 5,    500'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 6,    200'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 7,    100'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 8, 	20'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 9, 	 5'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 10,     2'000);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 11,       500);
-	Benchmark_serial<Search::AlphaBetaFailSoft>(library, 12,       100);
+	//std::cout << "\nAlphaBetaFailSoft serial\n";
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 0, 50'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 1, 50'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 2, 20'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 3,  5'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 4,  2'000'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 5,    500'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 6,    200'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 7,    100'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 8, 	20'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 9, 	 5'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 10,     2'000);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 11,       500);
+	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 12,       100);
 
 	std::cout << "\nPVSearch serial\n";
 	Benchmark_serial<Search::PVSearch>(library, 0, 50'000'000);
