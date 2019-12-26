@@ -26,10 +26,20 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity intensity)
 		return -PVS_N(passed, -intensity);
 	}
 
-	//if (const auto tt_value = tt.LookUp(pos))
-
-
 	StatusQuo status_quo(intensity);
+
+	if (const auto tt_value = tt.LookUp(pos))
+	{
+		if (tt_value.value().Exceeds(status_quo.Window()))
+		{
+			const auto ret = status_quo.UpperCut(tt_value.value());
+			tt.Update(pos, ret);
+			return ret;
+		}
+		status_quo.ImproveWith(tt_value);
+	}
+
+
 	for (auto move : moves)
 	{
 		const auto result = -PVS_N(Play(pos, move), status_quo);
