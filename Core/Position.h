@@ -16,7 +16,7 @@ public:
 	static Position Start();
 	static Position StartETH();
 
-	static constexpr Position TryCreate(uint64_t P, uint64_t O) noexcept(false)
+	static constexpr Position TryCreate(BitBoard P, BitBoard O) noexcept(false)
 	{
 		if (MeetsConstraints(P, O))
 			return { P, O };
