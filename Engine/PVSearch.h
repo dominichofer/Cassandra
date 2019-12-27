@@ -17,22 +17,25 @@ namespace Search
 			Intensity intensity;
 			Score best_score = -infinity;
 			Field best_move = Field::invalid;
-			unsigned int worst_depth = 0;
-			Selectivity worst_selectivity = Selectivity::Infinit;
+			unsigned int worst_depth;
+			Selectivity worst_selectivity;
 			std::size_t node_count = 1;
+			std::optional<Result> result = std::nullopt;
 
 		public:
 			StatusQuo() = delete;
-			StatusQuo(Intensity intensity) noexcept : intensity(intensity) {}
+			StatusQuo(Intensity required) noexcept : intensity(required), worst_depth(required.depth), worst_selectivity(required.selectivity) {}
 
 			operator Intensity() const noexcept;
 			ExclusiveInterval Window() const noexcept { return intensity.window; }
 
-			void ImproveWith(Result);
-			void ImproveWith(const std::optional<PVS_Info>&);
+			void ImproveWithMove(const Result&, Field move);
+			void ImproveWithAny(const Result&);
 
-			Result UpperCut(Result);
-			Result AllMovesTried(Intensity);
+			bool HasResult() const { return result.has_value(); }
+			Result GetResult() const { return result.value(); }
+
+			void AllMovesTried(const Intensity& requested);
 		};
 
 	public:
@@ -40,7 +43,7 @@ namespace Search
 
 		Result Eval(Position, Intensity);
 	private:
-		Result PVS_N(const Position&, Intensity);
-		Result ZWS_N(const Position&, Intensity);
+		Result PVS_N(const Position&, const Intensity&);
+		Result ZWS_N(const Position&, const Intensity&);
 	};
 }

@@ -12,7 +12,7 @@ Result PVSearch::Eval(Position pos, Intensity intensity)
 	return PVS_N(pos, intensity);
 }
 
-Result PVSearch::PVS_N(const Position& pos, const Intensity intensity)
+Result PVSearch::PVS_N(const Position& pos, const Intensity& intensity)
 {
 	if (pos.EmptyCount() <= 4)
 		return Eval(pos, intensity);
@@ -30,29 +30,29 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity intensity)
 
 	if (const auto tt_value = tt.LookUp(pos))
 	{
-		if (tt_value.value().Exceeds(status_quo.Window()))
+		status_quo.ImproveWithAny(tt_value.value());
+		if (status_quo.HasResult())
 		{
-			const auto ret = status_quo.UpperCut(tt_value.value());
+			const auto ret = status_quo.GetResult();
 			tt.Update(pos, ret);
 			return ret;
 		}
-		status_quo.ImproveWith(tt_value);
 	}
-
 
 	for (auto move : moves)
 	{
 		const auto result = -PVS_N(Play(pos, move), status_quo);
-		if (result.Exceeds(status_quo.Window()))
+		status_quo.ImproveWithMove(result, move);
+		if (status_quo.HasResult())
 		{
-			const auto ret = status_quo.UpperCut(result);
+			const auto ret = status_quo.GetResult();
 			tt.Update(pos, ret);
 			return ret;
 		}
-		status_quo.ImproveWith(result);
 	}
 
-	const auto ret = status_quo.AllMovesTried(intensity);
+	status_quo.AllMovesTried(intensity);
+	const auto ret = status_quo.GetResult();
 	tt.Update(pos, ret);
 	return ret;
 }
@@ -67,44 +67,54 @@ PVSearch::StatusQuo::operator Intensity() const noexcept
 	return -intensity - 1;
 }
 
-void PVSearch::StatusQuo::ImproveWith(Result novum)
+void PVSearch::StatusQuo::ImproveWithMove(const Result& novum, Field move)
 {
 	assert(novum.depth + 1 >= worst_depth);
 	assert(novum.selectivity <= worst_selectivity);
 
+	intensity.window.lower = std::max(intensity.window.lower, novum.window.lower);
 	if (novum.window.lower > best_score)
 	{
-		intensity.window.lower = std::max(intensity.window.lower, novum.window.lower);
 		best_score = novum.window.lower;
-		best_move = novum.best_move;
+		best_move = move;
 	}
-	worst_depth = std::max(worst_depth, novum.depth + 1);
-	worst_selectivity = std::min(worst_selectivity, novum.selectivity);
+	worst_depth = std::min(worst_depth, novum.depth + 1);
+	worst_selectivity = std::max(worst_selectivity, novum.selectivity);
 	node_count += novum.node_count;
+
+	if (best_score >= intensity.window.upper)
+		result = Result::MinBound(intensity.window.lower, worst_depth, worst_selectivity, best_move, node_count);
 }
 
-void Search::PVSearch::StatusQuo::ImproveWith(const std::optional<PVS_Info>& info)
+void PVSearch::StatusQuo::ImproveWithAny(const Result& novum)
 {
-	if (!info)
-		return;
+	const bool as_deep = (novum.depth >= intensity.depth);
+	const bool as_selective = (novum.selectivity <= intensity.selectivity);
 
-
+	if (as_deep and as_selective)
+	{
+		if (novum.window.lower == novum.window.upper) // exact score
+			result = Result::ExactScore(novum.window.lower, novum.depth, novum.selectivity, novum.best_move, node_count);
+		else if (novum.window.lower >= intensity.window.upper) // upper cut
+			result = Result::MinBound(novum.window.lower, novum.depth, novum.selectivity, novum.best_move, node_count);
+		else if (novum.window.upper <= intensity.window.lower) // lower cut
+			result = Result::MinBound(novum.window.upper, novum.depth, novum.selectivity, novum.best_move, node_count);
+		else
+		{
+			intensity.window.lower = std::max(intensity.window.lower, novum.window.lower);
+			intensity.window.upper = std::min(intensity.window.upper, novum.window.upper);
+		}
+	}
 }
 
-Result PVSearch::StatusQuo::UpperCut(Result result)
+void PVSearch::StatusQuo::AllMovesTried(const Intensity& requested) // TODO: Remove Intensity, because the condition can be inferred via best_move???
 {
-	assert(result.Exceeds(intensity.window));
+	assert(worst_depth >= requested.depth);
+	assert(worst_selectivity <= requested.selectivity);
+	assert(best_score < requested.window.upper);
 
-	ImproveWith(result);
-	return Result::MinBound(result.window.lower, worst_depth, worst_selectivity, best_move, node_count);
-}
-
-Result PVSearch::StatusQuo::AllMovesTried(Intensity intensity)
-{
-	assert(worst_depth >= intensity.depth);
-	assert(worst_selectivity <= intensity.selectivity);
-
-	if (best_score > intensity.window.lower)
-		return Result::ExactScore(best_score, worst_depth, worst_selectivity, best_move, node_count);
-	return Result::MaxBound(intensity.window.lower, worst_depth, worst_selectivity, best_move, node_count);
+	if (best_score > requested.window.lower)
+		result = Result::ExactScore(best_score, worst_depth, worst_selectivity, best_move, node_count);
+	else
+		result = Result::MaxBound(requested.window.lower, worst_depth, worst_selectivity, best_move, node_count);
 }

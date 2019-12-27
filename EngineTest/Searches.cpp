@@ -350,3 +350,22 @@ TEST_F(PVSearch, FForum_7) { TestAlgorithm(alg, FForum[7]); }
 TEST_F(PVSearch, FForum_8) { TestAlgorithm(alg, FForum[8]); }
 TEST_F(PVSearch, FForum_9) { TestAlgorithm(alg, FForum[9]); }
 TEST_F(PVSearch, FForum_10) { TestAlgorithm(alg, FForum[10]); }
+
+TEST(PVSearch_TT, FForum_10)
+{
+	HashTablePVS tt{ 1'000 };
+	Search::PVSearch alg{ tt };
+
+	const Position pos = FForum[10].pos;
+	const Score correct = FForum[10].score;
+
+	const auto result1 = alg.Eval(pos, Search::Intensity::Exact(pos));
+	const auto hitcounter1 = tt.HitCounter();
+
+	const auto result2 = alg.Eval(pos, Search::Intensity::Exact(pos));
+	const auto hitcounter2 = tt.HitCounter();
+
+	ASSERT_EQ(result2.window.lower, correct);
+	ASSERT_EQ(result2.window.upper, correct);
+	ASSERT_EQ(hitcounter2 - hitcounter1, 1);
+}
