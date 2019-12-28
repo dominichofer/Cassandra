@@ -31,11 +31,22 @@ namespace Search
 
 			void ImproveWithMove(const Result&, Field move);
 			void ImproveWithAny(const Result&);
+			void ImproveWithAny(const std::optional<Result>&);
 
 			bool HasResult() const { return result.has_value(); }
 			Result GetResult() const { return result.value(); }
 
 			void AllMovesTried(const Intensity& requested);
+		};
+
+		class TT_Updater
+		{
+			const Position& pos;
+			HashTablePVS& tt;
+			const PVSearch::StatusQuo& status_quo;
+		public:
+			TT_Updater(const Position& pos, HashTablePVS& tt, const PVSearch::StatusQuo& status_quo) : pos(pos), tt(tt), status_quo(status_quo) {}
+			~TT_Updater() { tt.Update(pos, status_quo.GetResult()); }
 		};
 
 	public:

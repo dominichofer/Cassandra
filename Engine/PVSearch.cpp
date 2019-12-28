@@ -27,34 +27,22 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity& intensity)
 	}
 
 	StatusQuo status_quo(intensity);
+	TT_Updater tt_updater(pos, tt, status_quo);
 
-	if (const auto tt_value = tt.LookUp(pos))
-	{
-		status_quo.ImproveWithAny(tt_value.value());
-		if (status_quo.HasResult())
-		{
-			const auto ret = status_quo.GetResult();
-			tt.Update(pos, ret);
-			return ret;
-		}
-	}
+	status_quo.ImproveWithAny(tt.LookUp(pos));
+	if (status_quo.HasResult())
+		return status_quo.GetResult();
 
 	for (auto move : moves)
 	{
 		const auto result = -PVS_N(Play(pos, move), status_quo);
 		status_quo.ImproveWithMove(result, move);
 		if (status_quo.HasResult())
-		{
-			const auto ret = status_quo.GetResult();
-			tt.Update(pos, ret);
-			return ret;
-		}
+			return status_quo.GetResult();
 	}
 
 	status_quo.AllMovesTried(intensity);
-	const auto ret = status_quo.GetResult();
-	tt.Update(pos, ret);
-	return ret;
+	return status_quo.GetResult();
 }
 
 //Result PVSearch::ZWS_N(Position pos, Intensity intensity)
@@ -105,6 +93,12 @@ void PVSearch::StatusQuo::ImproveWithAny(const Result& novum)
 			intensity.window.upper = std::min(intensity.window.upper, novum.window.upper);
 		}
 	}
+}
+
+void Search::PVSearch::StatusQuo::ImproveWithAny(const std::optional<Result>& novum)
+{
+	if (novum)
+		ImproveWithAny(novum.value());
 }
 
 void PVSearch::StatusQuo::AllMovesTried(const Intensity& requested) // TODO: Remove Intensity, because the condition can be inferred via best_move???
