@@ -14,10 +14,10 @@ public:
 	PositionGenerator(uint64_t seed = std::random_device{}()) : rnd_engine(seed) {}
 
 	Position Random();
-	Position Random(uint64_t empty_count);
+	Position Random(std::size_t empty_count);
 
 	//Position RandomlyPlayed(Position start_pos = Position::Start());
-	static Position Played(Player&, std::size_t empty_count, Position start = Position::Start());
+	static Position Played(Player&, std::size_t empty_count, Position start = Position::Start()); // TODO: Refactor our of class!
 
 	//std::unordered_set<Position> RandomlyPlayed(std::size_t count,                       Position start_pos = Position::Start());
 	//std::vector<Position> Played(Player&, std::size_t count, std::size_t empty_count, Position start = Position::Start());
@@ -27,16 +27,16 @@ public:
 	//std::unordered_set<Position> RandomlyPlayed(std::execution::parallel_policy&& , std::size_t count, uint64_t empty_count, Position start_pos = Position::Start());
 	
 	template <class Inserter>
-	static void All(Inserter it, std::size_t plies, std::size_t plies_per_pass, Position start = Position::Start())
+	static void All(Inserter ins, std::size_t plies, std::size_t plies_per_pass, Position start = Position::Start())
 	{
-		all(start, plies, plies_per_pass, it);
+		all(start, plies, plies_per_pass, ins);
 	}
 
 	template <class Inserter>
-	static void All(Inserter it, std::size_t empty_count, Position start = Position::Start())
+	static void All(Inserter ins, std::size_t empty_count, Position start = Position::Start())
 	{
 		if (start.EmptyCount() >= empty_count)
-			all(start, start.EmptyCount() - empty_count, 0, it);
+			all(start, start.EmptyCount() - empty_count, 0, ins);
 	}
 
 private:

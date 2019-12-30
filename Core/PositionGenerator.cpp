@@ -37,14 +37,15 @@
 
 Position PositionGenerator::Random()
 {
-	// 25% chance to belong to player
-	// 25% chance to belong to opponent
-	// 50% chance to be empty
+	// Each field has a:
+	//  25% chance to belong to player,
+	//  25% chance to belong to opponent,
+	//  50% chance to be empty.
 
 	auto rnd = [this]() { return BitBoard(std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine)); };
-	BitBoard P = rnd();
-	BitBoard O = rnd();
-	return { P & ~O, O & ~P };
+	BitBoard p = rnd();
+	BitBoard o = rnd();
+	return { p & ~o, o & ~p };
 }
 
 Position PositionGenerator::Random(const std::size_t target_empty_count)
@@ -53,7 +54,7 @@ Position PositionGenerator::Random(const std::size_t target_empty_count)
 
 	BitBoard P = 0;
 	BitBoard O = 0;
-	for (std::size_t empty_count = Position{}.EmptyCount(); empty_count > target_empty_count; empty_count--)
+	for (std::size_t empty_count = 64; empty_count > target_empty_count; empty_count--)
 	{
 		auto rnd = std::uniform_int_distribution<std::size_t>(0, empty_count - 1)(rnd_engine);
 		auto bit = BitBoard(PDep(1ULL << rnd, Position(P, O).Empties()));
