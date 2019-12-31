@@ -5,21 +5,17 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <optional>
 
-std::wstring to_wstring(Field);
-Field ParseField(const std::wstring&);
+// Maps 'Field::A1' -> "A1", ... , 'Field::invalid' -> "--".
+std::wstring to_wstring(Field) noexcept;
+Field ParseField(const std::wstring&) noexcept;
 
-std::wstring SingleLine(Position);
-Position ParsePosition_SingleLine(const std::wstring&);
+std::wstring SingleLine(const Position&);
+std::optional<Position> ParsePosition_SingleLine(const std::wstring&);
 
-std::wstring MultiLine(Position);
+std::wstring MultiLine(const Position&);
 
-std::wstring SignedInt(Score);
-std::wstring DoubleDigitSignedInt(Score);
-
-std::size_t ParseBytes(const std::wstring& bytes);
-
-wchar_t MetricPrefix(int magnitude_base_1000);
 
 // Format: "ddd:hh:mm:ss.ccc"
 std::wstring time_format(const std::chrono::milliseconds duration);
@@ -53,11 +49,11 @@ void ReadFile(Inserter& inserter, const std::filesystem::path& path, std::size_t
 }
 
 template <typename Iterator>
-void write_to_file(const std::filesystem::path& path, Iterator begin, Iterator end)
+void WriteToFile(const std::filesystem::path& path, Iterator begin, Iterator end)
 {
 	std::fstream file(path, std::ios::out | std::ios::binary);
 	if (!file.is_open())
-		throw std::fstream::failure("File '" + filename + "' could not be opened.");
+		throw std::fstream::failure("File '" + filename + "' could not be opened for output.");
 
 	for (auto it = begin; it != end; ++it)
 		file.write(reinterpret_cast<const char*>(std::addressof(*it)), sizeof(std::iterator_traits<Iterator>::value_type));
