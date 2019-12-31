@@ -22,12 +22,21 @@ Puzzle Puzzle::Exact(::Position pos)
 	return Puzzle(pos, Search::Intensity::Exact(pos));
 }
 
-void Puzzle::Reset()
+bool Puzzle::IsSolved() const
 {
-	result = {};
+	if (result)
+		return (result.value().depth >= intensity.depth)
+			&& (result.value().selectivity <= intensity.selectivity);
+	return false;
 }
 
-void Puzzle::Solve(Search::Algorithm& algorithm)
+void Puzzle::Reset()
 {
-	result = algorithm.Eval(position, intensity);
+	result = std::nullopt;
+}
+
+void Puzzle::Solve(Search::Algorithm& algorithm, bool force)
+{
+	if (force || !IsSolved())
+		result = algorithm.Eval(position, intensity);
 }

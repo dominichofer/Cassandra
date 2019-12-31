@@ -17,6 +17,8 @@ public:
 	auto Intensity() const { return intensity; }
 	auto Result() const { return result; }
 
+	bool IsSolved() const;
+
 	void Reset();
-	void Solve(Search::Algorithm&);
+	void Solve(Search::Algorithm&, bool force = true);
 };
