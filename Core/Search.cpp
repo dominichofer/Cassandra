@@ -122,8 +122,3 @@ Result Result::operator-() const
 {
 	return { -window, depth, selectivity, best_move, node_count };
 }
-
-bool Result::Exceeds(ExclusiveInterval w) const noexcept
-{
-	return window > w;
-}

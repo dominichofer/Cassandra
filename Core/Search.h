@@ -143,7 +143,6 @@ namespace Search
 
 		// Result with inverted window.
 		[[nodiscard]] Result operator-() const;
-		[[nodiscard]] bool Exceeds(ExclusiveInterval) const noexcept;
 	};
 
 	struct Algorithm
