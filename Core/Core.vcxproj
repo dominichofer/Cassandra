@@ -68,6 +68,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BitBoard.cpp" />
+    <ClCompile Include="Interval.cpp" />
     <ClCompile Include="Machine.cpp" />
     <ClCompile Include="Moves.cpp" />
     <ClCompile Include="Player.cpp" />

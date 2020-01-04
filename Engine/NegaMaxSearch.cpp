@@ -57,7 +57,7 @@ Score NegaMax::Eval_1(const Position& pos, const Field move1)
 Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 {
 	node_counter++;
-	Score score = -infinity;
+	Score score = -Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1))
 		score = std::max(score, -Eval_1(Play(pos, move1, flips), move2));
@@ -65,11 +65,11 @@ Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 	if (const auto flips = Flips(pos, move2))
 		score = std::max(score, -Eval_1(Play(pos, move2, flips), move1));
 
-	if (score != -infinity)
+	if (score != -Score::Infinity)
 		return score;
 
 	const auto passed = PlayPass(pos);
-	score = infinity;
+	score = Score::Infinity;
 
 	if (const auto flips = Flips(passed, move1))
 		score = std::min(score, Eval_1(Play(passed, move1, flips), move2));
@@ -77,7 +77,7 @@ Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 	if (const auto flips = Flips(passed, move2))
 		score = std::min(score, Eval_1(Play(passed, move2, flips), move1));
 
-	if (score != infinity) {
+	if (score != Score::Infinity) {
 		node_counter++;
 		return score;
 	}
@@ -88,7 +88,7 @@ Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2, const Field move3)
 {
 	node_counter++;
-	Score score = -infinity;
+	Score score = -Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1))
 		score = std::max(score, -Eval_2(Play(pos, move1, flips), move2, move3));
@@ -99,11 +99,11 @@ Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2,
 	if (const auto flips = Flips(pos, move3))
 		score = std::max(score, -Eval_2(Play(pos, move3, flips), move1, move2));
 
-	if (score != -infinity)
+	if (score != -Score::Infinity)
 		return score;
 
 	const auto passed = PlayPass(pos);
-	score = infinity;
+	score = Score::Infinity;
 
 	if (const auto flips = Flips(passed, move1))
 		score = std::min(score, Eval_2(Play(passed, move1, flips), move2, move3));
@@ -114,7 +114,7 @@ Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2,
 	if (const auto flips = Flips(passed, move3))
 		score = std::min(score, Eval_2(Play(passed, move3, flips), move1, move2));
 
-	if (score != infinity) {
+	if (score != Score::Infinity) {
 		node_counter++;
 		return score;
 	}
@@ -125,7 +125,7 @@ Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2,
 Score NegaMax::Eval_4(const Position& pos, const Field move1, const Field move2, const Field move3, const Field move4)
 {
 	node_counter++;
-	Score score = -infinity;
+	Score score = -Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1))
 		score = std::max(score, -Eval_3(Play(pos, move1, flips), move2, move3, move4));
@@ -139,11 +139,11 @@ Score NegaMax::Eval_4(const Position& pos, const Field move1, const Field move2,
 	if (const auto flips = Flips(pos, move4))
 		score = std::max(score, -Eval_3(Play(pos, move4, flips), move1, move2, move3));
 
-	if (score != -infinity)
+	if (score != -Score::Infinity)
 		return score;
 
 	const auto passed = PlayPass(pos);
-	score = infinity;
+	score = Score::Infinity;
 
 	if (const auto flips = Flips(passed, move1))
 		score = std::min(score, Eval_3(Play(passed, move1, flips), move2, move3, move4));
@@ -157,7 +157,7 @@ Score NegaMax::Eval_4(const Position& pos, const Field move1, const Field move2,
 	if (const auto flips = Flips(passed, move4))
 		score = std::min(score, Eval_3(Play(passed, move4, flips), move1, move2, move3));
 
-	if (score != infinity) {
+	if (score != Score::Infinity) {
 		node_counter++;
 		return score;
 	}
@@ -181,7 +181,7 @@ Score NegaMax::Eval_N(const Position& pos)
 		return -Eval_N(passed);
 	}
 
-	Score score = -infinity;
+	Score score = -Score::Infinity;
 	for (auto move : moves)
 		score = std::max(score, -Eval_N(Play(pos, move)));
 

@@ -47,7 +47,7 @@ Score AlphaBetaFailHard::Eval_1(const Position& pos, const ExclusiveInterval w, 
 Score AlphaBetaFailHard::Eval_2(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2)
 {
 	node_counter++;
-	Score score = infinity;
+	Score score = Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1)) {
 		score = -Eval_1(Play(pos, move1, flips), -w, move2);
@@ -63,7 +63,7 @@ Score AlphaBetaFailHard::Eval_2(const Position& pos, ExclusiveInterval w, const 
 		return std::max(score, w.lower);
 	}
 
-	if (score != infinity)
+	if (score != Score::Infinity)
 		return w.lower;
 
 	const auto passed = PlayPass(pos);
@@ -83,7 +83,7 @@ Score AlphaBetaFailHard::Eval_2(const Position& pos, ExclusiveInterval w, const 
 		return std::min(score, w.upper);
 	}
 
-	if (score != infinity)
+	if (score != Score::Infinity)
 		return w.upper;
 
 	node_counter--;
@@ -93,7 +93,7 @@ Score AlphaBetaFailHard::Eval_2(const Position& pos, ExclusiveInterval w, const 
 Score AlphaBetaFailHard::Eval_3(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3)
 {
 	node_counter++;
-	Score score = infinity;
+	Score score = Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1)) {
 		score = -Eval_2(Play(pos, move1, flips), -w, move2, move3);
@@ -116,7 +116,7 @@ Score AlphaBetaFailHard::Eval_3(const Position& pos, ExclusiveInterval w, const 
 		return std::max(score, w.lower);
 	}
 
-	if (score != infinity)
+	if (score != Score::Infinity)
 		return w.lower;
 
 	const auto passed = PlayPass(pos);
@@ -143,7 +143,7 @@ Score AlphaBetaFailHard::Eval_3(const Position& pos, ExclusiveInterval w, const 
 		return std::min(score, w.upper);
 	}
 
-	if (score != infinity)
+	if (score != Score::Infinity)
 		return w.upper;
 
 	node_counter--;
@@ -153,7 +153,7 @@ Score AlphaBetaFailHard::Eval_3(const Position& pos, ExclusiveInterval w, const 
 Score AlphaBetaFailHard::Eval_4(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3, const Field move4)
 {
 	node_counter++;
-	Score score = infinity;
+	Score score = Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1)) {
 		score = -Eval_3(Play(pos, move1, flips), -w, move2, move3, move4);
@@ -183,7 +183,7 @@ Score AlphaBetaFailHard::Eval_4(const Position& pos, ExclusiveInterval w, const 
 		return std::max(score, w.lower);
 	}
 
-	if (score != infinity)
+	if (score != Score::Infinity)
 		return w.lower;
 
 	const auto passed = PlayPass(pos);
@@ -217,7 +217,7 @@ Score AlphaBetaFailHard::Eval_4(const Position& pos, ExclusiveInterval w, const 
 		return std::min(w.upper, score);
 	}
 
-	if (score != infinity)
+	if (score != Score::Infinity)
 		return w.upper;
 	
 	node_counter--;

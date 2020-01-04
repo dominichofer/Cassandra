@@ -8,40 +8,10 @@
 #include <cmath>
 #include <chrono>
 
-using Score = int;
-
 Score EvalGameOver(Position);
 
 namespace Search
-{
-	constexpr Score infinity = +65;
-
-	// A window of scores \in (lower, upper). Does not include boundaries.
-	//class ExclusiveInterval
-	//{
-	//public:
-	//	// TODO: Because members are public, the constraint can be violated.
-	//	Score lower{ -infinity }, upper{ +infinity };
-
-	//	ExclusiveInterval() = delete;
-	//	ExclusiveInterval(Score lower, Score upper) noexcept;
-
-	//	static const ExclusiveInterval Full;
-	//	
-	//	[[nodiscard]] bool operator==(ExclusiveInterval o) const noexcept { return (upper == o.upper) && (lower == o.lower); }
-	//	[[nodiscard]] bool operator!=(ExclusiveInterval o) const noexcept { return (upper != o.upper) || (lower != o.lower); }
-
-	//	// Inverts window.
-	//	[[nodiscard]] ExclusiveInterval operator-() const noexcept { return { -upper, -lower }; }
-
-	//	[[nodiscard]] bool Contains(Score) const noexcept;
-	//	[[nodiscard]] bool IsAbove(Score) const noexcept;
-	//	[[nodiscard]] bool IsBelow(Score) const noexcept;
-
-	//	[[nodiscard]] bool IsAbove(ExclusiveInterval) const noexcept;
-	//	[[nodiscard]] bool IsBelow(ExclusiveInterval) const noexcept;
-	//};
-	
+{	
 	class Selectivity
 	{
 		//  Phi       z
@@ -85,7 +55,7 @@ namespace Search
 		float quantile;
 
 		Selectivity() = delete;
-		explicit Selectivity(float quantile);
+		constexpr explicit Selectivity(float quantile) : quantile(quantile) { assert((quantile >= 0) || (quantile == None.quantile)); }
 		static const Selectivity None;
 		static const Selectivity Infinit;
 

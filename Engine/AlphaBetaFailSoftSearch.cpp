@@ -32,7 +32,7 @@ Score AlphaBetaFailSoft::Eval_triage(const Position& pos, ExclusiveInterval w)
 Score AlphaBetaFailSoft::Eval_2(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2)
 {
 	node_counter++;
-	Score bestscore = -infinity;
+	Score bestscore = -Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1))
 	{
@@ -47,9 +47,9 @@ Score AlphaBetaFailSoft::Eval_2(const Position& pos, ExclusiveInterval w, const 
 		return std::max(bestscore, score);
 	}
 
-	if (bestscore != -infinity)
+	if (bestscore != -Score::Infinity)
 		return bestscore;
-	bestscore = infinity;
+	bestscore = Score::Infinity;
 
 	const auto passed = PlayPass(pos);
 	node_counter++;
@@ -64,7 +64,7 @@ Score AlphaBetaFailSoft::Eval_2(const Position& pos, ExclusiveInterval w, const 
 	if (const auto flips = Flips(passed, move2))
 		return std::min(bestscore, NegaMax::Eval_1(Play(passed, move2, flips), move1));
 
-	if (bestscore != infinity)
+	if (bestscore != Score::Infinity)
 		return bestscore;
 
 	node_counter--;
@@ -74,7 +74,7 @@ Score AlphaBetaFailSoft::Eval_2(const Position& pos, ExclusiveInterval w, const 
 Score AlphaBetaFailSoft::Eval_3(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3)
 {
 	node_counter++;
-	Score bestscore = -infinity;
+	Score bestscore = -Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1))
 	{
@@ -96,9 +96,9 @@ Score AlphaBetaFailSoft::Eval_3(const Position& pos, ExclusiveInterval w, const 
 	if (const auto flips = Flips(pos, move3))
 		return std::max(bestscore, -Eval_2(Play(pos, move3, flips), -w, move1, move2));
 
-	if (bestscore != -infinity)
+	if (bestscore != -Score::Infinity)
 		return bestscore;
-	bestscore = infinity;
+	bestscore = Score::Infinity;
 
 	const auto passed = PlayPass(pos);
 	node_counter++;
@@ -123,7 +123,7 @@ Score AlphaBetaFailSoft::Eval_3(const Position& pos, ExclusiveInterval w, const 
 	if (const auto flips = Flips(passed, move3))
 		return std::min(bestscore, Eval_2(Play(passed, move3, flips), w, move1, move2));
 
-	if (bestscore != infinity)
+	if (bestscore != Score::Infinity)
 		return bestscore;
 
 	node_counter--;
@@ -133,7 +133,7 @@ Score AlphaBetaFailSoft::Eval_3(const Position& pos, ExclusiveInterval w, const 
 Score AlphaBetaFailSoft::Eval_4(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3, const Field move4)
 {
 	node_counter++;
-	Score bestscore = -infinity;
+	Score bestscore = -Score::Infinity;
 
 	if (const auto flips = Flips(pos, move1))
 	{
@@ -165,9 +165,9 @@ Score AlphaBetaFailSoft::Eval_4(const Position& pos, ExclusiveInterval w, const 
 	if (const auto flips = Flips(pos, move4))
 		return std::max(bestscore, -Eval_3(Play(pos, move4, flips), -w, move1, move2, move3));
 
-	if (bestscore != -infinity)
+	if (bestscore != -Score::Infinity)
 		return bestscore;
-	bestscore = infinity;
+	bestscore = Score::Infinity;
 
 	const auto passed = PlayPass(pos);
 	node_counter++;
@@ -201,7 +201,7 @@ Score AlphaBetaFailSoft::Eval_4(const Position& pos, ExclusiveInterval w, const 
 	if (const auto flips = Flips(passed, move4))
 		return std::min(bestscore, Eval_3(Play(passed, move4, flips), w, move1, move2, move3));
 
-	if (bestscore != infinity)
+	if (bestscore != Score::Infinity)
 		return bestscore;
 
 	node_counter--;
@@ -224,7 +224,7 @@ Score AlphaBetaFailSoft::Eval_N(const Position& pos, ExclusiveInterval w)
 		return EvalGameOver(pos);
 	}
 
-	Score bestscore = -infinity;
+	Score bestscore = -Score::Infinity;
 	for (auto move : moves)
 	{
 		const auto score = -Eval_N(Play(pos, move), -w);

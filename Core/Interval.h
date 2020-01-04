@@ -1,17 +1,70 @@
 #pragma once
 #include <algorithm>
+#include <cassert>
 
-using Score = int;
+class Score
+{
+	int value{};
+public:
+	static const Score Min;
+	static const Score Max;
+	static const Score Infinity;
+
+	Score() = default;
+	constexpr Score(int value) noexcept : value(value) {}
+
+	[[nodiscard]] constexpr operator int() const noexcept { return value; }
+
+	[[nodiscard]] Score operator++() noexcept { return ++value; }
+	[[nodiscard]] Score operator++(int) noexcept { return value++; }
+	[[nodiscard]] Score operator--() noexcept { return --value; }
+	[[nodiscard]] Score operator--(int) noexcept { return value--; }
+
+	[[nodiscard]] friend constexpr bool operator==(Score l, Score r) noexcept { return l.value == r.value; }
+	[[nodiscard]] friend constexpr bool operator==(int   l, Score r) noexcept { return l == r.value; }
+	[[nodiscard]] friend constexpr bool operator==(Score l, int   r) noexcept { return l.value == r; }
+	[[nodiscard]] friend constexpr bool operator!=(Score l, Score r) noexcept { return l.value != r.value; }
+	[[nodiscard]] friend constexpr bool operator!=(int   l, Score r) noexcept { return l != r.value; }
+	[[nodiscard]] friend constexpr bool operator!=(Score l, int   r) noexcept { return l.value != r; }
+	[[nodiscard]] friend constexpr bool operator<(Score l, Score r) noexcept { return l.value < r.value; }
+	[[nodiscard]] friend constexpr bool operator<(int   l, Score r) noexcept { return l < r.value; }
+	[[nodiscard]] friend constexpr bool operator<(Score l, int   r) noexcept { return l.value < r; }
+	[[nodiscard]] friend constexpr bool operator>(Score l, Score r) noexcept { return l.value > r.value; }
+	[[nodiscard]] friend constexpr bool operator>(int   l, Score r) noexcept { return l > r.value; }
+	[[nodiscard]] friend constexpr bool operator>(Score l, int   r) noexcept { return l.value > r; }
+	[[nodiscard]] friend constexpr bool operator<=(Score l, Score r) noexcept { return l.value <= r.value; }
+	[[nodiscard]] friend constexpr bool operator<=(int   l, Score r) noexcept { return l <= r.value; }
+	[[nodiscard]] friend constexpr bool operator<=(Score l, int   r) noexcept { return l.value <= r; }
+	[[nodiscard]] friend constexpr bool operator>=(Score l, Score r) noexcept { return l.value >= r.value; }
+	[[nodiscard]] friend constexpr bool operator>=(int   l, Score r) noexcept { return l >= r.value; }
+	[[nodiscard]] friend constexpr bool operator>=(Score l, int   r) noexcept { return l.value >= r; }
+
+	[[nodiscard]] friend constexpr Score operator+(Score l, Score r) noexcept { return l.value + r.value; }
+	[[nodiscard]] friend constexpr Score operator+(int   l, Score r) noexcept { return l + r.value; }
+	[[nodiscard]] friend constexpr Score operator+(Score l, int   r) noexcept { return l.value + r; }
+	[[nodiscard]] friend constexpr Score operator-(Score l, Score r) noexcept { return l.value - r.value; }
+	[[nodiscard]] friend constexpr Score operator-(int   l, Score r) noexcept { return l - r.value; }
+	[[nodiscard]] friend constexpr Score operator-(Score l, int   r) noexcept { return l.value - r; }
+	[[nodiscard]] friend constexpr Score operator*(Score l, Score r) noexcept { return l.value * r.value; }
+	[[nodiscard]] friend constexpr Score operator*(int   l, Score r) noexcept { return l * r.value; }
+	[[nodiscard]] friend constexpr Score operator*(Score l, int   r) noexcept { return l.value * r; }
+	[[nodiscard]] friend constexpr Score operator/(Score l, Score r) noexcept { return l.value / r.value; }
+	[[nodiscard]] friend constexpr Score operator/(int   l, Score r) noexcept { return l / r.value; }
+	[[nodiscard]] friend constexpr Score operator/(Score l, int   r) noexcept { return l.value / r; }
+};
+
+[[nodiscard]] constexpr Score operator-(Score o) noexcept { return -static_cast<int>(o); }
+[[nodiscard]] constexpr Score operator+(Score o) noexcept { return +static_cast<int>(o); }
 
 class InclusiveInterval
 {
-	bool Constraint() const noexcept { return lower <= upper; }
+	[[nodiscard]] bool Constraint() const noexcept { return (-Score::Infinity < lower) && (lower <= upper) && (upper < +Score::Infinity); }
 public:
 	// TODO: Because members are public, the constraint can be violated.
 	Score lower, upper;
 
 	InclusiveInterval() = delete;
-	InclusiveInterval(Score lower, Score upper) noexcept : lower(lower), upper(upper) {}
+	InclusiveInterval(Score lower, Score upper) noexcept : lower(lower), upper(upper) { assert(Constraint()); }
 
 	static const InclusiveInterval Full;
 
@@ -38,13 +91,13 @@ public:
 
 class ExclusiveInterval
 {
-	bool Constraint() const noexcept { return lower < upper; }
+	[[nodiscard]] bool Constraint() const noexcept { return (-Score::Infinity <= lower) && (lower < upper) && (upper <= +Score::Infinity); }
 public:
 	// TODO: Because members are public, the constraint can be violated.
 	Score lower, upper;
 
 	ExclusiveInterval() = delete;
-	ExclusiveInterval(Score lower, Score upper) noexcept : lower(lower), upper(upper) {}
+	ExclusiveInterval(Score lower, Score upper) noexcept : lower(lower), upper(upper) { }
 
 	static const ExclusiveInterval Full;
 

@@ -15,7 +15,7 @@ namespace Search
 		class StatusQuo
 		{
 			Intensity intensity;
-			Score best_score = -infinity;
+			Score best_score = -Score::Infinity;
 			Field best_move = Field::invalid;
 			unsigned int worst_depth;
 			Selectivity worst_selectivity;

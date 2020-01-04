@@ -9,6 +9,7 @@
     <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="BitBoard.cpp" />
     <ClCompile Include="Machine.cpp" />
+    <ClCompile Include="Interval.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Moves.h" />
