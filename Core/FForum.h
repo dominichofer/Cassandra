@@ -10,7 +10,7 @@ struct PositionScore
 
 static std::vector<PositionScore> FForum =
 {
-	{ Position::Start() },
+	{ Position::Start() ,+0 },
 	{
 		"- - X X X X X -"
 		"- O O O X X - O"
