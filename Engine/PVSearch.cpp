@@ -79,19 +79,19 @@ void PVSearch::StatusQuo::ImproveWithAny(const Result& novum)
 	const bool as_deep = (novum.depth >= intensity.depth);
 	const bool as_selective = (novum.selectivity <= intensity.selectivity);
 
-	if (as_deep and as_selective)
+	if (as_deep && as_selective)
 	{
 		if (novum.window.lower == novum.window.upper) // exact score
 			result = Result::ExactScore(novum.window.lower, novum.depth, novum.selectivity, novum.best_move, node_count);
 		else if (novum.window.lower >= intensity.window.upper) // upper cut
 			result = Result::MinBound(novum.window.lower, novum.depth, novum.selectivity, novum.best_move, node_count);
 		else if (novum.window.upper <= intensity.window.lower) // lower cut
-			result = Result::MinBound(novum.window.upper, novum.depth, novum.selectivity, novum.best_move, node_count);
-		else
-		{
-			intensity.window.lower = std::max(intensity.window.lower, novum.window.lower);
-			intensity.window.upper = std::min(intensity.window.upper, novum.window.upper);
-		}
+			result = Result::MaxBound(novum.window.upper, novum.depth, novum.selectivity, novum.best_move, node_count);
+		//else
+		//{
+		//	intensity.window.lower = std::max(intensity.window.lower, novum.window.lower);
+		//	intensity.window.upper = std::min(intensity.window.upper, novum.window.upper);
+		//}
 	}
 }
 
@@ -110,5 +110,5 @@ void PVSearch::StatusQuo::AllMovesTried(const Intensity& requested) // TODO: Rem
 	if (best_score > requested.window.lower)
 		result = Result::ExactScore(best_score, worst_depth, worst_selectivity, best_move, node_count);
 	else
-		result = Result::MaxBound(requested.window.lower, worst_depth, worst_selectivity, best_move, node_count);
+		result = Result::MaxBound(best_score, worst_depth, worst_selectivity, best_move, node_count);
 }
