@@ -43,7 +43,7 @@ struct Node
 		"X X X X X X X X"
 		"X X X X X X X X"_pos;
 
-	PVS_Info value{ InclusiveInterval{ +64, +64 }, 0, Search::Selectivity::None, Field::invalid, 0 };
+	PVS_Info value{ ClosedInterval{ +64, +64 }, 0, Search::Selectivity::None, Field::invalid, 0 };
 };
 
 class OneNode

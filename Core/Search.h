@@ -72,7 +72,7 @@ namespace Search
 
 	struct Intensity
 	{
-		ExclusiveInterval window;
+		OpenInterval window;
 		unsigned int depth;
 		Selectivity selectivity;
 
@@ -92,7 +92,7 @@ namespace Search
 	{
 	public:
 		// TODO: Because members are public, the constraint can be violated.
-		InclusiveInterval window;
+		ClosedInterval window;
 		unsigned int depth;
 		Selectivity selectivity;
 		Field best_move;
@@ -101,7 +101,7 @@ namespace Search
 		static Result ExactScore(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 		static Result MaxBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 		static Result MinBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
-		static Result FromScore(Score, ExclusiveInterval, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
+		static Result FromScore(Score, OpenInterval, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 
 		static Result ExactScore(Score, Intensity, Field best_move, std::size_t node_count);
 		static Result MaxBound(Score, Intensity, Field best_move, std::size_t node_count);

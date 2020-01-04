@@ -20,7 +20,7 @@ const Selectivity Selectivity::Infinit = Selectivity(0);
 
 Intensity Intensity::Exact(Position pos)
 {
-	return { ExclusiveInterval::Full, static_cast<unsigned int>(pos.EmptyCount()), Selectivity::None };
+	return { OpenInterval::Full, static_cast<unsigned int>(pos.EmptyCount()), Selectivity::None };
 }
 
 Intensity Intensity::operator-() const
@@ -60,7 +60,7 @@ Result Result::MinBound(Score score, Intensity intensity, Field best_move, std::
 	return MinBound(score, intensity.depth, intensity.selectivity, best_move, node_count);
 }
 
-Result Result::FromScore(Score score, ExclusiveInterval window, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count)
+Result Result::FromScore(Score score, OpenInterval window, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count)
 {
 	if (window.Contains(score))
 		return ExactScore(score, depth, selectivity, best_move, node_count);

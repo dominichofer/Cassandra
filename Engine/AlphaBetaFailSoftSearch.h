@@ -11,11 +11,11 @@ namespace Search
 	public:
 		Result Eval(Position, Intensity) override;
 	protected:
-		Score Eval_2(const Position&, ExclusiveInterval, Field, Field);
-		Score Eval_3(const Position&, ExclusiveInterval, Field, Field, Field);
-		Score Eval_4(const Position&, ExclusiveInterval, Field, Field, Field, Field);
+		Score Eval_2(const Position&, OpenInterval, Field, Field);
+		Score Eval_3(const Position&, OpenInterval, Field, Field, Field);
+		Score Eval_4(const Position&, OpenInterval, Field, Field, Field, Field);
 	private:
-		Score Eval_triage(const Position&, ExclusiveInterval);
-		Score Eval_N(const Position&, ExclusiveInterval);
+		Score Eval_triage(const Position&, OpenInterval);
+		Score Eval_N(const Position&, OpenInterval);
 	};
 }

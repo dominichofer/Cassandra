@@ -77,10 +77,10 @@ TEST(EvalGameOver, empties_count_toward_opponent)
 	ASSERT_EQ(EvalGameOver(pos), -64);
 }
 
-TEST(ExclusiveInterval, Equality1)
+TEST(OpenInterval, Equality1)
 {
-	ExclusiveInterval w1(1, 10);
-	ExclusiveInterval w2(2, 10);
+	OpenInterval w1(1, 10);
+	OpenInterval w2(2, 10);
 
 	ASSERT_TRUE(w1 == w1);
 	ASSERT_FALSE(w1 != w1);
@@ -88,17 +88,17 @@ TEST(ExclusiveInterval, Equality1)
 	ASSERT_FALSE(w1 == w2);
 }
 
-TEST(ExclusiveInterval, Negation_flips_window)
+TEST(OpenInterval, Negation_flips_window)
 {
-	ExclusiveInterval w1(1, 10);
-	ExclusiveInterval w2(-10, -1);
+	OpenInterval w1(1, 10);
+	OpenInterval w2(-10, -1);
 
 	ASSERT_TRUE(-w1 == w2);
 }
 
-TEST(ExclusiveInterval, Contains_Score)
+TEST(OpenInterval, Contains_Score)
 {
-	ExclusiveInterval w(1, 10);
+	OpenInterval w(1, 10);
 
 	ASSERT_FALSE(w.Contains(0));
 	ASSERT_FALSE(w.Contains(1));
@@ -108,9 +108,9 @@ TEST(ExclusiveInterval, Contains_Score)
 	ASSERT_FALSE(w.Contains(11));
 }
 
-TEST(ExclusiveInterval, Compares_to_Score)
+TEST(OpenInterval, Compares_to_Score)
 {
-	ExclusiveInterval w(1, 10);
+	OpenInterval w(1, 10);
 
 	ASSERT_TRUE(w > 0);
 	ASSERT_TRUE(w > 1);
@@ -120,16 +120,16 @@ TEST(ExclusiveInterval, Compares_to_Score)
 	ASSERT_TRUE(w < 11);
 }
 
-TEST(ExclusiveInterval, Compares_to_self)
+TEST(OpenInterval, Compares_to_self)
 {
-	ExclusiveInterval w(1, 10);
+	OpenInterval w(1, 10);
 
-	ASSERT_TRUE(w > ExclusiveInterval(-10, 0));
-	ASSERT_TRUE(w > ExclusiveInterval(-10, 1));
-	ASSERT_FALSE(w > ExclusiveInterval(-10, 20));
-	ASSERT_FALSE(w < ExclusiveInterval(9, 20));
-	ASSERT_TRUE(w < ExclusiveInterval(10, 20));
-	ASSERT_TRUE(w < ExclusiveInterval(11, 20));
+	ASSERT_TRUE(w > OpenInterval(-10, 0));
+	ASSERT_TRUE(w > OpenInterval(-10, 1));
+	ASSERT_FALSE(w > OpenInterval(-10, 20));
+	ASSERT_FALSE(w < OpenInterval(9, 20));
+	ASSERT_TRUE(w < OpenInterval(10, 20));
+	ASSERT_TRUE(w < OpenInterval(11, 20));
 }
 
 TEST(Selectivity, None_represents_infinit_sigmas)
@@ -173,16 +173,16 @@ TEST(Selectivity, Compare)
 
 TEST(Intensity, Negation_flips_window)
 {
-	Intensity i1{ ExclusiveInterval{+1,+2}, 0, Selectivity{0} };
-	Intensity i2{ ExclusiveInterval{-2,-1}, 0, Selectivity{0} };
+	Intensity i1{ OpenInterval{+1,+2}, 0, Selectivity{0} };
+	Intensity i2{ OpenInterval{-2,-1}, 0, Selectivity{0} };
 
 	ASSERT_TRUE(i1 == -i2);
 }
 
 TEST(Intensity, Subtraction_of_depth)
 {
-	Intensity i1{ ExclusiveInterval{+1,+2}, 0, Selectivity{0} };
-	Intensity i2{ ExclusiveInterval{+1,+2}, 1, Selectivity{0} };
+	Intensity i1{ OpenInterval{+1,+2}, 0, Selectivity{0} };
+	Intensity i2{ OpenInterval{+1,+2}, 1, Selectivity{0} };
 
 	ASSERT_TRUE(i1 == i2 - 1);
 }

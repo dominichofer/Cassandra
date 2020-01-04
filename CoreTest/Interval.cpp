@@ -1,9 +1,9 @@
 #include "pch.h"
 
-TEST(InclusiveInterval, Equality)
+TEST(ClosedInterval, Equality)
 {
-	InclusiveInterval a{ 1, 2 };
-	InclusiveInterval b{ 1, 3 };
+	ClosedInterval a{ 1, 2 };
+	ClosedInterval b{ 1, 3 };
 
 	ASSERT_TRUE(a == a);
 	ASSERT_FALSE(a != a);
@@ -11,11 +11,11 @@ TEST(InclusiveInterval, Equality)
 	ASSERT_TRUE(a != b);
 }
 
-TEST(InclusiveInterval, Compare)
+TEST(ClosedInterval, Compare)
 {
-	InclusiveInterval a{ 1, 2 };
-	InclusiveInterval b{ 2, 3 };
-	InclusiveInterval c{ 3, 4 };
+	ClosedInterval a{ 1, 2 };
+	ClosedInterval b{ 2, 3 };
+	ClosedInterval c{ 3, 4 };
 
 	ASSERT_FALSE(a < a);
 	ASSERT_FALSE(a < b);
@@ -32,9 +32,9 @@ TEST(InclusiveInterval, Compare)
 	ASSERT_FALSE(c > c);
 }
 
-TEST(InclusiveInterval, Compare_with_score)
+TEST(ClosedInterval, Compare_with_score)
 {
-	InclusiveInterval i{ 1, 2 };
+	ClosedInterval i{ 1, 2 };
 
 	ASSERT_TRUE(0 < i);
 	ASSERT_FALSE(1 < i);
@@ -47,21 +47,21 @@ TEST(InclusiveInterval, Compare_with_score)
 	ASSERT_TRUE(3 > i);
 }
 
-TEST(InclusiveInterval, Intersection)
+TEST(ClosedInterval, Intersection)
 {
-	InclusiveInterval a{ 1, 3 };
-	InclusiveInterval b{ 2, 4 };
-	InclusiveInterval c{ 2, 3 };
+	ClosedInterval a{ 1, 3 };
+	ClosedInterval b{ 2, 4 };
+	ClosedInterval c{ 2, 3 };
 
 	auto i = Intersection(a, b);
 	
 	ASSERT_TRUE(i == c);
 }
 
-TEST(ExclusiveInterval, Equality)
+TEST(OpenInterval, Equality)
 {
-	ExclusiveInterval a{ 1, 2 };
-	ExclusiveInterval b{ 1, 3 };
+	OpenInterval a{ 1, 2 };
+	OpenInterval b{ 1, 3 };
 
 	ASSERT_TRUE(a == a);
 	ASSERT_FALSE(a != a);
@@ -69,11 +69,11 @@ TEST(ExclusiveInterval, Equality)
 	ASSERT_TRUE(a != b);
 }
 
-TEST(ExclusiveInterval, Compare)
+TEST(OpenInterval, Compare)
 {
-	ExclusiveInterval a{ 1, 2 };
-	ExclusiveInterval b{ 2, 4 };
-	ExclusiveInterval c{ 3, 5 };
+	OpenInterval a{ 1, 2 };
+	OpenInterval b{ 2, 4 };
+	OpenInterval c{ 3, 5 };
 
 	ASSERT_FALSE(a < a);
 	ASSERT_TRUE(a < b);
@@ -90,9 +90,9 @@ TEST(ExclusiveInterval, Compare)
 	ASSERT_FALSE(c > c);
 }
 
-TEST(ExclusiveInterval, Compare_with_score)
+TEST(OpenInterval, Compare_with_score)
 {
-	ExclusiveInterval i{ 1, 2 };
+	OpenInterval i{ 1, 2 };
 
 	ASSERT_TRUE(0 < i);
 	ASSERT_TRUE(1 < i);
@@ -109,11 +109,11 @@ TEST(ExclusiveInterval, Compare_with_score)
 	ASSERT_TRUE(3 > i);
 }
 
-TEST(ExclusiveInterval, Intersection)
+TEST(OpenInterval, Intersection)
 {
-	ExclusiveInterval a{ 1, 3 };
-	ExclusiveInterval b{ 2, 4 };
-	ExclusiveInterval c{ 2, 3 };
+	OpenInterval a{ 1, 3 };
+	OpenInterval b{ 2, 4 };
+	OpenInterval c{ 2, 3 };
 
 	auto i = Intersection(a, b);
 

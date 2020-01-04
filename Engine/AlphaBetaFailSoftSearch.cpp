@@ -11,7 +11,7 @@ Result AlphaBetaFailSoft::Eval(Position pos, Intensity intensity)
 	return Result::ExactScore(score, pos.EmptyCount(), Selectivity::None, Field::invalid, node_counter);
 }
 
-Score AlphaBetaFailSoft::Eval_triage(const Position& pos, ExclusiveInterval w)
+Score AlphaBetaFailSoft::Eval_triage(const Position& pos, OpenInterval w)
 {
 	auto moves = Moves(pos.Empties());
 	const auto move1 = moves.front(); moves.pop_front();
@@ -29,7 +29,7 @@ Score AlphaBetaFailSoft::Eval_triage(const Position& pos, ExclusiveInterval w)
 	}
 }
 
-Score AlphaBetaFailSoft::Eval_2(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2)
+Score AlphaBetaFailSoft::Eval_2(const Position& pos, OpenInterval w, const Field move1, const Field move2)
 {
 	node_counter++;
 	Score bestscore = -Score::Infinity;
@@ -71,7 +71,7 @@ Score AlphaBetaFailSoft::Eval_2(const Position& pos, ExclusiveInterval w, const 
 	return -EvalGameOver(passed);
 }
 
-Score AlphaBetaFailSoft::Eval_3(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3)
+Score AlphaBetaFailSoft::Eval_3(const Position& pos, OpenInterval w, const Field move1, const Field move2, const Field move3)
 {
 	node_counter++;
 	Score bestscore = -Score::Infinity;
@@ -130,7 +130,7 @@ Score AlphaBetaFailSoft::Eval_3(const Position& pos, ExclusiveInterval w, const 
 	return -EvalGameOver(passed);
 }
 
-Score AlphaBetaFailSoft::Eval_4(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3, const Field move4)
+Score AlphaBetaFailSoft::Eval_4(const Position& pos, OpenInterval w, const Field move1, const Field move2, const Field move3, const Field move4)
 {
 	node_counter++;
 	Score bestscore = -Score::Infinity;
@@ -208,7 +208,7 @@ Score AlphaBetaFailSoft::Eval_4(const Position& pos, ExclusiveInterval w, const 
 	return -EvalGameOver(passed);
 }
 
-Score AlphaBetaFailSoft::Eval_N(const Position& pos, ExclusiveInterval w)
+Score AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval w)
 {
 	if (pos.EmptyCount() <= 4)
 		return Eval_triage(pos, w);

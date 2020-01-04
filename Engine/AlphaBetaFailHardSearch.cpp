@@ -4,7 +4,7 @@
 
 using namespace Search;
 
-Score clamp(Score value, ExclusiveInterval w)
+Score clamp(Score value, OpenInterval w)
 {
 	return std::clamp(value, w.lower, w.upper);
 }
@@ -16,7 +16,7 @@ Result AlphaBetaFailHard::Eval(Position pos, Intensity intensity)
 	return Result::ExactScore(score, pos.EmptyCount(), Selectivity::None, Field::invalid, node_counter);
 }
 
-Score AlphaBetaFailHard::Eval_triage(const Position& pos, ExclusiveInterval w)
+Score AlphaBetaFailHard::Eval_triage(const Position& pos, OpenInterval w)
 {
 	auto moves = Moves(pos.Empties());
 	const auto move1 = moves.front(); moves.pop_front();
@@ -34,17 +34,17 @@ Score AlphaBetaFailHard::Eval_triage(const Position& pos, ExclusiveInterval w)
 	}
 }
 
-Score AlphaBetaFailHard::Eval_0(const Position& pos, const ExclusiveInterval w)
+Score AlphaBetaFailHard::Eval_0(const Position& pos, const OpenInterval w)
 {
 	return clamp(NegaMax::Eval_0(pos), w);
 }
 
-Score AlphaBetaFailHard::Eval_1(const Position& pos, const ExclusiveInterval w, const Field move1)
+Score AlphaBetaFailHard::Eval_1(const Position& pos, const OpenInterval w, const Field move1)
 {
 	return clamp(NegaMax::Eval_1(pos, move1), w);
 }
 
-Score AlphaBetaFailHard::Eval_2(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2)
+Score AlphaBetaFailHard::Eval_2(const Position& pos, OpenInterval w, const Field move1, const Field move2)
 {
 	node_counter++;
 	Score score = Score::Infinity;
@@ -90,7 +90,7 @@ Score AlphaBetaFailHard::Eval_2(const Position& pos, ExclusiveInterval w, const 
 	return clamp(-EvalGameOver(passed), w);
 }
 
-Score AlphaBetaFailHard::Eval_3(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3)
+Score AlphaBetaFailHard::Eval_3(const Position& pos, OpenInterval w, const Field move1, const Field move2, const Field move3)
 {
 	node_counter++;
 	Score score = Score::Infinity;
@@ -150,7 +150,7 @@ Score AlphaBetaFailHard::Eval_3(const Position& pos, ExclusiveInterval w, const 
 	return clamp(-EvalGameOver(passed), w);
 }
 
-Score AlphaBetaFailHard::Eval_4(const Position& pos, ExclusiveInterval w, const Field move1, const Field move2, const Field move3, const Field move4)
+Score AlphaBetaFailHard::Eval_4(const Position& pos, OpenInterval w, const Field move1, const Field move2, const Field move3, const Field move4)
 {
 	node_counter++;
 	Score score = Score::Infinity;
@@ -224,7 +224,7 @@ Score AlphaBetaFailHard::Eval_4(const Position& pos, ExclusiveInterval w, const 
 	return clamp(-EvalGameOver(passed), w);
 }
 
-Score AlphaBetaFailHard::Eval_N(const Position& pos, ExclusiveInterval w)
+Score AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval w)
 {
 	if (pos.EmptyCount() <= 4)
 		return Eval_triage(pos, w);

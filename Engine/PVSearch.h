@@ -11,9 +11,10 @@ namespace Search
 	class PVSearch : public Algorithm
 	{
 		HashTablePVS& tt;
-
+	public:
 		class StatusQuo
 		{
+		public: // TODO: Make it private!
 			Intensity intensity;
 			Score best_score = -Score::Infinity;
 			Field best_move = Field::invalid;
@@ -27,7 +28,7 @@ namespace Search
 			StatusQuo(Intensity required) noexcept : intensity(required), worst_depth(required.depth), worst_selectivity(required.selectivity) {}
 
 			operator Intensity() const noexcept;
-			ExclusiveInterval Window() const noexcept { return intensity.window; }
+			OpenInterval Window() const noexcept { return intensity.window; }
 
 			void ImproveWithMove(const Result&, Field move);
 			void ImproveWithAny(const Result&);
@@ -39,6 +40,7 @@ namespace Search
 			void AllMovesTried(const Intensity& requested);
 		};
 
+	private:
 		class TT_Updater
 		{
 			const Position& pos;
