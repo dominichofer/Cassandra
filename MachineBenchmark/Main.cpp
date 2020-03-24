@@ -82,7 +82,7 @@ void GetMSB(benchmark::State& state)
 }
 BENCHMARK(GetMSB);
 
-void RemoveLSB_generic(benchmark::State& state)
+void RemoveLSB(benchmark::State& state)
 {
 	std::mt19937_64 rng;
 	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
@@ -91,26 +91,11 @@ void RemoveLSB_generic(benchmark::State& state)
 	for (auto _ : state)
 	{
 		benchmark::DoNotOptimize(b);
-		detail::RemoveLSB_generic(b);
+		RemoveLSB(b);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(RemoveLSB_generic);
-
-void RemoveLSB_intrinsic(benchmark::State& state)
-{
-	std::mt19937_64 rng;
-	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
-	uint64_t b = dist(rng);
-
-	for (auto _ : state)
-	{
-		benchmark::DoNotOptimize(b);
-		detail::RemoveLSB_intrinsic(b);
-	}
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(RemoveLSB_intrinsic);
+BENCHMARK(RemoveLSB);
 
 void RemoveMSB(benchmark::State& state)
 {
@@ -121,7 +106,7 @@ void RemoveMSB(benchmark::State& state)
 	for (auto _ : state)
 	{
 		benchmark::DoNotOptimize(b);
-		detail::RemoveLSB_intrinsic(b);
+		RemoveMSB(b);
 	}
 	state.SetItemsProcessed(state.iterations());
 }

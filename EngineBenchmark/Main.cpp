@@ -34,17 +34,17 @@ public:
 	PuzzleLibrary(std::size_t max_empty_count)
 	{
 		const std::size_t positions_per_empty_count = 100'000;
-		const std::size_t SEED = 65481265;
-		PositionGenerator pos_gen(SEED);
+		const std::size_t seed = 65481265;
 
 		for (std::size_t empty_count = 0; empty_count <= max_empty_count; empty_count++)
 		{
+			PosGen::Random_with_empty_count rnd(empty_count, seed);
 			std::vector<Puzzle> puzzles;
 			puzzles.reserve(positions_per_empty_count);
 			std::generate_n(
 				std::back_inserter(puzzles),
 				positions_per_empty_count,
-				[&pos_gen, empty_count]() { return Puzzle::Exact(pos_gen.Random(empty_count)); }
+				[&rnd, empty_count]() { return Puzzle::Exact(rnd()); }
 			);
 			library.emplace_back(puzzles);
 		}

@@ -7,7 +7,8 @@ namespace Search
 {
 	class NegaMax : public Algorithm
 	{
-	public:		
+	public:
+		using Algorithm::Eval;
 		Result Eval(Position, Intensity) override;
 	protected:
 		std::size_t node_counter = 0;

@@ -25,10 +25,10 @@ static std::vector<PositionScore> FForum =
 		"- X X X X X X -"
 		"- - X O O O O -"
 		"- X O X X O O X"
-		"- O O O O O O O"
-		"O O O O X X O O"
+		"X O O O O O O O"
+		"O X O O X X O O"
 		"O O O X X O O X"
-		"- - X X O O - -"
+		"- O O O O O - -"
 		"- - X X X X X -"_pos, +10 // 02
 	},
 	{

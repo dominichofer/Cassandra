@@ -86,10 +86,4 @@ namespace Intrinsics
 		ASSERT_EQ(PopCount(3), 2u);
 		ASSERT_EQ(PopCount(0xFFFFFFFFFFFFFFFFULL), 64u);
 	}
-
-	// TODO: Add test for BExtr
-	// TODO: Add test for BZHI
-	// TODO: Add test for PDep
-	// TODO: Add test for PExt
-	// TODO: Add test for BSwap
 }

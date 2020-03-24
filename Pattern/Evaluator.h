@@ -11,7 +11,7 @@ namespace Pattern
 	public:
 		Evaluator(BitBoard pattern) : Pattern(pattern) {}
 
-		virtual float Eval(Position) const = 0;
+		virtual float Eval(const Position&) const = 0;
 
 		const BitBoard Pattern;
 	};

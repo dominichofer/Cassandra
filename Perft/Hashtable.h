@@ -6,7 +6,7 @@
 
 struct PositionDepthPair
 {
-	Position pos{ 0, 0 };
+	Position pos;
 	int depth = -1;
 };
 
@@ -61,8 +61,8 @@ struct BigNodeHashTable : public HashTable<BigNode::key_type, BigNode::value_typ
 	BigNodeHashTable(uint64_t buckets)
 		: HashTable(buckets,
 			[](const HashTable::key_type& key) {
-				uint64_t P = key.pos.GetP();
-				uint64_t O = key.pos.GetO();
+				uint64_t P = key.pos.P;
+				uint64_t O = key.pos.O;
 				P ^= P >> 36;
 				O ^= O >> 21;
 				return (P * O + key.depth);

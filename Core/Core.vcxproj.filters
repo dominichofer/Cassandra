@@ -23,5 +23,10 @@
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Machine.h" />
     <ClInclude Include="Interval.h" />
+    <ClInclude Include="SortedMoves.h" />
+    <ClInclude Include="Algorithm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Core.natvis" />
   </ItemGroup>
 </Project>

@@ -2,52 +2,53 @@
 
 TEST(PosGen, Random_is_deterministic)
 {
-	PositionGenerator pg_1(42);
-	PositionGenerator pg_2(42);
+	PosGen::Random rnd_1(42);
+	PosGen::Random rnd_2(42);
 
-	ASSERT_EQ(pg_1.Random(), pg_2.Random());
+	ASSERT_EQ(rnd_1(), rnd_2());
 }
 
 TEST(PosGen, Random_with_empty_count_is_deterministic)
 {
-	PositionGenerator pg_1(42);
-	PositionGenerator pg_2(42);
+	PosGen::Random_with_empty_count rnd_1(15, 42);
+	PosGen::Random_with_empty_count rnd_2(15, 42);
 
-	ASSERT_EQ(pg_1.Random(8), pg_2.Random(8));
+	ASSERT_EQ(rnd_1(), rnd_2());
 }
 
 TEST(PosGen, Random_with_empty_count_returns_empty_count)
 {
-	PositionGenerator pg(42);
-
 	for (std::size_t empty_count = 0; empty_count < 60; empty_count++)
-		ASSERT_EQ(pg.Random(empty_count).EmptyCount(), empty_count);
+	{
+		PosGen::Random_with_empty_count rnd(empty_count);
+		ASSERT_EQ(rnd().EmptyCount(), empty_count);
+	}
 }
 
 class MockPlayer : public Player
 {
-	Position Play(Position in) noexcept(false) final
+	Position Play(const Position& in) override
 	{
-		auto P = in.GetP();
-		P[in.Empties().FirstField()] = true;
-		return { in.GetO(), P };
+		return Position{ in.O, in.P | GetLSB(in.Empties()) };
 	}
 };
+
 TEST(PosGen, Played_returns_empty_count)
 {
-	PositionGenerator pg(42);
-	MockPlayer mock;
+	MockPlayer player1, player2;
 
 	for (std::size_t empty_count = 0; empty_count <= 60; empty_count++)
-		ASSERT_EQ(pg.Played(mock, empty_count).EmptyCount(), empty_count);
+	{
+		PosGen::Played generate(player1, player2, empty_count);
+		ASSERT_EQ(generate().EmptyCount(), empty_count);
+	}
 }
 
 std::size_t SizeOfAll(std::size_t empty_count)
 {
 	std::vector<Position> all;
-	PositionGenerator::All(std::back_inserter(all), empty_count);
-	std::sort(all.begin(), all.end(), 
-		[](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); });
+	generate_all(std::back_inserter(all), PosGen::All_with_empty_count(empty_count));
+	std::sort(all.begin(), all.end());
 	auto it = std::unique(all.begin(), all.end());
 	return std::distance(all.begin(), it);
 }
@@ -66,11 +67,9 @@ TEST(PosGen, All_with_empty_count_52) { ASSERT_EQ(SizeOfAll(52), 269'352); }
 std::size_t Number_of_different_positions(std::size_t plies)
 {
 	std::vector<Position> all;
-	PositionGenerator::All(std::back_inserter(all), plies, 1);
-	std::sort(all.begin(), all.end(),
-		[](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); });
-	auto it = std::unique(all.begin(), all.end());
-	return std::distance(all.begin(), it);
+	generate_all(std::back_inserter(all), PosGen::All_after_nth_ply(plies, 1));
+	std::sort(all.begin(), all.end());
+	return std::inner_product(all.begin() + 1, all.end(), all.begin(), 1, std::plus(), std::not_equal_to());
 }
 
 TEST(PosGen, different_positions_ply_0) { ASSERT_EQ(Number_of_different_positions(0), 1); }
@@ -87,27 +86,20 @@ TEST(PosGen, different_positions_ply_8) { ASSERT_EQ(Number_of_different_position
 std::size_t Number_of_unique_realization(std::size_t plies)
 {
 	std::vector<Position> all;
-	PositionGenerator::All(std::back_inserter(all), plies, 1);
-	std::sort(all.begin(), all.end(),
-		[](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); });
+	generate_all(std::back_inserter(all), PosGen::All_after_nth_ply(plies, 1));
+	std::sort(all.begin(), all.end());
 
-	std::size_t sum = 0;
-	Position testee = all.front();
-	bool unique = true;
-	for (auto it = all.cbegin() + 1; it != all.cend(); ++it)
-	{
-		Position pos = *it;
-		if (testee == pos)
-			unique = false;
-		else
-		{
-			if (unique)
-				sum++;
-			testee = pos;
-			unique = true;
-		}
-	}
-	if (unique)
+	// Counts Othello positions that occure once and only once in the list.
+	const std::size_t size = all.size();
+	if (size < 2)
+		return size;
+
+	int64_t sum = (all[0] != all[1]) ? 1 : 0;
+	#pragma omp parallel for reduction(+:sum)
+	for (int64_t i = 1; i < size - 1; i++)
+		if ((all[i-1] != all[i]) && (all[i] != all[i+1]))
+			sum++;
+	if (all[size - 2] != all[size - 1])
 		sum++;
 	return sum;
 }
@@ -126,7 +118,7 @@ TEST(PosGen, unique_positions_ply_8) { ASSERT_EQ(Number_of_unique_realization(8)
 std::size_t Number_of_possible_games(std::size_t plies)
 {
 	std::vector<Position> all;
-	PositionGenerator::All(std::back_inserter(all), plies, 1);
+	generate_all(std::back_inserter(all), PosGen::All_after_nth_ply(plies, 1));
 	return all.size();
 }
 

@@ -1,73 +1,51 @@
 #pragma once
 #include "MacrosHell.h"
+#include <cassert>
 #include <cstdint>
 #include <cstddef>
 
-//[[nodiscard]]
-//constexpr uint64_t Bit(const uint64_t position) noexcept
-//{
-//	assert(position < 64);
-//	return 1ULL << position;
-//}
-//
-//constexpr void SetBit(uint64_t& bit_field, const uint64_t position) noexcept
-//{
-//	assert(position < 64);
-//	bit_field |= Bit(position);
-//}
-//
-//constexpr void ResetBit(uint64_t& bit_field, const uint64_t position) noexcept
-//{
-//	assert(position < 64);
-//	bit_field &= ~Bit(position);
-//}
-//
-//[[nodiscard]]
-//constexpr bool TestBit(const uint64_t bit_field, const uint64_t position) noexcept
-//{
-//	assert(position < 64);
-//	return (bit_field & Bit(position)) != 0;
-//}
-//
-//[[nodiscard]]
-//constexpr bool TestBits(const uint64_t bit_field, const uint64_t mask) noexcept
-//{
-//	return (bit_field & mask) == mask;
-//}
+// TODO: Rename!
+[[nodiscard]]
+constexpr uint64_t Horizontal(int i) noexcept { return 0xFFULL << i; }
 
 [[nodiscard]]
-unsigned int BitScanLSB(uint64_t) noexcept;
+constexpr uint64_t Vertical(int i) noexcept { return 0x0101010101010101ULL << i; }
 
 [[nodiscard]]
-inline unsigned int BitScanMSB(const uint64_t mask) noexcept
+constexpr uint64_t Diagonal(int i) noexcept
 {
-	// BitScanMSB(0) may be undefined.
-	assert(mask);
-
-	#if defined(_MSC_VER)
-		unsigned long index = 0;
-		_BitScanReverse64(&index, mask);
-		return index;
-	#elif defined(__GNUC__)
-		return __builtin_clzll(mask) ^ 63; // __builtin_clzll(0) is undefined
-	#endif
+	if (i > 0)
+		return 0x8040201008040201ULL << (8 * i);
+	return 0x8040201008040201ULL >> (8 * i);
 }
+
 
 [[nodiscard]]
 inline std::size_t CountLeadingZeros(const uint64_t mask) noexcept
 {
-	// CountLeadingZeros(0) may be undefined.
-	assert(mask);
+	// CountLeadingZeros(0) == 64
 
 	#if defined(_MSC_VER)
 		return _lzcnt_u64(mask); // _lzcnt_u64(0) == 64
 	#elif defined(__GNUC__)
-		return __builtin_clzll(mask); // __builtin_clzll(0) is undefined
+		return __builtin_ia32_lzcnt_u64(mask); // __builtin_ia32_lzcnt_u64(0) == 64
 	#endif
 }
 
 [[nodiscard]]
 std::size_t CountTrailingZeros(const uint64_t mask) noexcept;
+
+[[nodiscard]]
+inline std::size_t BitScanLSB(const uint64_t mask) noexcept
+{
+	return CountTrailingZeros(mask);
+}
+
+[[nodiscard]]
+inline std::size_t BitScanMSB(const uint64_t mask) noexcept
+{
+	return CountLeadingZeros(mask) ^ 63ULL;
+}
 
 [[nodiscard]]
 uint64_t GetLSB(uint64_t) noexcept;
@@ -80,40 +58,20 @@ inline uint64_t GetMSB(const uint64_t b) noexcept
 	return 0x8000000000000000ULL >> CountLeadingZeros(b);
 }
 
-namespace detail
-{
-#ifdef HAS_BLSR
-	inline void RemoveLSB_intrinsic(uint64_t& b) noexcept
-	{
-		b = _blsr_u64(b);
-	}
-#endif
+inline void RemoveLSB(uint64_t& b) noexcept { b &= b - 1; }
 
-	inline void RemoveLSB_generic(uint64_t& b) noexcept
-	{
-		b &= b - 1;
-	}
-}
-
-void RemoveLSB(uint64_t&) noexcept;
-
-inline void RemoveMSB(uint64_t& b) noexcept
-{
-	b ^= GetMSB(b);
-}
+inline void RemoveMSB(uint64_t& b) noexcept { b ^= GetMSB(b); }
 
 namespace detail
 {
-#ifdef HAS_POPCNT
+#ifdef __AVX2__
 	[[nodiscard]]
 	inline std::size_t PopCount_intrinsic(uint64_t b) noexcept
 	{
-		#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
-			return _mm_popcnt_u64(b);
-		#else
-			return __builtin_popcountll(b);
-		#endif
+		return __builtin_popcountll(b);
 	}
+#else
+	std::size_t PopCount_intrinsic(uint64_t b) noexcept;
 #endif
 
 	[[nodiscard]]
@@ -132,7 +90,7 @@ std::size_t PopCount(uint64_t b) noexcept;
 [[nodiscard]]
 inline uint64_t BExtr(const uint64_t src, const unsigned int start, unsigned int len) noexcept
 {
-	#if defined(HAS_BEXTR) || defined(HAS_TBM)
+	#ifdef __AVX2__
 		return _bextr_u64(src, start, len);
 	#else
 		return (src >> start) & ((1ULL << len) - 1);
@@ -142,7 +100,7 @@ inline uint64_t BExtr(const uint64_t src, const unsigned int start, unsigned int
 [[nodiscard]]
 inline uint64_t BZHI(const uint64_t src, const uint32_t index) noexcept
 {
-	#ifdef HAS_BZHI
+	#ifdef __AVX2__
 		return _bzhi_u64(src, index);
 	#else
 		return src & ((1ULL << index) - 1);
@@ -159,7 +117,7 @@ uint64_t PExt(uint64_t src, uint64_t mask) noexcept;
 uint64_t BSwap(const uint64_t b) noexcept;
 
 #if defined(_MSC_VER)
-    #ifdef HAS_SSE2
+    #ifdef __AVX2__
         [[nodiscard]] inline __m128i operator~(const __m128i& a) noexcept { return _mm_andnot_si128(a, _mm_set1_epi64x(0xFFFFFFFFFFFFFFFFULL)); }
 
         [[nodiscard]] inline __m128i operator+(const __m128i& a, const __m128i& b) noexcept { return _mm_add_epi64(a, b); }
@@ -177,18 +135,15 @@ uint64_t BSwap(const uint64_t b) noexcept;
         inline __m128i& operator^=(__m128i& a, const __m128i& b) noexcept { return a = a ^ b; }
         inline __m128i& operator<<=(__m128i& a, const int b) noexcept { return a = a << b; }
         inline __m128i& operator>>=(__m128i& a, const int b) noexcept { return a = a >> b; }
-    #endif
-    #ifdef HAS_SSE4_1
+
 		[[nodiscard]] inline __m128i operator==(const __m128i& a, const __m128i& b) noexcept { return _mm_cmpeq_epi64(a, b); }
-    #endif
-    #ifdef HAS_SSE4_2
+
         [[nodiscard]] inline __m128i operator>(const __m128i& a, const __m128i& b) noexcept { return _mm_cmpgt_epi64(a, b); }
         [[nodiscard]] inline __m128i operator<(const __m128i& a, const __m128i& b) noexcept { return b > a; }
         [[nodiscard]] inline __m128i operator>=(const __m128i& a, const __m128i& b) noexcept { return ~(a < b); }
         [[nodiscard]] inline __m128i operator<=(const __m128i& a, const __m128i& b) noexcept { return ~(a > b); }
-    #endif
-    #ifdef HAS_AVX2
-		[[nodiscard]] inline __m256i operator~(const __m256i& a) noexcept { return _mm256_xor_si256(a, _mm256_set1_epi64x(0xFFFFFFFFFFFFFFFFULL)); }
+
+		[[nodiscard]] inline __m256i operator~(const __m256i& a) noexcept { return _mm256_andnot_si256(_mm256_set1_epi64x(0), a); }
 
         [[nodiscard]] inline __m256i operator+(const __m256i& a, const __m256i& b) noexcept { return _mm256_add_epi64(a, b); }
         [[nodiscard]] inline __m256i operator-(const __m256i& a, const __m256i& b) noexcept { return _mm256_sub_epi64(a, b); }
@@ -207,8 +162,9 @@ uint64_t BSwap(const uint64_t b) noexcept;
         inline __m256i& operator>>=(__m256i& a, const int b) noexcept { return a = a >> b; }
 
 		uint64_t _mm256_reduce_or_epi64(__m256i) noexcept;
+		uint32_t _mm256_reduce_add_epi32(__m256i) noexcept;
     #endif
-	#ifdef HAS_AVX512
+	#ifdef __AVX512F__
 		[[nodiscard]] inline __m512i operator~(const __m512i& a) noexcept { return _mm512_xor_si512(a, _mm512_set1_epi64(0xFFFFFFFFFFFFFFFFULL)); }
 
 		[[nodiscard]] inline __m512i operator+(const __m512i& a, const __m512i& b) noexcept { return _mm512_add_epi64(a, b); }

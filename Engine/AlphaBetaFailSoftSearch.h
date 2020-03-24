@@ -9,6 +9,7 @@ namespace Search
 	class AlphaBetaFailSoft : public NegaMax
 	{
 	public:
+		using Algorithm::Eval;
 		Result Eval(Position, Intensity) override;
 	protected:
 		Score Eval_2(const Position&, OpenInterval, Field, Field);

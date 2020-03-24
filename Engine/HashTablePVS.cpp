@@ -1,6 +1,7 @@
 #include "HashTablePVS.h"
 #include <algorithm>
 #include <mutex>
+#include "AlphaBetaFailSoftSearch.h"
 
 OneNode::OneNode(const OneNode& o) noexcept
 {
@@ -20,6 +21,9 @@ OneNode& OneNode::operator=(const OneNode& o) noexcept
 
 void OneNode::Update(Position key, const PVS_Info& novum)
 {
+	//auto correct_window = Search::AlphaBetaFailSoft{}.Eval(key).window;
+	//if (!novum.window.Contains(correct_window))
+	//	return;
 	std::lock_guard<SpinlockMutex> lock{ mutex };
 	if (key != node.key)
 	{
@@ -31,18 +35,14 @@ void OneNode::Update(Position key, const PVS_Info& novum)
 	const bool node_is_exact = (node.value.depth == key.EmptyCount()) && (node.value.selectivity == Search::Selectivity::None);
 	if (novum_is_exact && node_is_exact)
 	{
-		assert(std::max(node.value.window.lower, novum.window.lower) <= std::min(node.value.window.upper, novum.window.upper));
+		if (!node.value.window.Overlaps(novum.window))
+			assert(node.value.window.Overlaps(novum.window));
 
 		node.value.node_count += novum.node_count;
 
-		if (novum.window.lower > node.value.window.lower)
+		if (novum.window.Overlaps(node.value.window))
 		{
-			node.value.window.lower = novum.window.lower;
-			node.value.best_move = novum.best_move;
-		}
-		if (novum.window.upper < node.value.window.upper)
-		{
-			node.value.window.upper = novum.window.upper;
+			node.value.window = Overlap(node.value.window, novum.window);
 			node.value.best_move = novum.best_move;
 		}
 	}

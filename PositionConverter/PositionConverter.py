@@ -21,3 +21,22 @@ def HexToString(in_str):
             if TestBit(O, 63 - i * 8 - j):
                 out_str[i * 18 + j * 2 + 1] = 'O'
     print(''.join(out_str))
+
+
+def MultiLinePosition(P, O):
+    out_str = list(
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"\n'
+        '"- - - - - - - -"_pos')
+    for i in range(8):
+        for j in range(8):
+            if TestBit(P, 63 - i * 8 - j):
+                out_str[i * 18 + j * 2 + 1] = 'X'
+            if TestBit(O, 63 - i * 8 - j):
+                out_str[i * 18 + j * 2 + 1] = 'O'
+    print(''.join(out_str))

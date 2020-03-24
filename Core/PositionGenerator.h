@@ -1,4 +1,5 @@
 #pragma once
+#include "Algorithm.h"
 #include "Position.h"
 #include "Moves.h"
 #include "Player.h"
@@ -7,69 +8,67 @@
 #include <random>
 #include <stack>
 #include <iterator>
+#include <optional>
+#include <stack>
 
-class PositionGenerator
+// PositionGenerator
+namespace PosGen
 {
-public:
-	PositionGenerator(uint64_t seed = std::random_device{}()) : rnd_engine(seed) {}
+	// Generator of random Position.
+	class Random
+	{
+		std::mt19937_64 rnd_engine;
+	public:
+		Random(uint64_t seed = std::random_device{}()) : rnd_engine(seed) {}
 
-	Position Random();
-	Position Random(std::size_t empty_count);
+		Position operator()();
+	};
 
-	//Position RandomlyPlayed(Position start_pos = Position::Start());
-	static Position Played(Player&, std::size_t empty_count, Position start = Position::Start()); // TODO: Refactor our of class!
+	// Generator of random Position with given empty count.
+	class Random_with_empty_count
+	{
+		const std::size_t empty_count;
+		std::mt19937_64 rnd_engine;
+	public:
+		Random_with_empty_count(std::size_t empty_count, uint64_t seed = std::random_device{}()) : empty_count(empty_count), rnd_engine(seed) {}
+		
+		Position operator()();
+	};
 
-	//std::unordered_set<Position> RandomlyPlayed(std::size_t count,                       Position start_pos = Position::Start());
-	//std::vector<Position> Played(Player&, std::size_t count, std::size_t empty_count, Position start = Position::Start());
-	//std::unordered_set<Position> RandomlyPlayed(std::execution::sequenced_policy&&, std::size_t count,                       Position start_pos = Position::Start());
-	//std::unordered_set<Position> RandomlyPlayed(std::execution::sequenced_policy&&, std::size_t count, uint64_t empty_count, Position start_pos = Position::Start());
-	//std::unordered_set<Position> RandomlyPlayed(std::execution::parallel_policy&& , std::size_t count,                       Position start_pos = Position::Start());
-	//std::unordered_set<Position> RandomlyPlayed(std::execution::parallel_policy&& , std::size_t count, uint64_t empty_count, Position start_pos = Position::Start());
+	// Generator of all Positions after the n-th ply.
+	class All_after_nth_ply
+	{
+		struct PosMov{ Position pos; Moves moves; };
+		const std::size_t plies;
+		const std::size_t plies_per_pass;
+		std::stack<PosMov> stack;
+	public:
+		All_after_nth_ply(std::size_t plies, std::size_t plies_per_pass, Position start = Position::Start());
+
+		std::optional<Position> operator()();
+	};
+
+	// Generator of all Position with given empty count.
+	class All_with_empty_count
+	{
+		struct PosMov{ Position pos; Moves moves; };
+		const std::size_t empty_count;
+		std::stack<PosMov> stack;
+	public:
+		All_with_empty_count(std::size_t empty_count, Position start = Position::Start());
+
+		std::optional<Position> operator()();
+	};
 	
-	template <class Inserter>
-	static void All(Inserter ins, std::size_t plies, std::size_t plies_per_pass, Position start = Position::Start())
+	// Generator of played Position with given empty count.
+	class Played
 	{
-		all(start, plies, plies_per_pass, ins);
-	}
+		Player &first, &second;
+		const std::size_t empty_count;
+		const Position start;
+	public:
+		Played(Player& first, Player& second, std::size_t empty_count, Position start = Position::Start());
 
-	template <class Inserter>
-	static void All(Inserter ins, std::size_t empty_count, Position start = Position::Start())
-	{
-		if (start.EmptyCount() >= empty_count)
-			all(start, start.EmptyCount() - empty_count, 0, ins);
-	}
-
-private:
-	std::mt19937_64 rnd_engine;
-
-	template <class Inserter>
-	static void add(Position pos, const std::size_t plies, const std::size_t plies_per_pass, Inserter& inserter)
-	{
-		if (plies == 0)
-		{
-			inserter = pos;
-			return;
-		}
-
-		Moves moves = PossibleMoves(pos);
-		if (moves.empty())
-		{
-			pos = PlayPass(pos);
-			if (!PossibleMoves(pos).empty())
-				add(pos, plies - plies_per_pass, plies_per_pass, inserter);
-			return;
-		}
-
-		for (const auto move : moves)
-			add(Play(pos, move), plies - 1, plies_per_pass, inserter);
-	}
-
-	template <class Inserter>
-	static void all(const Position pos, const std::size_t plies, const std::size_t plies_per_pass, Inserter& inserter)
-	{
-		if (plies)
-			add(pos, plies, plies_per_pass, inserter);
-		else
-			inserter = pos;
-	}
-};
+		Position operator()();
+	};
+}

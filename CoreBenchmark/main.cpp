@@ -53,8 +53,8 @@ BENCHMARK(FlipVertical);
 
 void EvalGameOver(benchmark::State& state)
 {
-	PositionGenerator pg;
-	const Position pos = pg.Random();
+	PosGen::Random rnd;
+	const Position pos = rnd();
 
 	for (auto _ : state)
 		benchmark::DoNotOptimize(EvalGameOver(pos));
@@ -64,44 +64,47 @@ BENCHMARK(EvalGameOver);
 
 void PosGen_Random(benchmark::State& state)
 {
-	PositionGenerator pg;
+	PosGen::Random rnd;
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(pg.Random());
+		benchmark::DoNotOptimize(rnd());
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PosGen_Random);
 
 void PosGen_Random_empty_count(benchmark::State& state)
 {
-	PositionGenerator pg;
 	const uint64_t empty_count = state.range(0);
+	PosGen::Random_with_empty_count rnd(empty_count);
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(pg.Random(empty_count));
+		benchmark::DoNotOptimize(rnd());
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PosGen_Random_empty_count)->Arg(0)->Arg(20)->Arg(40)->Arg(60);
 
 void PosGen_RandomPlayed(benchmark::State& state)
 {
-	PositionGenerator pg;
-	auto player = RandomPlayer();
+	auto player1 = RandomPlayer();
+	auto player2 = RandomPlayer();
 	const uint64_t empty_count = state.range(0);
+	PosGen::Played generate(player1, player2, empty_count);
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(pg.Played(player, empty_count));
+		benchmark::DoNotOptimize(generate());
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PosGen_RandomPlayed)->Arg(0)->Arg(20)->Arg(40)->Arg(60);
 
 void PosGen_All(benchmark::State& state)
 {
-	PositionGenerator pg;
 	const uint64_t empty_count = state.range(0);
-	std::vector<Position> vec;
+	PosGen::All_with_empty_count rnd(empty_count);
 	for (auto _ : state)
-		pg.All(std::back_inserter(vec), empty_count);
+	{
+		std::vector<Position> vec;
+		generate_all(std::back_inserter(vec), rnd);
+	}
 }
 BENCHMARK(PosGen_All)->DenseRange(51, 60);
 

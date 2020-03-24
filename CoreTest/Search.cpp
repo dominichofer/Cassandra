@@ -77,61 +77,6 @@ TEST(EvalGameOver, empties_count_toward_opponent)
 	ASSERT_EQ(EvalGameOver(pos), -64);
 }
 
-TEST(OpenInterval, Equality1)
-{
-	OpenInterval w1(1, 10);
-	OpenInterval w2(2, 10);
-
-	ASSERT_TRUE(w1 == w1);
-	ASSERT_FALSE(w1 != w1);
-	ASSERT_TRUE(w1 != w2);
-	ASSERT_FALSE(w1 == w2);
-}
-
-TEST(OpenInterval, Negation_flips_window)
-{
-	OpenInterval w1(1, 10);
-	OpenInterval w2(-10, -1);
-
-	ASSERT_TRUE(-w1 == w2);
-}
-
-TEST(OpenInterval, Contains_Score)
-{
-	OpenInterval w(1, 10);
-
-	ASSERT_FALSE(w.Contains(0));
-	ASSERT_FALSE(w.Contains(1));
-	ASSERT_TRUE(w.Contains(2));
-	ASSERT_TRUE(w.Contains(9));
-	ASSERT_FALSE(w.Contains(10));
-	ASSERT_FALSE(w.Contains(11));
-}
-
-TEST(OpenInterval, Compares_to_Score)
-{
-	OpenInterval w(1, 10);
-
-	ASSERT_TRUE(w > 0);
-	ASSERT_TRUE(w > 1);
-	ASSERT_FALSE(w > 2);
-	ASSERT_FALSE(w < 9);
-	ASSERT_TRUE(w < 10);
-	ASSERT_TRUE(w < 11);
-}
-
-TEST(OpenInterval, Compares_to_self)
-{
-	OpenInterval w(1, 10);
-
-	ASSERT_TRUE(w > OpenInterval(-10, 0));
-	ASSERT_TRUE(w > OpenInterval(-10, 1));
-	ASSERT_FALSE(w > OpenInterval(-10, 20));
-	ASSERT_FALSE(w < OpenInterval(9, 20));
-	ASSERT_TRUE(w < OpenInterval(10, 20));
-	ASSERT_TRUE(w < OpenInterval(11, 20));
-}
-
 TEST(Selectivity, None_represents_infinit_sigmas)
 {
 	ASSERT_TRUE(Selectivity::None == Selectivity(std::numeric_limits<decltype(Selectivity::quantile)>::infinity()));
@@ -173,16 +118,16 @@ TEST(Selectivity, Compare)
 
 TEST(Intensity, Negation_flips_window)
 {
-	Intensity i1{ OpenInterval{+1,+2}, 0, Selectivity{0} };
-	Intensity i2{ OpenInterval{-2,-1}, 0, Selectivity{0} };
+	Intensity i1{ OpenInterval(+2, +4), 0, Selectivity(0) };
+	Intensity i2{ OpenInterval(-4, -2), 0, Selectivity(0) };
 
 	ASSERT_TRUE(i1 == -i2);
 }
 
 TEST(Intensity, Subtraction_of_depth)
 {
-	Intensity i1{ OpenInterval{+1,+2}, 0, Selectivity{0} };
-	Intensity i2{ OpenInterval{+1,+2}, 1, Selectivity{0} };
+	Intensity i1{ OpenInterval(+2, +4), 0, Selectivity(0) };
+	Intensity i2{ OpenInterval(+2, +4), 1, Selectivity(0) };
 
-	ASSERT_TRUE(i1 == i2 - 1);
+	ASSERT_EQ(i1, i2 - 1);
 }

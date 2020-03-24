@@ -40,13 +40,17 @@ public:
 	void Update(const Key& key, const Value& value)
 	{
 		updates++;
-		buckets[hash(key) % buckets.size()].Update(key, value);
+		auto hash_ = hash(key);
+		auto index = hash_ % buckets.size();
+		buckets[index].Update(key, value);
 	}
 
 	std::optional<Value> LookUp(const Key& key) const
 	{
 		lookups++;
-		const auto ret = buckets[hash(key) % buckets.size()].LookUp(key);
+		auto hash_ = hash(key);
+		auto index = hash_ % buckets.size();
+		const auto ret = buckets[index].LookUp(key);
 		if (ret.has_value())
 			++hits;
 		return ret;

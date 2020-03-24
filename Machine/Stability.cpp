@@ -9,7 +9,7 @@ public:
 	StabilityAnalyzer();
 
 	uint64_t StableEdges(uint64_t P, uint64_t O) const;
-	uint64_t StableStones(uint64_t P, uint64_t O) const; // Stable stones of the opponent.
+	uint64_t StableStones(uint64_t P, uint64_t O) const; // Stable stones of the opponent
 
 private:
 	static uint64_t FullLineHorizontal(uint64_t discs);

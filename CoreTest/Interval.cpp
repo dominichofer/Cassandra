@@ -1,121 +1,133 @@
 #include "pch.h"
 
-TEST(ClosedInterval, Equality)
+TEST(Intervals, Compare_less_Intervals_to_Score)
 {
-	ClosedInterval a{ 1, 2 };
-	ClosedInterval b{ 1, 3 };
+	ASSERT_TRUE(OpenInterval(2, 4) < 4);
+	ASSERT_TRUE(2 < OpenInterval(2, 4));
 
-	ASSERT_TRUE(a == a);
-	ASSERT_FALSE(a != a);
-	ASSERT_FALSE(a == b);
-	ASSERT_TRUE(a != b);
+	ASSERT_FALSE(ClosedInterval(2, 4) < 4);
+	ASSERT_FALSE(2 < ClosedInterval(2, 4));
 }
 
-TEST(ClosedInterval, Compare)
+TEST(Intervals, Compare_greater_Intervals_to_Score)
 {
-	ClosedInterval a{ 1, 2 };
-	ClosedInterval b{ 2, 3 };
-	ClosedInterval c{ 3, 4 };
+	ASSERT_TRUE(4 > OpenInterval(2, 4));
+	ASSERT_TRUE(OpenInterval(2, 4) > 2);
 
-	ASSERT_FALSE(a < a);
-	ASSERT_FALSE(a < b);
-	ASSERT_TRUE(a < c);
-	ASSERT_FALSE(b < b);
-	ASSERT_FALSE(b < c);
-	ASSERT_FALSE(c < c);
-
-	ASSERT_FALSE(a > a);
-	ASSERT_FALSE(b > a);
-	ASSERT_TRUE(c > a);
-	ASSERT_FALSE(b > b);
-	ASSERT_FALSE(c > b);
-	ASSERT_FALSE(c > c);
+	ASSERT_FALSE(4 > ClosedInterval(2, 4));
+	ASSERT_FALSE(ClosedInterval(2, 4) > 2);
 }
 
-TEST(ClosedInterval, Compare_with_score)
+TEST(Intervals, Compare_less_Intervals_to_Intervals)
 {
-	ClosedInterval i{ 1, 2 };
+	ASSERT_TRUE(OpenInterval(2, 4) < OpenInterval(3, 6)); // The overlap is empty.
+	ASSERT_TRUE(OpenInterval(2, 4) < OpenInterval(4, 6)); // No overlap.
 
-	ASSERT_TRUE(0 < i);
-	ASSERT_FALSE(1 < i);
-	ASSERT_FALSE(i < 2);
-	ASSERT_TRUE(i < 3);
+	ASSERT_TRUE(OpenInterval(2, 4) < ClosedInterval(4, 6)); // Intervals are touching but don't overlap.
 
-	ASSERT_TRUE(i > 0);
-	ASSERT_FALSE(i > 1);
-	ASSERT_FALSE(2 > i);
-	ASSERT_TRUE(3 > i);
+	ASSERT_TRUE(ClosedInterval(2, 4) < OpenInterval(4, 6)); // Intervals are touching but don't overlap.
+
+	ASSERT_FALSE(ClosedInterval(2, 4) < ClosedInterval(4, 6)); // The overlap contains one element.
+	ASSERT_TRUE(ClosedInterval(2, 4) < ClosedInterval(5, 6)); // No overlap.
 }
 
-TEST(ClosedInterval, Intersection)
+TEST(Intervals, Compare_greater_Intervals_to_Intervals)
 {
-	ClosedInterval a{ 1, 3 };
-	ClosedInterval b{ 2, 4 };
-	ClosedInterval c{ 2, 3 };
+	ASSERT_TRUE(OpenInterval(3, 6) > OpenInterval(2, 4));
+	ASSERT_TRUE(OpenInterval(4, 6) > OpenInterval(2, 4));
 
-	auto i = Intersection(a, b);
-	
-	ASSERT_TRUE(i == c);
+	ASSERT_TRUE(ClosedInterval(4, 6) > OpenInterval(2, 4));
+
+	ASSERT_TRUE(OpenInterval(4, 6) > ClosedInterval(2, 4));
+
+	ASSERT_FALSE(ClosedInterval(3, 6) > ClosedInterval(2, 4));
+	ASSERT_TRUE(ClosedInterval(5, 6) > ClosedInterval(2, 4));
 }
 
-TEST(OpenInterval, Equality)
+TEST(Intervals, OpenInterval_Contains_Score)
 {
-	OpenInterval a{ 1, 2 };
-	OpenInterval b{ 1, 3 };
+	OpenInterval w(2, 6);
 
-	ASSERT_TRUE(a == a);
-	ASSERT_FALSE(a != a);
-	ASSERT_FALSE(a == b);
-	ASSERT_TRUE(a != b);
+	ASSERT_FALSE(w.Contains(2));
+	ASSERT_FALSE(w.Contains(6));
 }
 
-TEST(OpenInterval, Compare)
+TEST(Intervals, ClosedInterval_Contains_Score)
 {
-	OpenInterval a{ 1, 2 };
-	OpenInterval b{ 2, 4 };
-	OpenInterval c{ 3, 5 };
+	ClosedInterval w(2, 6);
 
-	ASSERT_FALSE(a < a);
-	ASSERT_TRUE(a < b);
-	ASSERT_TRUE(a < c);
-	ASSERT_FALSE(b < b);
-	ASSERT_FALSE(b < c);
-	ASSERT_FALSE(c < c);
-
-	ASSERT_FALSE(a > a);
-	ASSERT_TRUE(b > a);
-	ASSERT_TRUE(c > a);
-	ASSERT_FALSE(b > b);
-	ASSERT_FALSE(c > b);
-	ASSERT_FALSE(c > c);
+	ASSERT_TRUE(w.Contains(2));
+	ASSERT_TRUE(w.Contains(6));
 }
 
-TEST(OpenInterval, Compare_with_score)
+TEST(Intervals, Interval_Contains_Interval)
 {
-	OpenInterval i{ 1, 2 };
+	OpenInterval open(2, 6);
+	ClosedInterval closed(2, 6);
 
-	ASSERT_TRUE(0 < i);
-	ASSERT_TRUE(1 < i);
-	ASSERT_FALSE(2 < i);
-	ASSERT_FALSE(i < 1);
-	ASSERT_TRUE(i < 2);
-	ASSERT_TRUE(i < 3);
-
-	ASSERT_TRUE(i > 0);
-	ASSERT_TRUE(i > 1);
-	ASSERT_FALSE(i > 2);
-	ASSERT_FALSE(1 > i);
-	ASSERT_TRUE(2 > i);
-	ASSERT_TRUE(3 > i);
+	ASSERT_TRUE(open.Contains(open));
+	ASSERT_FALSE(open.Contains(closed));
+	ASSERT_TRUE(closed.Contains(open));
+	ASSERT_TRUE(closed.Contains(OpenInterval(1, 5)));
+	ASSERT_TRUE(closed.Contains(closed));
 }
 
-TEST(OpenInterval, Intersection)
+TEST(Intervals, Interval_Overlaps_Interval)
 {
-	OpenInterval a{ 1, 3 };
-	OpenInterval b{ 2, 4 };
-	OpenInterval c{ 2, 3 };
+	ASSERT_TRUE(OpenInterval(2, 6).Overlaps(OpenInterval(4, 10)));
+	ASSERT_FALSE(OpenInterval(2, 6).Overlaps(OpenInterval(5, 10)));
+	ASSERT_FALSE(OpenInterval(2, 6).Overlaps(OpenInterval(6, 10)));
 
-	auto i = Intersection(a, b);
+	ASSERT_TRUE(OpenInterval(2, 6).Overlaps(ClosedInterval(5, 10)));
+	ASSERT_FALSE(OpenInterval(2, 6).Overlaps(ClosedInterval(6, 10)));
 
-	ASSERT_TRUE(i == c);
+	ASSERT_TRUE(ClosedInterval(2, 6).Overlaps(OpenInterval(5, 10)));
+	ASSERT_FALSE(ClosedInterval(2, 6).Overlaps(OpenInterval(6, 10)));
+
+	ASSERT_TRUE(ClosedInterval(2, 6).Overlaps(ClosedInterval(6, 10)));
+	ASSERT_FALSE(ClosedInterval(2, 6).Overlaps(ClosedInterval(7, 10)));
+}
+
+TEST(Intervals, Overlap)
+{	
+	ASSERT_EQ(Overlap(OpenInterval(2, 6), OpenInterval(4, 8)), OpenInterval(4, 6));
+	ASSERT_EQ(Overlap(ClosedInterval(2, 6), ClosedInterval(4, 8)), ClosedInterval(4, 6));
+}
+
+TEST(Intervals, OpenInterval_subtract_assign)
+{
+	OpenInterval open(2, 6);
+	ClosedInterval closed(4, 8);
+
+	open -= closed;
+
+	ASSERT_EQ(open, OpenInterval(2, 4));
+}
+
+TEST(Intervals, ClosedInterval_subtract_assign)
+{
+	OpenInterval open(2, 6);
+	ClosedInterval closed(4, 8);
+
+	closed -= open;
+
+	ASSERT_EQ(closed, ClosedInterval(6, 8));
+}
+
+TEST(Intervals, Subtract)
+{
+	ASSERT_EQ(OpenInterval(2, 6) - ClosedInterval(4, 8), OpenInterval(2, 4));
+	ASSERT_EQ(ClosedInterval(2, 6) - OpenInterval(4, 8), ClosedInterval(2, 4));
+}
+
+TEST(Intervals, empty)
+{
+	ASSERT_TRUE(OpenInterval(2, 3).empty());
+	ASSERT_FALSE(OpenInterval(2, 4).empty());
+}
+
+TEST(Intervals, Negation_flips_window)
+{
+	ASSERT_TRUE(-OpenInterval(2, 10) == OpenInterval(-10, -2));
+	ASSERT_TRUE(-ClosedInterval(2, 10) == ClosedInterval(-10, -2));
 }

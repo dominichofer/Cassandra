@@ -181,5 +181,5 @@ TEST(StableStones, disturbed_corner_triangles_are_stable)
 		"- - - - - - - #"
 		"- - - - - - # #"_BitBoard;
 
-	ASSERT_TRUE(stables.IsSubsetOf(StableStones(pos)));
+	ASSERT_TRUE((StableStones(pos) & stables) == stables);
 }

@@ -9,13 +9,14 @@ public:
 	constexpr explicit Moves(BitBoard moves) noexcept : m_moves(moves) {}
 
 	[[nodiscard]] auto operator<=>(const Moves&) const noexcept = default;
-	
+
 	std::size_t size() const;
 	bool empty() const noexcept;
+	operator bool() const noexcept;
 
 	bool contains(Field) const;
 	Field front() const;
-	void pop_front();
+	Field pop_front();
 
 	void Remove(Field);
 	void Remove(BitBoard moves);
@@ -26,11 +27,11 @@ public:
 		BitBoard m_moves;
 	public:
 		explicit Iterator(const Moves& moves) : m_moves(moves.m_moves) {}
-		Iterator& operator++() { m_moves.RemoveFirstField(); return *this; }
-		Field operator*() const { return m_moves.FirstField(); }
+		Iterator& operator++();
+		Field operator*() const;
 
-		bool operator==(const Iterator& o) { return m_moves == o.m_moves; }
-		bool operator!=(const Iterator& o) { return m_moves != o.m_moves; }
+		[[nodiscard]] bool operator==(const Iterator& o) const noexcept { return m_moves == o.m_moves; }
+		[[nodiscard]] bool operator!=(const Iterator& o) const noexcept { return m_moves != o.m_moves; }
 	};
 
 
@@ -50,7 +51,7 @@ constexpr Moves operator""_mov(const char* c, std::size_t size)
 		{
 			char symbol = c[119 - 2 * j - 15 * i];
 			if (symbol == '#')
-				moves[i * 8 + j] = true;
+				moves |= 1ULL << (i * 8 + j);
 		}
 	return Moves(moves);
 }

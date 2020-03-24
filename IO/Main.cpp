@@ -33,29 +33,12 @@ std::wstring SingleLine(const Position& pos)
 	std::wstring str = L"---------------------------------------------------------------- X";
 	for (int i = 0; i < 64; i++)
 	{
-		if (pos.GetP()[63ULL - i])
+		if (Bit(pos.P, 63 - i))
 			str[i] = L'X';
-		else if (pos.GetO()[63ULL - i])
+		else if (Bit(pos.O, 63 - i))
 			str[i] = L'O';
 	}
 	return str;
-}
-
-std::optional<Position> ParsePosition_SingleLine(const std::wstring& str)
-{
-	BitBoard P{ 0 }, O{ 0 };
-
-	for (int i = 0; i < 64; i++)
-	{
-		P[63ULL - i] = (str[i] == L'X');
-		O[63ULL - i] = (str[i] == L'O');
-	}
-
-	if (str[65] == L'X')
-		return Position{ P, O };
-	if (str[65] == L'O')
-		return Position{ O, P };
-	return std::nullopt;
 }
 
 std::wstring MultiLine(const Position& pos)
@@ -77,14 +60,31 @@ std::wstring MultiLine(const Position& pos)
 	{
 		auto& field = puzzle[22 + 2 * i + 4 * (i / 8)];
 
-		if (pos.GetP()[63 - i])
+		if (Bit(pos.P, 63 - i))
 			field = 'X';
-		else if (pos.GetO()[63 - i])
+		else if (Bit(pos.O, 63 - i))
 			field = 'O';
 		else if (moves.contains(static_cast<Field>(63 - i)))
 			field = '+';
 	}
 	return puzzle;
+}
+
+Position ParsePosition_SingleLine(const std::wstring& str) noexcept(false)
+{
+	BitBoard P{ 0 }, O{ 0 };
+
+	for (int i = 0; i < 64; i++)
+	{
+		Bit(P, 63 - i) = (str[i] == L'X');
+		Bit(O, 63 - i) = (str[i] == L'O');
+	}
+
+	if (str[65] == L'X')
+		return Position{ P, O };
+	if (str[65] == L'O')
+		return Position{ O, P };
+	throw;
 }
 
 // Format: "ddd:hh:mm:ss.ccc"

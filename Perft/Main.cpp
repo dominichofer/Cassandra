@@ -74,78 +74,27 @@ std::string time_format(const std::chrono::milliseconds duration)
 #include <execution>
 #include "Core/PositionGenerator.h"
 
-std::size_t Number_of_different_positions(std::size_t plies)
-{
-	std::vector<Position> all;
-	PositionGenerator::All(std::back_inserter(all), plies, 1);
-	std::sort(all.begin(), all.end(),
-		[](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); });
-	auto it = std::unique(all.begin(), all.end());
-	return std::distance(all.begin(), it);
-
-	return 1 +
-		std::inner_product(all.cbegin() + 1, all.cend(), all.cbegin(), std::size_t(0),
-			std::plus<std::size_t>(),
-			[](Position l, Position r) -> std::size_t { return l != r; }
-		);
-}
-
 std::size_t Number_of_different_positions(const std::vector<Position>& all)
 {
-	return 1 +
-		std::inner_product(all.cbegin() + 1, all.cend(), all.cbegin(), std::size_t(0),
-			std::plus<std::size_t>(),
-			[](Position l, Position r) -> std::size_t { return l != r; }
-	);
+	return std::inner_product(all.begin() + 1, all.end(), all.begin(), 1, std::plus(), std::not_equal_to());
 }
 
+// Counts Othello positions that occure once and only once in the list.
 std::size_t Number_of_unique_realization(const std::vector<Position>& all)
 {
-	std::size_t sum = 0;
-	Position testee = all.front();
-	bool unique = true;
-	for (auto it = all.cbegin() + 1; it != all.cend(); ++it)
-	{
-		Position pos = *it;
-		if (testee == pos)
-			unique = false;
-		else
-		{
-			if (unique)
-				sum++;
-			testee = pos;
-			unique = true;
-		}
-	}
-	if (unique)
+	const std::size_t size = all.size();
+	if (size < 2)
+		return size;
+
+	int64_t sum = (all[0] != all[1]) ? 1 : 0;
+	#pragma omp parallel for reduction(+:sum)
+	for (int64_t i = 1; i < size - 1; i++)
+		if ((all[i-1] != all[i]) && (all[i] != all[i+1]))
+			sum++;
+	if (all[size - 2] != all[size - 1])
 		sum++;
 	return sum;
 }
-
-class AAA : public std::back_insert_iterator<std::vector<Position>>
-{
-	std::size_t sorted = 0;
-public:
-	AAA(std::vector<Position>& vec) : std::back_insert_iterator<std::vector<Position>>(vec) {}
-	AAA& operator=(Position pos)
-	{
-		auto less = [](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); };
-
-		if (!std::binary_search(container->cbegin(), container->cbegin() + sorted, pos, less))
-		{
-			container->push_back(pos);
-			if (container->size() == container->capacity())
-			{
-				std::cout << "Container size pre: " << container->size() << std::endl;
-				std::sort(std::execution::par, container->begin(), container->end(), less);
-				container->erase(std::unique(container->begin(), container->end()), container->end());
-				sorted = container->size();
-				std::cout << "Container size post: " << container->size() << std::endl;
-			}
-		}
-		return *this;
-	}
-};
 
 //int main()
 //{
@@ -157,10 +106,8 @@ public:
 //		const auto start = std::chrono::high_resolution_clock::now();
 //
 //		std::vector<Position> all;
-//		all.reserve(4'000'000'000);
-//		PositionGenerator::All(AAA(all), plies, 1);
-//		std::sort(std::execution::par, all.begin(), all.end(),
-//			[](Position l, Position r) { return (l.GetP() == r.GetP()) ? (l.GetO() < r.GetO()) : (l.GetP() < r.GetP()); });
+//		generate_all(std::back_inserter(all), PosGen::All_after_nth_ply(plies, 1));
+//		std::sort(std::execution::par, all.begin(), all.end());
 //
 //		const auto end = std::chrono::high_resolution_clock::now();
 //		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
@@ -168,10 +115,12 @@ public:
 //
 //		printf(" %3u", plies);
 //		printf(" | %11s", ThousandsSeparator(Number_of_different_positions(all)).c_str());
-//		//printf(" | %11s", ThousandsSeparator(Number_of_unique_realization(all)).c_str());
-//		//std::transform(all.begin(), all.end(), all.begin(), [](Position pos) { return Position(pos.GetP() | pos.GetO(), 0); });
-//		//printf(" | %11s", ThousandsSeparator(Number_of_different_positions(all)).c_str());
-//		//printf(" | %11s", ThousandsSeparator(Number_of_unique_realization(all)).c_str());
+//		printf(" | %11s", ThousandsSeparator(Number_of_unique_realization(all)).c_str());
+//		std::transform(std::execution::par, all.begin(), all.end(), all.begin(), 
+//					   [](const Position& pos) { return Position(pos.P | pos.O, 0); });
+//		std::sort(std::execution::par, all.begin(), all.end());
+//		printf(" | %11s", ThousandsSeparator(Number_of_different_positions(all)).c_str());
+//		printf(" | %11s", ThousandsSeparator(Number_of_unique_realization(all)).c_str());
 //		printf(" | % 9s\n", time_format(duration).c_str());
 //	}
 //	return 0;
@@ -212,7 +161,7 @@ int main(int argc, char* argv[])
 	for (uint8_t d = 1; d <= depth; d++)
 	{
 		const auto start = std::chrono::high_resolution_clock::now();
-		std::size_t result = Unrolled2::perft(d);
+		std::size_t result = HashTableMap::perft(d, 100'000'000);
 		const auto end = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		const auto milliseconds = duration.count();

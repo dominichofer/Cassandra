@@ -1,128 +1,114 @@
 #pragma once
 #include <algorithm>
 #include <cassert>
+#include <compare>
+#include <cmath>
+#include <type_traits>
+#include "Algorithm.h"
 
-class Score
+using Score = int;
+
+constexpr Score min_score{ -64 };
+constexpr Score max_score{ +64 };
+constexpr Score infinity{ +66 };
+
+struct Interval
 {
-	int value{};
-public:
-	static const Score Min;
-	static const Score Max;
-	static const Score Infinity;
+	Score m_lower, m_upper;
 
-	Score() = default;
-	constexpr Score(int value) noexcept : value(value) {}
+	Interval(Score lower, Score upper) noexcept : m_lower(lower), m_upper(upper) {}
 
-	[[nodiscard]] constexpr operator int() const noexcept { return value; }
+	[[nodiscard]] Score lower() const { return m_lower; }
+	[[nodiscard]] Score upper() const { return m_upper; }
+	
+	[[nodiscard]] bool operator==(const Interval& o) const noexcept = default;
+	[[nodiscard]] bool operator!=(const Interval & o) const noexcept = default;
 
-	[[nodiscard]] Score operator++() noexcept { return ++value; }
-	[[nodiscard]] Score operator++(int) noexcept { return value++; }
-	[[nodiscard]] Score operator--() noexcept { return --value; }
-	[[nodiscard]] Score operator--(int) noexcept { return value--; }
+	[[nodiscard]] Score clamp(Score s) const { return std::clamp(s, m_lower, m_upper); }
 
-	[[nodiscard]] friend constexpr bool operator==(Score l, Score r) noexcept { return l.value == r.value; }
-	[[nodiscard]] friend constexpr bool operator==(int   l, Score r) noexcept { return l == r.value; }
-	[[nodiscard]] friend constexpr bool operator==(Score l, int   r) noexcept { return l.value == r; }
-	[[nodiscard]] friend constexpr bool operator!=(Score l, Score r) noexcept { return l.value != r.value; }
-	[[nodiscard]] friend constexpr bool operator!=(int   l, Score r) noexcept { return l != r.value; }
-	[[nodiscard]] friend constexpr bool operator!=(Score l, int   r) noexcept { return l.value != r; }
-	[[nodiscard]] friend constexpr bool operator<(Score l, Score r) noexcept { return l.value < r.value; }
-	[[nodiscard]] friend constexpr bool operator<(int   l, Score r) noexcept { return l < r.value; }
-	[[nodiscard]] friend constexpr bool operator<(Score l, int   r) noexcept { return l.value < r; }
-	[[nodiscard]] friend constexpr bool operator>(Score l, Score r) noexcept { return l.value > r.value; }
-	[[nodiscard]] friend constexpr bool operator>(int   l, Score r) noexcept { return l > r.value; }
-	[[nodiscard]] friend constexpr bool operator>(Score l, int   r) noexcept { return l.value > r; }
-	[[nodiscard]] friend constexpr bool operator<=(Score l, Score r) noexcept { return l.value <= r.value; }
-	[[nodiscard]] friend constexpr bool operator<=(int   l, Score r) noexcept { return l <= r.value; }
-	[[nodiscard]] friend constexpr bool operator<=(Score l, int   r) noexcept { return l.value <= r; }
-	[[nodiscard]] friend constexpr bool operator>=(Score l, Score r) noexcept { return l.value >= r.value; }
-	[[nodiscard]] friend constexpr bool operator>=(int   l, Score r) noexcept { return l >= r.value; }
-	[[nodiscard]] friend constexpr bool operator>=(Score l, int   r) noexcept { return l.value >= r; }
+	[[nodiscard]] virtual bool Constraint() const noexcept = 0;
 
-	[[nodiscard]] friend constexpr Score operator+(Score l, Score r) noexcept { return l.value + r.value; }
-	[[nodiscard]] friend constexpr Score operator+(int   l, Score r) noexcept { return l + r.value; }
-	[[nodiscard]] friend constexpr Score operator+(Score l, int   r) noexcept { return l.value + r; }
-	[[nodiscard]] friend constexpr Score operator-(Score l, Score r) noexcept { return l.value - r.value; }
-	[[nodiscard]] friend constexpr Score operator-(int   l, Score r) noexcept { return l - r.value; }
-	[[nodiscard]] friend constexpr Score operator-(Score l, int   r) noexcept { return l.value - r; }
-	//[[nodiscard]] friend constexpr Score operator*(Score l, Score r) noexcept { return l.value * r.value; }
-	//[[nodiscard]] friend constexpr Score operator*(int   l, Score r) noexcept { return l * r.value; }
-	//[[nodiscard]] friend constexpr Score operator*(Score l, int   r) noexcept { return l.value * r; }
-	//[[nodiscard]] friend constexpr Score operator/(Score l, Score r) noexcept { return l.value / r.value; }
-	//[[nodiscard]] friend constexpr Score operator/(int   l, Score r) noexcept { return l / r.value; }
-	//[[nodiscard]] friend constexpr Score operator/(Score l, int   r) noexcept { return l.value / r; }
+	bool try_increase_lower(Score s) { if (s > m_lower) { m_lower = s; assert(Constraint()); return true; } return false; }
+	bool try_decrease_lower(Score s) { if (s < m_lower) { m_lower = s; assert(Constraint()); return true; } return false; }
+	bool try_increase_upper(Score s) { if (s > m_upper) { m_upper = s; assert(Constraint()); return true; } return false; }
+	bool try_decrease_upper(Score s) { if (s < m_upper) { m_upper = s; assert(Constraint()); return true; } return false; }
 };
 
-[[nodiscard]] constexpr Score operator-(Score o) noexcept { return -static_cast<int>(o); }
-[[nodiscard]] constexpr Score operator+(Score o) noexcept { return +static_cast<int>(o); }
+class ClosedInterval;
 
-class ClosedInterval
+class OpenInterval final : public Interval
 {
-	[[nodiscard]] bool Constraint() const noexcept { return (-Score::Infinity < lower) && (lower <= upper) && (upper < +Score::Infinity); }
+	[[nodiscard]] bool Constraint() const noexcept override { return (-infinity <= m_lower) && (m_lower < m_upper) && (m_upper <= +infinity); }
+
 public:
-	// TODO: Because members are public, the constraint can be violated.
-	Score lower, upper;
-
-	ClosedInterval() = delete;
-	ClosedInterval(Score lower, Score upper) noexcept : lower(lower), upper(upper) { assert(Constraint()); }
-
-	static const ClosedInterval Full;
-
-	[[nodiscard]] bool operator==(ClosedInterval o) const noexcept { return (upper == o.upper) && (lower == o.lower); }
-	[[nodiscard]] bool operator!=(ClosedInterval o) const noexcept { return (upper != o.upper) || (lower != o.lower); }
-	[[nodiscard]] bool operator<(ClosedInterval o) const noexcept { return upper < o.lower; }
-	[[nodiscard]] bool operator>(ClosedInterval o) const noexcept { return lower > o.upper; }
-
-	[[nodiscard]] bool Contains(Score s) const noexcept { return (lower <= s) && (s <= upper); }
-
-	// Inverted interval.
-	[[nodiscard]] ClosedInterval operator-() const noexcept { return { -upper, -lower }; }
-};
-
-[[nodiscard]] inline ClosedInterval Intersection(ClosedInterval l, ClosedInterval r) noexcept
-{
-	return { std::max(l.lower, r.lower), std::min(l.upper, r.upper) };
-}
-
-[[nodiscard]] inline bool operator<(ClosedInterval r, Score s) noexcept { return r.upper < s; }
-[[nodiscard]] inline bool operator>(ClosedInterval r, Score s) noexcept { return r.lower > s; }
-[[nodiscard]] inline bool operator<(Score s, ClosedInterval r) noexcept { return s < r.lower; }
-[[nodiscard]] inline bool operator>(Score s, ClosedInterval r) noexcept { return s > r.upper; }
-
-class OpenInterval
-{
-	[[nodiscard]] bool Constraint() const noexcept { return (-Score::Infinity <= lower) && (lower < upper) && (upper <= +Score::Infinity); }
-public:
-	// TODO: Because members are public, the constraint can be violated.
-	Score lower, upper;
-
 	OpenInterval() = delete;
-	OpenInterval(Score lower, Score upper) noexcept : lower(lower), upper(upper) {} // TODO: Add assert Constrint()!
+	OpenInterval(Score lower, Score upper) noexcept : Interval(lower, upper) { assert(Constraint()); }
+	explicit OpenInterval(ClosedInterval) noexcept;
 
-	static const OpenInterval Full;
+	[[nodiscard]] static OpenInterval Whole() { return { -infinity, +infinity }; }
+	
+	[[nodiscard]] OpenInterval operator-() const noexcept { return { -m_upper, -m_lower }; }
+	OpenInterval& operator-=(ClosedInterval) noexcept;
 
-	[[nodiscard]] bool operator==(OpenInterval o) const noexcept { return (upper == o.upper) && (lower == o.lower); }
-	[[nodiscard]] bool operator!=(OpenInterval o) const noexcept { return (upper != o.upper) || (lower != o.lower); }
-	[[nodiscard]] bool operator<(OpenInterval o) const noexcept { return upper <= o.lower; }
-	[[nodiscard]] bool operator>(OpenInterval o) const noexcept { return lower >= o.upper; }
+	[[nodiscard]] bool empty() const noexcept { return m_lower + 1 == m_upper; }
 
-	[[nodiscard]] bool Contains(Score s) const noexcept { return (lower < s) && (s < upper); }
+	[[nodiscard]] bool Contains(Score s) const noexcept { return (m_lower < s) && (s < m_upper); }
+	[[nodiscard]] bool Contains(OpenInterval o) const noexcept { return (m_lower <= o.m_lower) && (o.m_upper <= m_upper); }
+	[[nodiscard]] bool Contains(ClosedInterval) const noexcept;
 
-	// Inverted interval.
-	[[nodiscard]] OpenInterval operator-() const noexcept { return { -upper, -lower }; }
+	[[nodiscard]] bool Overlaps(OpenInterval) const noexcept;
+	[[nodiscard]] bool Overlaps(ClosedInterval) const noexcept;
 };
 
-[[nodiscard]] inline OpenInterval Intersection(OpenInterval l, OpenInterval r) noexcept
+class ClosedInterval final : public Interval
 {
-	return { std::max(l.lower, r.lower), std::min(l.upper, r.upper) };
-}
+	// TODO: Does it need to include infinity?
+	[[nodiscard]] bool Constraint() const noexcept override { return (min_score <= m_lower) && (m_lower <= m_upper) && (m_upper <= max_score); }
 
-[[nodiscard]] inline bool operator<(OpenInterval r, Score s) noexcept { return r.upper <= s; }
-[[nodiscard]] inline bool operator>(OpenInterval r, Score s) noexcept { return r.lower >= s; }
-[[nodiscard]] inline bool operator<(Score s, OpenInterval r) noexcept { return s <= r.lower; }
-[[nodiscard]] inline bool operator>(Score s, OpenInterval r) noexcept { return s >= r.upper; }
+public:
+	ClosedInterval() = delete;
+	ClosedInterval(Score lower, Score upper) noexcept : Interval(lower, upper) { assert(Constraint()); }
+	// explicit ClosedInterval(OpenInterval o) noexcept : ClosedInterval(o.m_lower + 1, o.m_upper - 1) {}
 
-[[nodiscard]] inline bool operator<(OpenInterval e, ClosedInterval i) noexcept { return e.upper <= i.lower; }
-[[nodiscard]] inline bool operator>(OpenInterval e, ClosedInterval i) noexcept { return e.lower >= i.upper; }
-[[nodiscard]] inline bool operator<(ClosedInterval i, OpenInterval e) noexcept { return i.upper <= e.lower; }
-[[nodiscard]] inline bool operator>(ClosedInterval i, OpenInterval e) noexcept { return i.lower >= e.upper; }
+	[[nodiscard]] static ClosedInterval Whole() noexcept { return { min_score, max_score }; }
+		
+	[[nodiscard]] ClosedInterval operator-() const noexcept { return { -m_upper, -m_lower }; }
+	ClosedInterval& operator-=(OpenInterval) noexcept;
+
+	[[nodiscard]] bool IsSingleton() const noexcept { return m_lower == m_upper; }
+	
+	[[nodiscard]] bool Contains(Score s) const noexcept { return (m_lower <= s) && (s <= m_upper); }
+	[[nodiscard]] bool Contains(OpenInterval o) const noexcept { return OpenInterval(*this).Contains(o); }
+	[[nodiscard]] bool Contains(ClosedInterval o) const noexcept { return (m_lower <= o.m_lower) && (o.m_upper <= m_upper); }
+
+	[[nodiscard]] bool Overlaps(OpenInterval o) const noexcept;
+	[[nodiscard]] bool Overlaps(ClosedInterval o) const noexcept;
+};
+
+[[nodiscard]] inline bool operator<(OpenInterval l, Score r) noexcept { return l.upper() <= r; }
+[[nodiscard]] inline bool operator<(Score l, OpenInterval r) noexcept { return l <= r.lower(); }
+[[nodiscard]] inline bool operator<(ClosedInterval l, Score r) noexcept { return l.upper() < r; }
+[[nodiscard]] inline bool operator<(Score l, ClosedInterval r) noexcept { return l < r.lower(); }
+[[nodiscard]] inline bool operator<(OpenInterval l, OpenInterval r) noexcept { return l.upper() - 1 <= r.lower(); }
+[[nodiscard]] inline bool operator<(OpenInterval l, ClosedInterval r) noexcept { return l.upper() <= r.lower(); }
+[[nodiscard]] inline bool operator<(ClosedInterval l, OpenInterval r) noexcept { return l.upper() <= r.lower(); }
+[[nodiscard]] inline bool operator<(ClosedInterval l, ClosedInterval r) noexcept { return l.upper() < r.lower(); }
+
+[[nodiscard]] inline bool operator>(OpenInterval l, Score r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(Score l, OpenInterval r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(ClosedInterval l, Score r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(Score l, ClosedInterval r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(OpenInterval l, OpenInterval r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(OpenInterval l, ClosedInterval r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(ClosedInterval l, OpenInterval r) noexcept { return r < l; }
+[[nodiscard]] inline bool operator>(ClosedInterval l, ClosedInterval r) noexcept { return r < l; }
+
+[[nodiscard]] inline OpenInterval operator-(OpenInterval l, ClosedInterval r) noexcept { l -= r; return l; }
+[[nodiscard]] inline ClosedInterval operator-(ClosedInterval l, OpenInterval r) noexcept { l -= r; return l; }
+
+
+[[nodiscard]] OpenInterval Overlap(OpenInterval l, OpenInterval r) noexcept;
+[[nodiscard]] ClosedInterval Overlap(ClosedInterval l, ClosedInterval r) noexcept;
+
+[[nodiscard]] OpenInterval Hull(OpenInterval l, OpenInterval r) noexcept;
+[[nodiscard]] ClosedInterval Hull(ClosedInterval l, ClosedInterval r) noexcept;

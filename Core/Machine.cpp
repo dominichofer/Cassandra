@@ -12,42 +12,47 @@
 
 int CountLastFlip(const Position& pos, Field move)
 {
-	return CountLastFlip(pos.GetP(), static_cast<uint8_t>(move));
+	return CountLastFlip(pos.P, static_cast<uint8_t>(move));
 }
 
 BitBoard Flips(const Position& pos, Field move)
 {
-	return BitBoard{ Flips(pos.GetP(), pos.GetO(), static_cast<uint8_t>(move)) };
+	return BitBoard{ Flips(pos.P, pos.O, static_cast<uint8_t>(move)) };
 }
 
 Position Play(const Position& pos, Field move, BitBoard flips)
 {
-	return { pos.GetO() ^ flips, pos.GetP() ^ flips ^ BitBoard{ move } };
+	return { pos.O ^ flips, pos.P ^ flips ^ to_BitBoard(move) };
 }
 
 Position Play(const Position& pos, Field move)
 {
-	assert(pos.Empties()[move]); // move field is free.
+	assert(pos.Empties() & (1ULL << static_cast<int>(move))); // move field is free.
 
 	const auto flips = Flips(pos, move);
 
 	assert(flips); // flips something.
-	assert((pos.GetO() & flips) == flips); // only flipping opponent stones.
+	assert((pos.O & flips) == flips); // only flipping opponent stones.
 
 	return Play(pos, move, flips);
 }
 
 Position PlayPass(const Position& pos)
 {
-	return { pos.GetO(), pos.GetP() };
+	return { pos.O, pos.P };
 }
 
 Moves PossibleMoves(const Position& board)
 {
-	return Moves{ BitBoard{ PossibleMoves(board.GetP(), board.GetO()) } };
+	return Moves{ BitBoard{ PossibleMoves(board.P, board.O) } };
+}
+
+Field GetFirstDisc(BitBoard board)
+{
+	return static_cast<Field>(BitScanLSB(board));
 }
 
 BitBoard StableStones(const Position& pos)
 {
-	return StableStones(pos.GetP(), pos.GetO());
+	return StableStones(pos.P, pos.O);
 }

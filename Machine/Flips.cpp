@@ -185,6 +185,12 @@ uint64_t  FLIPPED_5_V[137] = {
 
 uint64_t A1(const uint64_t P, const uint64_t O)
 {
+	//const auto fill = _mm256_set_epi64x(~Horizontal(0), ~Vertical(0), ~Diagonal(0), 0);
+	//const auto ripple_bit = _mm256_set_epi64x(0x02, 0x0100, 0x0200, 0);
+	//auto outflank = ((_mm256_set1_epi64x(O) | fill) + ripple_bit) & _mm256_set1_epi64x(P);
+	//auto flipped = ()
+	//return _mm256_reduce_or_epi64(flipped);
+
 	const auto outflank_v = GetLSB(~O & 0x0101010101010100ULL) & P;
 	const auto flipped_v = (outflank_v - static_cast<uint64_t>(outflank_v != 0)) & 0x0101010101010100ULL;
 
@@ -1175,76 +1181,151 @@ uint64_t Flips(uint64_t P, uint64_t O, uint8_t move)
 	//return functions[move] (P, O);
 	switch (move)
 	{
-	case 0: return A1(P, O);
-	case 1: return B1(P, O);
-	case 2: return C1(P, O);
-	case 3: return D1(P, O);
-	case 4: return E1(P, O);
-	case 5: return F1(P, O);
-	case 6: return G1(P, O);
-	case 7: return H1(P, O);
+		case 0: return A1(P, O);
+		case 1: return B1(P, O);
+		case 2: return C1(P, O);
+		case 3: return D1(P, O);
+		case 4: return E1(P, O);
+		case 5: return F1(P, O);
+		case 6: return G1(P, O);
+		case 7: return H1(P, O);
 
-	case 8: return A2(P, O);
-	case 9: return B2(P, O);
-	case 10: return C2(P, O);
-	case 11: return D2(P, O);
-	case 12: return E2(P, O);
-	case 13: return F2(P, O);
-	case 14: return G2(P, O);
-	case 15: return H2(P, O);
+		case 8: return A2(P, O);
+		case 9: return B2(P, O);
+		case 10: return C2(P, O);
+		case 11: return D2(P, O);
+		case 12: return E2(P, O);
+		case 13: return F2(P, O);
+		case 14: return G2(P, O);
+		case 15: return H2(P, O);
 
-	case 16: return A3(P, O);
-	case 17: return B3(P, O);
-	case 18: return C3(P, O);
-	case 19: return D3(P, O);
-	case 20: return E3(P, O);
-	case 21: return F3(P, O);
-	case 22: return G3(P, O);
-	case 23: return H3(P, O);
+		case 16: return A3(P, O);
+		case 17: return B3(P, O);
+		case 18: return C3(P, O);
+		case 19: return D3(P, O);
+		case 20: return E3(P, O);
+		case 21: return F3(P, O);
+		case 22: return G3(P, O);
+		case 23: return H3(P, O);
 
-	case 24: return A4(P, O);
-	case 25: return B4(P, O);
-	case 26: return C4(P, O);
-	case 27: return D4(P, O);
-	case 28: return E4(P, O);
-	case 29: return F4(P, O);
-	case 30: return G4(P, O);
-	case 31: return H4(P, O);
+		case 24: return A4(P, O);
+		case 25: return B4(P, O);
+		case 26: return C4(P, O);
+		case 27: return D4(P, O);
+		case 28: return E4(P, O);
+		case 29: return F4(P, O);
+		case 30: return G4(P, O);
+		case 31: return H4(P, O);
 
-	case 32: return A5(P, O);
-	case 33: return B5(P, O);
-	case 34: return C5(P, O);
-	case 35: return D5(P, O);
-	case 36: return E5(P, O);
-	case 37: return F5(P, O);
-	case 38: return G5(P, O);
-	case 39: return H5(P, O);
+		case 32: return A5(P, O);
+		case 33: return B5(P, O);
+		case 34: return C5(P, O);
+		case 35: return D5(P, O);
+		case 36: return E5(P, O);
+		case 37: return F5(P, O);
+		case 38: return G5(P, O);
+		case 39: return H5(P, O);
 
-	case 40: return A6(P, O);
-	case 41: return B6(P, O);
-	case 42: return C6(P, O);
-	case 43: return D6(P, O);
-	case 44: return E6(P, O);
-	case 45: return F6(P, O);
-	case 46: return G6(P, O);
-	case 47: return H6(P, O);
+		case 40: return A6(P, O);
+		case 41: return B6(P, O);
+		case 42: return C6(P, O);
+		case 43: return D6(P, O);
+		case 44: return E6(P, O);
+		case 45: return F6(P, O);
+		case 46: return G6(P, O);
+		case 47: return H6(P, O);
 
-	case 48: return A7(P, O);
-	case 49: return B7(P, O);
-	case 50: return C7(P, O);
-	case 51: return D7(P, O);
-	case 52: return E7(P, O);
-	case 53: return F7(P, O);
-	case 54: return G7(P, O);
-	case 55: return H7(P, O);
+		case 48: return A7(P, O);
+		case 49: return B7(P, O);
+		case 50: return C7(P, O);
+		case 51: return D7(P, O);
+		case 52: return E7(P, O);
+		case 53: return F7(P, O);
+		case 54: return G7(P, O);
+		case 55: return H7(P, O);
 
-	case 56: return A8(P, O);
-	case 57: return B8(P, O);
-	case 58: return C8(P, O);
-	case 59: return D8(P, O);
-	case 60: return E8(P, O);
-	case 61: return F8(P, O);
-	case 62: return G8(P, O);
-	case 63: return H8(P, O);
+		case 56: return A8(P, O);
+		case 57: return B8(P, O);
+		case 58: return C8(P, O);
+		case 59: return D8(P, O);
+		case 60: return E8(P, O);
+		case 61: return F8(P, O);
+		case 62: return G8(P, O);
+		case 63: return H8(P, O);
 	}
+
+	//switch (move)
+	//{
+	//	case 0: return A1(P, O);
+	//	case 1: return B1(P, O);
+	//	case 2: return C1(P, O);
+	//	case 3: return D1(P, O);
+	//	case 4: return E1(P, O);
+	//	case 5: return F1(P, O);
+	//	case 6: return G1(P, O);
+	//	case 7: return H1(P, O);
+
+	//	case 8: return  A2(P, O);
+	//	case 9: return  B2(P, O);
+	//	case 10: return C2(P, O);
+	//	case 11: return D2(P, O);
+	//	case 12: return E2(P, O);
+	//	case 13: return F2(P, O);
+	//	case 14: return G2(P, O);
+	//	case 15: return H2(P, O);
+
+	//	case 16: return A3(P, O);
+	//	case 17: return B3(P, O);
+	//	case 18: return C3(P, O);
+	//	case 19: return D3(P, O);
+	//	case 20: return E3(P, O);
+	//	case 21: return F3(P, O);
+	//	case 22: return G3(P, O);
+	//	case 23: return H3(P, O);
+
+	//	case 24: return A4(P, O);
+	//	case 25: return B4(P, O);
+	//	case 26: return C4(P, O);
+	//	case 27: return D4(P, O);
+	//	case 28: return E4(P, O);
+	//	case 29: return F4(P, O);
+	//	case 30: return G4(P, O);
+	//	case 31: return H4(P, O);
+
+	//	case 32: return BSwap(A4(BSwap(P), BSwap(O)));
+	//	case 33: return BSwap(B4(BSwap(P), BSwap(O)));
+	//	case 34: return BSwap(C4(BSwap(P), BSwap(O)));
+	//	case 35: return BSwap(D4(BSwap(P), BSwap(O)));
+	//	case 36: return BSwap(E4(BSwap(P), BSwap(O)));
+	//	case 37: return BSwap(F4(BSwap(P), BSwap(O)));
+	//	case 38: return BSwap(G4(BSwap(P), BSwap(O)));
+	//	case 39: return BSwap(H4(BSwap(P), BSwap(O)));
+
+	//	case 40: return BSwap(A3(BSwap(P), BSwap(O)));
+	//	case 41: return BSwap(B3(BSwap(P), BSwap(O)));
+	//	case 42: return BSwap(C3(BSwap(P), BSwap(O)));
+	//	case 43: return BSwap(D3(BSwap(P), BSwap(O)));
+	//	case 44: return BSwap(E3(BSwap(P), BSwap(O)));
+	//	case 45: return BSwap(F3(BSwap(P), BSwap(O)));
+	//	case 46: return BSwap(G3(BSwap(P), BSwap(O)));
+	//	case 47: return BSwap(H3(BSwap(P), BSwap(O)));
+
+	//	case 48: return BSwap(A2(BSwap(P), BSwap(O)));
+	//	case 49: return BSwap(B2(BSwap(P), BSwap(O)));
+	//	case 50: return BSwap(C2(BSwap(P), BSwap(O)));
+	//	case 51: return BSwap(D2(BSwap(P), BSwap(O)));
+	//	case 52: return BSwap(E2(BSwap(P), BSwap(O)));
+	//	case 53: return BSwap(F2(BSwap(P), BSwap(O)));
+	//	case 54: return BSwap(G2(BSwap(P), BSwap(O)));
+	//	case 55: return BSwap(H2(BSwap(P), BSwap(O)));
+
+	//	case 56: return BSwap(A1(BSwap(P), BSwap(O)));
+	//	case 57: return BSwap(B1(BSwap(P), BSwap(O)));
+	//	case 58: return BSwap(C1(BSwap(P), BSwap(O)));
+	//	case 59: return BSwap(D1(BSwap(P), BSwap(O)));
+	//	case 60: return BSwap(E1(BSwap(P), BSwap(O)));
+	//	case 61: return BSwap(F1(BSwap(P), BSwap(O)));
+	//	case 62: return BSwap(G1(BSwap(P), BSwap(O)));
+	//	case 63: return BSwap(H1(BSwap(P), BSwap(O)));
+	//}
 }

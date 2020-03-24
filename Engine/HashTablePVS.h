@@ -43,7 +43,7 @@ struct Node
 		"X X X X X X X X"
 		"X X X X X X X X"_pos;
 
-	PVS_Info value{ ClosedInterval{ +64, +64 }, 0, Search::Selectivity::None, Field::invalid, 0 };
+	PVS_Info value{ ClosedInterval::Whole(), 0, Search::Selectivity::None, Field::invalid, 0 };
 };
 
 class OneNode
@@ -71,8 +71,8 @@ struct HashTablePVS : public HashTable<Position, PVS_Info, OneNode>
 		: HashTable(buckets, 
 			[](const Position& key)
 			{ 
-				uint64_t P = key.GetP();
-				uint64_t O = key.GetO();
+				uint64_t P = key.P;
+				uint64_t O = key.O;
 				P ^= P >> 36;
 				O ^= O >> 21;
 				return P * O; 

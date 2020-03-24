@@ -76,16 +76,21 @@ namespace Search
 		unsigned int depth;
 		Selectivity selectivity;
 
+		Intensity() = delete;
+		Intensity(OpenInterval window, unsigned int depth, Selectivity selectivity) : window(window), depth(depth), selectivity(selectivity) {}
+
 		static Intensity Exact(Position);
 
 		[[nodiscard]] bool operator==(const Intensity& o) const noexcept { return (window == o.window) && (depth == o.depth) && (selectivity == o.selectivity); }
 		[[nodiscard]] bool operator!=(const Intensity& o) const noexcept { return (window != o.window) || (depth != o.depth) || (selectivity != o.selectivity); }
 
 		// Intensity with inverted window.
-		[[nodiscard]] Intensity operator-() const;
+		[[nodiscard]] Intensity operator-() const; // TODO: Remove?
 
 		// Subtracts depth.
-		[[nodiscard]] Intensity operator-(int depth) const;
+		[[nodiscard]] Intensity operator-(int depth) const; // TODO: Remove?
+
+		[[nodiscard]] Intensity next() const;
 	};
 
 	class Result
@@ -98,18 +103,16 @@ namespace Search
 		Field best_move;
 		std::size_t node_count;
 
+		Result() = delete;
+		Result(ClosedInterval window, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count);
+
 		static Result ExactScore(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 		static Result MaxBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 		static Result MinBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
-		static Result FromScore(Score, OpenInterval, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
 
 		static Result ExactScore(Score, Intensity, Field best_move, std::size_t node_count);
 		static Result MaxBound(Score, Intensity, Field best_move, std::size_t node_count);
 		static Result MinBound(Score, Intensity, Field best_move, std::size_t node_count);
-		static Result FromScore(Score, Intensity, Field best_move, std::size_t node_count);
-
-		//static Result MaxBound(Intensity, Result);
-		//static Result MinBound(Intensity, Result);
 
 		// Result with inverted window.
 		[[nodiscard]] Result operator-() const;
@@ -118,5 +121,6 @@ namespace Search
 	struct Algorithm
 	{
 		virtual Result Eval(Position, Intensity) = 0;
+		Result Eval(Position pos) { return Eval(pos, Search::Intensity::Exact(pos)); }
 	};
 }

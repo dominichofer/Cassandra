@@ -5,18 +5,18 @@ uint64_t PossibleMoves(const uint64_t P, const uint64_t O)
 {
 	assert((P & O) == 0);
 
-	#if defined(HAS_AVX512)
+	#if defined(__AVX512F__)
 		return detail::PossibleMoves_AVX512(P, O);
-	#elif defined(HAS_AVX2)
+	#elif defined(__AVX2__)
 		return detail::PossibleMoves_AVX2(P, O);
-	#elif defined(HAS_SSE2)
+	#elif defined(__SSE2__)
 		return detail::PossibleMoves_SSE2(P, O);
 	#else
 		return detail::PossibleMoves_x64(P, O);
 	#endif
 }
 
-#if defined(HAS_AVX512)
+#if defined(__AVX512F__)
 uint64_t detail::PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
 {
 	// 6 x SHIFT, 7 x AND, 5 x OR, 1 x NOT
@@ -40,7 +40,7 @@ uint64_t detail::PossibleMoves_AVX512(const uint64_t P, const uint64_t O)
 }
 #endif
 
-#if defined(HAS_AVX2)
+#if defined(__AVX2__)
 uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 {
 	// 1 x PERMUTE, 1 x SHUFFLE, 10 x OR, 12 x SHIFT, 11 x AND, 1 x NOT
@@ -80,7 +80,7 @@ uint64_t detail::PossibleMoves_AVX2(const uint64_t P, const uint64_t O)
 }
 #endif
 
-#if defined(HAS_SSE2)
+#if defined(__AVX2__)
 uint64_t detail::PossibleMoves_SSE2(const uint64_t P, const uint64_t O)
 {
 	// 30 x SHIFT, 28 x AND, 21 x OR, 1 x NOT, 2 x BSWAP

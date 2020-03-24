@@ -40,7 +40,7 @@ std::optional<BigNode::value_type> BigNode::LookUp(const key_type& key) const
 void BigNode::Clear()
 {
 	LockGuard lock_guard(m_value);
-	m_key = { { BitBoard{ 0 }, BitBoard{ 0 } }, 0 }; // TODO: This is an illegal state of Position!
+	m_key = key_type{};
 	lock_guard.value = 0;
 }
 

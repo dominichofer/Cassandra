@@ -29,27 +29,27 @@ TEST(IndexMapper, CreateIndexMapper_HorizontalSymmetric)
 {
 	const auto im = CreateIndexMapper(PatternH);
 
-	ASSERT_EQ(im->Multiplicity(), 4);
-	ASSERT_EQ(im->Pattern, PatternH);
-	ASSERT_EQ(im->ReducedIndices(Position::Start()).size(), 4);
+	ASSERT_EQ(im->GroupOrder(), 4);
+	ASSERT_EQ(im->Patterns()[0], PatternH);
+	ASSERT_EQ(im->Indices(Position::Start()).size(), 4);
 }
 
 TEST(IndexMapper, CreateIndexMapper_DiagonalSymmetric)
 {
 	const auto im = CreateIndexMapper(PatternD);
 
-	ASSERT_EQ(im->Multiplicity(), 4);
-	ASSERT_EQ(im->Pattern, PatternD);
-	ASSERT_EQ(im->ReducedIndices(Position::Start()).size(), 4);
+	ASSERT_EQ(im->GroupOrder(), 4);
+	ASSERT_EQ(im->Patterns()[0], PatternD);
+	ASSERT_EQ(im->Indices(Position::Start()).size(), 4);
 }
 
 TEST(IndexMapper, CreateIndexMapper_Asymmetric)
 {
 	const auto im = CreateIndexMapper(PatternA);
 
-	ASSERT_EQ(im->Multiplicity(), 8);
-	ASSERT_EQ(im->Pattern, PatternA);
-	ASSERT_EQ(im->ReducedIndices(Position::Start()).size(), 8);
+	ASSERT_EQ(im->GroupOrder(), 8);
+	ASSERT_EQ(im->Patterns()[0], PatternA);
+	ASSERT_EQ(im->Indices(Position::Start()).size(), 8);
 }
 
 TEST(Evaluator, CreateEvaluator_works_for_horizontal_symmetric_pattern)
@@ -80,7 +80,6 @@ void Test_SymmetryIndependance(const BitBoard pattern, const Weights& compressed
 	// Assert score's independance of flips
 	For_each_config(pattern,
 		[&](Position pos) {
-			pos = Position(pos.GetP() | ~pos.GetO() & BitBoard::Middle(), pos.GetO());
 			const auto score = eval->Eval(pos);
 			for (std::size_t i = 1; i < 8; i++)
 			{
@@ -94,8 +93,8 @@ void Test_SymmetryIndependance(const BitBoard pattern, const Weights& compressed
 					case 6: pos.FlipVertical(); break;
 					case 7: pos.FlipHorizontal(); break;
 				}
-				auto other_score = eval->Eval(pos);
-				ASSERT_EQ(score, other_score);
+				auto other = eval->Eval(pos);
+				ASSERT_EQ(score, other);
 			}
 		});
 }
@@ -122,13 +121,13 @@ void Test_LegalWeights(BitBoard pattern)
 	Weights compressed(index_mapper->ReducedSize());
 	std::iota(compressed.begin(), compressed.end(), 1);
 	auto evaluator = CreateEvaluator(pattern, compressed);
-	PositionGenerator pos_gen(78);
+	PosGen::Random rnd(78);
 
 	for (std::size_t i = 0; i < 100'000; i++)
 	{
-		const auto pos = pos_gen.Random();
+		const auto pos = rnd();
 
-		auto configs = index_mapper->ReducedIndices(pos);
+		auto configs = index_mapper->Indices(pos);
 		float sum = 0;
 		for (auto it : configs)
 			sum += compressed[it];
@@ -153,5 +152,3 @@ TEST(Evaluator, LegalWeights_Asymmetric)
 {
 	Test_LegalWeights(PatternA);
 }
-
-// TODO: Add test for index coverage!

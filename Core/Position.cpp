@@ -2,10 +2,10 @@
 #include "Machine/BitTwiddling.h"
 #include <algorithm>
 
-void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
-void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
-void Position::FlipHorizontal() noexcept { P.FlipHorizontal(); O.FlipHorizontal(); }
-void Position::FlipVertical  () noexcept { P.FlipVertical  (); O.FlipVertical  (); }
+void Position::FlipCodiagonal() noexcept { P.value = ::FlipCodiagonal(P.value); O.value = ::FlipCodiagonal(O.value); }
+void Position::FlipDiagonal  () noexcept { P.value = ::FlipDiagonal  (P.value); O.value = ::FlipDiagonal  (O.value); }
+void Position::FlipHorizontal() noexcept { P.value = ::FlipHorizontal(P.value); O.value = ::FlipHorizontal(O.value); }
+void Position::FlipVertical  () noexcept { P.value = ::FlipVertical  (P.value); O.value = ::FlipVertical  (O.value); }
 
 void Position::FlipToUnique() noexcept
 {
@@ -47,6 +47,12 @@ Position Position::StartETH()
 		"- - - - - - - -"_pos;
 }
 
+
+std::size_t Position::EmptyCount() const
+{
+	return PopCount(Empties());
+}
+
 uint64_t Position::ParityQuadrants() const
 {
 	// 4 x SHIFT, 4 x XOR, 1 x AND, 1 x NOT, 1x OR, 1 x MUL
@@ -69,12 +75,11 @@ Position operator""_pos(const char* c, std::size_t size)
 	for (int i = 0; i < 8; i++)
 		for (int j = 0; j < 8; j++)
 		{
-			auto field = static_cast<Field>(i * 8 + j);
 			char symbol = c[119 - 2 * j - 15 * i];
 			if (symbol == 'X')
-				P[field] = true;
+				Bit(P, i * 8 + j) = true;
 			if (symbol == 'O')
-				O[field] = true;
+				Bit(O, i * 8 + j) = true;
 		}
 	return { P, O };
 }

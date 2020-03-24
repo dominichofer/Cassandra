@@ -78,6 +78,7 @@
     <ClCompile Include="Search.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Algorithm.h" />
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="FForum.h" />
     <ClInclude Include="HashTable.h" />
@@ -89,6 +90,10 @@
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="Interval.h" />
     <ClInclude Include="Search.h" />
+    <ClInclude Include="SortedMoves.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Core.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

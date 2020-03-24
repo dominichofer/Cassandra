@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="OpenInterval">
+    <DisplayString>({m_lower}, {m_upper})</DisplayString>
+  </Type>
+  <Type Name="ClosedInterval">
+    <DisplayString>[{m_lower}, {m_upper}]</DisplayString>
+  </Type>
+  <Type Name="Search::Selectivity">
+    <DisplayString Condition="quantile &gt;= 1000">none</DisplayString>
+    <DisplayString Condition="quantile &lt;= 1000">{quantile}σ</DisplayString>
+  </Type>
+  <Type Name="Search::Intensity">
+    <DisplayString Condition="selectivity.quantile &gt;= 1000">{{{window} d{depth}}}</DisplayString>
+    <DisplayString Condition="selectivity.quantile &lt;= 1000">{{{window} d{depth}@{selectivity}}}</DisplayString>
+  </Type>
+  <Type Name="Search::Result">
+    <DisplayString Condition="selectivity.quantile &gt;= 1000">{{{window} d{depth} best_move={best_move} {node_count}_nodes}}</DisplayString>
+    <DisplayString Condition="selectivity.quantile &lt;= 1000">{{{window} d{depth}@{selectivity} best_move={best_move} {node_count}_nodes}}</DisplayString>
+  </Type>
+</AutoVisualizer>

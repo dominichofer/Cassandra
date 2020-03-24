@@ -5,16 +5,16 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include <optional>
 
 // Maps 'Field::A1' -> "A1", ... , 'Field::invalid' -> "--".
 std::wstring to_wstring(Field) noexcept;
 Field ParseField(const std::wstring&) noexcept;
 
 std::wstring SingleLine(const Position&);
-std::optional<Position> ParsePosition_SingleLine(const std::wstring&);
-
 std::wstring MultiLine(const Position&);
+
+Position ParsePosition_SingleLine(const std::wstring&) noexcept(false);
+
 
 
 // Format: "ddd:hh:mm:ss.ccc"
