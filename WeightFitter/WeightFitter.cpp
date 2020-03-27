@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 
 		Vector weights(index_mapper->ReducedSize(), 0);
 
-		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare());
+		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(1000));
 		PCGLS solver(train_mat, P, weights, transposed(train_mat) * train_scores);
 		for (int i = 0; i < 10; i++)
 		{
