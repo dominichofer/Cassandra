@@ -34,7 +34,7 @@ uint64_t Pow_int(uint64_t base, uint64_t exponent)
 
 class SumPow3Cache
 {
-	std::array<int, (1ULL << 15)> m_cache{};
+	std::array<int, (1ULL << 10)> m_cache{}; // 4kB
 
 	int sum_pow3(uint64_t exp)
 	{

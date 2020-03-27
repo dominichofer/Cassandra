@@ -5,20 +5,29 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
+#include <any>
 
+class OutputIterator
+{
+public:
+	virtual OutputIterator& operator*() = 0;
+	virtual OutputIterator& operator++() = 0;
+	virtual OutputIterator& operator=(int) = 0;
+};
+
+// Reduced configuration index generator
 class IndexMapper
 {
 public:
-	virtual ~IndexMapper() = default;
-
 	// number of unique patterns within.
 	std::size_t GroupOrder() const;
 
 	virtual std::vector<BitBoard> Patterns() const = 0;
 	virtual std::vector<int> Indices(const Position& pos) const = 0;
-	virtual void PushBackIndices(std::vector<int>&, const Position&, std::size_t offset = 0) const = 0;
 
 	virtual std::size_t ReducedSize() const = 0;
+
+	virtual void generate(OutputIterator&, const Position&) const = 0;
 };
 
 std::unique_ptr<IndexMapper> CreateIndexMapper(BitBoard pattern);
@@ -37,14 +46,14 @@ public:
 
 	std::vector<BitBoard> Patterns() const override { return { m_pattern, m_pattern_C, m_pattern_D, m_pattern_V }; }
 	std::vector<int> Indices(const Position& pos) const override { return { Index0(pos), Index1(pos), Index2(pos), Index3(pos) }; }
-	void PushBackIndices(std::vector<int>&, const Position&, std::size_t offset = 0) const override;
+	void generate(OutputIterator&, const Position&) const override;
 
 	std::size_t ReducedSize() const override { return m_half_size * (m_half_size + 1) / 2; }
 private:
 	int Index0(const Position& pos) const;
 	int Index1(const Position& pos) const { return Index0(FlipCodiagonal(pos)); }
-	int Index2(const Position& pos) const { return Index0(FlipDiagonal(pos)); }
-	int Index3(const Position& pos) const { return Index0(FlipVertical(pos)); }
+	int Index2(const Position& pos) const { return Index0(FlipDiagonal(pos));  }
+	int Index3(const Position& pos) const { return Index0(FlipVertical(pos));  }
 };
 
 class DiagonalSymmetric final : public IndexMapper
@@ -59,14 +68,14 @@ public:
 
 	std::vector<BitBoard> Patterns() const override { return { m_pattern, m_pattern_C, m_pattern_H, m_pattern_V }; }
 	std::vector<int> Indices(const Position& pos) const override { return { Index0(pos), Index1(pos), Index2(pos), Index3(pos) }; }
-	void PushBackIndices(std::vector<int>&, const Position&, std::size_t offset = 0) const override;
+	void generate(OutputIterator&, const Position&) const override;
 
 	std::size_t ReducedSize() const override { return m_diag_size * m_half_size * (m_half_size + 1) / 2; }
 private:
 	int Index0(const Position& pos) const;
 	int Index1(const Position& pos) const { return Index0(FlipCodiagonal(pos)); }
 	int Index2(const Position& pos) const { return Index0(FlipHorizontal(pos)); }
-	int Index3(const Position& pos) const { return Index0(FlipVertical(pos)); }
+	int Index3(const Position& pos) const { return Index0(FlipVertical(pos));  }
 };
 
 class Asymmetric final : public IndexMapper
@@ -78,7 +87,7 @@ public:
 
 	std::vector<BitBoard> Patterns() const override { return { m_pattern, m_pattern_C, m_pattern_D, m_pattern_H, m_pattern_V, m_patternHC, m_patternHD, m_patternHV }; }
 	std::vector<int> Indices(const Position& pos) const override { return { Index0(pos), Index1(pos), Index2(pos), Index3(pos), Index4(pos), Index5(pos), Index6(pos), Index7(pos) };}
-	void PushBackIndices(std::vector<int>&, const Position&, std::size_t offset = 0) const override;
+	void generate(OutputIterator&, const Position&) const override;
 
 	std::size_t ReducedSize() const override { return Pow_int(3, PopCount(m_pattern)); }
 private:
@@ -101,7 +110,7 @@ public:
 
 	std::vector<BitBoard> Patterns() const override;
 	std::vector<int> Indices(const Position&) const override;
-	void PushBackIndices(std::vector<int>&, const Position&, std::size_t offset = 0) const override;
+	void generate(OutputIterator&, const Position&) const override;
 
 	std::size_t ReducedSize() const override;
 };

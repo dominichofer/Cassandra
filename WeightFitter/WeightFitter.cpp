@@ -43,17 +43,27 @@ constexpr BitBoard C3ppp= 0x81410000000103C7ULL;
 constexpr BitBoard C4pp = C4 | C3pp;
 constexpr BitBoard AA = 0x000000010105031FULL;
 
-MatrixCSR<uint8_t, uint32_t> CreateMatrix(const IndexMapper& index_mapper, const std::vector<Position>& positions)
+template <typename Iterator>
+class IteratorWrapper final : public OutputIterator
 {
-	MatrixCSR<uint8_t, uint32_t> mat(index_mapper.ReducedSize());
+	Iterator it;
+public:
+	IteratorWrapper(Iterator it) : it(it) {}
+	IteratorWrapper& operator*() override { return *this; }
+	IteratorWrapper& operator++() override { ++it; return *this; }
+	IteratorWrapper& operator=(int index) override { *it = index; return *this; }
+};
+
+MatrixCSR<uint32_t> CreateMatrix(const IndexMapper& index_mapper, const std::vector<Position>& positions)
+{
+	const auto entries_per_row = index_mapper.GroupOrder();
+	const auto cols = index_mapper.ReducedSize();
+	const auto rows = positions.size();
+
+	MatrixCSR<uint32_t> mat(entries_per_row, cols, rows);
+	IteratorWrapper output_it(mat.begin());
 	for (const auto& pos : positions)
-	{
-		std::vector<int> indices;
-		index_mapper.PushBackIndices(indices, pos);
-		for (const auto& index : indices)
-			mat.push_back(index, 1);
-		mat.end_row();
-	}
+		index_mapper.generate(output_it, pos);
 	return mat;
 }
 
@@ -108,7 +118,15 @@ int main(int argc, char* argv[])
 
 		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare());
 		PCGLS solver(train_mat, P, weights, transposed(train_mat) * train_scores);
-		solver.Iterate(10);
+		for (int i = 0; i < 10; i++)
+		{
+			const auto start = std::chrono::high_resolution_clock::now();
+			solver.Iterate(1);
+			const auto end = std::chrono::high_resolution_clock::now();
+			const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+			const auto milliseconds = duration.count();
+			std::cout << milliseconds << std::endl;
+		}
 		const auto end = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		const auto milliseconds = duration.count();

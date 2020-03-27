@@ -32,8 +32,7 @@ public:
 	std::size_t Rows() const noexcept override { return rows; }
 	std::size_t Cols() const noexcept override { return cols; }
 	std::size_t size() const noexcept override { return data.size(); }
-	std::size_t nnz() const noexcept override { return std::count_if(data.begin(), data.end(), [](const auto& d) { return d != 0; }); }
-	
+
 	value_type& operator()(std::size_t i, std::size_t j) { return data[i * cols + j]; }
 	value_type const& operator()(std::size_t i, std::size_t j) const { return data[i * cols + j]; }
 

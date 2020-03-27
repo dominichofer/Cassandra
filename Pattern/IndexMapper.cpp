@@ -31,12 +31,12 @@ HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
 	assert(pattern == FlipHorizontal(pattern));
 }
 
-void HorizontalSymmetric::PushBackIndices(std::vector<int>& vec, const Position& pos, std::size_t offset) const
+void HorizontalSymmetric::generate(OutputIterator& it, const Position& pos) const
 {
-	vec.push_back(Index0(pos) + offset);
-	vec.push_back(Index1(pos) + offset);
-	vec.push_back(Index2(pos) + offset);
-	vec.push_back(Index3(pos) + offset);
+	*it = Index0(pos); ++it;
+	*it = Index1(pos); ++it;
+	*it = Index2(pos); ++it;
+	*it = Index3(pos); ++it;
 }
 
 int HorizontalSymmetric::Index0(const Position& pos) const
@@ -60,12 +60,12 @@ DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
 	assert(pattern == FlipDiagonal(pattern));
 }
 
-void DiagonalSymmetric::PushBackIndices(std::vector<int>& vec, const Position& pos, std::size_t offset) const
+void DiagonalSymmetric::generate(OutputIterator& it, const Position& pos) const
 {
-	vec.push_back(Index0(pos) + offset);
-	vec.push_back(Index1(pos) + offset);
-	vec.push_back(Index2(pos) + offset);
-	vec.push_back(Index3(pos) + offset);
+	*it = Index0(pos); ++it;
+	*it = Index1(pos); ++it;
+	*it = Index2(pos); ++it;
+	*it = Index3(pos); ++it;
 }
 
 int DiagonalSymmetric::Index0(const Position& pos) const
@@ -90,16 +90,16 @@ Asymmetric::Asymmetric(BitBoard pattern)
 	, m_patternHV(FlipVertical(FlipHorizontal(pattern)))
 {}
 
-void Asymmetric::PushBackIndices(std::vector<int>& vec, const Position& pos, std::size_t offset) const
+void Asymmetric::generate(OutputIterator& it, const Position& pos) const
 {
-	vec.push_back(Index0(pos) + offset);
-	vec.push_back(Index1(pos) + offset);
-	vec.push_back(Index2(pos) + offset);
-	vec.push_back(Index3(pos) + offset);
-	vec.push_back(Index4(pos) + offset);
-	vec.push_back(Index5(pos) + offset);
-	vec.push_back(Index6(pos) + offset);
-	vec.push_back(Index7(pos) + offset);
+	*it = Index0(pos); ++it;
+	*it = Index1(pos); ++it;
+	*it = Index2(pos); ++it;
+	*it = Index3(pos); ++it;
+	*it = Index4(pos); ++it;
+	*it = Index5(pos); ++it;
+	*it = Index6(pos); ++it;
+	*it = Index7(pos); ++it;
 }
 
 Composite::Composite(const std::vector<BitBoard>& patterns)
@@ -134,13 +134,26 @@ std::vector<int> Composite::Indices(const Position& pos) const
 	return ret;
 }
 
-void Composite::PushBackIndices(std::vector<int>& vec, const Position& pos, std::size_t offset) const
+
+class OffsetWrapper final : public OutputIterator
 {
-	vec.reserve(group_order);
+	OutputIterator& it;
+public:
+	int offset;
+
+	OffsetWrapper(OutputIterator& it, int offset = 0) : it(it), offset(offset) {}
+	OutputIterator& operator*() override { return *this; }
+	OutputIterator& operator++() override { ++it; return *this; }
+	OutputIterator& operator=(int index) override { *it = index + offset; return *this; }
+};
+
+void Composite::generate(OutputIterator& it, const Position& pos) const
+{
+	OffsetWrapper offsetter(it);
 	for (const auto& im : index_mappers)
 	{
-		im->PushBackIndices(vec, pos, offset);
-		offset += im->ReducedSize();
+		im->generate(it, pos);
+		offsetter.offset += im->ReducedSize();
 	}
 }
 
