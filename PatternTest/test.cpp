@@ -5,9 +5,9 @@ using namespace Pattern;
 constexpr BitBoard PatternH{ 0x00000000000000E7ULL }; // HorizontalSymmetric
 constexpr BitBoard PatternD{ 0x8040201008040303ULL }; // DiagonalSymmetric
 constexpr BitBoard PatternA{ 0x000000000000000FULL }; // Asymmetric
-static const auto WeightsH = Weights(CreateIndexMapper(PatternH)->reduced_size, 0);
-static const auto WeightsD = Weights(CreateIndexMapper(PatternD)->reduced_size, 0);
-static const auto WeightsA = Weights(CreateIndexMapper(PatternA)->reduced_size, 0);
+static const auto WeightsH = Weights(CreateConfigIndexer(PatternH)->reduced_size, 0);
+static const auto WeightsD = Weights(CreateConfigIndexer(PatternD)->reduced_size, 0);
+static const auto WeightsA = Weights(CreateConfigIndexer(PatternA)->reduced_size, 0);
 
 TEST(MetaTest, HorizontalSymmetric)
 {
@@ -25,31 +25,31 @@ TEST(MetaTest, Asymmetric)
 	ASSERT_NE(PatternA, FlipDiagonal(PatternA));
 }
 
-TEST(IndexMapper, CreateIndexMapper_HorizontalSymmetric)
+TEST(ConfigIndexer, CreateConfigIndexer_HorizontalSymmetric)
 {
-	const auto im = CreateIndexMapper(PatternH);
+	const auto ci = CreateConfigIndexer(PatternH);
 
-	ASSERT_EQ(im->group_order, 4);
-	ASSERT_EQ(im->Patterns()[0], PatternH);
-	ASSERT_EQ(im->Patterns().size(), 4);
+	ASSERT_EQ(ci->group_order, 4);
+	ASSERT_EQ(ci->Patterns()[0], PatternH);
+	ASSERT_EQ(ci->Patterns().size(), 4);
 }
 
-TEST(IndexMapper, CreateIndexMapper_DiagonalSymmetric)
+TEST(ConfigIndexer, CreateConfigIndexer_DiagonalSymmetric)
 {
-	const auto im = CreateIndexMapper(PatternD);
+	const auto ci = CreateConfigIndexer(PatternD);
 
-	ASSERT_EQ(im->group_order, 4);
-	ASSERT_EQ(im->Patterns()[0], PatternD);
-	ASSERT_EQ(im->Patterns().size(), 4);
+	ASSERT_EQ(ci->group_order, 4);
+	ASSERT_EQ(ci->Patterns()[0], PatternD);
+	ASSERT_EQ(ci->Patterns().size(), 4);
 }
 
-TEST(IndexMapper, CreateIndexMapper_Asymmetric)
+TEST(ConfigIndexer, CreateConfigIndexer_Asymmetric)
 {
-	const auto im = CreateIndexMapper(PatternA);
+	const auto ci = CreateConfigIndexer(PatternA);
 
-	ASSERT_EQ(im->group_order, 8);
-	ASSERT_EQ(im->Patterns()[0], PatternA);
-	ASSERT_EQ(im->Patterns().size(), 8);
+	ASSERT_EQ(ci->group_order, 8);
+	ASSERT_EQ(ci->Patterns()[0], PatternA);
+	ASSERT_EQ(ci->Patterns().size(), 8);
 }
 
 TEST(Evaluator, CreateEvaluator_works_for_horizontal_symmetric_pattern)
@@ -116,9 +116,9 @@ TEST(Evaluator, Asymmetric_is_independant_of_symmetry)
 
 void Test_LegalWeights(BitBoard pattern)
 {
-	auto index_mapper = CreateIndexMapper(pattern);
+	auto config_indexer = CreateConfigIndexer(pattern);
 
-	Weights compressed(index_mapper->reduced_size);
+	Weights compressed(config_indexer->reduced_size);
 	std::iota(compressed.begin(), compressed.end(), 1);
 	auto evaluator = CreateEvaluator(pattern, compressed);
 	PosGen::Random rnd(78);
@@ -128,7 +128,7 @@ void Test_LegalWeights(BitBoard pattern)
 		const auto pos = rnd();
 
 		std::vector<int> configs;
-		index_mapper->generate(std::back_inserter(configs), pos);
+		config_indexer->generate(std::back_inserter(configs), pos);
 		float sum = 0;
 		for (auto it : configs)
 			sum += compressed[it];

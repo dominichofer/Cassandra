@@ -1,7 +1,7 @@
 #include "Core/Position.h"
 #include "Core/PositionGenerator.h"
 #include "Engine/PVSearch.h"
-#include "Pattern/IndexMapper.h"
+#include "Pattern/ConfigIndexer.h"
 #include "Math/Matrix.h"
 #include "Math/MatrixCSR.h"
 #include "Math/Vector.h"
@@ -54,25 +54,29 @@ public:
 	IteratorWrapper& operator=(int index) override { *it = index; return *this; }
 };
 
-auto CreateMatrix(const IndexMapper& index_mapper, const std::vector<Position>& positions)
+auto CreateMatrix(const ConfigIndexer& config_indexer, const std::vector<Position>& positions)
 {
-	const auto entries_per_row = index_mapper.group_order;
-	const auto cols = index_mapper.reduced_size;
+	const auto entries_per_row = config_indexer.group_order;
+	const auto cols = config_indexer.reduced_size;
 	const auto rows = positions.size();
-
 	MatrixCSR<uint32_t> mat(entries_per_row, cols, rows);
-	IteratorWrapper output_it(mat.begin());
-	for (const auto& pos : positions)
-		index_mapper.generate(output_it, pos);
+
+	const int64_t size = positions.size();
+	#pragma omp parallel for schedule(dynamic, 64)
+	for (int64_t i = 0; i < size; i++)
+	{
+		IteratorWrapper output_it(mat.begin() + i * entries_per_row);
+		config_indexer.generate(output_it, positions[i]);
+	}
 	return mat;
 }
 
 int main(int argc, char* argv[])
 {
-	//auto index_mapper = CreateIndexMapper({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, Ep, C3p1, B5 }); // 6.38253
-	//auto index_mapper = CreateIndexMapper({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, Epp, C3p1, B5 }); // 6.46631
-	//auto index_mapper = CreateIndexMapper({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B5 }); //6.38712
-	//auto index_mapper = CreateIndexMapper({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B6 }); // 6.5572
+	//auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, Ep, C3p1, B5 }); // 6.38253
+	//auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, Epp, C3p1, B5 }); // 6.46631
+	//auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B5 }); //6.38712
+	//auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B6 }); // 6.5572
 
 	HashTablePVS tt{ 1'000'000 };
 	Search::PVSearch pvs{ tt };
@@ -109,11 +113,11 @@ int main(int argc, char* argv[])
 	for (const auto& patterns : ppp)
 	{
 		const auto start = std::chrono::high_resolution_clock::now();
-		auto index_mapper = CreateIndexMapper(patterns);
-		auto train_mat = CreateMatrix(*index_mapper, train_positions);
-		auto test_mat = CreateMatrix(*index_mapper, test_positions);
+		auto config_indexer = CreateConfigIndexer(patterns);
+		auto train_mat = CreateMatrix(*config_indexer, train_positions);
+		auto test_mat = CreateMatrix(*config_indexer, test_positions);
 
-		Vector weights(index_mapper->reduced_size, 0);
+		Vector weights(config_indexer->reduced_size, 0);
 
 		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(1000));
 		PCG solver(transposed(train_mat) * train_mat, P, weights, transposed(train_mat) * train_scores);
@@ -121,7 +125,7 @@ int main(int argc, char* argv[])
 		const auto end = std::chrono::high_resolution_clock::now();
 		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 		const auto milliseconds = duration.count();
-		std::cout << milliseconds << "ms. Reduced size: " << index_mapper->reduced_size
+		std::cout << milliseconds << "ms. Reduced size: " << config_indexer->reduced_size
 			<< "\tTrainError: " << SampleStandardDeviation(train_scores - train_mat * solver.GetX())
 			<< "\t TestError: " << SampleStandardDeviation(test_scores - test_mat * solver.GetX()) << std::endl;
 	}

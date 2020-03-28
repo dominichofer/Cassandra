@@ -1,7 +1,7 @@
-#include "IndexMapper.h"
+#include "ConfigIndexer.h"
 #include <stdexcept>
 
-std::unique_ptr<IndexMapper> CreateIndexMapper(const BitBoard pattern)
+std::unique_ptr<ConfigIndexer> CreateConfigIndexer(const BitBoard pattern)
 {
 	if (pattern == FlipHorizontal(pattern))
 		return std::make_unique<HorizontalSymmetric>(pattern);
@@ -10,7 +10,7 @@ std::unique_ptr<IndexMapper> CreateIndexMapper(const BitBoard pattern)
 	return std::make_unique<Asymmetric>(pattern);
 }
 
-std::unique_ptr<IndexMapper> CreateIndexMapper(const std::vector<BitBoard>& patterns)
+std::unique_ptr<ConfigIndexer> CreateConfigIndexer(const std::vector<BitBoard>& patterns)
 {
 	return std::make_unique<Composite>(patterns);
 }
@@ -25,14 +25,14 @@ public:
 	BackInsertWrapper& operator=(int index) override { *it = index; return *this; }
 };
 
-void IndexMapper::generate(std::back_insert_iterator<std::vector<int>> it, const Position& pos) const
+void ConfigIndexer::generate(std::back_insert_iterator<std::vector<int>> it, const Position& pos) const
 {
 	BackInsertWrapper wrapper(it);
 	generate(wrapper, pos);
 }
 
 HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
-	: IndexMapper(4)
+	: ConfigIndexer(4)
 	, pattern(pattern)
 	, half_size(Pow_int(3, PopCount(pattern & HALF)))
 {
@@ -70,7 +70,7 @@ int HorizontalSymmetric::Index(const Position& pos) const noexcept
 }
 
 DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
-	: IndexMapper(4)
+	: ConfigIndexer(4)
 	, pattern(pattern)
 	, half_size(Pow_int(3, PopCount(pattern & HALF)))
 	, diag_size(Pow_int(3, PopCount(pattern & DIAG)))
@@ -109,7 +109,7 @@ int DiagonalSymmetric::Index(const Position& pos) const noexcept
 	return (min * half_size + max - (min * (min + 1) / 2)) * diag_size + diag;
 }
 Asymmetric::Asymmetric(BitBoard pattern)
-	: IndexMapper(8), pattern(pattern)
+	: ConfigIndexer(8), pattern(pattern)
 {
 	reduced_size = Pow_int(3, PopCount(pattern));
 }
@@ -146,24 +146,24 @@ int Asymmetric::Index(const Position& pos) const noexcept
 }
 
 Composite::Composite(const std::vector<BitBoard>& patterns)
-	: IndexMapper(0)
+	: ConfigIndexer(0)
 {
 	for (const auto& p : patterns)
-		index_mappers.emplace_back(CreateIndexMapper(p));
+		config_indexers.emplace_back(CreateConfigIndexer(p));
 
-	for (const auto& im : index_mappers)
+	for (const auto& ci : config_indexers)
 	{
-		reduced_size += im->reduced_size;
-		group_order += im->group_order;
+		reduced_size += ci->reduced_size;
+		group_order += ci->group_order;
 	}
 }
 
 std::vector<BitBoard> Composite::Patterns() const
 {
 	std::vector<BitBoard> ret;
-	for (const auto& im : index_mappers)
+	for (const auto& ci : config_indexers)
 	{
-		auto novum = im->Patterns();
+		auto novum = ci->Patterns();
 		std::move(novum.begin(), novum.end(), std::back_inserter(ret));
 	}
 	return ret;
@@ -184,9 +184,9 @@ public:
 void Composite::generate(OutputIterator& it, const Position& pos) const
 {
 	OffsetWrapper offsetter(it);
-	for (const auto& im : index_mappers)
+	for (const auto& ci : config_indexers)
 	{
-		im->generate(offsetter, pos);
-		offsetter.offset += im->reduced_size;
+		ci->generate(offsetter, pos);
+		offsetter.offset += ci->reduced_size;
 	}
 }

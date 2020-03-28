@@ -72,12 +72,12 @@
   <ItemGroup>
     <ClCompile Include="Evaluator.cpp" />
     <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="IndexMapper.cpp" />
+    <ClCompile Include="ConfigIndexer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Evaluator.h" />
     <ClInclude Include="Helpers.h" />
-    <ClInclude Include="IndexMapper.h" />
+    <ClInclude Include="ConfigIndexer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
