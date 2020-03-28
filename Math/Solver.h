@@ -98,8 +98,7 @@ class PCG : public IterativeSolver
 {
 	std::unique_ptr<IMatrix> A;
 	const Preconditioner& P;
-	const Vector& b;
-	Vector x, z, r, p;
+	Vector b, x, z, r, p;
 public:
 	// A: has to be symmetric and positive-definite.
 	template <typename Matrix>

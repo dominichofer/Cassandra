@@ -152,7 +152,7 @@ void Composite::generate(OutputIterator& it, const Position& pos) const
 	OffsetWrapper offsetter(it);
 	for (const auto& im : index_mappers)
 	{
-		im->generate(it, pos);
+		im->generate(offsetter, pos);
 		offsetter.offset += im->ReducedSize();
 	}
 }
