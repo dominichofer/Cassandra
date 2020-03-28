@@ -52,14 +52,14 @@ public:
 		for (std::size_t i = 0; i < std::size(m_cache); i++)
 			m_cache[i] = sum_pow3(i);
 	}
-	uint64_t SumPow3(uint64_t exp) const { return m_cache[exp]; }
+	uint64_t SumPow3(uint64_t exp) const noexcept { return m_cache[exp]; }
 };
 
 static SumPow3Cache sum_pow_3_cache;
 
 uint32_t _mm256_reduce_add_epi32(__m256i x) noexcept;
 
-int Index(const Position& pos, const BitBoard pattern)
+int Index(const Position& pos, const BitBoard pattern) noexcept
 {
 	return sum_pow_3_cache.SumPow3(PExt(pos.P, pattern))
 		+ sum_pow_3_cache.SumPow3(PExt(pos.O, pattern)) * 2;

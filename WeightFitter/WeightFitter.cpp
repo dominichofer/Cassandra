@@ -56,8 +56,8 @@ public:
 
 auto CreateMatrix(const IndexMapper& index_mapper, const std::vector<Position>& positions)
 {
-	const auto entries_per_row = index_mapper.GroupOrder();
-	const auto cols = index_mapper.ReducedSize();
+	const auto entries_per_row = index_mapper.group_order;
+	const auto cols = index_mapper.reduced_size;
 	const auto rows = positions.size();
 
 	MatrixCSR<uint32_t> mat(entries_per_row, cols, rows);
@@ -101,7 +101,6 @@ int main(int argc, char* argv[])
 	std::cout << "Solved" << std::endl;
 
 	std::vector<std::vector<BitBoard>> ppp = {
-		std::vector<BitBoard>{L0, L1, L2, L3, D4, D5, D6, D7, D8},
 		std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}, // 6.32
 		std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}, // 6.21
 		std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2},
@@ -114,20 +113,17 @@ int main(int argc, char* argv[])
 		auto train_mat = CreateMatrix(*index_mapper, train_positions);
 		auto test_mat = CreateMatrix(*index_mapper, test_positions);
 
-		Vector weights(index_mapper->ReducedSize(), 0);
+		Vector weights(index_mapper->reduced_size, 0);
 
 		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(1000));
 		PCG solver(transposed(train_mat) * train_mat, P, weights, transposed(train_mat) * train_scores);
-		for (int i = 0; i < 100; i++)
-		{
-			solver.Iterate();
-			const auto end = std::chrono::high_resolution_clock::now();
-			const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-			const auto milliseconds = duration.count();
-			std::cout << milliseconds << "ms. Reduced size: " << index_mapper->ReducedSize()
+		solver.Iterate(10);
+		const auto end = std::chrono::high_resolution_clock::now();
+		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		const auto milliseconds = duration.count();
+		std::cout << milliseconds << "ms. Reduced size: " << index_mapper->reduced_size
 			<< "\tTrainError: " << SampleStandardDeviation(train_scores - train_mat * solver.GetX())
 			<< "\t TestError: " << SampleStandardDeviation(test_scores - test_mat * solver.GetX()) << std::endl;
-		}
 	}
 
 	////LSQR solver(mat, weights, scores);

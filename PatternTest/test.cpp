@@ -5,9 +5,9 @@ using namespace Pattern;
 constexpr BitBoard PatternH{ 0x00000000000000E7ULL }; // HorizontalSymmetric
 constexpr BitBoard PatternD{ 0x8040201008040303ULL }; // DiagonalSymmetric
 constexpr BitBoard PatternA{ 0x000000000000000FULL }; // Asymmetric
-static const auto WeightsH = Weights(CreateIndexMapper(PatternH)->ReducedSize(), 0);
-static const auto WeightsD = Weights(CreateIndexMapper(PatternD)->ReducedSize(), 0);
-static const auto WeightsA = Weights(CreateIndexMapper(PatternA)->ReducedSize(), 0);
+static const auto WeightsH = Weights(CreateIndexMapper(PatternH)->reduced_size, 0);
+static const auto WeightsD = Weights(CreateIndexMapper(PatternD)->reduced_size, 0);
+static const auto WeightsA = Weights(CreateIndexMapper(PatternA)->reduced_size, 0);
 
 TEST(MetaTest, HorizontalSymmetric)
 {
@@ -29,27 +29,27 @@ TEST(IndexMapper, CreateIndexMapper_HorizontalSymmetric)
 {
 	const auto im = CreateIndexMapper(PatternH);
 
-	ASSERT_EQ(im->GroupOrder(), 4);
+	ASSERT_EQ(im->group_order, 4);
 	ASSERT_EQ(im->Patterns()[0], PatternH);
-	ASSERT_EQ(im->Indices(Position::Start()).size(), 4);
+	ASSERT_EQ(im->Patterns().size(), 4);
 }
 
 TEST(IndexMapper, CreateIndexMapper_DiagonalSymmetric)
 {
 	const auto im = CreateIndexMapper(PatternD);
 
-	ASSERT_EQ(im->GroupOrder(), 4);
+	ASSERT_EQ(im->group_order, 4);
 	ASSERT_EQ(im->Patterns()[0], PatternD);
-	ASSERT_EQ(im->Indices(Position::Start()).size(), 4);
+	ASSERT_EQ(im->Patterns().size(), 4);
 }
 
 TEST(IndexMapper, CreateIndexMapper_Asymmetric)
 {
 	const auto im = CreateIndexMapper(PatternA);
 
-	ASSERT_EQ(im->GroupOrder(), 8);
+	ASSERT_EQ(im->group_order, 8);
 	ASSERT_EQ(im->Patterns()[0], PatternA);
-	ASSERT_EQ(im->Indices(Position::Start()).size(), 8);
+	ASSERT_EQ(im->Patterns().size(), 8);
 }
 
 TEST(Evaluator, CreateEvaluator_works_for_horizontal_symmetric_pattern)
@@ -118,7 +118,7 @@ void Test_LegalWeights(BitBoard pattern)
 {
 	auto index_mapper = CreateIndexMapper(pattern);
 
-	Weights compressed(index_mapper->ReducedSize());
+	Weights compressed(index_mapper->reduced_size);
 	std::iota(compressed.begin(), compressed.end(), 1);
 	auto evaluator = CreateEvaluator(pattern, compressed);
 	PosGen::Random rnd(78);
@@ -127,7 +127,8 @@ void Test_LegalWeights(BitBoard pattern)
 	{
 		const auto pos = rnd();
 
-		auto configs = index_mapper->Indices(pos);
+		std::vector<int> configs;
+		index_mapper->generate(std::back_inserter(configs), pos);
 		float sum = 0;
 		for (auto it : configs)
 			sum += compressed[it];

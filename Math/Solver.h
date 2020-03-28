@@ -146,62 +146,6 @@ public:
 	const Vector& GetX() const override { return x; }
 };
 
-// Preconditioned Conjugate Gradient method
-// Solves At * A * P(y) = b, where P(y) = x, for x.
-class PCGLS : public IterativeSolver
-{
-	std::unique_ptr<IMatrix> A;
-	const Preconditioner& P;
-	Vector x, b, z, r, p;
-public:
-	// A: has to be symmetric and positive-definite.
-	template <typename Matrix>
-	PCGLS(Matrix A_, const Preconditioner& P, Vector x0, Vector b_)
-		: A(std::make_unique<Matrix>(std::move(A_))), P(P), x(std::move(x0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
-	{
-		if (A->Cols() != A->Rows())
-			throw std::runtime_error("Size mismatch.");
-		if (A->Cols() != x.size())
-			throw std::runtime_error("Size mismatch.");
-		if (A->Rows() != b.size())
-			throw std::runtime_error("Size mismatch.");
-
-		Reinitialize();
-	}
-	~PCGLS() override = default;
-
-	void Reinitialize() override
-	{
-		r = Error();
-		p = z = P.apply(r);
-	}
-
-	void Reinitialize(Vector x0) override
-	{
-		x = std::move(x0);
-		Reinitialize();
-	}
-
-	void Iterate(int n = 1) override
-	{
-		for (int k = 0; k < n; k++)
-		{
-			const auto r_dot_z_old = dot(r, z);
-			const auto A_p = A * p;
-			const auto alpha = r_dot_z_old / dot(p, A_p);
-			x += alpha * p;
-			r -= alpha * A_p;
-			z = P.apply(r);
-			const auto beta = dot(r, z) / r_dot_z_old;
-			p = z + beta * p;
-		}
-	}
-
-	double Residuum() const override { return dot(r, r); }
-	Vector Error() const override { return b - A * x; }
-	const Vector& GetX() const override { return x; }
-};
-
 // Least Squares QR Method
 // Solves A * x = b for x, or minimizes ||A*x-b||.
 template <typename Matrix>

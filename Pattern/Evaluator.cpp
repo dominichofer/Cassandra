@@ -3,6 +3,7 @@
 #include "IndexMapper.h"
 #include "Machine/BitTwiddling.h"
 #include <cassert>
+#include <iterator>
 
 using namespace Pattern;
 
@@ -109,7 +110,7 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, std:
 std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, const Weights& compressed)
 {
 	const auto index_mapper = CreateIndexMapper(pattern);
-	const auto multiplicity = index_mapper->GroupOrder();
+	const auto multiplicity = index_mapper->group_order;
 	const std::size_t full_size = Pow_int(3, PopCount(pattern));
 	const auto patterns = index_mapper->Patterns();
 
@@ -122,8 +123,12 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 	for (std::size_t i = 0; i < multiplicity; i++)
 	{
 		For_each_config(patterns[i],
-						[&](const Position& pos) { 
-							weights[i][Index(pos, patterns[i])] = compressed[index_mapper->Indices(pos)[i]];
+						[&](const Position& pos) {
+							std::vector<int> indices;
+							indices.reserve(index_mapper->group_order);
+							index_mapper->generate(std::back_inserter(indices), pos);
+
+							weights[i][Index(pos, patterns[i])] = compressed[indices[i]];
 						}
 		);
 	}

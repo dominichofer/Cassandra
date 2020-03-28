@@ -1,11 +1,5 @@
 #include "IndexMapper.h"
-#include <cassert>
-#include <numeric>
-
-std::size_t IndexMapper::GroupOrder() const
-{
-	return std::size(Patterns());
-}
+#include <stdexcept>
 
 std::unique_ptr<IndexMapper> CreateIndexMapper(const BitBoard pattern)
 {
@@ -21,92 +15,147 @@ std::unique_ptr<IndexMapper> CreateIndexMapper(const std::vector<BitBoard>& patt
 	return std::make_unique<Composite>(patterns);
 }
 
-HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
-	: m_pattern(pattern)
-	, m_pattern_C(FlipCodiagonal(pattern))
-	, m_pattern_V(FlipVertical(pattern))
-	, m_pattern_D(FlipDiagonal(pattern))
-	, m_half_size(Pow_int(3, PopCount(pattern & HALF)))
+class BackInsertWrapper final : public OutputIterator
 {
-	assert(pattern == FlipHorizontal(pattern));
+	std::back_insert_iterator<std::vector<int>> it;
+public:
+	BackInsertWrapper(std::back_insert_iterator<std::vector<int>> it) : it(it) {}
+	BackInsertWrapper& operator*() override { return *this; }
+	BackInsertWrapper& operator++() override { ++it; return *this; }
+	BackInsertWrapper& operator=(int index) override { *it = index; return *this; }
+};
+
+void IndexMapper::generate(std::back_insert_iterator<std::vector<int>> it, const Position& pos) const
+{
+	BackInsertWrapper wrapper(it);
+	generate(wrapper, pos);
+}
+
+HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
+	: IndexMapper(4)
+	, pattern(pattern)
+	, half_size(Pow_int(3, PopCount(pattern & HALF)))
+{
+	reduced_size = half_size * (half_size + 1) / 2;
+	if (pattern != FlipHorizontal(pattern))
+		throw std::runtime_error("Pattern has no horizontal symmetry.");
+}
+
+std::vector<BitBoard> HorizontalSymmetric::Patterns() const
+{
+	return {
+		pattern,
+		FlipCodiagonal(pattern),
+		FlipDiagonal(pattern),
+		FlipVertical(pattern)
+	};
 }
 
 void HorizontalSymmetric::generate(OutputIterator& it, const Position& pos) const
 {
-	*it = Index0(pos); ++it;
-	*it = Index1(pos); ++it;
-	*it = Index2(pos); ++it;
-	*it = Index3(pos); ++it;
+	*it = Index(pos); ++it;
+	*it = Index(FlipCodiagonal(pos)); ++it;
+	*it = Index(FlipDiagonal(pos)); ++it;
+	*it = Index(FlipVertical(pos)); ++it;
 }
 
-int HorizontalSymmetric::Index0(const Position& pos) const
+int HorizontalSymmetric::Index(const Position& pos) const noexcept
 {
-	int min = Index(pos, m_pattern & HALF);
-	int max = Index(FlipHorizontal(pos), m_pattern & HALF);
+	int min = ::Index(pos, pattern & HALF);
+	int max = ::Index(FlipHorizontal(pos), pattern & HALF);
 	if (min > max)
 		std::swap(min, max);
 
-	return min * m_half_size + max - (min * (min + 1) / 2);
+	return min * half_size + max - (min * (min + 1) / 2);
 }
 
 DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
-	: m_pattern(pattern)
-	, m_pattern_H(FlipHorizontal(pattern))
-	, m_pattern_C(FlipCodiagonal(pattern))
-	, m_pattern_V(FlipVertical(pattern))
-	, m_half_size(Pow_int(3, PopCount(pattern & HALF)))
-	, m_diag_size(Pow_int(3, PopCount(pattern & DIAG)))
+	: IndexMapper(4)
+	, pattern(pattern)
+	, half_size(Pow_int(3, PopCount(pattern & HALF)))
+	, diag_size(Pow_int(3, PopCount(pattern & DIAG)))
 {
-	assert(pattern == FlipDiagonal(pattern));
+	reduced_size = diag_size * half_size * (half_size + 1) / 2;
+	if (pattern != FlipDiagonal(pattern))
+		throw std::runtime_error("Pattern has no diagonal symmetry.");
+}
+
+std::vector<BitBoard> DiagonalSymmetric::Patterns() const
+{
+	return {
+		pattern,
+		FlipCodiagonal(pattern),
+		FlipHorizontal(pattern),
+		FlipVertical(pattern)
+	};
 }
 
 void DiagonalSymmetric::generate(OutputIterator& it, const Position& pos) const
 {
-	*it = Index0(pos); ++it;
-	*it = Index1(pos); ++it;
-	*it = Index2(pos); ++it;
-	*it = Index3(pos); ++it;
+	*it = Index(pos); ++it;
+	*it = Index(FlipCodiagonal(pos)); ++it;
+	*it = Index(FlipHorizontal(pos)); ++it;
+	*it = Index(FlipVertical(pos)); ++it;
 }
 
-int DiagonalSymmetric::Index0(const Position& pos) const
+int DiagonalSymmetric::Index(const Position& pos) const noexcept
 {
-	int diag = Index(pos, m_pattern & DIAG);
-	int min = Index(pos, m_pattern & HALF);
-	int max = Index(FlipDiagonal(pos), m_pattern & HALF);
+	int diag = ::Index(pos, pattern & DIAG);
+	int min = ::Index(pos, pattern & HALF);
+	int max = ::Index(FlipDiagonal(pos), pattern & HALF);
 	if (min > max)
 		std::swap(min, max);
 
-	return (min * m_half_size + max - (min * (min + 1) / 2)) * m_diag_size + diag;
+	return (min * half_size + max - (min * (min + 1) / 2)) * diag_size + diag;
+}
+Asymmetric::Asymmetric(BitBoard pattern)
+	: IndexMapper(8), pattern(pattern)
+{
+	reduced_size = Pow_int(3, PopCount(pattern));
 }
 
-Asymmetric::Asymmetric(BitBoard pattern)
-	: m_pattern(pattern)
-	, m_pattern_C(FlipCodiagonal(pattern))
-	, m_pattern_D(FlipDiagonal(pattern))
-	, m_pattern_H(FlipHorizontal(pattern))
-	, m_pattern_V(FlipVertical(pattern))
-	, m_patternHC(FlipCodiagonal(FlipHorizontal(pattern)))
-	, m_patternHD(FlipDiagonal(FlipHorizontal(pattern)))
-	, m_patternHV(FlipVertical(FlipHorizontal(pattern)))
-{}
+std::vector<BitBoard> Asymmetric::Patterns() const
+{
+	auto horizontal = FlipHorizontal(pattern);
+	return {
+		pattern,
+		FlipCodiagonal(pattern),
+		FlipDiagonal(pattern),
+		horizontal,
+		FlipVertical(pattern),
+		FlipCodiagonal(horizontal),
+		FlipDiagonal(horizontal),
+		FlipVertical(horizontal)
+	};
+}
 
 void Asymmetric::generate(OutputIterator& it, const Position& pos) const
 {
-	*it = Index0(pos); ++it;
-	*it = Index1(pos); ++it;
-	*it = Index2(pos); ++it;
-	*it = Index3(pos); ++it;
-	*it = Index4(pos); ++it;
-	*it = Index5(pos); ++it;
-	*it = Index6(pos); ++it;
-	*it = Index7(pos); ++it;
+	*it = Index(pos); ++it;
+	*it = Index(FlipCodiagonal(pos)); ++it;
+	*it = Index(FlipDiagonal(pos)); ++it;
+	*it = Index(FlipHorizontal(pos)); ++it;
+	*it = Index(FlipVertical(pos)); ++it;
+	*it = Index(FlipHorizontal(FlipCodiagonal(pos))); ++it;
+	*it = Index(FlipHorizontal(FlipDiagonal(pos))); ++it;
+	*it = Index(FlipHorizontal(FlipVertical(pos))); ++it;
+}
+int Asymmetric::Index(const Position& pos) const noexcept
+{
+	return ::Index(pos, pattern);
 }
 
 Composite::Composite(const std::vector<BitBoard>& patterns)
+	: IndexMapper(0)
 {
 	for (const auto& p : patterns)
 		index_mappers.emplace_back(CreateIndexMapper(p));
-	group_order = GroupOrder();
+
+	for (const auto& im : index_mappers)
+	{
+		reduced_size += im->reduced_size;
+		group_order += im->group_order;
+	}
 }
 
 std::vector<BitBoard> Composite::Patterns() const
@@ -119,21 +168,6 @@ std::vector<BitBoard> Composite::Patterns() const
 	}
 	return ret;
 }
-
-std::vector<int> Composite::Indices(const Position& pos) const
-{
-	std::vector<int> ret;
-	ret.reserve(group_order);
-	std::size_t offset = 0;
-	for (const auto& im : index_mappers)
-	{
-		for (const auto n : im->Indices(pos))
-			ret.push_back(n + offset);
-		offset += im->ReducedSize();
-	}
-	return ret;
-}
-
 
 class OffsetWrapper final : public OutputIterator
 {
@@ -153,14 +187,6 @@ void Composite::generate(OutputIterator& it, const Position& pos) const
 	for (const auto& im : index_mappers)
 	{
 		im->generate(offsetter, pos);
-		offsetter.offset += im->ReducedSize();
+		offsetter.offset += im->reduced_size;
 	}
-}
-
-std::size_t Composite::ReducedSize() const
-{
-	return std::transform_reduce(index_mappers.begin(), index_mappers.end(),
-								 static_cast<std::size_t>(0), std::plus<>(),
-								 [](const auto& im){ return im->ReducedSize(); }
-	);
 }

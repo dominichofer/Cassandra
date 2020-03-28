@@ -101,7 +101,10 @@ public:
 
 	// Jacobi Preconditioner Square
 	// Returns 1 / diag(A' * A)
-	Vector JacobiPreconditionerSquare(double infinity = std::numeric_limits<double>::infinity()) const { return inv(DiagATA(), infinity); }
+	Vector JacobiPreconditionerSquare(double infinity = std::numeric_limits<double>::infinity()) const
+	{
+		return inv(DiagATA(), infinity);
+	}
 };
 
 namespace
@@ -174,7 +177,7 @@ namespace
 			if(x.size() != r.cols)
 				throw std::runtime_error("Size mismatch.");
 
-			//if (l.begin() != r.begin())
+			if (l.begin() != r.begin())
 				return l * (r * x);
 
 			if(r.entires_per_row % 4 != 0)

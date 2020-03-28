@@ -5,6 +5,6 @@
 
 uint64_t Pow_int(uint64_t base, uint64_t exponent);
 
-int Index(const Position&, BitBoard pattern);
+int Index(const Position&, BitBoard pattern) noexcept;
 
 void For_each_config(BitBoard pattern, const std::function<void(Position)>&);
