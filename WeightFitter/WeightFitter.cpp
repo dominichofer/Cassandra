@@ -54,7 +54,7 @@ public:
 	IteratorWrapper& operator=(int index) override { *it = index; return *this; }
 };
 
-MatrixCSR<uint32_t> CreateMatrix(const IndexMapper& index_mapper, const std::vector<Position>& positions)
+auto CreateMatrix(const IndexMapper& index_mapper, const std::vector<Position>& positions)
 {
 	const auto entries_per_row = index_mapper.GroupOrder();
 	const auto cols = index_mapper.ReducedSize();
@@ -78,10 +78,9 @@ int main(int argc, char* argv[])
 	Search::PVSearch pvs{ tt };
 
 	std::vector<Position> train_positions;
-	for (int e = 0; e < 5; e++)
-		std::generate_n(std::back_inserter(train_positions), 1'000'000, PosGen::Random_with_empty_count(e /*empty_count*/, 13));
-
 	std::vector<Position> test_positions;
+	for (int e = 5; e < 10; e++)
+		std::generate_n(std::back_inserter(train_positions), 1'000'000, PosGen::Random_with_empty_count(e /*empty_count*/, 13));
 	for (int e = 5; e < 10; e++)
 		std::generate_n(std::back_inserter(test_positions), 250'000, PosGen::Random_with_empty_count(e /*empty_count*/, 113));
 
@@ -102,6 +101,7 @@ int main(int argc, char* argv[])
 	std::cout << "Solved" << std::endl;
 
 	std::vector<std::vector<BitBoard>> ppp = {
+		std::vector<BitBoard>{L0, L1, L2, L3, D4, D5, D6, D7, D8},
 		std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}, // 6.32
 		std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}, // 6.21
 		std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2},
@@ -117,22 +117,17 @@ int main(int argc, char* argv[])
 		Vector weights(index_mapper->ReducedSize(), 0);
 
 		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(1000));
-		PCGLS solver(train_mat, P, weights, transposed(train_mat) * train_scores);
-		for (int i = 0; i < 10; i++)
+		PCG solver(transposed(train_mat) * train_mat, P, weights, transposed(train_mat) * train_scores);
+		for (int i = 0; i < 100; i++)
 		{
-			const auto start = std::chrono::high_resolution_clock::now();
-			solver.Iterate(1);
+			solver.Iterate();
 			const auto end = std::chrono::high_resolution_clock::now();
 			const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 			const auto milliseconds = duration.count();
-			std::cout << milliseconds << std::endl;
-		}
-		const auto end = std::chrono::high_resolution_clock::now();
-		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		const auto milliseconds = duration.count();
-		std::cout << milliseconds << "ms. Reduced size: " << index_mapper->ReducedSize()
-		<< "\tTrainError: " << SampleStandardDeviation(train_scores - train_mat * solver.GetX())
+			std::cout << milliseconds << "ms. Reduced size: " << index_mapper->ReducedSize()
+			<< "\tTrainError: " << SampleStandardDeviation(train_scores - train_mat * solver.GetX())
 			<< "\t TestError: " << SampleStandardDeviation(test_scores - test_mat * solver.GetX()) << std::endl;
+		}
 	}
 
 	////LSQR solver(mat, weights, scores);

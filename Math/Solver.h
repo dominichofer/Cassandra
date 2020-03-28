@@ -42,6 +42,8 @@ inline std::tuple<double, Vector> decompose(const Vector& x)
 	return std::tuple(n, x / n);
 }
 
+inline Vector operator*(const std::unique_ptr<IMatrix>& m, const Vector& v) { return m->operator*(v); }
+
 // Conjugate Gradient method
 // Solves A * x = b for x.
 class CG : public IterativeSolver
@@ -54,12 +56,9 @@ public:
 	CG(Matrix A_, Vector x0, Vector b_)
 		: A(std::make_unique<Matrix>(std::move(A_))), x(std::move(x0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
 	{
-		//if (A->Cols() != A->Rows()) 
-		//	throw;
-		//if (A->Cols() != x.size())
-		//	throw;
-		//if (A->Rows() != b.size())
-		//	throw;
+		if (A->Cols() != A->Rows()) throw std::runtime_error("Size mismatch.");
+		if (A->Cols() != x.size()) throw std::runtime_error("Size mismatch.");
+		if (A->Rows() != b.size()) throw std::runtime_error("Size mismatch.");
 		Reinitialize();
 	}
 	~CG() override = default;
@@ -79,7 +78,7 @@ public:
 		for (int k = 0; k < n; k++)
 		{
 			const auto r_dot_r_old = dot(r, r);
-			const auto A_p = A->ATAx(p);
+			const auto A_p = A * p;
 			const auto alpha = r_dot_r_old / dot(p, A_p);
 			x += alpha * p;
 			r -= alpha * A_p;
@@ -89,27 +88,27 @@ public:
 	}
 
 	double Residuum() const override { return dot(r, r); }
-	Vector Error() const override { return b- A->ATAx(x); }
+	Vector Error() const override { return b - A * x; }
 	const Vector& GetX() const override { return x; }
 };
 
 // Preconditioned Conjugate Gradient method
 // Solves A * P(y) = b, where P(y) = x, for x.
-template <typename Matrix>
 class PCG : public IterativeSolver
 {
-	const Matrix& A;
+	std::unique_ptr<IMatrix> A;
 	const Preconditioner& P;
 	const Vector& b;
 	Vector x, z, r, p;
 public:
 	// A: has to be symmetric and positive-definite.
-	PCG(const Matrix& A, const Preconditioner& P, Vector x0, const Vector& b)
-		: A(A), P(P), b(b), y{}, r(A.Cols()), p(A.Cols())
+	template <typename Matrix>
+	PCG(Matrix A_, const Preconditioner& P, Vector x0, Vector b_)
+		: A(std::make_unique<Matrix>(std::move(A_))), P(P), x(std::move(x0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
 	{
-		if (A.Cols() != A.Rows()) throw;
-		if (A.Cols() != x.size()) throw;
-		if (A.Rows() != b.size()) throw;
+		if (A->Cols() != A->Rows()) throw std::runtime_error("Size mismatch.");
+		if (A->Cols() != x.size()) throw std::runtime_error("Size mismatch.");
+		if (A->Rows() != b.size()) throw std::runtime_error("Size mismatch.");
 		Reinitialize();
 	}
 	~PCG() override = default;
@@ -161,9 +160,13 @@ public:
 	PCGLS(Matrix A_, const Preconditioner& P, Vector x0, Vector b_)
 		: A(std::make_unique<Matrix>(std::move(A_))), P(P), x(std::move(x0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
 	{
-		//if (A.Cols() != A.Rows()) throw;
-		//if (A.Cols() != x.size()) throw;
-		//if (A.Rows() != b.size()) throw;
+		if (A->Cols() != A->Rows())
+			throw std::runtime_error("Size mismatch.");
+		if (A->Cols() != x.size())
+			throw std::runtime_error("Size mismatch.");
+		if (A->Rows() != b.size())
+			throw std::runtime_error("Size mismatch.");
+
 		Reinitialize();
 	}
 	~PCGLS() override = default;
@@ -185,7 +188,7 @@ public:
 		for (int k = 0; k < n; k++)
 		{
 			const auto r_dot_z_old = dot(r, z);
-			const auto A_p = A->ATAx(p);
+			const auto A_p = A * p;
 			const auto alpha = r_dot_z_old / dot(p, A_p);
 			x += alpha * p;
 			r -= alpha * A_p;
@@ -196,7 +199,7 @@ public:
 	}
 
 	double Residuum() const override { return dot(r, r); }
-	Vector Error() const override { return b - A->ATAx(x); }
+	Vector Error() const override { return b - A * x; }
 	const Vector& GetX() const override { return x; }
 };
 
