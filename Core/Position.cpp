@@ -1,11 +1,11 @@
 #include "Position.h"
-#include "Machine/BitTwiddling.h"
+#include "Bit.h"
 #include <algorithm>
 
-void Position::FlipCodiagonal() noexcept { P.value = ::FlipCodiagonal(P.value); O.value = ::FlipCodiagonal(O.value); }
-void Position::FlipDiagonal  () noexcept { P.value = ::FlipDiagonal  (P.value); O.value = ::FlipDiagonal  (O.value); }
-void Position::FlipHorizontal() noexcept { P.value = ::FlipHorizontal(P.value); O.value = ::FlipHorizontal(O.value); }
-void Position::FlipVertical  () noexcept { P.value = ::FlipVertical  (P.value); O.value = ::FlipVertical  (O.value); }
+void Position::FlipCodiagonal() noexcept { P = ::FlipCodiagonal(P); O = ::FlipCodiagonal(O); }
+void Position::FlipDiagonal  () noexcept { P = ::FlipDiagonal  (P); O = ::FlipDiagonal  (O); }
+void Position::FlipHorizontal() noexcept { P = ::FlipHorizontal(P); O = ::FlipHorizontal(O); }
+void Position::FlipVertical  () noexcept { P = ::FlipVertical  (P); O = ::FlipVertical  (O); }
 
 void Position::FlipToUnique() noexcept
 {
@@ -48,9 +48,9 @@ Position Position::StartETH()
 }
 
 
-std::size_t Position::EmptyCount() const
+int Position::EmptyCount() const
 {
-	return PopCount(Empties());
+	return popcount(Empties());
 }
 
 uint64_t Position::ParityQuadrants() const
@@ -64,24 +64,6 @@ uint64_t Position::ParityQuadrants() const
 	E ^= E >> 16;
 	E &= 0x0000'0011'0000'0011ULL;
 	return E * 0x0000'0000'0F0F'0F0FULL;
-}
-
-Position operator""_pos(const char* c, std::size_t size)
-{
-	assert(size == 120);
-
-	BitBoard P(0);
-	BitBoard O(0);
-	for (int i = 0; i < 8; i++)
-		for (int j = 0; j < 8; j++)
-		{
-			char symbol = c[119 - 2 * j - 15 * i];
-			if (symbol == 'X')
-				Bit(P, i * 8 + j) = true;
-			if (symbol == 'O')
-				Bit(O, i * 8 + j) = true;
-		}
-	return { P, O };
 }
 
 Position FlipCodiagonal(Position pos) noexcept
@@ -112,4 +94,15 @@ Position FlipToUnique(Position pos) noexcept
 {
 	pos.FlipToUnique();
 	return pos;
+}
+
+Score EvalGameOver(const Position& pos)
+{
+	const auto Ps = popcount(pos.P);
+	const auto Os = popcount(pos.O);
+	if (Ps > Os)
+		return 64 - 2 * Os;
+	if (Ps < Os)
+		return 2 * Ps - 64;
+	return 0;
 }

@@ -3,7 +3,6 @@
 #include "Position.h"
 #include "Moves.h"
 #include "Player.h"
-#include "Machine.h"
 
 #include <random>
 #include <stack>

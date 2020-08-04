@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="HashTablePVS.cpp" />
+    <ClCompile Include="Interval.cpp" />
+    <ClCompile Include="Puzzle.cpp" />
+    <ClCompile Include="AlphaBetaFailHard.cpp" />
+    <ClCompile Include="AlphaBetaFailSoft.cpp" />
+    <ClCompile Include="NegaMax.cpp" />
+    <ClCompile Include="PrincipalVariation.cpp" />
+    <ClCompile Include="Algorithm.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HashTablePVS.h" />
+    <ClInclude Include="Interval.h" />
+    <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="Search.h" />
+    <ClInclude Include="SortedMoves.h" />
+    <ClInclude Include="AlphaBetaFailHard.h" />
+    <ClInclude Include="AlphaBetaFailSoft.h" />
+    <ClInclude Include="NegaMax.h" />
+    <ClInclude Include="PrincipalVariation.h" />
+    <ClInclude Include="Algorithm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Search.natvis" />
+  </ItemGroup>
+</Project>

@@ -1,14 +1,13 @@
 #pragma once
 #include <cassert>
 #include <cmath>
-#include <tuple>
 #include "Vector.h"
 
 inline Vector sqrt(Vector x)
 {
 	const int64_t size = x.size();
 	#pragma omp parallel for schedule(dynamic, 64)
-	for(int64_t i = 0; i < size; i++)
+	for (int64_t i = 0; i < size; i++)
 		x[i] = sqrt(x[i]);
 	return x;
 }

@@ -1,7 +1,6 @@
 #include "Evaluator.h"
 #include "Helpers.h"
 #include "ConfigIndexer.h"
-#include "Machine/BitTwiddling.h"
 #include <cassert>
 #include <iterator>
 
@@ -111,13 +110,13 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 {
 	const auto config_indexer = CreateConfigIndexer(pattern);
 	const auto multiplicity = config_indexer->group_order;
-	const std::size_t full_size = Pow_int(3, PopCount(pattern));
+	const std::size_t full_size = Pow_int(3, popcount(pattern));
 	const auto patterns = config_indexer->Patterns();
 
 	// Reserve memory
 	std::vector<Weights> weights(multiplicity);
-	for (auto& weight : weights)
-		weight.resize(full_size);
+	for (auto& w : weights)
+		w.resize(full_size);
 
 	// Decompress
 	for (std::size_t i = 0; i < multiplicity; i++)
@@ -125,7 +124,7 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 		For_each_config(patterns[i],
 						[&](const Position& pos) {
 							std::vector<int> indices;
-							indices.reserve(config_indexer->group_order);
+							indices.reserve(multiplicity);
 							config_indexer->generate(std::back_inserter(indices), pos);
 
 							weights[i][Index(pos, patterns[i])] = compressed[indices[i]];

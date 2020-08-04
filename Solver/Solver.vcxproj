@@ -85,14 +85,14 @@
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Engine\Engine.vcxproj">
-      <Project>{24406b09-1801-4af1-98d7-682fc50eba34}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\IO\IO.vcxproj">
       <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Machine\Machine.vcxproj">
-      <Project>{d4a9b7d0-1902-45e2-8f6c-c0e7483ebfba}</Project>
+    <ProjectReference Include="..\Pattern\Pattern.vcxproj">
+      <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Search\Search.vcxproj">
+      <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

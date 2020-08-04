@@ -3,55 +3,40 @@
 
 class Moves
 {
-	BitBoard m_moves{ 0 };
+	BitBoard b{};
 public:
-	Moves() noexcept = default;
-	constexpr explicit Moves(BitBoard moves) noexcept : m_moves(moves) {}
+	constexpr Moves() noexcept = default;
+	constexpr Moves(BitBoard moves) noexcept : b(moves) {}
 
 	[[nodiscard]] auto operator<=>(const Moves&) const noexcept = default;
 
-	std::size_t size() const;
-	bool empty() const noexcept;
-	operator bool() const noexcept;
+	int size() const noexcept { return popcount(b); }
+	constexpr bool empty() const noexcept { return b.empty(); }
 
-	bool contains(Field) const;
-	Field front() const;
-	Field pop_front();
+	bool contains(Field f) const noexcept { return b.Get(f); }
+	Field First() const noexcept { return b.FirstSet(); }
+	void RemoveFirst() noexcept { b.ClearFirstSet(); }
+	Field ExtractFirst() noexcept { auto first = First(); RemoveFirst(); return first; }
 
-	void Remove(Field);
-	void Remove(BitBoard moves);
-	void Filter(BitBoard moves);
+	void Remove(Field f) noexcept { b.Clear(f); }
+	void Remove(const BitBoard& moves) { b &= ~moves; }
+	void Filter(const BitBoard& moves) { b &= moves; }
 
 	class Iterator
 	{
-		BitBoard m_moves;
+		BitBoard moves{};
 	public:
-		explicit Iterator(const Moves& moves) : m_moves(moves.m_moves) {}
-		Iterator& operator++();
-		Field operator*() const;
+		constexpr Iterator() noexcept = default;
+		Iterator(const Moves& moves) : moves(moves.b) {}
+		Iterator& operator++() { moves.ClearFirstSet(); return *this; }
+		Field operator*() const { return moves.FirstSet(); }
 
-		[[nodiscard]] bool operator==(const Iterator& o) const noexcept { return m_moves == o.m_moves; }
-		[[nodiscard]] bool operator!=(const Iterator& o) const noexcept { return m_moves != o.m_moves; }
+		[[nodiscard]] bool operator==(const Iterator& o) const noexcept { return moves == o.moves; }
+		[[nodiscard]] bool operator!=(const Iterator& o) const noexcept { return moves != o.moves; }
 	};
 
-
-	Iterator begin() const { return Iterator(*this); }
-	Iterator cbegin() const { return Iterator(*this); }
-	Iterator end() const { return Iterator(Moves(BitBoard(0))); }
-	Iterator cend() const { return Iterator(Moves(BitBoard(0))); }
+	Iterator begin() const { return *this; }
+	Iterator cbegin() const { return *this; }
+	Iterator end() const { return {}; }
+	Iterator cend() const { return {}; }
 };
-
-constexpr Moves operator""_mov(const char* c, std::size_t size)
-{
-	assert(size == 120);
-
-	BitBoard moves{ 0 };
-	for (int i = 0; i < 8; i++)
-		for (int j = 0; j < 8; j++)
-		{
-			char symbol = c[119 - 2 * j - 15 * i];
-			if (symbol == '#')
-				moves |= 1ULL << (i * 8 + j);
-		}
-	return Moves(moves);
-}

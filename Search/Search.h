@@ -1,0 +1,11 @@
+#pragma once
+#include "Core/Core.h"
+#include "Algorithm.h"
+#include "AlphaBetaFailHard.h"
+#include "AlphaBetaFailSoft.h"
+#include "HashTablePVS.h"
+#include "Interval.h"
+#include "NegaMax.h"
+#include "PrincipalVariation.h"
+#include "Puzzle.h"
+#include "SortedMoves.h"

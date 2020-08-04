@@ -1,5 +1,7 @@
 #include "PositionGenerator.h"
-#include "Machine.h"
+#include "Bit.h"
+#include "PossibleMoves.h"
+#include "Play.h"
 
 Position PosGen::Random::operator()()
 {
@@ -8,10 +10,10 @@ Position PosGen::Random::operator()()
 	//  25% chance to belong to opponent,
 	//  50% chance to be empty.
 
-	auto rnd = [this]() { return BitBoard(std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine)); };
-	BitBoard p = rnd();
-	BitBoard o = rnd();
-	return { p & ~o, o & ~p };
+	auto rnd = [this]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
+	BitBoard a = rnd();
+	BitBoard b = rnd();
+	return { a & ~b, b & ~a };
 }
 
 Position PosGen::Random_with_empty_count::operator()()
@@ -62,7 +64,7 @@ std::optional<Position> PosGen::All_after_nth_ply::operator()()
 			continue;
 		}
 
-		Position next = Play(pos, moves.pop_front());
+		Position next = Play(pos, moves.ExtractFirst());
 		if (stack.size() == plies)
 			return next;
 
@@ -112,7 +114,7 @@ std::optional<Position> PosGen::All_with_empty_count::operator()()
 			continue;
 		}
 
-		Position next = Play(pos, moves.pop_front());
+		Position next = Play(pos, moves.ExtractFirst());
 		if (next.EmptyCount() == empty_count)
 			return next;
 

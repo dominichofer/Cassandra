@@ -1,7 +1,7 @@
 #include "BitBoard.h"
-#include "Machine.h"
+#include "Bit.h"
 
-BitBoard FlipCodiagonal(BitBoard b) noexcept
+void BitBoard::FlipCodiagonal() noexcept
 {
 	// 9 x XOR, 6 x SHIFT, 3 x AND
 	// 18 OPs
@@ -21,10 +21,9 @@ BitBoard FlipCodiagonal(BitBoard b) noexcept
 	b ^=  t ^ (t >> 18);
 	t  = (b ^ (b <<  9)) & 0xAA00AA00AA00AA00ULL;
 	b ^=  t ^ (t >>  9);
-	return b;
 }
 
-BitBoard FlipDiagonal(BitBoard b) noexcept
+void BitBoard::FlipDiagonal() noexcept
 {
 	// 9 x XOR, 6 x SHIFT, 3 x AND
 	// 18 OPs
@@ -44,10 +43,9 @@ BitBoard FlipDiagonal(BitBoard b) noexcept
 	b ^=  t ^ (t << 14);
 	t  = (b ^ (b >> 28)) & 0x00000000F0F0F0F0ULL;
 	b ^=  t ^ (t << 28);
-	return b;
 }
 
-BitBoard FlipHorizontal(BitBoard b) noexcept
+void BitBoard::FlipHorizontal() noexcept
 {
 	// 6 x SHIFT, 6 x AND, 3 x OR
 	// 15 OPs
@@ -63,13 +61,12 @@ BitBoard FlipHorizontal(BitBoard b) noexcept
 	b = ((b >> 1) & 0x5555555555555555ULL) | ((b << 1) & 0xAAAAAAAAAAAAAAAAULL);
 	b = ((b >> 2) & 0x3333333333333333ULL) | ((b << 2) & 0xCCCCCCCCCCCCCCCCULL);
 	b = ((b >> 4) & 0x0F0F0F0F0F0F0F0FULL) | ((b << 4) & 0xF0F0F0F0F0F0F0F0ULL);
-	return b;
 }
 
-BitBoard FlipVertical(BitBoard b) noexcept
+void BitBoard::FlipVertical() noexcept
 {
-	// 1 x BSwap
-	// 1 OPs
+	// 1 x ByteSwap
+	// 1 OP
 
 	// # # # # # # # #
 	// # # # # # # # #
@@ -80,5 +77,29 @@ BitBoard FlipVertical(BitBoard b) noexcept
 	// # # # # # # # #
 	// # # # # # # # #
 	// # # # # # # # #<-LSB
-	return BSwap(b);
+	b = BSwap(b);
+}
+
+BitBoard FlipCodiagonal(BitBoard b) noexcept
+{
+	b.FlipCodiagonal();
+	return b;
+}
+
+BitBoard FlipDiagonal(BitBoard b) noexcept
+{
+	b.FlipDiagonal();
+	return b;
+}
+
+BitBoard FlipHorizontal(BitBoard b) noexcept
+{
+	b.FlipHorizontal();
+	return b;
+}
+
+BitBoard FlipVertical(BitBoard b) noexcept
+{
+	b.FlipVertical();
+	return b;
 }

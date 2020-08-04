@@ -32,7 +32,7 @@ public:
 	using value_type = Value;
 	using node_type = Node;
 
-	HashTable(uint64_t bucket_count, std::function<std::size_t(const Key&)> hash)
+	HashTable(std::size_t bucket_count, std::function<std::size_t(const Key&)> hash)
 		: hash(std::move(hash))
 		, buckets(bucket_count)
 	{}
@@ -40,16 +40,14 @@ public:
 	void Update(const Key& key, const Value& value)
 	{
 		updates++;
-		auto hash_ = hash(key);
-		auto index = hash_ % buckets.size();
+		auto index = hash(key) % buckets.size();
 		buckets[index].Update(key, value);
 	}
 
 	std::optional<Value> LookUp(const Key& key) const
 	{
 		lookups++;
-		auto hash_ = hash(key);
-		auto index = hash_ % buckets.size();
+		auto index = hash(key) % buckets.size();
 		const auto ret = buckets[index].LookUp(key);
 		if (ret.has_value())
 			++hits;

@@ -34,7 +34,7 @@ void ConfigIndexer::generate(std::back_insert_iterator<std::vector<int>> it, con
 HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
 	: ConfigIndexer(4)
 	, pattern(pattern)
-	, half_size(Pow_int(3, PopCount(pattern & HALF)))
+	, half_size(Pow_int(3, popcount(pattern & HALF)))
 {
 	reduced_size = half_size * (half_size + 1) / 2;
 	if (pattern != FlipHorizontal(pattern))
@@ -72,8 +72,8 @@ int HorizontalSymmetric::Index(const Position& pos) const noexcept
 DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
 	: ConfigIndexer(4)
 	, pattern(pattern)
-	, half_size(Pow_int(3, PopCount(pattern & HALF)))
-	, diag_size(Pow_int(3, PopCount(pattern & DIAG)))
+	, half_size(Pow_int(3, popcount(pattern & HALF)))
+	, diag_size(Pow_int(3, popcount(pattern & DIAG)))
 {
 	reduced_size = diag_size * half_size * (half_size + 1) / 2;
 	if (pattern != FlipDiagonal(pattern))
@@ -111,7 +111,7 @@ int DiagonalSymmetric::Index(const Position& pos) const noexcept
 Asymmetric::Asymmetric(BitBoard pattern)
 	: ConfigIndexer(8), pattern(pattern)
 {
-	reduced_size = Pow_int(3, PopCount(pattern));
+	reduced_size = Pow_int(3, popcount(pattern));
 }
 
 std::vector<BitBoard> Asymmetric::Patterns() const

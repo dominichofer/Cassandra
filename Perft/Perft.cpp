@@ -1,7 +1,6 @@
 #include "Perft.h"
 #include "Hashtable.h"
-#include "Core/Machine.h"
-#include "Core/PositionGenerator.h"
+#include "Core/Core.h"
 
 #include <algorithm>
 #include <chrono>
@@ -77,7 +76,7 @@ namespace Basic
 			return perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).front());
+		pos = Play(pos, PossibleMoves(pos).First());
 		return 4 * perft(pos, depth - 1);
 	}
 }
@@ -159,7 +158,7 @@ namespace Unrolled2
 			return perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).front());
+		pos = Play(pos, PossibleMoves(pos).First());
 		return 4 * perft(pos, depth - 1);
 	}
 }
@@ -276,8 +275,7 @@ namespace HashTableMap
 			return Unrolled2::perft(pos, depth);
 
 		// Makes use of 4-fold symmetrie.
-		pos = Play(pos, PossibleMoves(pos).front());
+		pos = Play(pos, PossibleMoves(pos).First());
 		return 4 * perft(pos, depth, BytesRAM);
 	}
 }
-

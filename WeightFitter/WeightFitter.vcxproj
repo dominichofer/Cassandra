@@ -85,14 +85,8 @@
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Engine\Engine.vcxproj">
-      <Project>{24406b09-1801-4af1-98d7-682fc50eba34}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\IO\IO.vcxproj">
       <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Machine\Machine.vcxproj">
-      <Project>{d4a9b7d0-1902-45e2-8f6c-c0e7483ebfba}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Math\Math.vcxproj">
       <Project>{b07cdffe-a2a7-4a06-ae85-c6e8d82528b4}</Project>

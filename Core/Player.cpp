@@ -1,6 +1,6 @@
 #include "Player.h"
-#include "Machine/BitTwiddling.h"
-#include "Machine.h"
+#include "PossibleMoves.h"
+#include "Play.h"
 
 Position RandomPlayer::Play(const Position& pos)
 {
@@ -10,7 +10,7 @@ Position RandomPlayer::Play(const Position& pos)
 
 	auto rnd = std::uniform_int_distribution<std::size_t>(0, possible_moves.size())(rnd_engine);
 	for (std::size_t i = 0; i < rnd; i++)
-		possible_moves.pop_front();
+		possible_moves.RemoveFirst();
 
-	return ::Play(pos, possible_moves.pop_front());
+	return ::Play(pos, possible_moves.First());
 }

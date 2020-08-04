@@ -1,9 +1,10 @@
 #pragma once
+#include <intrin.h>
+#include <bit>
 #include <cassert>
 #include <cstdint>
-#include <cstddef>
-#include <utility>
 #include <compare>
+#include "Bit.h"
 
 enum class Field : uint8_t
 {
@@ -18,53 +19,81 @@ enum class Field : uint8_t
 	invalid
 };
 
-using BitBoard = uint64_t;
-
-[[nodiscard]]
-constexpr bool empty(const BitBoard& bb) noexcept { return bb == 0; }
-
-[[nodiscard]]
-constexpr BitBoard to_BitBoard(Field f) { assert(f != Field::invalid); return 1ULL << static_cast<uint8_t>(f); }
-
-template <class T>
-class Bit
+// An 8x8 board of binary integers.
+class BitBoard
 {
-	T& bb;
-	T mask;
+	uint64_t b;
 public:
-	constexpr Bit(T& bb, unsigned int bit_index) noexcept : bb(bb), mask(1ULL << bit_index) { assert(bit_index < 64); }
-	constexpr Bit(T& bb, Field f) noexcept : Bit(bb, static_cast<unsigned int>(f)) {}
+	constexpr BitBoard() noexcept : b(0) {}
+	constexpr BitBoard(uint64_t b) noexcept : b(b) {}
+	constexpr explicit BitBoard(Field f) noexcept : BitBoard(1ULL << static_cast<int>(f)) {}
 
-	constexpr Bit& operator=(bool x) noexcept { throw; }
+	constexpr static BitBoard HorizontalLine(int i) noexcept { return 0xFFULL << (i * 8); }
+	constexpr static BitBoard VerticalLine(int i) noexcept { return 0x0101010101010101ULL << i; }
+	constexpr static BitBoard Edges() noexcept { return 0xFF818181818181FFULL; }
 
-	constexpr operator bool() const noexcept { return (bb & mask) != 0; }
+	constexpr operator uint64_t() const noexcept { return b; }
+	constexpr BitBoard operator~() const noexcept { return ~b; }
+	BitBoard& operator&=(const BitBoard& o) noexcept { b &= o.b; return *this; }
+	BitBoard& operator|=(const BitBoard& o) noexcept { b |= o.b; return *this; }
+	BitBoard& operator^=(const BitBoard& o) noexcept { b ^= o.b; return *this; }
+	BitBoard& operator&=(uint64_t o) noexcept { b &= o; return *this; }
+	BitBoard& operator|=(uint64_t o) noexcept { b |= o; return *this; }
+	BitBoard& operator^=(uint64_t o) noexcept { b ^= o; return *this; }
+	friend constexpr BitBoard operator&(const BitBoard& l, const BitBoard& r) noexcept { return l.b & r.b; }
+	friend constexpr BitBoard operator|(const BitBoard& l, const BitBoard& r) noexcept { return l.b | r.b; }
+	friend constexpr BitBoard operator^(const BitBoard& l, const BitBoard& r) noexcept { return l.b ^ r.b; }
+	friend constexpr BitBoard operator&(uint64_t l, const BitBoard& r) noexcept { return l & r.b; }
+	friend constexpr BitBoard operator|(uint64_t l, const BitBoard& r) noexcept { return l | r.b; }
+	friend constexpr BitBoard operator^(uint64_t l, const BitBoard& r) noexcept { return l ^ r.b; }
+	friend constexpr BitBoard operator&(const BitBoard& l, uint64_t r) noexcept { return l.b & r; }
+	friend constexpr BitBoard operator|(const BitBoard& l, uint64_t r) noexcept { return l.b | r; }
+	friend constexpr BitBoard operator^(const BitBoard& l, uint64_t r) noexcept { return l.b ^ r; }
+
+	[[nodiscard]] auto operator<=>(const BitBoard&) const noexcept = default;
+
+	[[nodiscard]] bool Get(Field f) const noexcept { return b & (1ULL << static_cast<int>(f)); }
+	[[nodiscard]] bool Get(int x, int y) const noexcept { return b & (1ULL << (x + 8 * y)); }
+
+	constexpr void Set(Field f) noexcept { b |= 1ULL << static_cast<int>(f); }
+	constexpr void Set(int x, int y) noexcept { b |= 1ULL << (x + 8 * y); }
+
+	void Clear(Field f) noexcept { b &= ~(1ULL << static_cast<int>(f)); }
+	void Clear(int x, int y) noexcept { b &= ~(1ULL << (x + 8 * y)); }
+
+	[[nodiscard]] constexpr bool empty() const noexcept { return b == 0; }
+
+	[[nodiscard]] Field FirstSet() const noexcept { return static_cast<Field>(countr_zero(b)); }
+	void ClearFirstSet() noexcept { RemoveLSB(b); }
+
+	void FlipCodiagonal() noexcept;
+	void FlipDiagonal() noexcept;
+	void FlipHorizontal() noexcept;
+	void FlipVertical() noexcept;
 };
-
-constexpr Bit<BitBoard>& Bit<BitBoard>::operator=(bool x) noexcept
-{
-	if (x)
-		bb |= mask;
-	else
-		bb &= ~mask;
-	return *this;
-}
 
 [[nodiscard]] BitBoard FlipCodiagonal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipDiagonal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipHorizontal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipVertical(BitBoard) noexcept;
 
+//constexpr int countl_zero(const BitBoard& b) noexcept { return std::countl_zero(static_cast<uint64_t>(b)); }
+//constexpr int countl_one(const BitBoard& b) noexcept { return std::countl_one(static_cast<uint64_t>(b)); }
+//constexpr int countr_zero(const BitBoard& b) noexcept { return std::countr_zero(static_cast<uint64_t>(b)); }
+//constexpr int countr_one(const BitBoard& b) noexcept { return std::countr_one(static_cast<uint64_t>(b)); }
+//constexpr int popcount(const BitBoard& b) noexcept { return __builtin_popcountll(static_cast<uint64_t>(b)); }
 
 constexpr BitBoard operator""_BitBoard(const char* c, std::size_t size)
 {
 	assert(size == 120);
 
-	BitBoard bb = 0;
-	for (int i = 0; i < 8; i++)
-		for (int j = 0; j < 8; j++)
+	BitBoard bb;
+	for (int y = 0; y < 8; y++)
+		for (int x = 0; x < 8; x++)
 		{
-			char symbol = c[119 - 2 * j - 15 * i];
-			Bit(bb, i * 8 + j) = (symbol != '-');
+			char symbol = c[119 - 15 * y - 2 * x];
+			if (symbol != '-')
+				bb.Set(x, y);
 		}
 	return bb;
 }

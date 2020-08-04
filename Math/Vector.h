@@ -20,6 +20,7 @@ public:
 
 	std::size_t size() const noexcept { return data.size(); }
 	auto push_back(value_type x) noexcept { return data.push_back(x); }
+	void clear() noexcept { data.clear(); }
 
 	value_type& operator[](std::size_t i) noexcept { return data[i]; }
 	value_type& operator()(std::size_t i) noexcept { return data[i]; }

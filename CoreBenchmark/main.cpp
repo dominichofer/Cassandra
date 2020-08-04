@@ -1,7 +1,8 @@
 #include "benchmark/benchmark.h"
-#include "Core/BitBoard.h"
-#include "Core/PositionGenerator.h"
-#include "Core/Search.h"
+#include "Core/Core.h"
+#include <random>
+
+using namespace detail;
 
 void FlipCodiagonal(benchmark::State& state)
 {
@@ -51,6 +52,101 @@ void FlipVertical(benchmark::State& state)
 }
 BENCHMARK(FlipVertical);
 
+void popcount(benchmark::State& state)
+{
+	std::mt19937_64 rng;
+	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
+	const uint64_t b = dist(rng);
+
+	for (auto _ : state)
+		benchmark::DoNotOptimize(popcount(b));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(popcount);
+
+void PossibleMoves_x64(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(detail::PossibleMoves_x64(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(PossibleMoves_x64);
+
+void PossibleMoves_SSE2(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(detail::PossibleMoves_SSE2(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(PossibleMoves_SSE2);
+
+void PossibleMoves_AVX2(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(detail::PossibleMoves_AVX2(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(PossibleMoves_AVX2);
+
+void PossibleMoves(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(PossibleMoves(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(PossibleMoves);
+
+
+void Flips(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	unsigned int move = 0;
+
+	for (auto _ : state)
+	{
+		move = (move + 1) % 64;
+		benchmark::DoNotOptimize(Flips(pos, static_cast<Field>(move)));
+	}
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(Flips);
+
+void CountLastFlip(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	unsigned int move = 0;
+
+	for (auto _ : state)
+	{
+		move = (move + 1) % 64;
+		benchmark::DoNotOptimize(CountLastFlip(pos, static_cast<Field>(move)));
+	}
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(CountLastFlip);
+
+void StableEdges(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(StableEdges(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(StableEdges);
+
+void StableStones(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(StableStones(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(StableStones);
+
 void EvalGameOver(benchmark::State& state)
 {
 	PosGen::Random rnd;
@@ -95,17 +191,5 @@ void PosGen_RandomPlayed(benchmark::State& state)
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PosGen_RandomPlayed)->Arg(0)->Arg(20)->Arg(40)->Arg(60);
-
-void PosGen_All(benchmark::State& state)
-{
-	const uint64_t empty_count = state.range(0);
-	PosGen::All_with_empty_count rnd(empty_count);
-	for (auto _ : state)
-	{
-		std::vector<Position> vec;
-		generate_all(std::back_inserter(vec), rnd);
-	}
-}
-BENCHMARK(PosGen_All)->DenseRange(51, 60);
 
 BENCHMARK_MAIN();

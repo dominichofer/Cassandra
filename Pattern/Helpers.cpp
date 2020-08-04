@@ -15,9 +15,9 @@
 
 
 // Forward declarations
-[[nodiscard]] std::size_t BitScanLSB(uint64_t) noexcept;
+[[nodiscard]] int countr_zero(uint64_t) noexcept;
 void RemoveLSB(uint64_t&) noexcept;
-[[nodiscard]] std::size_t PopCount(uint64_t) noexcept;
+[[nodiscard]] int popcount(uint64_t) noexcept;
 [[nodiscard]] uint64_t PDep(uint64_t src, uint64_t mask) noexcept;
 [[nodiscard]] uint64_t PExt(uint64_t src, uint64_t mask) noexcept;
 
@@ -34,14 +34,14 @@ uint64_t Pow_int(uint64_t base, uint64_t exponent)
 
 class SumPow3Cache
 {
-	std::array<int, (1ULL << 10)> m_cache{}; // 4kB
+	std::array<int, (1ULL << 16)> m_cache{};
 
 	int sum_pow3(uint64_t exp)
 	{
 		int sum = 0;
 		while (exp != 0u)
 		{
-			sum += Pow_int(3, BitScanLSB(exp));
+			sum += Pow_int(3, countr_zero(exp));
 			RemoveLSB(exp);
 		}
 		return sum;
@@ -56,8 +56,6 @@ public:
 };
 
 static SumPow3Cache sum_pow_3_cache;
-
-uint32_t _mm256_reduce_add_epi32(__m256i x) noexcept;
 
 int Index(const Position& pos, const BitBoard pattern) noexcept
 {
@@ -102,7 +100,7 @@ int Index(const Position& pos, const BitBoard pattern) noexcept
 
 void For_each_config(const BitBoard pattern, const std::function<void(Position)>& fkt)
 {
-	const std::size_t size = 1ULL << PopCount(pattern);
+	const std::size_t size = 1ULL << popcount(pattern);
 	for (uint64_t i = 0; i < size; i++)
 	{
 		const BitBoard P{ PDep(i, pattern) };
@@ -113,7 +111,7 @@ void For_each_config(const BitBoard pattern, const std::function<void(Position)>
 
 			const BitBoard O{ PDep(j, pattern) };
 
-			fkt(Position::TryCreate(P, O));
+			fkt(Position::From(P, O));
 		}
 	}
 }

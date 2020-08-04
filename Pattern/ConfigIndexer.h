@@ -1,7 +1,6 @@
 #pragma once
-#include "Core/Position.h"
+#include "Core/Core.h"
 #include "Helpers.h"
-#include "Machine/BitTwiddling.h"
 #include <cstdint>
 #include <memory>
 #include <vector>

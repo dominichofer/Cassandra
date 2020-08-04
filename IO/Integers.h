@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Interval.h"
+#include "Core/Core.h"
 #include <string>
 #include <optional>
 
