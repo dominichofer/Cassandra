@@ -72,7 +72,7 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 }
 
 [[nodiscard]]
-Score EvalGameOver(const Position&);
+Score EvalGameOver(const Position&) noexcept;
 
 [[nodiscard]]
 Position Play(const Position&, Field move, BitBoard flips);
@@ -87,7 +87,7 @@ Position PlayPass(const Position&) noexcept;
 BitBoard Flips(const Position&, Field move) noexcept;
 
 [[nodiscard]]
-int CountLastFlip(const Position&, Field move);
+int CountLastFlip(const Position&, Field move) noexcept;
 
 [[nodiscard]]
 BitBoard StableEdges(const Position&);

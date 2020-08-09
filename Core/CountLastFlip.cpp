@@ -154,7 +154,7 @@ static const uint64 masks[64][4] = {
 };
 
 
-int CountLastFlip(const Position& pos, Field f)
+int CountLastFlip(const Position& pos, Field f) noexcept
 {
 	const auto move = static_cast<uint8>(f);
 	const auto x = move % 8;

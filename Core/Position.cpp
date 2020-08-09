@@ -89,7 +89,7 @@ Position FlipToUnique(Position pos) noexcept
 	return pos;
 }
 
-Score EvalGameOver(const Position& pos)
+Score EvalGameOver(const Position& pos) noexcept
 {
 	const auto Ps = popcount(pos.Player());
 	const auto Os = popcount(pos.Opponent());
