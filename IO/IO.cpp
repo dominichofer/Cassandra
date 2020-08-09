@@ -32,9 +32,9 @@ std::wstring SingleLine(const Position& pos)
 	std::wstring str = L"---------------------------------------------------------------- X";
 	for (int i = 0; i < 64; i++)
 	{
-		if (pos.P.Get(static_cast<Field>(63 - i)))
+		if (pos.Player().Get(static_cast<Field>(63 - i)))
 			str[i] = L'X';
-		else if (pos.O.Get(static_cast<Field>(63 - i)))
+		else if (pos.Opponent().Get(static_cast<Field>(63 - i)))
 			str[i] = L'O';
 	}
 	return str;
@@ -68,9 +68,9 @@ std::wstring MultiLine(const Position& pos)
 	{
 		auto& field = puzzle[22 + 2 * i + 4 * (i / 8)];
 
-		if (pos.P.Get(static_cast<Field>(63 - i)))
+		if (pos.Player().Get(static_cast<Field>(63 - i)))
 			field = 'X';
-		else if (pos.O.Get(static_cast<Field>(63 - i)))
+		else if (pos.Opponent().Get(static_cast<Field>(63 - i)))
 			field = 'O';
 		else if (moves.contains(static_cast<Field>(63 - i)))
 			field = '+';

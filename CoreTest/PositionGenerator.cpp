@@ -29,7 +29,7 @@ class MockPlayer : public Player
 {
 	Position Play(const Position& in) override
 	{
-		return Position{ in.O, in.P | GetLSB(in.Empties()) };
+		return Position{ in.Opponent(), in.Player() | GetLSB(in.Empties()) };
 	}
 };
 

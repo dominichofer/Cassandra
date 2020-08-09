@@ -4,9 +4,9 @@
 Position Play(const Position& pos, Field move, BitBoard flips)
 {
 	assert(flips); // flips something.
-	assert((pos.O & flips) == flips); // only flipping opponent stones.
+	assert((pos.Opponent() & flips) == flips); // only flipping opponent stones.
 
-	return { pos.O ^ flips, pos.P ^ flips ^ BitBoard(move) };
+	return { pos.Opponent() ^ flips, pos.Player() ^ flips ^ BitBoard(move) };
 }
 
 Position Play(const Position& pos, Field move)
@@ -17,7 +17,7 @@ Position Play(const Position& pos, Field move)
 	return Play(pos, move, flips);
 }
 
-Position PlayPass(const Position& pos)
+Position PlayPass(const Position& pos) noexcept
 {
-	return { pos.O, pos.P };
+	return { pos.Opponent(), pos.Player() };
 }

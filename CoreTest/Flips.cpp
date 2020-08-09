@@ -11,9 +11,9 @@ namespace Flips_test
 		while ((x >= 0) && (x < 8) && (y >= 0) && (y < 8)) // In between boundaries
 		{
 			const uint64_t bit = 1ULL << (x + 8 * y);
-			if (pos.O.Get(x, y)) // The field belongs to the opponent
+			if (pos.Opponent().Get(x, y)) // The field belongs to the opponent
 				flips.Set(x, y); // Add to potential flips
-			else if (pos.P.Get(x, y)) // The field belongs to the player
+			else if (pos.Player().Get(x, y)) // The field belongs to the player
 				return flips; // All potential flips become real flips
 			else // The field belongs to no player
 				break; // There are no possible flips

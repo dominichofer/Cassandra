@@ -117,7 +117,7 @@ std::size_t Number_of_unique_realization(const std::vector<Position>& all)
 //		printf(" | %11s", ThousandsSeparator(Number_of_different_positions(all)).c_str());
 //		printf(" | %11s", ThousandsSeparator(Number_of_unique_realization(all)).c_str());
 //		std::transform(std::execution::par, all.begin(), all.end(), all.begin(), 
-//					   [](const Position& pos) { return Position(pos.P | pos.O, 0); });
+//					   [](const Position& pos) { return Position(pos.Player() | pos.Opponent()pponent(), 0); });
 //		std::sort(std::execution::par, all.begin(), all.end());
 //		printf(" | %11s", ThousandsSeparator(Number_of_different_positions(all)).c_str());
 //		printf(" | %11s", ThousandsSeparator(Number_of_unique_realization(all)).c_str());

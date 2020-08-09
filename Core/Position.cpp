@@ -1,23 +1,23 @@
 #include "Position.h"
 #include "Bit.h"
-#include <algorithm>
+#include "Flips.h"
 
-void Position::FlipCodiagonal() noexcept { P = ::FlipCodiagonal(P); O = ::FlipCodiagonal(O); }
-void Position::FlipDiagonal  () noexcept { P = ::FlipDiagonal  (P); O = ::FlipDiagonal  (O); }
-void Position::FlipHorizontal() noexcept { P = ::FlipHorizontal(P); O = ::FlipHorizontal(O); }
-void Position::FlipVertical  () noexcept { P = ::FlipVertical  (P); O = ::FlipVertical  (O); }
+void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
+void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
+void Position::FlipHorizontal() noexcept { P.FlipHorizontal(); O.FlipHorizontal(); }
+void Position::FlipVertical  () noexcept { P.FlipVertical  (); O.FlipVertical  (); }
 
 void Position::FlipToUnique() noexcept
 {
 	Position candidate = *this;
 	Position min = candidate;
-	candidate.FlipVertical();		if (candidate < min) min = std::min(min, candidate);
-	candidate.FlipHorizontal();		if (candidate < min) min = std::min(min, candidate);
-	candidate.FlipVertical();		if (candidate < min) min = std::min(min, candidate);
-	candidate.FlipCodiagonal();		if (candidate < min) min = std::min(min, candidate);
-	candidate.FlipVertical();		if (candidate < min) min = std::min(min, candidate);
-	candidate.FlipHorizontal();		if (candidate < min) min = std::min(min, candidate);
-	candidate.FlipVertical();		if (candidate < min) min = std::min(min, candidate);
+	candidate.FlipVertical();		if (candidate < min) min = candidate;
+	candidate.FlipHorizontal();		if (candidate < min) min = candidate;
+	candidate.FlipVertical();		if (candidate < min) min = candidate;
+	candidate.FlipCodiagonal();		if (candidate < min) min = candidate;
+	candidate.FlipVertical();		if (candidate < min) min = candidate;
+	candidate.FlipHorizontal();		if (candidate < min) min = candidate;
+	candidate.FlipVertical();		if (candidate < min) min = candidate;
 	*this = min;
 }
 
@@ -47,17 +47,11 @@ Position Position::StartETH()
 		"- - - - - - - -"_pos;
 }
 
-
-int Position::EmptyCount() const
-{
-	return popcount(Empties());
-}
-
-uint64_t Position::ParityQuadrants() const
+BitBoard Position::ParityQuadrants() const
 {
 	// 4 x SHIFT, 4 x XOR, 1 x AND, 1 x NOT, 1x OR, 1 x MUL
 	// = 12 OPs
-	uint64_t E = Empties();
+	BitBoard E = Empties();
 	E ^= E >> 1;
 	E ^= E >> 2;
 	E ^= E >> 8;
@@ -98,8 +92,8 @@ Position FlipToUnique(Position pos) noexcept
 
 Score EvalGameOver(const Position& pos)
 {
-	const auto Ps = popcount(pos.P);
-	const auto Os = popcount(pos.O);
+	const auto Ps = popcount(pos.Player());
+	const auto Os = popcount(pos.Opponent());
 	if (Ps > Os)
 		return 64 - 2 * Os;
 	if (Ps < Os)

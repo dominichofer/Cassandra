@@ -22,17 +22,18 @@ enum class Field : uint8_t
 // An 8x8 board of binary integers.
 class BitBoard
 {
-	uint64_t b;
+	uint64_t b{};
 public:
-	constexpr BitBoard() noexcept : b(0) {}
+	constexpr BitBoard() noexcept = default;
 	constexpr BitBoard(uint64_t b) noexcept : b(b) {}
 	constexpr explicit BitBoard(Field f) noexcept : BitBoard(1ULL << static_cast<int>(f)) {}
 
-	constexpr static BitBoard HorizontalLine(int i) noexcept { return 0xFFULL << (i * 8); }
-	constexpr static BitBoard VerticalLine(int i) noexcept { return 0x0101010101010101ULL << i; }
-	constexpr static BitBoard Edges() noexcept { return 0xFF818181818181FFULL; }
+	//constexpr static BitBoard HorizontalLine(int i) noexcept { return 0xFFULL << (i * 8); }
+	//constexpr static BitBoard VerticalLine(int i) noexcept { return 0x0101010101010101ULL << i; }
+	//constexpr static BitBoard Edges() noexcept { return 0xFF818181818181FFULL; }
 
 	constexpr operator uint64_t() const noexcept { return b; }
+
 	constexpr BitBoard operator~() const noexcept { return ~b; }
 	BitBoard& operator&=(const BitBoard& o) noexcept { b &= o.b; return *this; }
 	BitBoard& operator|=(const BitBoard& o) noexcept { b |= o.b; return *this; }

@@ -73,15 +73,6 @@ void PossibleMoves_x64(benchmark::State& state)
 }
 BENCHMARK(PossibleMoves_x64);
 
-void PossibleMoves_SSE2(benchmark::State& state)
-{
-	auto pos = PosGen::Random{}();
-	for (auto _ : state)
-		benchmark::DoNotOptimize(detail::PossibleMoves_SSE2(pos));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PossibleMoves_SSE2);
-
 void PossibleMoves_AVX2(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();

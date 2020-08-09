@@ -59,16 +59,16 @@ static SumPow3Cache sum_pow_3_cache;
 
 int Index(const Position& pos, const BitBoard pattern) noexcept
 {
-	return sum_pow_3_cache.SumPow3(PExt(pos.P, pattern))
-		+ sum_pow_3_cache.SumPow3(PExt(pos.O, pattern)) * 2;
+	return sum_pow_3_cache.SumPow3(PExt(pos.Player(), pattern))
+		+ sum_pow_3_cache.SumPow3(PExt(pos.Opponent(), pattern)) * 2;
 
 	// 8 x AND, 4 x SHIFT, 4 x CMP, 5 x ADD
 	// 1 x _mm256_reduce_add_epi32 (6 OPs)
 	// = 27 OPs
 
-	//auto P_1 = _mm256_set1_epi32(PExt(pos.P, pattern));
+	//auto P_1 = _mm256_set1_epi32(PExt(pos.Player(), pattern));
 	//auto P_2 = P_1;
-	//auto O_1 = _mm256_set1_epi32(PExt(pos.O, pattern));
+	//auto O_1 = _mm256_set1_epi32(PExt(pos.Opponent(), pattern));
 	//auto O_2 = O_1;
 	//const auto iota_1 = _mm256_set_epi32(0, 1, 2, 3, 4, 5, 6, 7);
 	//const auto iota_2 = _mm256_set_epi32(8, 9, 10, 11, 12, 13, 14, 15);

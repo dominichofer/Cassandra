@@ -24,7 +24,6 @@
     <ClInclude Include="Stability.h" />
     <ClInclude Include="Play.h" />
     <ClInclude Include="Core.h" />
-    <ClInclude Include="Score.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PositionGenerator.h" />

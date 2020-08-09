@@ -321,10 +321,23 @@ if __name__ == '__main__':
     #    for width in [16,32,64,128,256]:
     #        for lr in [0.01, 0.02, 0.05, 0.1]:
     #            results.append(Train(25, 20, lr, 0, ResNet([width]*n, ResNet_Basic), test, train, "ResNet_Basic", width, n-1))
-
-    for width in [128]:
-        for n in range(7, 11):
-            results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), ResNet_Basic), test, train, "ResNet_Basic", width, n))
+    
+    #for width in [64]:
+    #    for n in range(14, 15):
+    #        for lr in [0.01, 0.02, 0.1]:
+    #            results.append(Train(25, 20, lr, 0, ResNet([width]*(n+1), ResNet_Bottleneck), test, train, "ResNet_Bottleneck", width, n))
+          
+    #for width in [64]:
+    #    for n in range(11, 21):
+    #        results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
+            
+    #for width in [128]:
+    #    for n in range(1, 11):
+    #        results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
+            
+    for width in [256]:
+        for n in range(2, 6):
+            results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
 
 
     #for n in range(2, 22):

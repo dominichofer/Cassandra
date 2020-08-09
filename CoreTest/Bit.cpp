@@ -29,4 +29,12 @@ namespace Bit
 		ASSERT_EQ(popcount(3), 2u);
 		ASSERT_EQ(popcount(0xFFFFFFFFFFFFFFFFULL), 64u);
 	}
+
+	TEST(reduce_or, samples)
+	{
+		ASSERT_EQ(reduce_or(int64x4{}), 0);
+		ASSERT_EQ(reduce_or(int64x4{1,2,4,8}), 1|2|4|8);
+		ASSERT_EQ(reduce_or(int64x4{-1,2,4,8}), -1);
+	}
+	
 }

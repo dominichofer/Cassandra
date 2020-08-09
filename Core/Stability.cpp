@@ -2,6 +2,7 @@
 #include "Bit.h"
 #include "Flips.h"
 #include "Moves.h"
+#include "Play.h"
 #include <array>
 
 class StabilityAnalyzer
@@ -40,15 +41,13 @@ StabilityAnalyzer::StabilityAnalyzer()
 				uint8_t stables = 0xFF;
 				for (const auto move : Moves(~(p | o) & 0xFFULL))
 				{
-					auto A_flips = Flips(A, move);
-					auto B_flips = Flips(B, move);
-					Position A_next{ A.O ^ A_flips, A.P ^ A_flips ^ BitBoard(move) };
-					Position B_next{ B.O ^ B_flips, B.P ^ B_flips ^ BitBoard(move) };
-					uint64_t A_unchanged = ~(A_flips ^ BitBoard(move));
-					uint64_t B_unchanged = ~(B_flips ^ BitBoard(move));
+					Position A_next = Play(A, move);
+					Position B_next = Play(B, move);
+					uint64_t A_unchanged = ~(A.Player() ^ A_next.Opponent());
+					uint64_t B_unchanged = ~(B.Player() ^ B_next.Opponent());
 
-					stables &= edge_stables[A_next.O][A_next.P] & A_unchanged;
-					stables &= edge_stables[B_next.O][B_next.P] & B_unchanged;
+					stables &= edge_stables[A_next.Opponent()][A_next.Player()] & A_unchanged;
+					stables &= edge_stables[B_next.Opponent()][B_next.Player()] & B_unchanged;
 
 					if (stables == 0)
 						break;
@@ -64,10 +63,10 @@ BitBoard StabilityAnalyzer::StableEdges(const Position& pos) const
 	constexpr uint64_t L0_Left = 0x8080808080808080ULL;
 	constexpr uint64_t L0_Right = 0x0101010101010101ULL;
 
-	const auto stable_L0_Bottom = edge_stables[static_cast<uint8_t>(pos.P)][static_cast<uint8_t>(pos.O)];
-	const auto stable_L0_Top = static_cast<uint64_t>(edge_stables[pos.P >> 56][pos.O >> 56]) << 56;
-	const auto stable_L0_Left  = PDep(edge_stables[PExt(pos.P, L0_Left )][PExt(pos.O, L0_Left )], L0_Left );
-	const auto stable_L0_Right = PDep(edge_stables[PExt(pos.P, L0_Right)][PExt(pos.O, L0_Right)], L0_Right);
+	const auto stable_L0_Bottom = edge_stables[static_cast<uint8_t>(pos.Player())][static_cast<uint8_t>(pos.Opponent())];
+	const auto stable_L0_Top = static_cast<uint64_t>(edge_stables[pos.Player() >> 56][pos.Opponent() >> 56]) << 56;
+	const auto stable_L0_Left  = PDep(edge_stables[PExt(pos.Player(), L0_Left )][PExt(pos.Opponent(), L0_Left )], L0_Left );
+	const auto stable_L0_Right = PDep(edge_stables[PExt(pos.Player(), L0_Right)][PExt(pos.Opponent(), L0_Right)], L0_Right);
 
 	return stable_L0_Bottom | stable_L0_Top | stable_L0_Left | stable_L0_Right;
 }
@@ -80,8 +79,8 @@ BitBoard StabilityAnalyzer::StableStones(const Position& pos) const
 	const uint64_t full_v = FullLineVertival(discs);
 	const uint64_t full_d = FullLineDiagonal(discs);
 	const uint64_t full_c = FullLineCodiagonal(discs);
-	uint64_t new_stables = StableEdges(pos) & pos.O;
-	new_stables |= full_h & full_v & full_d & full_c & pos.O & 0x007E7E7E7E7E7E00ULL;
+	uint64_t new_stables = StableEdges(pos) & pos.Opponent();
+	new_stables |= full_h & full_v & full_d & full_c & pos.Opponent() & 0x007E7E7E7E7E7E00ULL;
 
 	uint64_t stables = 0;
 	while (new_stables & ~stables)
@@ -91,7 +90,7 @@ BitBoard StabilityAnalyzer::StableStones(const Position& pos) const
 		const uint64_t stables_v = (stables >> 8) | (stables << 8) | full_v;
 		const uint64_t stables_d = (stables >> 9) | (stables << 9) | full_d;
 		const uint64_t stables_c = (stables >> 7) | (stables << 7) | full_c;
-		new_stables = stables_h & stables_v & stables_d & stables_c & pos.O & 0x007E7E7E7E7E7E00ULL;
+		new_stables = stables_h & stables_v & stables_d & stables_c & pos.Opponent() & 0x007E7E7E7E7E7E00ULL;
 	}
 	return stables;
 }

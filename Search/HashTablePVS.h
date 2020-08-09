@@ -71,8 +71,8 @@ struct HashTablePVS : public HashTable<Position, PVS_Info, OneNode>
 		: HashTable(buckets, 
 			[](const Position& key)
 			{ 
-				uint64_t P = key.P;
-				uint64_t O = key.O;
+				uint64_t P = key.Player();
+				uint64_t O = key.Opponent();
 				P ^= P >> 36;
 				O ^= O >> 21;
 				return P * O; 

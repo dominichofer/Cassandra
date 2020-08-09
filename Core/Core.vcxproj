@@ -92,7 +92,6 @@
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="PossibleMoves.h" />
-    <ClInclude Include="Score.h" />
     <ClInclude Include="Stability.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

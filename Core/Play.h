@@ -8,4 +8,4 @@ Position Play(const Position&, Field move, BitBoard flips);
 Position Play(const Position&, Field move);
 
 [[nodiscard]]
-Position PlayPass(const Position&);
+Position PlayPass(const Position&) noexcept;

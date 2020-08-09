@@ -165,7 +165,7 @@ namespace Unrolled2
 
 namespace HashTableMap
 {
-	bool operator<(Position l, Position r) noexcept { return (l.P == r.P) ? (l.O < r.O) : (l.P < r.P); }
+	bool operator<(Position l, Position r) noexcept { return (l.Player() == r.Player()) ? (l.Opponent() < r.Opponent()) : (l.Player() < r.Player()); }
 
 	void fill(Position pos, const uint8_t depth, std::vector<Position>& all)
 	{

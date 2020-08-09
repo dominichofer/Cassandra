@@ -1,6 +1,6 @@
 #include "PositionGenerator.h"
-#include "Bit.h"
 #include "PossibleMoves.h"
+#include "Bit.h"
 #include "Play.h"
 
 Position PosGen::Random::operator()()
@@ -11,8 +11,8 @@ Position PosGen::Random::operator()()
 	//  50% chance to be empty.
 
 	auto rnd = [this]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
-	BitBoard a = rnd();
-	BitBoard b = rnd();
+	BitBoard a = rnd() & mask;
+	BitBoard b = rnd() & mask;
 	return { a & ~b, b & ~a };
 }
 
@@ -73,7 +73,7 @@ std::optional<Position> PosGen::All_after_nth_ply::operator()()
 		{
 			for (std::size_t i = 0; i < plies_per_pass; i++)
 				stack.push({ next, Moves{0} });
-			next = PlayPass(next);
+			Position next = PlayPass(next);
 			possible_moves = PossibleMoves(next);
 			if (stack.size() == plies && !possible_moves.empty())
 				return next;
@@ -121,7 +121,7 @@ std::optional<Position> PosGen::All_with_empty_count::operator()()
 		auto possible_moves = PossibleMoves(next);
 		if (possible_moves.empty())
 		{ // next has no possible moves. It will be skipped.
-			next = PlayPass(next);
+			Position next = PlayPass(next);
 			possible_moves = PossibleMoves(next);
 		}
 		stack.push({ next, possible_moves });
@@ -139,24 +139,24 @@ PosGen::Played::Played(Player& first, Player& second, std::size_t empty_count, P
 
 Position PosGen::Played::operator()()
 {
-	Position pos_1 = start;
-	if (pos_1.EmptyCount() == empty_count)
-		return pos_1;
+	Position pos = start;
+	if (pos.EmptyCount() == empty_count)
+		return pos;
 
 	while (true)
 	{
-		Position old = pos_1;
+		Position old = pos;
 
-		Position pos_2 = first.Play(pos_1);
-		if (pos_2.EmptyCount() == empty_count)
-			return pos_2;
+		pos = first.Play(pos);
+		if (pos.EmptyCount() == empty_count)
+			return pos;
 
-		pos_1 = second.Play(pos_2);
-		if (pos_1.EmptyCount() == empty_count)
-			return pos_1;
+		pos = second.Play(pos);
+		if (pos.EmptyCount() == empty_count)
+			return pos;
 
-		if (old == pos_1) // both players passed
-			pos_1 = start; // restart
+		if (old == pos) // both players passed
+			pos = start; // restart
 	}
 }
 

@@ -2,4 +2,4 @@
 #include "Position.h"
 
 [[nodiscard]]
-BitBoard Flips(const Position&, Field move);
+BitBoard Flips(const Position&, Field move) noexcept;

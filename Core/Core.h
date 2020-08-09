@@ -11,5 +11,4 @@
 #include "Position.h"
 #include "PositionGenerator.h"
 #include "PossibleMoves.h"
-#include "Score.h"
 #include "Stability.h"

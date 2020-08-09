@@ -36,7 +36,7 @@ Score NegaMax::Eval_0(const Position& pos)
 
 Score NegaMax::Eval_1(const Position& pos, const Field move1)
 {
-	const Score score = static_cast<Score>(2 * popcount(pos.P)) - 63; // == popcount(pos.P) - popcount(pos.O)
+	const Score score = static_cast<Score>(2 * popcount(pos.Player())) - 63; // == popcount(pos.P) - popcount(pos.O)
 
 	if (const auto diff = CountLastFlip(pos, move1))
 	{

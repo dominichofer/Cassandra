@@ -61,8 +61,8 @@ struct BigNodeHashTable : public HashTable<BigNode::key_type, BigNode::value_typ
 	BigNodeHashTable(uint64_t buckets)
 		: HashTable(buckets,
 			[](const HashTable::key_type& key) {
-				uint64_t P = key.pos.P;
-				uint64_t O = key.pos.O;
+				uint64_t P = key.pos.Player();
+				uint64_t O = key.pos.Opponent();
 				P ^= P >> 36;
 				O ^= O >> 21;
 				return (P * O + key.depth);

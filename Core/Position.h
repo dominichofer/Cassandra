@@ -1,54 +1,21 @@
 #pragma once
 #include "BitBoard.h"
-#include "Score.h"
+#include "Moves.h"
 #include <cstdint>
 #include <cstddef>
 #include <compare>
 
-class Position;
+using Score = int;
 
-class BitBoard_property
-{
-	friend class Position;
-	BitBoard value{};
-
-	constexpr BitBoard& operator=(const BitBoard& novum) { return value = novum; }
-public:
-	constexpr BitBoard_property() noexcept = default;
-	constexpr BitBoard_property(const BitBoard& value) noexcept : value(value) {}
-
-	[[nodiscard]] auto operator<=>(const BitBoard_property&) const noexcept = default;
-
-	[[nodiscard]] constexpr operator BitBoard const&() const { return value; }
-	[[nodiscard]] constexpr operator uint64_t() const { return value; }
-
-	[[nodiscard]] bool Get(Field f) const noexcept { return value.Get(f); }
-	[[nodiscard]] bool Get(int x, int y) const noexcept { return value.Get(x, y); }
-};
-
-constexpr BitBoard operator&(const BitBoard_property& l, const BitBoard_property& r) noexcept { return static_cast<BitBoard>(l) & static_cast<BitBoard>(r); }
-constexpr BitBoard operator|(const BitBoard_property& l, const BitBoard_property& r) noexcept { return static_cast<BitBoard>(l) | static_cast<BitBoard>(r); }
-constexpr BitBoard operator^(const BitBoard_property& l, const BitBoard_property& r) noexcept { return static_cast<BitBoard>(l) ^ static_cast<BitBoard>(r); }
-constexpr BitBoard operator&(const BitBoard_property& l, uint64_t r) noexcept { return static_cast<BitBoard>(l) & r; }
-constexpr BitBoard operator|(const BitBoard_property& l, uint64_t r) noexcept { return static_cast<BitBoard>(l) | r; }
-constexpr BitBoard operator^(const BitBoard_property& l, uint64_t r) noexcept { return static_cast<BitBoard>(l) ^ r; }
-constexpr BitBoard operator&(const BitBoard_property& l, const BitBoard& r) noexcept { return static_cast<BitBoard>(l) & r; }
-constexpr BitBoard operator|(const BitBoard_property& l, const BitBoard& r) noexcept { return static_cast<BitBoard>(l) | r; }
-constexpr BitBoard operator^(const BitBoard_property& l, const BitBoard& r) noexcept { return static_cast<BitBoard>(l) ^ r; }
-constexpr BitBoard operator&(uint64_t l, const BitBoard_property& r) noexcept { return l & static_cast<BitBoard>(r); }
-constexpr BitBoard operator|(uint64_t l, const BitBoard_property& r) noexcept { return l | static_cast<BitBoard>(r); }
-constexpr BitBoard operator^(uint64_t l, const BitBoard_property& r) noexcept { return l ^ static_cast<BitBoard>(r); }
-constexpr BitBoard operator&(const BitBoard& l, const BitBoard_property& r) noexcept { return l & static_cast<BitBoard>(r); }
-constexpr BitBoard operator|(const BitBoard& l, const BitBoard_property& r) noexcept { return l | static_cast<BitBoard>(r); }
-constexpr BitBoard operator^(const BitBoard& l, const BitBoard_property& r) noexcept { return l ^ static_cast<BitBoard>(r); }
-
+constexpr Score min_score{ -64 };
+constexpr Score max_score{ +64 };
+constexpr Score infinity{ +66 };
 
 // A board where every field is either taken by exactly one player or is empty.
 class Position
 {
+	BitBoard P{}, O{};
 public:
-	BitBoard_property P{}, O{};
-
 	constexpr Position() noexcept = default;
 	constexpr Position(BitBoard P, BitBoard O) noexcept : P(P), O(O) { assert((P & O).empty()); }
 
@@ -62,8 +29,10 @@ public:
 		throw;
 	}
 
-	[[nodiscard]]
-	constexpr auto operator<=>(const Position&) const noexcept = default;
+	[[nodiscard]] constexpr auto operator<=>(const Position&) const noexcept = default;
+
+	[[nodiscard]] BitBoard Player() const noexcept { return P; }
+	[[nodiscard]] BitBoard Opponent() const noexcept { return O; }
 
 	void FlipCodiagonal() noexcept;
 	void FlipDiagonal() noexcept;
@@ -71,11 +40,11 @@ public:
 	void FlipVertical() noexcept;
 	void FlipToUnique() noexcept;
 
-	BitBoard Discs() const { return P | O; }
-	BitBoard Empties() const { return ~Discs(); }
-	int EmptyCount() const;
-	
-	uint64_t ParityQuadrants() const;
+	[[nodiscard]] BitBoard Discs() const { return P | O; }
+	[[nodiscard]] BitBoard Empties() const { return ~Discs(); }
+	[[nodiscard]] int EmptyCount() const { return popcount(Empties()); }
+
+	[[nodiscard]] BitBoard ParityQuadrants() const;
 };
 
 [[nodiscard]] Position FlipCodiagonal(Position) noexcept;
@@ -102,4 +71,5 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 	return { P, O };
 }
 
+[[nodiscard]]
 Score EvalGameOver(const Position&);

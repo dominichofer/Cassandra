@@ -16,9 +16,10 @@ namespace PosGen
 	// Generator of random Position.
 	class Random
 	{
+		BitBoard mask;
 		std::mt19937_64 rnd_engine;
 	public:
-		Random(uint64_t seed = std::random_device{}()) : rnd_engine(seed) {}
+		Random(uint64_t seed = std::random_device{}(), BitBoard exclude = {}) : mask(~exclude), rnd_engine(seed) {}
 
 		Position operator()();
 	};
