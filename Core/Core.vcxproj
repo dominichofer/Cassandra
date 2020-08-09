@@ -71,7 +71,6 @@
     <ClCompile Include="Bit.cpp" />
     <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Flips.cpp" />
-    <ClCompile Include="Play.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
@@ -83,16 +82,11 @@
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Core.h" />
-    <ClInclude Include="CountLastFlip.h" />
-    <ClInclude Include="Flips.h" />
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="Moves.h" />
-    <ClInclude Include="Play.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
-    <ClInclude Include="PossibleMoves.h" />
-    <ClInclude Include="Stability.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,5 @@
 #include "Position.h"
 #include "Bit.h"
-#include "Flips.h"
 
 void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
 void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
@@ -99,4 +98,24 @@ Score EvalGameOver(const Position& pos)
 	if (Ps < Os)
 		return 2 * Ps - 64;
 	return 0;
+}
+
+Position Play(const Position& pos, Field move, BitBoard flips)
+{
+	assert((pos.Opponent() & flips) == flips); // only flipping opponent stones.
+
+	return { pos.Opponent() ^ flips, pos.Player() ^ flips ^ BitBoard(move) };
+}
+
+Position Play(const Position& pos, Field move)
+{
+	assert(pos.Empties().Get(move)); // move field is free.
+
+	const auto flips = Flips(pos, move);
+	return Play(pos, move, flips);
+}
+
+Position PlayPass(const Position& pos) noexcept
+{
+	return { pos.Opponent(), pos.Player() };
 }

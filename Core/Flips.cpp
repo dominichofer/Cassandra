@@ -1,4 +1,4 @@
-#include "Flips.h"
+#include "Position.h"
 #include "Bit.h"
 #include <array>
 

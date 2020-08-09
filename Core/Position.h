@@ -73,3 +73,43 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 
 [[nodiscard]]
 Score EvalGameOver(const Position&);
+
+[[nodiscard]]
+Position Play(const Position&, Field move, BitBoard flips);
+
+[[nodiscard]]
+Position Play(const Position&, Field move);
+
+[[nodiscard]]
+Position PlayPass(const Position&) noexcept;
+
+[[nodiscard]]
+BitBoard Flips(const Position&, Field move) noexcept;
+
+[[nodiscard]]
+int CountLastFlip(const Position&, Field move);
+
+[[nodiscard]]
+BitBoard StableEdges(const Position&);
+
+// Stable stones of the opponent.
+[[nodiscard]]
+BitBoard StableStones(const Position&);
+
+[[nodiscard]]
+Moves PossibleMoves(const Position&) noexcept;
+
+namespace detail
+{
+	#if defined(__AVX512F__)
+	[[nodiscard]]
+	Moves PossibleMoves_AVX512(const Position&) noexcept;
+	#endif
+	#if defined(__AVX2__)
+	[[nodiscard]]
+	Moves PossibleMoves_AVX2(const Position&) noexcept;
+	#endif
+
+	[[nodiscard]]
+	Moves PossibleMoves_x64(const Position&) noexcept;
+}

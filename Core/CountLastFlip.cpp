@@ -1,4 +1,4 @@
-#include "CountLastFlip.h"
+#include "Position.h"
 #include "Bit.h"
 
 /** precomputed count flip array */

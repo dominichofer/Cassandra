@@ -1,6 +1,4 @@
 #include "Player.h"
-#include "PossibleMoves.h"
-#include "Play.h"
 
 Position RandomPlayer::Play(const Position& pos)
 {

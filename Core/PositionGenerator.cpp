@@ -1,7 +1,5 @@
 #include "PositionGenerator.h"
-#include "PossibleMoves.h"
 #include "Bit.h"
-#include "Play.h"
 
 Position PosGen::Random::operator()()
 {

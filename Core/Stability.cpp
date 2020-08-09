@@ -1,8 +1,6 @@
-#include "Stability.h"
+#include "Position.h"
 #include "Bit.h"
-#include "Flips.h"
 #include "Moves.h"
-#include "Play.h"
 #include <array>
 
 class StabilityAnalyzer

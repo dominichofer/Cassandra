@@ -1,4 +1,4 @@
-#include "PossibleMoves.h"
+#include "Position.h"
 
 Moves PossibleMoves(const Position& pos) noexcept
 {

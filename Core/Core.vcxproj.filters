@@ -7,7 +7,6 @@
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
     <ClCompile Include="Stability.cpp" />
-    <ClCompile Include="Play.cpp" />
     <ClCompile Include="Bit.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
@@ -18,11 +17,6 @@
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="CountLastFlip.h" />
-    <ClInclude Include="Flips.h" />
-    <ClInclude Include="PossibleMoves.h" />
-    <ClInclude Include="Stability.h" />
-    <ClInclude Include="Play.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Player.h" />
