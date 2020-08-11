@@ -130,7 +130,7 @@ void Test_LegalWeights(BitBoard pattern)
 		std::vector<int> configs;
 		config_indexer->generate(std::back_inserter(configs), pos);
 		float sum = 0;
-		for (auto it : configs)
+		for (const auto& it : configs)
 			sum += compressed[it];
 
 		auto score = evaluator->Eval(pos);

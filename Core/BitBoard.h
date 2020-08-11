@@ -67,7 +67,7 @@ public:
 	friend constexpr BitBoard operator|(const BitBoard& l, uint64_t r) noexcept { return l.b | r; }
 	friend constexpr BitBoard operator^(const BitBoard& l, uint64_t r) noexcept { return l.b ^ r; }
 
-	[[nodiscard]] auto operator<=>(const BitBoard&) const noexcept = default;
+	[[nodiscard]] constexpr auto operator<=>(const BitBoard&) const noexcept = default;
 
 	[[nodiscard]] bool Get(Field f) const noexcept { return b & (1ULL << static_cast<int>(f)); }
 	[[nodiscard]] bool Get(int x, int y) const noexcept { return b & (1ULL << (x + 8 * y)); }

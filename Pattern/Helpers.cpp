@@ -1,7 +1,7 @@
 #include "Helpers.h"
 #include <array>
 
-uint64_t Pow_int(uint64_t base, uint64_t exponent)
+int Pow_int(int base, unsigned int exponent)
 {
 	if (exponent == 0)
 		return 1;
@@ -15,10 +15,10 @@ class SumPow3Cache
 {
 	std::array<int, (1ULL << 16)> m_cache{};
 
-	int sum_pow3(uint64_t exp)
+	static int sum_pow3(uint64_t exp)
 	{
 		int sum = 0;
-		while (exp != 0u)
+		while (exp != 0U)
 		{
 			sum += Pow_int(3, countr_zero(exp));
 			RemoveLSB(exp);
@@ -31,7 +31,7 @@ public:
 		for (std::size_t i = 0; i < std::size(m_cache); i++)
 			m_cache[i] = sum_pow3(i);
 	}
-	uint64_t SumPow3(uint64_t exp) const noexcept { return m_cache[exp]; }
+	[[nodiscard]] uint64_t SumPow3(uint64_t exp) const noexcept { return m_cache[exp]; }
 };
 
 static SumPow3Cache sum_pow_3_cache;

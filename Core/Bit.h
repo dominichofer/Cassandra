@@ -78,12 +78,12 @@ namespace detail
 		[[nodiscard]] operator __m128i() const noexcept { return reg; }
 
 		[[nodiscard]] T operator~() const noexcept { return andnot(reg, T{-1}); }
-		friend [[nodiscard]] T operator-(T v) noexcept { return T{} - v; }
+		[[nodiscard]] friend T operator-(T v) noexcept { return T{} - v; }
 
 		[[nodiscard]] T operator&(T v) const noexcept { return _mm_and_si128(reg, v); }
 		[[nodiscard]] T operator|(T v) const noexcept { return _mm_or_si128(reg, v); }
 		[[nodiscard]] T operator^(T v) const noexcept { return _mm_xor_si128(reg, v); }
-		friend [[nodiscard]] T andnot(T l, T r) noexcept { return _mm_andnot_si128(l, r); }
+		[[nodiscard]] friend T andnot(T l, T r) noexcept { return _mm_andnot_si128(l, r); }
 
 		T& operator+=(T v) noexcept { reg = static_cast<T&>(*this) + v; return static_cast<T&>(*this); }
 		T& operator-=(T v) noexcept { reg = static_cast<T&>(*this) - v; return static_cast<T&>(*this); }
@@ -108,12 +108,12 @@ namespace detail
 		[[nodiscard]] operator __m256i() const noexcept { return reg; }
 
 		[[nodiscard]] T operator~() const noexcept { return andnot(reg, T{-1}); }
-		friend [[nodiscard]] T operator-(T v) noexcept { return T{} - v; }
+		[[nodiscard]] friend T operator-(T v) noexcept { return T{} - v; }
 
 		[[nodiscard]] T operator&(T v) const noexcept { return _mm256_and_si256(reg, v); }
 		[[nodiscard]] T operator|(T v) const noexcept { return _mm256_or_si256(reg, v); }
 		[[nodiscard]] T operator^(T v) const noexcept { return _mm256_xor_si256(reg, v); }
-		friend [[nodiscard]] T andnot(T l, T r) noexcept { return _mm256_andnot_si256(l, r); }
+		[[nodiscard]] friend T andnot(T l, T r) noexcept { return _mm256_andnot_si256(l, r); }
 
 		T& operator+=(T v) noexcept { reg = static_cast<T&>(*this) + v; return static_cast<T&>(*this); }
 		T& operator-=(T v) noexcept { reg = static_cast<T&>(*this) - v; return static_cast<T&>(*this); }

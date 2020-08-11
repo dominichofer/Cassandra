@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <functional>
 
-uint64_t Pow_int(uint64_t base, uint64_t exponent);
+int Pow_int(int base, unsigned int exponent);
 
 int Index(const Position&, BitBoard pattern) noexcept;
 
@@ -41,6 +41,6 @@ public:
 
 	[[nodiscard]] Iterator begin() const { return Iterator(pattern); }
 	[[nodiscard]] Iterator cbegin() const { return Iterator(pattern); }
-	[[nodiscard]] Iterator end() const { return {}; }
-	[[nodiscard]] Iterator cend() const { return {}; }
+	[[nodiscard]] static Iterator end() { return {}; }
+	[[nodiscard]] static Iterator cend() { return {}; }
 };
