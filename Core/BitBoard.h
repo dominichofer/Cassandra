@@ -28,9 +28,25 @@ public:
 	constexpr BitBoard(uint64_t b) noexcept : b(b) {}
 	constexpr explicit BitBoard(Field f) noexcept : BitBoard(1ULL << static_cast<int>(f)) {}
 
-	//constexpr static BitBoard HorizontalLine(int i) noexcept { return 0xFFULL << (i * 8); }
-	//constexpr static BitBoard VerticalLine(int i) noexcept { return 0x0101010101010101ULL << i; }
-	//constexpr static BitBoard Edges() noexcept { return 0xFF818181818181FFULL; }
+	static constexpr BitBoard Bit(int x, int y) noexcept { return 1ULL << (x + y * 8); }
+	static constexpr BitBoard HorizontalLine(int i) noexcept { return 0xFFULL << (i * 8); }
+	static constexpr BitBoard VerticalLine(int i) noexcept { return 0x0101010101010101ULL << i; }
+	static constexpr BitBoard UpperDiagonalLine(int i) noexcept { return 0x8040201008040201ULL << (i * 8); }
+	static constexpr BitBoard LowerDiagonalLine(int i) noexcept { return 0x8040201008040201ULL >> (i * 8); }
+	static constexpr BitBoard UpperCodiagonalLine(int i) noexcept { return 0x0102040810204080ULL << (i * 8); }
+	static constexpr BitBoard LowerCodiagonalLine(int i) noexcept { return 0x0102040810204080ULL >> (i * 8); }
+	static constexpr BitBoard DiagonalLine(int i) noexcept { return (i > 0) ? UpperDiagonalLine(i) : LowerDiagonalLine(-i); }
+	static constexpr BitBoard CodiagonalLine(int i) noexcept { return (i > 0) ? UpperCodiagonalLine(i) : LowerCodiagonalLine(-i); }
+	static constexpr BitBoard Corners() noexcept { return 0x8100000000000081ULL; }
+	static constexpr BitBoard Edges() noexcept { return 0xFF818181818181FFULL; }
+	static constexpr BitBoard LeftHalf() noexcept { return 0xF0F0F0F0F0F0F0F0ULL; }
+	static constexpr BitBoard RightHalf() noexcept { return 0x0F0F0F0F0F0F0F0FULL; }
+	static constexpr BitBoard UpperHalf() noexcept { return 0xFFFFFFFF00000000ULL; }
+	static constexpr BitBoard LowerHalf() noexcept { return 0x00000000FFFFFFFFULL; }
+	static constexpr BitBoard StrictlyLeftUpper() noexcept { return 0xFEFCF8F0E0C08000ULL; }
+	static constexpr BitBoard StrictlyLeftLower() noexcept { return 0x0080C0E0F0F8FCFEULL; }
+	static constexpr BitBoard StrictlyRighUppert() noexcept { return 0x7F3F1F0F07030100ULL; }
+	static constexpr BitBoard StrictlyRighLowert() noexcept { return 0x000103070F1F3F7FULL; }
 
 	constexpr operator uint64_t() const noexcept { return b; }
 
@@ -64,7 +80,7 @@ public:
 
 	[[nodiscard]] constexpr bool empty() const noexcept { return b == 0; }
 
-	[[nodiscard]] Field FirstSet() const noexcept { return static_cast<Field>(countr_zero(b)); }
+	[[nodiscard]] Field FirstSet() const noexcept { return static_cast<Field>(std::countr_zero(b)); }
 	void ClearFirstSet() noexcept { RemoveLSB(b); }
 
 	void FlipCodiagonal() noexcept;
@@ -78,11 +94,11 @@ public:
 [[nodiscard]] BitBoard FlipHorizontal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipVertical(BitBoard) noexcept;
 
-//constexpr int countl_zero(const BitBoard& b) noexcept { return std::countl_zero(static_cast<uint64_t>(b)); }
-//constexpr int countl_one(const BitBoard& b) noexcept { return std::countl_one(static_cast<uint64_t>(b)); }
-//constexpr int countr_zero(const BitBoard& b) noexcept { return std::countr_zero(static_cast<uint64_t>(b)); }
-//constexpr int countr_one(const BitBoard& b) noexcept { return std::countr_one(static_cast<uint64_t>(b)); }
-//constexpr int popcount(const BitBoard& b) noexcept { return __builtin_popcountll(static_cast<uint64_t>(b)); }
+constexpr int countl_zero(const BitBoard& b) noexcept { return std::countl_zero(static_cast<uint64_t>(b)); }
+constexpr int countl_one(const BitBoard& b) noexcept { return std::countl_one(static_cast<uint64_t>(b)); }
+constexpr int countr_zero(const BitBoard& b) noexcept { return std::countr_zero(static_cast<uint64_t>(b)); }
+constexpr int countr_one(const BitBoard& b) noexcept { return std::countr_one(static_cast<uint64_t>(b)); }
+constexpr int popcount(const BitBoard& b) noexcept { return std::popcount(static_cast<uint64_t>(b)); }
 
 constexpr BitBoard operator""_BitBoard(const char* c, std::size_t size)
 {

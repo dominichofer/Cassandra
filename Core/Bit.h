@@ -26,6 +26,9 @@
 #include <cstdint>
 #include <bit>
 
+//using std::countr_zero;
+//using std::popcount;
+
 using int8 = signed char;
 using int16 = short;
 using int32 = int;
@@ -185,32 +188,6 @@ public:
 	return static_cast<int64>(y);
 }
 
-
-// TODO: Rename!
-//[[nodiscard]]
-//uint64_t Horizontal(int i) noexcept { return 0xFFULL << (i * 8); }
-//
-//[[nodiscard]]
-//uint64_t Vertical(int i) noexcept { return 0x0101010101010101ULL << i; }
-//
-//[[nodiscard]]
-//uint64_t Diagonal(int i) noexcept
-//{
-//	if (i > 0)
-//		return 0x8040201008040201ULL << (8 * i);
-//	return 0x8040201008040201ULL >> (8 * i);
-//}
-
-[[nodiscard]]
-inline int countr_zero(const uint64_t mask) noexcept
-{
-	#if defined(_MSC_VER)
-		return _tzcnt_u64(mask);
-	#elif defined(__GNUC__)
-		return __builtin_ia32_tzcnt_u64(mask);
-	#endif
-}
-
 [[nodiscard]]
 inline uint64_t GetLSB(const uint64_t b) noexcept
 {
@@ -221,12 +198,6 @@ inline uint64_t GetLSB(const uint64_t b) noexcept
 inline void RemoveLSB(uint64_t& b) noexcept
 {
 	b &= b - 1;
-}
-
-[[nodiscard]]
-inline int popcount(uint64_t b) noexcept
-{
-	return __popcnt64(b);
 }
 
 [[nodiscard]]

@@ -5,23 +5,8 @@
 #include <cstdint>
 #include <optional>
 
-// TODO: Remove!
-//template <typename Key, typename Value>
-//class IHashTable
-//{
-//public:
-//	using key_type = Key;
-//	using value_type = Value;
-//
-//	virtual ~IHashTable() = default;
-//
-//	virtual void Update(const Key&, const Value&) = 0;
-//	virtual std::optional<Value> LookUp(const Key&) const = 0;
-//	virtual void Clear() = 0;
-//};
-
 template <typename Key, typename Value, typename Node>
-class HashTable /*: public IHashTable<Key, Value>*/
+class HashTable
 {
 	mutable std::atomic<std::size_t> updates{ 0 }, lookups{ 0 }, hits{ 0 };
 	std::function<std::size_t(const Key&)> hash;

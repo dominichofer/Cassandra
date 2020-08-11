@@ -34,7 +34,7 @@ void ConfigIndexer::generate(std::back_insert_iterator<std::vector<int>> it, con
 HorizontalSymmetric::HorizontalSymmetric(BitBoard pattern)
 	: ConfigIndexer(4)
 	, pattern(pattern)
-	, half_size(Pow_int(3, popcount(pattern & HALF)))
+	, half_size(Pow_int(3, popcount(pattern & half)))
 {
 	reduced_size = half_size * (half_size + 1) / 2;
 	if (pattern != FlipHorizontal(pattern))
@@ -61,8 +61,8 @@ void HorizontalSymmetric::generate(OutputIterator& it, const Position& pos) cons
 
 int HorizontalSymmetric::Index(const Position& pos) const noexcept
 {
-	int min = ::Index(pos, pattern & HALF);
-	int max = ::Index(FlipHorizontal(pos), pattern & HALF);
+	int min = ::Index(pos, pattern & half);
+	int max = ::Index(FlipHorizontal(pos), pattern & half);
 	if (min > max)
 		std::swap(min, max);
 
@@ -72,8 +72,8 @@ int HorizontalSymmetric::Index(const Position& pos) const noexcept
 DiagonalSymmetric::DiagonalSymmetric(BitBoard pattern)
 	: ConfigIndexer(4)
 	, pattern(pattern)
-	, half_size(Pow_int(3, popcount(pattern & HALF)))
-	, diag_size(Pow_int(3, popcount(pattern & DIAG)))
+	, half_size(Pow_int(3, popcount(pattern & half)))
+	, diag_size(Pow_int(3, popcount(pattern & diag)))
 {
 	reduced_size = diag_size * half_size * (half_size + 1) / 2;
 	if (pattern != FlipDiagonal(pattern))
@@ -100,13 +100,13 @@ void DiagonalSymmetric::generate(OutputIterator& it, const Position& pos) const
 
 int DiagonalSymmetric::Index(const Position& pos) const noexcept
 {
-	int diag = ::Index(pos, pattern & DIAG);
-	int min = ::Index(pos, pattern & HALF);
-	int max = ::Index(FlipDiagonal(pos), pattern & HALF);
+	int d = ::Index(pos, pattern & diag);
+	int min = ::Index(pos, pattern & half);
+	int max = ::Index(FlipDiagonal(pos), pattern & half);
 	if (min > max)
 		std::swap(min, max);
 
-	return (min * half_size + max - (min * (min + 1) / 2)) * diag_size + diag;
+	return (min * half_size + max - (min * (min + 1) / 2)) * diag_size + d;
 }
 Asymmetric::Asymmetric(BitBoard pattern)
 	: ConfigIndexer(8), pattern(pattern)

@@ -1,27 +1,6 @@
 #include "Helpers.h"
 #include <array>
 
-
-// TODO: Remove?
-#if defined(_MSC_VER)
-	#include <intrin.h>
-#elif defined(__GNUC__)
-	#include <x86intrin.h>
-#else
-	#error compiler not supported
-#endif
-
-
-
-
-// Forward declarations
-[[nodiscard]] int countr_zero(uint64_t) noexcept;
-void RemoveLSB(uint64_t&) noexcept;
-[[nodiscard]] int popcount(uint64_t) noexcept;
-[[nodiscard]] uint64_t PDep(uint64_t src, uint64_t mask) noexcept;
-[[nodiscard]] uint64_t PExt(uint64_t src, uint64_t mask) noexcept;
-
-
 uint64_t Pow_int(uint64_t base, uint64_t exponent)
 {
 	if (exponent == 0)

@@ -35,7 +35,7 @@ std::unique_ptr<ConfigIndexer> CreateConfigIndexer(const std::vector<BitBoard>& 
 // TODO: Refactor into Vertical symmetrie for performance reasons?
 class HorizontalSymmetric final : public ConfigIndexer
 {
-	static constexpr BitBoard HALF = BitBoard{ 0x0F0F0F0F0F0F0F0FULL };
+	static constexpr BitBoard half = BitBoard::LowerHalf();
 	const BitBoard pattern;
 	const int half_size;
 
@@ -49,8 +49,8 @@ public:
 
 class DiagonalSymmetric final : public ConfigIndexer
 {
-	static constexpr BitBoard HALF = BitBoard{ 0x0080C0E0F0F8FCFEULL };
-	static constexpr BitBoard DIAG = BitBoard{ 0x8040201008040201ULL };
+	static constexpr BitBoard half = BitBoard::StrictlyLeftLower();
+	static constexpr BitBoard diag = BitBoard::DiagonalLine(0);
 	const BitBoard pattern;
 	const int half_size, diag_size;
 

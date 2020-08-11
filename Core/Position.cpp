@@ -1,5 +1,4 @@
 #include "Position.h"
-#include "Bit.h"
 
 void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
 void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
