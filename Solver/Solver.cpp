@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	std::wcout << L" # | depth| eval|score| diff|       time (s) |      nodes (N) |    N/s     \n";
 	std::wcout << L"---+------+-----+-----+-----+----------------+----------------+------------\n";
 
-	Search::PVSearch algorithm{ tt };
+	Search::PV algorithm{ tt };
 	//Search::AlphaBetaFailSoft algorithm;
 	auto start = std::chrono::high_resolution_clock::now();
 	////#pragma omp parallel for reduction(+:node_count)

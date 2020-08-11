@@ -141,12 +141,12 @@ int32_t MoveOrderingScorer(const Position& pos, Field move) noexcept
 }
 
 
-Result PVSearch::Eval(Position pos, Intensity requested)
+Result PV::Eval(Position pos, Intensity requested)
 {
 	return PVS_N(pos, requested);
 }
 
-Result PVSearch::PVS_N(const Position& pos, const Intensity& requested)
+Result PV::PVS_N(const Position& pos, const Intensity& requested)
 {
 	if (pos.EmptyCount() <= 4)
 		return AlphaBetaFailSoft{}.Eval(pos, requested);
@@ -200,7 +200,7 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity& requested)
 	return status_quo.GetResult();
 }
 
-Result PVSearch::ZWS_N(const Position& pos, const Intensity& requested)
+Result PV::ZWS_N(const Position& pos, const Intensity& requested)
 {
 	if (pos.EmptyCount() <= 7)
 		return ZWS_A(pos, requested);
@@ -236,7 +236,7 @@ Result PVSearch::ZWS_N(const Position& pos, const Intensity& requested)
 	return status_quo.GetResult();
 }
 
-Result PVSearch::ZWS_A(const Position& pos, const Intensity& requested)
+Result PV::ZWS_A(const Position& pos, const Intensity& requested)
 {
 	if (pos.EmptyCount() <= 4)
 		return AlphaBetaFailSoft{}.Eval(pos, requested);

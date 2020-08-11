@@ -476,7 +476,7 @@ struct DensePositionScore
 //    //auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B6 }); // 6.5572
 //
 //    HashTablePVS tt{1'000'000};
-//    Search::PVSearch pvs{tt};
+//    Search::PV pvs{tt};
 //
 //    for (int i = 18; i <= 22; i++)
 //    {

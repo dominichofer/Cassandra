@@ -67,11 +67,11 @@ namespace Search
 		~TT_Updater() { tt.Update(pos, status_quo.GetResult()); }
 	};
 
-	class PVSearch : public Algorithm
+	class PV : public Algorithm
 	{
 		HashTablePVS& tt;
 	public:
-		PVSearch(HashTablePVS& tt) : tt(tt) {}
+		PV(HashTablePVS& tt) : tt(tt) {}
 
 		using Algorithm::Eval;
 		Result Eval(Position, Intensity requested) override;

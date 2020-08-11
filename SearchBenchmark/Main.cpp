@@ -86,7 +86,7 @@ void Benchmark_serial(PuzzleLibrary& library, const std::size_t empty_count, std
 	print(stop - start, empty_count, sample_size, node_count);
 }
 template <>
-void Benchmark_serial<Search::PVSearch>(PuzzleLibrary& library, const std::size_t empty_count, std::size_t sample_size)
+void Benchmark_serial<Search::PV>(PuzzleLibrary& library, const std::size_t empty_count, std::size_t sample_size)
 {
 	auto puzzles = library[empty_count];
 	std::size_t node_count = 0;
@@ -96,7 +96,7 @@ void Benchmark_serial<Search::PVSearch>(PuzzleLibrary& library, const std::size_
 	//#pragma omp parallel for reduction(+:node_count)
 	for (int64_t i = 0; i < sample_size; i++)
 	{
-		Search::PVSearch algorithm{ tt };
+		Search::PV algorithm{ tt };
 		puzzles[i].Solve(algorithm);
 		node_count += puzzles[i].Result().value().node_count;
 	}
@@ -154,28 +154,28 @@ int main(int argc, char* argv[])
 	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 11,       500);
 	//Benchmark_serial<Search::AlphaBetaFailSoft>(library, 12,       100);
 
-	std::cout << "\nPVSearch serial\n";
-	//Benchmark_serial<Search::PVSearch>(library, 0, 50'000'000);
-	//Benchmark_serial<Search::PVSearch>(library, 1, 50'000'000);
-	//Benchmark_serial<Search::PVSearch>(library, 2, 20'000'000);
-	//Benchmark_serial<Search::PVSearch>(library, 3,  5'000'000);
-	//Benchmark_serial<Search::PVSearch>(library, 4,  2'000'000);
-	//Benchmark_serial<Search::PVSearch>(library, 5,  1'000'000);
-	//Benchmark_serial<Search::PVSearch>(library, 6,    200'000);
-	//Benchmark_serial<Search::PVSearch>(library, 7,    100'000);
-	//Benchmark_serial<Search::PVSearch>(library, 8, 	   20'000);
-	//Benchmark_serial<Search::PVSearch>(library, 9, 	    5'000);
-	//Benchmark_serial<Search::PVSearch>(library, 10,     2'000);
-	//Benchmark_serial<Search::PVSearch>(library, 11,       500);
-	//Benchmark_serial<Search::PVSearch>(library, 12,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 13,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 14,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 15,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 16,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 17,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 18,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 19,       100);
-	//Benchmark_serial<Search::PVSearch>(library, 20,       100);
+	std::cout << "\nPV serial\n";
+	//Benchmark_serial<Search::PV>(library, 0, 50'000'000);
+	//Benchmark_serial<Search::PV>(library, 1, 50'000'000);
+	//Benchmark_serial<Search::PV>(library, 2, 20'000'000);
+	//Benchmark_serial<Search::PV>(library, 3,  5'000'000);
+	//Benchmark_serial<Search::PV>(library, 4,  2'000'000);
+	//Benchmark_serial<Search::PV>(library, 5,  1'000'000);
+	//Benchmark_serial<Search::PV>(library, 6,    200'000);
+	//Benchmark_serial<Search::PV>(library, 7,    100'000);
+	//Benchmark_serial<Search::PV>(library, 8, 	   20'000);
+	//Benchmark_serial<Search::PV>(library, 9, 	    5'000);
+	//Benchmark_serial<Search::PV>(library, 10,     2'000);
+	//Benchmark_serial<Search::PV>(library, 11,       500);
+	//Benchmark_serial<Search::PV>(library, 12,       100);
+	//Benchmark_serial<Search::PV>(library, 13,       100);
+	//Benchmark_serial<Search::PV>(library, 14,       100);
+	//Benchmark_serial<Search::PV>(library, 15,       100);
+	//Benchmark_serial<Search::PV>(library, 16,       100);
+	//Benchmark_serial<Search::PV>(library, 17,       100);
+	//Benchmark_serial<Search::PV>(library, 18,       100);
+	//Benchmark_serial<Search::PV>(library, 19,       100);
+	//Benchmark_serial<Search::PV>(library, 20,       100);
 
 	return 0;
 }

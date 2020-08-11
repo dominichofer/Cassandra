@@ -410,14 +410,14 @@ TEST_F(AlphaBetaFailSoft, FForum_8) { Test(FForum[8]); }
 TEST_F(AlphaBetaFailSoft, FForum_9) { Test(FForum[9]); }
 TEST_F(AlphaBetaFailSoft, FForum_10) { Test(FForum[10]); }
 
-class PVSearch : public ::testing::Test
+class PV : public ::testing::Test
 {
 public:
 	HashTablePVS tt{ 1 };
 
 	void Test(const Position& pos, const Score& correct, const OpenInterval& requested)
 	{
-		const auto result = Search::PVSearch{ tt }.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
+		const auto result = Search::PV{ tt }.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
 
 		ASSERT_TRUE(result.window.Contains(correct));
 
@@ -470,45 +470,45 @@ public:
 	}
 };
 
-TEST_F(PVSearch, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
-TEST_F(PVSearch, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
-TEST_F(PVSearch, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
-TEST_F(PVSearch, One_empty_0) { Test_all_windows(One_empty_0); }
-TEST_F(PVSearch, One_empty_1) { Test_all_windows(One_empty_1); }
-TEST_F(PVSearch, One_empty_2) { Test_all_windows(One_empty_2); }
-TEST_F(PVSearch, One_empty_3) { Test_all_windows(One_empty_3); }
-TEST_F(PVSearch, Two_empty_0) { Test_all_windows(Two_empty_0); }
-TEST_F(PVSearch, Two_empty_1) { Test_all_windows(Two_empty_1); }
-TEST_F(PVSearch, Two_empty_2) { Test_all_windows(Two_empty_2); }
-TEST_F(PVSearch, Two_empty_3) { Test_all_windows(Two_empty_3); }
-TEST_F(PVSearch, Three_empty_0) { Test_all_windows(Three_empty_0); }
-TEST_F(PVSearch, Three_empty_1) { Test_all_windows(Three_empty_1); }
-TEST_F(PVSearch, Three_empty_2) { Test_all_windows(Three_empty_2); }
-TEST_F(PVSearch, Three_empty_3) { Test_all_windows(Three_empty_3); }
-TEST_F(PVSearch, Four_empty_0) { Test_all_windows(Four_empty_0); }
-TEST_F(PVSearch, Four_empty_1) { Test_all_windows(Four_empty_1); }
-TEST_F(PVSearch, Four_empty_2) { Test_all_windows(Four_empty_2); }
-TEST_F(PVSearch, Four_empty_3) { Test_all_windows(Four_empty_3); }
-TEST_F(PVSearch, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(PVSearch, FForum_1) { Test(FForum[1]); }
-TEST_F(PVSearch, FForum_2) { Test(FForum[2]); }
-TEST_F(PVSearch, FForum_3) { Test(FForum[3]); }
-TEST_F(PVSearch, FForum_4) { Test(FForum[4]); }
-TEST_F(PVSearch, FForum_5) { Test(FForum[5]); }
-TEST_F(PVSearch, FForum_6) { Test(FForum[6]); }
-TEST_F(PVSearch, FForum_7) { Test(FForum[7]); }
-TEST_F(PVSearch, FForum_8) { Test(FForum[8]); }
-TEST_F(PVSearch, FForum_9) { Test(FForum[9]); }
-TEST_F(PVSearch, FForum_10) { Test(FForum[10]); }
+TEST_F(PV, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
+TEST_F(PV, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
+TEST_F(PV, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
+TEST_F(PV, One_empty_0) { Test_all_windows(One_empty_0); }
+TEST_F(PV, One_empty_1) { Test_all_windows(One_empty_1); }
+TEST_F(PV, One_empty_2) { Test_all_windows(One_empty_2); }
+TEST_F(PV, One_empty_3) { Test_all_windows(One_empty_3); }
+TEST_F(PV, Two_empty_0) { Test_all_windows(Two_empty_0); }
+TEST_F(PV, Two_empty_1) { Test_all_windows(Two_empty_1); }
+TEST_F(PV, Two_empty_2) { Test_all_windows(Two_empty_2); }
+TEST_F(PV, Two_empty_3) { Test_all_windows(Two_empty_3); }
+TEST_F(PV, Three_empty_0) { Test_all_windows(Three_empty_0); }
+TEST_F(PV, Three_empty_1) { Test_all_windows(Three_empty_1); }
+TEST_F(PV, Three_empty_2) { Test_all_windows(Three_empty_2); }
+TEST_F(PV, Three_empty_3) { Test_all_windows(Three_empty_3); }
+TEST_F(PV, Four_empty_0) { Test_all_windows(Four_empty_0); }
+TEST_F(PV, Four_empty_1) { Test_all_windows(Four_empty_1); }
+TEST_F(PV, Four_empty_2) { Test_all_windows(Four_empty_2); }
+TEST_F(PV, Four_empty_3) { Test_all_windows(Four_empty_3); }
+TEST_F(PV, Five_empty) { Test_all_windows(Five_empty); }
+TEST_F(PV, FForum_1) { Test(FForum[1]); }
+TEST_F(PV, FForum_2) { Test(FForum[2]); }
+TEST_F(PV, FForum_3) { Test(FForum[3]); }
+TEST_F(PV, FForum_4) { Test(FForum[4]); }
+TEST_F(PV, FForum_5) { Test(FForum[5]); }
+TEST_F(PV, FForum_6) { Test(FForum[6]); }
+TEST_F(PV, FForum_7) { Test(FForum[7]); }
+TEST_F(PV, FForum_8) { Test(FForum[8]); }
+TEST_F(PV, FForum_9) { Test(FForum[9]); }
+TEST_F(PV, FForum_10) { Test(FForum[10]); }
 
-class PVSearch_TT : public ::testing::Test
+class PV_TT : public ::testing::Test
 {
 public:
 	HashTablePVS tt{ 1'000 };
 	
 	void Test(const Position& pos, const Score& correct, const OpenInterval& requested)
 	{
-		const auto result = Search::PVSearch{ tt }.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
+		const auto result = Search::PV{ tt }.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
 
 		ASSERT_TRUE(result.window.Contains(correct));
 
@@ -561,13 +561,13 @@ public:
 	}
 };
 
-TEST_F(PVSearch_TT, FForum_1) { Test(FForum[1]); }
-TEST_F(PVSearch_TT, FForum_2) { Test(FForum[2]); }
-TEST_F(PVSearch_TT, FForum_3) { Test(FForum[3]); }
-TEST_F(PVSearch_TT, FForum_4) { Test(FForum[4]); }
-TEST_F(PVSearch_TT, FForum_5) { Test(FForum[5]); }
-TEST_F(PVSearch_TT, FForum_6) { Test(FForum[6]); }
-TEST_F(PVSearch_TT, FForum_7) { Test(FForum[7]); }
-TEST_F(PVSearch_TT, FForum_8) { Test(FForum[8]); }
-TEST_F(PVSearch_TT, FForum_9) { Test(FForum[9]); }
-TEST_F(PVSearch_TT, FForum_10) { Test(FForum[10]); }
+TEST_F(PV_TT, FForum_1) { Test(FForum[1]); }
+TEST_F(PV_TT, FForum_2) { Test(FForum[2]); }
+TEST_F(PV_TT, FForum_3) { Test(FForum[3]); }
+TEST_F(PV_TT, FForum_4) { Test(FForum[4]); }
+TEST_F(PV_TT, FForum_5) { Test(FForum[5]); }
+TEST_F(PV_TT, FForum_6) { Test(FForum[6]); }
+TEST_F(PV_TT, FForum_7) { Test(FForum[7]); }
+TEST_F(PV_TT, FForum_8) { Test(FForum[8]); }
+TEST_F(PV_TT, FForum_9) { Test(FForum[9]); }
+TEST_F(PV_TT, FForum_10) { Test(FForum[10]); }
