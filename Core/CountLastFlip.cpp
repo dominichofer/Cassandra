@@ -2,7 +2,7 @@
 #include "Bit.h"
 
 /** precomputed count flip array */
-static const uint8 COUNT_FLIP[8][256] = {
+alignas(64) static const uint8 COUNT_FLIP[8][256] = {
 	{
 		0,  0,  0,  0,  2,  2,  0,  0,  4,  4,  0,  0,  2,  2,  0,  0,  6,  6,  0,  0,  2,  2,  0,  0,  4,  4,  0,  0,  2,  2,  0,  0,
 		8,  8,  0,  0,  2,  2,  0,  0,  4,  4,  0,  0,  2,  2,  0,  0,  6,  6,  0,  0,  2,  2,  0,  0,  4,  4,  0,  0,  2,  2,  0,  0,
@@ -86,7 +86,7 @@ static const uint8 COUNT_FLIP[8][256] = {
 };
 
 /* bit masks for diagonal/vertical/all lines */
-static const uint64 masks[64][4] = {
+alignas(64) static const uint64 masks[64][4] = {
 	{ 0x81412111090503ffULL, 0x0000000000000001ULL, 0x8040201008040201ULL, 0x0101010101010101ULL },
 	{ 0x02824222120a07ffULL, 0x0000000000000102ULL, 0x0080402010080402ULL, 0x0202020202020202ULL },
 	{ 0x0404844424150effULL, 0x0000000000010204ULL, 0x0000804020100804ULL, 0x0404040404040404ULL },
@@ -152,7 +152,6 @@ static const uint64 masks[64][4] = {
 	{ 0xffe0504844424140ULL, 0x408000000000003fULL, 0x4020100804020101ULL, 0x4040404040404040ULL },
 	{ 0xffc0a09088848281ULL, 0x800000000000017eULL, 0x8040201008040201ULL, 0x8080808080808080ULL }
 };
-
 
 int CountLastFlip(const Position& pos, Field f) noexcept
 {

@@ -72,7 +72,8 @@ namespace Search
 		Selectivity selectivity;
 
 		Intensity() = delete;
-		Intensity(OpenInterval window, unsigned int depth, Selectivity selectivity) : window(window), depth(depth), selectivity(selectivity) {}
+		Intensity(OpenInterval window, unsigned int depth, Selectivity selectivity)
+			: window(window), depth(depth), selectivity(selectivity) {}
 
 		static Intensity Exact(Position);
 
@@ -82,7 +83,7 @@ namespace Search
 		// Intensity with inverted window.
 		[[nodiscard]] Intensity operator-() const; // TODO: Remove?
 
-												   // Subtracts depth.
+		// Subtracts depth.
 		[[nodiscard]] Intensity operator-(int depth) const; // TODO: Remove?
 
 		[[nodiscard]] Intensity next() const;
@@ -116,6 +117,6 @@ namespace Search
 	struct Algorithm
 	{
 		virtual Result Eval(Position, Intensity) = 0;
-		Result Eval(Position pos) { return Eval(pos, Search::Intensity::Exact(pos)); }
+		Result Eval(Position pos) { return Eval(pos, Intensity::Exact(pos)); }
 	};
 }

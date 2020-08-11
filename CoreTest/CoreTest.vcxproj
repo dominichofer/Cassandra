@@ -43,7 +43,7 @@
     </ClCompile>
     <ClCompile Include="PositionGenerator.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
-    <ClCompile Include="Search.cpp" />
+    <ClCompile Include="EvalGameOver.cpp" />
     <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -52,9 +52,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Machine\Machine.vcxproj">
-      <Project>{d4a9b7d0-1902-45e2-8f6c-c0e7483ebfba}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemDefinitionGroup />

@@ -73,8 +73,8 @@ BitBoard Flips(const Position& pos, Field move) noexcept
 {
 	const int64x4 P(pos.Player());
 	const int64x4 O(pos.Opponent());
-	const int64x4 mask1(_mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + static_cast<uint64>(move) * 8 + 0))); // TODO: Make this [1]
-	const int64x4 mask2(_mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + static_cast<uint64>(move) * 8 + 4))); // TODO: Make this [0]
+	const int64x4 mask1(_mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + static_cast<uint64>(move) * 8 + 0)));
+	const int64x4 mask2(_mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + static_cast<uint64>(move) * 8 + 4)));
 
 	int64x4 outflank1 = andnot(O, mask1);
 	// look for non-opponent LS1B

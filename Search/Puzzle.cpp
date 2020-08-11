@@ -24,10 +24,9 @@ Puzzle Puzzle::Exact(::Position pos)
 
 bool Puzzle::IsSolved() const
 {
-	if (result)
-		return (result.value().depth >= intensity.depth)
-			&& (result.value().selectivity <= intensity.selectivity);
-	return false;
+	return result.has_value()
+		&& (result.value().depth >= intensity.depth)
+		&& (result.value().selectivity <= intensity.selectivity);
 }
 
 void Puzzle::Reset()
