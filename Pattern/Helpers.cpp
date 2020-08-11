@@ -97,21 +97,3 @@ int Index(const Position& pos, const BitBoard pattern) noexcept
 	//auto x = _mm256_add_epi32(_mm256_add_epi32(P_1, P_2), _mm256_add_epi32(O_1, O_2));
 	//return _mm256_reduce_add_epi32(x);
 }
-
-void For_each_config(const BitBoard pattern, const std::function<void(Position)>& fkt)
-{
-	const std::size_t size = 1ULL << popcount(pattern);
-	for (uint64_t i = 0; i < size; i++)
-	{
-		const BitBoard P{ PDep(i, pattern) };
-		for (uint64_t j = 0; j < size; j++)
-		{
-			if ((i & j) != 0u)
-				continue; // fields can only be taken by one player
-
-			const BitBoard O{ PDep(j, pattern) };
-
-			fkt(Position::From(P, O));
-		}
-	}
-}

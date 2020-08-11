@@ -113,24 +113,22 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 	const std::size_t full_size = Pow_int(3, popcount(pattern));
 	const auto patterns = config_indexer->Patterns();
 
-	// Reserve memory
+	// Reserve memory for weights
 	std::vector<Weights> weights(multiplicity);
 	for (auto& w : weights)
 		w.resize(full_size);
 
-	// Decompress
+	// Decompress weights
 	for (std::size_t i = 0; i < multiplicity; i++)
-	{
-		For_each_config(patterns[i],
-						[&](const Position& pos) {
-							std::vector<int> indices;
-							indices.reserve(multiplicity);
-							config_indexer->generate(std::back_inserter(indices), pos);
+		for (const auto& config : Configurations(patterns[i]))
+		{
+			std::vector<int> indices;
+			indices.reserve(multiplicity);
 
-							weights[i][Index(pos, patterns[i])] = compressed[indices[i]];
-						}
-		);
-	}
+			config_indexer->generate(std::back_inserter(indices), config);
+
+			weights[i][Index(config, patterns[i])] = compressed[indices[i]];
+		}
 
 	return CreateEvaluator(pattern, std::move(weights));
 }

@@ -78,25 +78,25 @@ void Test_SymmetryIndependance(const BitBoard pattern, const Weights& compressed
 	const auto eval = CreateEvaluator(pattern, compressed);
 
 	// Assert score's independance of flips
-	For_each_config(pattern,
-		[&](Position pos) {
-			const auto score = eval->Eval(pos);
-			for (std::size_t i = 1; i < 8; i++)
+	for (auto config : Configurations(pattern))
+	{
+		const auto score = eval->Eval(config);
+		for (std::size_t i = 1; i < 8; i++)
+		{
+			switch (i)
 			{
-				switch (i)
-				{
-					case 1: pos.FlipHorizontal(); break;
-					case 2: pos.FlipVertical(); break;
-					case 3: pos.FlipHorizontal(); break;
-					case 4: pos.FlipDiagonal(); break;
-					case 5: pos.FlipHorizontal(); break;
-					case 6: pos.FlipVertical(); break;
-					case 7: pos.FlipHorizontal(); break;
-				}
-				auto other = eval->Eval(pos);
-				ASSERT_EQ(score, other);
+				case 1: config.FlipHorizontal(); break;
+				case 2: config.FlipVertical(); break;
+				case 3: config.FlipHorizontal(); break;
+				case 4: config.FlipDiagonal(); break;
+				case 5: config.FlipHorizontal(); break;
+				case 6: config.FlipVertical(); break;
+				case 7: config.FlipHorizontal(); break;
 			}
-		});
+			auto other = eval->Eval(config);
+			ASSERT_EQ(score, other);
+		}
+	}
 }
 
 TEST(Evaluator, HorizontalSymmetric_is_independant_of_symmetry)
