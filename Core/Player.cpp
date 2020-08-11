@@ -3,7 +3,7 @@
 Position RandomPlayer::Play(const Position& pos)
 {
 	Moves possible_moves = PossibleMoves(pos);
-	if (possible_moves.empty())
+	if (!possible_moves)
 		return PlayPass(pos);
 
 	auto rnd = std::uniform_int_distribution<std::size_t>(0, possible_moves.size())(rnd_engine);

@@ -14,7 +14,6 @@ namespace Search
 		Score Eval_1(const Position&, OpenInterval, Field);
 		Score Eval_2(const Position&, OpenInterval, Field, Field);
 		Score Eval_3(const Position&, OpenInterval, Field, Field, Field);
-		Score Eval_4(const Position&, OpenInterval, Field, Field, Field, Field);
 		Score Eval_N(const Position&, OpenInterval);
 	};
 }

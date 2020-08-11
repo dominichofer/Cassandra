@@ -16,7 +16,6 @@ namespace Search
 	private:
 		Score Eval_2(const Position&, Field, Field);
 		Score Eval_3(const Position&, Field, Field, Field);
-		Score Eval_4(const Position&, Field, Field, Field, Field);
 		Score Eval_N(const Position&);
 
 		Score Eval_triage(const Position&);

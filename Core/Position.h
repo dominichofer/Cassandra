@@ -81,6 +81,9 @@ Position Play(const Position&, Field move, BitBoard flips);
 Position Play(const Position&, Field move);
 
 [[nodiscard]]
+Position TryPlay(const Position&, Field move) noexcept(false);
+
+[[nodiscard]]
 Position PlayPass(const Position&) noexcept;
 
 [[nodiscard]]
@@ -97,18 +100,20 @@ BitBoard StableEdges(const Position&);
 BitBoard StableStones(const Position&);
 
 [[nodiscard]]
+bool HasMoves(const Position&) noexcept;
+
+[[nodiscard]]
 Moves PossibleMoves(const Position&) noexcept;
 
 namespace detail
 {
 	#if defined(__AVX512F__)
-	[[nodiscard]]
-	Moves PossibleMoves_AVX512(const Position&) noexcept;
+		[[nodiscard]]
+		Moves PossibleMoves_AVX512(const Position&) noexcept;
 	#endif
-	#if defined(__AVX2__)
+
 	[[nodiscard]]
 	Moves PossibleMoves_AVX2(const Position&) noexcept;
-	#endif
 
 	[[nodiscard]]
 	Moves PossibleMoves_x64(const Position&) noexcept;

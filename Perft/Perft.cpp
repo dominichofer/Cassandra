@@ -53,12 +53,12 @@ namespace Basic
 
 		auto moves = PossibleMoves(pos);
 
-		if (moves.empty())
+		if (!moves)
 		{
 			Position passed = PlayPass(pos);
-			if (PossibleMoves(passed).empty())
-				return 0;
-			return perft(passed, depth - 1);
+			if (HasMoves(passed))
+				return perft(passed, depth - 1);
+			return 0;
 		}
 
 		std::size_t sum = 0;
@@ -100,7 +100,7 @@ namespace Unrolled2
 	{
 		auto moves = PossibleMoves(pos);
 
-		if (moves.empty())
+		if (!moves)
 			return PossibleMoves(PlayPass(pos)).size();
 
 		std::size_t sum = 0;
@@ -108,10 +108,10 @@ namespace Unrolled2
 		{
 			const auto next_pos = Play(pos, move);
 			const auto next_moves = PossibleMoves(next_pos);
-			if (next_moves.empty())
-				sum += static_cast<std::size_t>(PossibleMoves(PlayPass(next_pos)).empty() ? 0 : 1);
-			else
+			if (next_moves)
 				sum += next_moves.size();
+			else
+				sum += static_cast<std::size_t>(HasMoves(PlayPass(next_pos)) ? 1 : 0);
 		}
 
 		return sum;
@@ -124,12 +124,12 @@ namespace Unrolled2
 
 		auto moves = PossibleMoves(pos);
 
-		if (moves.empty())
+		if (!moves)
 		{
 			Position passed = PlayPass(pos);
-			if (PossibleMoves(passed).empty())
-				return 0;
-			return perft_(passed, depth - 1);
+			if (HasMoves(passed))
+				return perft_(passed, depth - 1);
+			return 0;
 		}
 
 		std::size_t sum = 0;
@@ -177,10 +177,10 @@ namespace HashTableMap
 
 		auto moves = PossibleMoves(pos);
 
-		if (moves.empty())
+		if (!moves)
 		{
 			auto passed = PlayPass(pos);
-			if (!PossibleMoves(passed).empty())
+			if (HasMoves(passed))
 				fill(passed, depth - 1, all);
 			return;
 		}
@@ -230,12 +230,12 @@ namespace HashTableMap
 
 		auto moves = PossibleMoves(pos);
 
-		if (moves.empty())
+		if (!moves)
 		{
 			Position passed = PlayPass(pos);
-			if (PossibleMoves(passed).empty())
-				return 0;
-			return perft(passed, depth - 1);
+			if (HasMoves(passed))
+				return perft(passed, depth - 1);
+			return 0;
 		}
 
 		if (const auto ret = hash_table.LookUp({ pos, depth }); ret.has_value())

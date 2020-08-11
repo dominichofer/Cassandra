@@ -64,6 +64,15 @@ void popcount(benchmark::State& state)
 }
 BENCHMARK(popcount);
 
+void HasMoves(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(HasMoves(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(HasMoves);
+
 void PossibleMoves_x64(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
@@ -90,7 +99,6 @@ void PossibleMoves(benchmark::State& state)
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PossibleMoves);
-
 
 void Flips(benchmark::State& state)
 {

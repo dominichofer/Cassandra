@@ -115,6 +115,16 @@ Position Play(const Position& pos, Field move)
 	return Play(pos, move, flips);
 }
 
+Position TryPlay(const Position& pos, Field move) noexcept(false)
+{
+	assert(pos.Empties().Get(move)); // move field is free.
+
+	const auto flips = Flips(pos, move);
+	if (flips)
+		return Play(pos, move, flips);
+	throw;
+}
+
 Position PlayPass(const Position& pos) noexcept
 {
 	return { pos.Opponent(), pos.Player() };

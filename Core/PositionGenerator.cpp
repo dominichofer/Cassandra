@@ -56,7 +56,7 @@ std::optional<Position> PosGen::All_after_nth_ply::operator()()
 
 		assert(stack.size() <= plies);
 
-		if (moves.empty())
+		if (!moves)
 		{
 			stack.pop();
 			continue;
@@ -67,13 +67,13 @@ std::optional<Position> PosGen::All_after_nth_ply::operator()()
 			return next;
 
 		auto possible_moves = PossibleMoves(next);
-		if (possible_moves.empty())
+		if (!possible_moves)
 		{
 			for (std::size_t i = 0; i < plies_per_pass; i++)
 				stack.push({ next, Moves{0} });
 			Position next = PlayPass(next);
 			possible_moves = PossibleMoves(next);
-			if (stack.size() == plies && !possible_moves.empty())
+			if (stack.size() == plies && !!possible_moves)
 				return next;
 		}
 		stack.push({ next, possible_moves });
@@ -106,7 +106,7 @@ std::optional<Position> PosGen::All_with_empty_count::operator()()
 
 		assert(pos.EmptyCount() > empty_count);
 
-		if (moves.empty())
+		if (!moves)
 		{
 			stack.pop();
 			continue;
@@ -117,7 +117,7 @@ std::optional<Position> PosGen::All_with_empty_count::operator()()
 			return next;
 
 		auto possible_moves = PossibleMoves(next);
-		if (possible_moves.empty())
+		if (!possible_moves)
 		{ // next has no possible moves. It will be skipped.
 			Position next = PlayPass(next);
 			possible_moves = PossibleMoves(next);

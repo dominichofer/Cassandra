@@ -152,12 +152,12 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity& requested)
 		return AlphaBetaFailSoft{}.Eval(pos, requested);
 	
 	Moves moves = PossibleMoves(pos);
-	if (moves.empty())
+	if (!moves)
 	{
 		const auto passed = PlayPass(pos);
-		if (PossibleMoves(passed).empty())
-			return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
-		return -PVS_N(passed, -requested);
+		if (HasMoves(passed))
+			return -PVS_N(passed, -requested);
+		return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
 	}
 
 	Limits limits(requested);
@@ -171,7 +171,7 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity& requested)
 	TT_Updater tt_updater(pos, tt, status_quo);
 
 	bool first = true;
-	SortedMoves sorted_moves(pos, [&](Field move) { return MoveOrderingScorer(pos, move); });
+	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
 	for (auto move : sorted_moves)
 	{
 		if (!first)
@@ -202,18 +202,16 @@ Result PVSearch::PVS_N(const Position& pos, const Intensity& requested)
 
 Result PVSearch::ZWS_N(const Position& pos, const Intensity& requested)
 {
-	if (pos.EmptyCount() <= 4)
-		return AlphaBetaFailSoft{}.Eval(pos, requested);
 	if (pos.EmptyCount() <= 7)
 		return ZWS_A(pos, requested);
 
 	Moves moves = PossibleMoves(pos);
-	if (moves.empty())
+	if (!moves)
 	{ 
 		const auto passed = PlayPass(pos);
-		if (PossibleMoves(passed).empty())
-			return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
-		return -ZWS_N(passed, -requested);
+		if (HasMoves(passed))
+			return -ZWS_N(passed, -requested);
+		return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
 	}
 
 	Limits limits(requested);
@@ -226,7 +224,7 @@ Result PVSearch::ZWS_N(const Position& pos, const Intensity& requested)
 	StatusQuo status_quo(limits);
 	TT_Updater tt_updater(pos, tt, status_quo);
 
-	SortedMoves sorted_moves(pos, [&](Field move) { return MoveOrderingScorer(pos, move); });
+	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
 	for (auto move : sorted_moves)
 	{
 		const auto result = -ZWS_N(Play(pos, move.second), status_quo.NextPvsIntensity());
@@ -244,12 +242,12 @@ Result PVSearch::ZWS_A(const Position& pos, const Intensity& requested)
 		return AlphaBetaFailSoft{}.Eval(pos, requested);
 
 	Moves moves = PossibleMoves(pos);
-	if (moves.empty())
+	if (!moves)
 	{ 
 		const auto passed = PlayPass(pos);
-		if (PossibleMoves(passed).empty())
-			return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
-		return -ZWS_N(passed, -requested);
+		if (HasMoves(passed))
+			return -ZWS_N(passed, -requested);
+		return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
 	}
 
 	StatusQuo status_quo(requested);
