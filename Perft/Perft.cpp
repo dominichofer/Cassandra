@@ -46,7 +46,7 @@ std::size_t Correct(int depth)
 
 namespace Basic
 {
-	std::size_t perft(Position pos, const int depth)
+	std::size_t perft(const Position& pos, const int depth)
 	{
 		if (depth == 0)
 			return 1;
@@ -84,19 +84,19 @@ namespace Basic
 namespace Unrolled2
 {
 	// perft for 0 plies left
-	std::size_t perft_0(Position)
+	std::size_t perft_0(const Position&)
 	{
 		return 1;
 	}
 
 	// perft for 1 ply left
-	std::size_t perft_1(Position pos)
+	std::size_t perft_1(const Position& pos)
 	{
 		return PossibleMoves(pos).size();
 	}
 
 	// perft for 2 plies left
-	std::size_t perft_2(Position pos)
+	std::size_t perft_2(const Position& pos)
 	{
 		auto moves = PossibleMoves(pos);
 
@@ -117,7 +117,7 @@ namespace Unrolled2
 		return sum;
 	}
 
-	std::size_t perft_(Position pos, const int depth)
+	std::size_t perft_(const Position& pos, const int depth)
 	{
 		if (depth == 2)
 			return perft_2(pos);
@@ -139,7 +139,7 @@ namespace Unrolled2
 		return sum;
 	}
 
-	std::size_t perft(Position pos, const int depth)
+	std::size_t perft(const Position& pos, const int depth)
 	{
 		switch (depth)
 		{
@@ -165,9 +165,9 @@ namespace Unrolled2
 
 namespace HashTableMap
 {
-	bool operator<(Position l, Position r) noexcept { return (l.Player() == r.Player()) ? (l.Opponent() < r.Opponent()) : (l.Player() < r.Player()); }
+	bool operator<(const Position& l, const Position& r) noexcept { return (l.Player() == r.Player()) ? (l.Opponent() < r.Opponent()) : (l.Player() < r.Player()); }
 
-	void fill(Position pos, const uint8_t depth, std::vector<Position>& all)
+	void fill(const Position& pos, const uint8_t depth, std::vector<Position>& all)
 	{
 		if (depth == 0)
 		{
@@ -195,7 +195,7 @@ namespace HashTableMap
 		std::size_t degeneracy;
 	};
 
-	std::vector<PositionDegeneracy> GetWork(Position pos, const std::size_t uniqueness_depth)
+	std::vector<PositionDegeneracy> GetWork(const Position& pos, const std::size_t uniqueness_depth)
 	{
 		std::vector<Position> all;
 		fill(pos, uniqueness_depth, all);
@@ -217,13 +217,13 @@ namespace HashTableMap
 	{
 		BigNodeHashTable hash_table;
 
-		std::size_t perft(Position, int depth);
+		std::size_t perft(const Position&, int depth);
 	public:
 		PerftWithHashTable(std::size_t BytesRAM) : hash_table(BytesRAM / sizeof(BigNodeHashTable::node_type)) {}
-		std::size_t calculate(Position, int depth);
+		std::size_t calculate(const Position&, int depth);
 	};
 
-	std::size_t PerftWithHashTable::perft(Position pos, const int depth)
+	std::size_t PerftWithHashTable::perft(const Position& pos, const int depth)
 	{
 		if (depth == 2)
 			return Unrolled2::perft_2(pos);
@@ -249,7 +249,7 @@ namespace HashTableMap
 		return sum;
 	}
 
-	std::size_t PerftWithHashTable::calculate(Position pos, const int depth)
+	std::size_t PerftWithHashTable::calculate(const Position& pos, const int depth)
 	{
 		const std::size_t uniqueness_depth = 9;
 		std::vector<PositionDegeneracy> work = GetWork(pos, uniqueness_depth);
@@ -262,7 +262,7 @@ namespace HashTableMap
 		return sum;
 	}
 	
-	std::size_t perft(Position pos, int depth, std::size_t BytesRAM)
+	std::size_t perft(const Position& pos, int depth, std::size_t BytesRAM)
 	{
 		return PerftWithHashTable(BytesRAM).calculate(pos, depth - 1);
 	}
