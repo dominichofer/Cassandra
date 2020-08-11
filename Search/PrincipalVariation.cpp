@@ -172,7 +172,7 @@ Result PV::PVS_N(const Position& pos, const Intensity& requested)
 
 	bool first = true;
 	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
-	for (auto move : sorted_moves)
+	for (const auto& move : sorted_moves)
 	{
 		if (!first)
 		{
@@ -225,7 +225,7 @@ Result PV::ZWS_N(const Position& pos, const Intensity& requested)
 	TT_Updater tt_updater(pos, tt, status_quo);
 
 	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
-	for (auto move : sorted_moves)
+	for (const auto& move : sorted_moves)
 	{
 		const auto result = -ZWS_N(Play(pos, move.second), status_quo.NextPvsIntensity());
 		status_quo.Improve(result, move.second);
@@ -253,7 +253,7 @@ Result PV::ZWS_A(const Position& pos, const Intensity& requested)
 	StatusQuo status_quo(requested);
 	Moves parity_moves = moves;
 	parity_moves.Filter(pos.ParityQuadrants());
-	for (auto move : parity_moves)
+	for (const auto& move : parity_moves)
 	{
 		const auto result = -ZWS_N(Play(pos, move), status_quo.NextPvsIntensity());
 		status_quo.Improve(result, move);
@@ -263,7 +263,7 @@ Result PV::ZWS_A(const Position& pos, const Intensity& requested)
 
 	Moves non_parity_moves = moves;
 	non_parity_moves.Filter(~pos.ParityQuadrants());
-	for (auto move : non_parity_moves)
+	for (const auto& move : non_parity_moves)
 	{
 		const auto result = -ZWS_N(Play(pos, move), status_quo.NextPvsIntensity());
 		status_quo.Improve(result, move);

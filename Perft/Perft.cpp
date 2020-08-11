@@ -62,7 +62,7 @@ namespace Basic
 		}
 
 		std::size_t sum = 0;
-		for (auto move : moves)
+		for (const auto& move : moves)
 			sum += perft(Play(pos, move), depth - 1);
 
 		return sum;
@@ -104,7 +104,7 @@ namespace Unrolled2
 			return PossibleMoves(PlayPass(pos)).size();
 
 		std::size_t sum = 0;
-		for (auto move : moves)
+		for (const auto& move : moves)
 		{
 			const auto next_pos = Play(pos, move);
 			const auto next_moves = PossibleMoves(next_pos);
@@ -133,7 +133,7 @@ namespace Unrolled2
 		}
 
 		std::size_t sum = 0;
-		for (auto move : moves)
+		for (const auto& move : moves)
 			sum += perft_(Play(pos, move), depth - 1);
 
 		return sum;
@@ -185,7 +185,7 @@ namespace HashTableMap
 			return;
 		}
 
-		for (auto move : moves)
+		for (const auto& move : moves)
 			fill(Play(pos, move), depth - 1, all);
 	}
 
@@ -242,7 +242,7 @@ namespace HashTableMap
 			return ret.value();
 
 		std::size_t sum = 0;
-		for (auto move : moves)
+		for (const auto& move : moves)
 			sum += perft(Play(pos, move), depth - 1);
 
 		hash_table.Update({ pos, depth }, sum);

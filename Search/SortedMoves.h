@@ -23,7 +23,7 @@ inline SortedMoves::SortedMoves(const Moves& possible_moves, const std::function
 {
 	m_moves.reserve(possible_moves.size());
 
-	for (auto move : possible_moves)
+	for (const auto& move : possible_moves)
 		m_moves.emplace_back(score(move), move);
 
 	std::sort(m_moves.begin(), m_moves.end(), [](const auto& l, const auto& r) { return l.first < r.first; });

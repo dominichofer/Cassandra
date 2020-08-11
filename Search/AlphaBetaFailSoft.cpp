@@ -110,7 +110,7 @@ Score AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval w)
 	}
 
 	Score bestscore = -infinity;
-	for (auto move : moves)
+	for (const auto& move : moves)
 	{
 		const auto score = -Eval_N(Play(pos, move), -w);
 		if (score > w)

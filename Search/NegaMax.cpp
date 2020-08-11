@@ -111,7 +111,7 @@ Score NegaMax::Eval_N(const Position& pos)
 	}
 
 	Score score = -infinity;
-	for (auto move : moves)
+	for (const auto& move : moves)
 		score = std::max(score, -Eval_N(Play(pos, move)));
 
 	return score;

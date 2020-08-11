@@ -8,8 +8,8 @@ class StabilityAnalyzer
 public:
 	StabilityAnalyzer();
 
-	BitBoard StableEdges(const Position&) const;
-	BitBoard StableStones(const Position&) const; // Stable stones of the opponent
+	[[nodiscard]] BitBoard StableEdges(const Position&) const;
+	[[nodiscard]] BitBoard StableStones(const Position&) const; // Stable stones of the opponent
 
 private:
 	static uint64_t FullLineHorizontal(uint64_t discs);
@@ -37,7 +37,7 @@ StabilityAnalyzer::StabilityAnalyzer()
 				const Position B{ o, p };
 
 				uint8_t stables = 0xFF;
-				for (const auto move : Moves(~(p | o) & 0xFFULL))
+				for (const auto& move : Moves(~(p | o) & 0xFFULL))
 				{
 					Position A_next = Play(A, move);
 					Position B_next = Play(B, move);

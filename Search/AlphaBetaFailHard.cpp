@@ -112,7 +112,7 @@ Score AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval w)
 		return w.clamp(EvalGameOver(pos));
 	}
 
-	for (auto move : moves)
+	for (const auto& move : moves)
 	{
 		const auto score = -Eval_N(Play(pos, move), -w);
 		if (score > w)

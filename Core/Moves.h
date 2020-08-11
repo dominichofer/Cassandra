@@ -38,6 +38,6 @@ public:
 
 	[[nodiscard]] Iterator begin() const { return Iterator(b); }
 	[[nodiscard]] Iterator cbegin() const { return Iterator(b); }
-	[[nodiscard]] Iterator end() const { return {}; }
-	[[nodiscard]] Iterator cend() const { return {}; }
+	[[nodiscard]] static Iterator end() { return {}; }
+	[[nodiscard]] static Iterator cend() { return {}; }
 };

@@ -58,7 +58,8 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 {
 	assert(size == 120);
 
-	BitBoard P{0}, O{0};
+	BitBoard P{0};
+	BitBoard O{0};
 	for (int j = 0; j < 8; j++)
 		for (int i = 0; i < 8; i++)
 		{

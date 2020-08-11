@@ -22,7 +22,7 @@ TEST(PossibleMoves, random_samples)
 		Moves potential_moves = pos.Empties();
 		BitBoard possible_moves;
 
-		for (auto move : potential_moves)
+		for (const auto& move : potential_moves)
 		{
 			if (Flips(pos, move))
 				possible_moves.Set(move);
