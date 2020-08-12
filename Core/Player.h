@@ -10,9 +10,6 @@ public:
 	virtual Position Play(const Position&) = 0;
 };
 
-class no_moves_exception : public std::exception
-{};
-
 class RandomPlayer final : public Player
 {
 	std::mt19937_64 rnd_engine;
