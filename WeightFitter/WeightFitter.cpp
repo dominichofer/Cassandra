@@ -1,374 +1,23 @@
 #include "Core/Core.h"
 #include "Search/Search.h"
 #include "IO/IO.h"
-#include "Pattern/ConfigIndexer.h"
+#include "Pattern/DenseIndexer.h"
+#include "Pattern/Evaluator.h"
 #include "Math/Matrix.h"
 #include "Math/MatrixCSR.h"
 #include "Math/Vector.h"
 #include "Math/Solver.h"
+#include "Math/Statistics.h"
 #include <algorithm>
 #include <iostream>
 #include <vector>
 #include <omp.h>
 #include <string>
 #include <chrono>
-#include <array>
 #include <random>
-#include <type_traits>
+#include <map>
 
-class Entity;
-using Probability = double;
-
-double fitness_eval(const Entity& ); // forward declaration
-
-template <typename T>
-T rnd(T min, T max)
-{
-    static std::mt19937_64 rng(std::random_device{}()); // random number generator
-
-    if constexpr (std::is_integral_v<T>)
-    {
-        std::uniform_int_distribution<T> dist(min, max);
-        return dist(rng);
-    }
-    else
-    {
-        std::uniform_real_distribution<T> dist(min, max);
-        return dist(rng);
-    }
-}
-
-template <typename T>
-T rnd();
-
-template <>
-Probability rnd<Probability>() { return rnd<Probability>(0, 1); }
-
-template <>
-bool rnd<bool>() { return rnd<int>(0, 1) == 0; }
-
-class Activator
-{
-    std::vector<bool> array;
-
-    std::vector<bool>::reference choose_one(const std::vector<std::vector<bool>::reference>& options)
-    {
-        assert(!options.empty());
-        return options[rnd<int>(0, options.size() - 1)];
-    }
-
-    std::vector<std::vector<bool>::reference> in_state(bool state)
-    {
-        std::vector<std::vector<bool>::reference> ret;
-        for (std::vector<bool>::reference e : array)
-            if (e == state)
-                ret.push_back(e);
-        return ret;
-    }
-
-    void activate_one() { choose_one(in_state(false)) = true; }
-    void deactivate_one() { choose_one(in_state(true)) = false; }
-
-    Activator& randomize(int min_active, int max_active)
-    {
-        for (int i = rnd<int>(min_active, max_active); i > 0; i--)
-            activate_one();
-        return *this;
-    }
-public:
-    Activator(int size = 0) : array(size, false) {}
-    Activator(std::vector<bool> v) : array(std::move(v)) {}
-    static Activator Random(int size, int min_active, int max_active)
-    {
-        return Activator{size}.randomize(min_active, max_active);
-    }
-    void mutate()
-    {
-        if ((rnd<Probability>() < 0.75) && (in_state(true).size() > 1)) // deactivate one. 75% chance.
-            deactivate_one();
-        if ((rnd<Probability>() < 0.75) && (!in_state(false).empty())) // activate one. 75% chance.
-            activate_one();
-    }
-    auto Array() const { return array; }
-    auto operator[](int index) const { return array[index]; }
-};
-
-class Actor
-{
-    bool is_legal() const { return (popcount(bb) <= upper_limit()) && (popcount(bb) > 0); }
-    static BitBoard choose_one(BitBoard available)
-    {
-        assert(available != 0);
-        auto index = rnd<int>(0, popcount(available) - 1);
-        return PDep(1ULL << index, available);
-    }
-    void add_one() { bb ^= Expand(choose_one(UniqueBits(~bb))); }
-    void remove_one() { bb ^= Expand(choose_one(UniqueBits(bb))); }
-protected:
-    BitBoard bb = 0;
-    virtual int upper_limit() const = 0;
-    virtual BitBoard UniqueBits(BitBoard) const = 0;
-    virtual BitBoard Expand(BitBoard) const = 0;
-    void randomize()
-    {
-        bb = 0;
-        add_one();
-        for (int i = 0; i < 6; i++)
-            if (rnd<bool>())
-                add_one();
-    }
-public:
-    Actor() = default;
-    Actor(BitBoard bb) : bb(bb) {}
-    virtual std::unique_ptr<Actor> clone() const = 0;
-    std::unique_ptr<Actor> UniformCrossover(const Actor& o) const
-    {
-        auto ret = o.clone();
-        auto mask = Expand(UniqueBits(rnd<uint64_t>(0, -1)));
-        ret->bb = (ret->bb & mask) | (bb & ~mask);
-        while (popcount(ret->bb) > ret->upper_limit())
-            ret->remove_one();
-        while (!ret->bb)
-            ret->add_one();
-        return ret;
-    }
-    void mutate()
-    {
-        if ((rnd<Probability>() < 0.75) && (popcount(bb) > 1)) // remove one. 75% chance.
-            remove_one();
-        if ((rnd<Probability>() < 0.75) && (popcount(bb) < upper_limit())) // add one. 75% chance.
-            add_one();
-        if ((rnd<Probability>() < 0.25) && (popcount(bb) < upper_limit())) // add one. 25% chance.
-            add_one();
-        if ((rnd<Probability>() < 0.25) && (popcount(bb) > 1)) // remove one. 25% chance.
-            remove_one();
-        assert(is_legal());
-    }
-    BitBoard Phenotype() const { return bb; }
-    virtual int Cost() const = 0;
-};
-
-class AsymmetricActor final : public Actor
-{
-    int upper_limit() const override { return 12; }
-    BitBoard UniqueBits(BitBoard b) const override { return b; }
-    BitBoard Expand(BitBoard b) const override { return b; }
-public:
-    AsymmetricActor() = default;
-    AsymmetricActor(BitBoard bb) : Actor(bb) {}
-    static AsymmetricActor Random() { AsymmetricActor x; x.randomize(); return x; }
-    std::unique_ptr<Actor> clone() const override { return std::make_unique<AsymmetricActor>(bb); }
-    int Cost() const override { return 8; }
-};
-
-class HorizontalActor final : public Actor
-{
-    int upper_limit() const override { return 12; }
-    BitBoard UniqueBits(BitBoard b) const override { return b & 0x0F0F0F0F0F0F0F0FULL; }
-    BitBoard Expand(BitBoard b) const override { return b | FlipHorizontal(b); }
-public:
-    HorizontalActor() = default;
-    HorizontalActor(BitBoard bb) : Actor(bb) {}
-    static HorizontalActor Random() { HorizontalActor x; x.randomize(); return x; }
-    std::unique_ptr<Actor> clone() const override { return std::make_unique<HorizontalActor>(bb); }
-    int Cost() const override { return 4; }
-};
-
-class DiagonalActor final : public Actor
-{
-    int upper_limit() const override { return 16; }
-    BitBoard UniqueBits(BitBoard b) const override { return b & 0xFF7F3F1F0F070301ULL; }
-    BitBoard Expand(BitBoard b) const override { return b | FlipDiagonal(b); }
-public:
-    DiagonalActor() = default;
-    DiagonalActor(BitBoard bb) : Actor(bb) {}
-    static DiagonalActor Random() { DiagonalActor x; x.randomize(); return x; }
-    std::unique_ptr<Actor> clone() const override { return std::make_unique<DiagonalActor>(bb); }
-    int Cost() const override { return 4; }
-};
-
-class Chromosome
-{
-public:
-    Activator activator;
-    std::vector<std::unique_ptr<Actor>> actors;
-    Chromosome() = default;
-    Chromosome(const Chromosome& o) : activator(o.activator)
-    {
-        std::transform(o.actors.begin(), o.actors.end(), std::back_inserter(actors), [](const auto& x) { return x->clone(); });
-    }
-    Chromosome(Chromosome&&) noexcept = default;
-    Chromosome& operator=(const Chromosome& o)
-    {
-        if (&o == this)
-            return *this;
-        activator = o.activator;
-        actors.clear();
-        std::transform(o.actors.begin(), o.actors.end(), std::back_inserter(actors), [](const auto& x) { return x->clone(); });
-    }
-    Chromosome& operator=(Chromosome&&) noexcept = default;
-
-    static Chromosome Random(int as, int hs, int ds, int min_active, int max_active)
-    {
-        Chromosome ret;
-        ret.activator = Activator::Random(as + hs + ds, min_active, max_active);
-        for (int i = 0; i < as; i++)
-            ret.actors.emplace_back(std::make_unique<AsymmetricActor>(AsymmetricActor::Random()));
-        for (int i = 0; i < hs; i++)
-            ret.actors.emplace_back(std::make_unique<HorizontalActor>(HorizontalActor::Random()));
-        for (int i = 0; i < ds; i++)
-            ret.actors.emplace_back(std::make_unique<DiagonalActor>(DiagonalActor::Random()));
-        return ret;
-    }
-    Chromosome UniformCrossover(const Chromosome& o) const
-    {
-        Chromosome ret;
-        ret.activator = rnd<bool>() ? activator : o.activator; // TODO: Maybe this should be UniformCrossover(activator, o.activator).
-        for (int i = 0; i < actors.size(); i++)
-            ret.actors.emplace_back(actors[i]->UniformCrossover(*o.actors[i]));
-        return ret;
-    }
-    // mutates each gene with a probabiliby of p.
-    void mutate(Probability p)
-    {
-        if (rnd<Probability>() < p / (actors.size() + 1))
-            activator.mutate();
-        for (auto& gene : actors)
-            if (rnd<Probability>() < p)
-                gene->mutate();
-    }
-    auto Activations() const { return activator.Array(); }
-    std::vector<BitBoard> Genotype() const
-    {
-        std::vector<BitBoard> ret;
-        for (int i = 0; i < actors.size(); i++)
-            ret.push_back(actors[i]->Phenotype());
-        return ret;
-    }
-    std::vector<BitBoard> Phenotype() const
-    {
-        std::vector<BitBoard> ret;
-        for (int i = 0; i < actors.size(); i++)
-            if (activator[i])
-                ret.push_back(actors[i]->Phenotype());
-        return ret;
-    }
-    int GenoCost() const
-    {
-        int sum = 0;
-        for (int i = 0; i < actors.size(); i++)
-            sum += actors[i]->Cost();
-        return sum;
-    }
-    int PhenoCost() const
-    {
-        int sum = 0;
-        for (int i = 0; i < actors.size(); i++)
-            if (activator[i])
-                sum += actors[i]->Cost();
-        return sum;
-    }
-};
-
-class Entity
-{
-    Chromosome chr;
-    mutable std::optional<double> fitness = std::nullopt;
-public:
-    Entity(const Entity&) = default;
-    Entity(Entity&&) noexcept = default;
-    Entity& operator=(const Entity&) = default;
-    Entity& operator=(Entity&&) noexcept = default;
-    Entity(Chromosome chr) noexcept : chr(std::move(chr)) {}
-
-    static Entity Random(int as, int hs, int ds, int min_active, int max_active)
-    {
-        return { Chromosome::Random(as, hs, ds, min_active, max_active) };
-    }
-
-    bool operator<(const Entity& o) const { return Fitness() < o.Fitness(); }
-
-    void mutate(Probability p) { chr.mutate(p); fitness = std::nullopt; }
-    double Fitness() const { if (!fitness) fitness = fitness_eval(*this); return fitness.value(); }
-    std::vector<BitBoard> Genotype() const { return chr.Genotype(); }
-    std::vector<BitBoard> Phenotype() const { return chr.Phenotype(); }
-    int GenoCost() const { return chr.GenoCost(); }
-    int PhenoCost() const { return chr.PhenoCost(); }
-    Entity Child(const Entity& o) const { return { chr.UniformCrossover(o.chr) }; }
-
-    std::wstring to_wstring() const
-    {
-        std::wstring ret = L"@@@@ Entity @@@\n";
-        ret += L"fitness: " + std::to_wstring(Fitness()) + L"\n";
-        auto active = chr.Activations();
-        auto genes = chr.Genotype();
-        for (int i = 0; i < genes.size(); i++)
-            ret += (active[i] ? L"+ " : L"- ") + SingleLine(genes[i]) + L'\n';
-        return ret;
-    }
-};
-
-std::wstring to_wstring(const Entity& e) { return e.to_wstring(); }
-
-Entity Child(const Entity& l, const Entity& r) { return l.Child(r); }
-
-class Population
-{
-    std::vector<Entity> entities; // always sorted!
-
-    void add(Entity&& e) { entities.emplace_back(std::move(e)); }
-    void sort() { std::sort(entities.begin(), entities.end()); }
-public:
-    Population() = default;
-    Population(std::vector<Entity> entities) : entities(std::move(entities)) {}
-    Population(const Population& o) : entities(o.entities) {}
-    static Population Random(std::size_t popcount, int as, int hs, int ds, int min_active, int max_active)
-    {
-        std::vector<Entity> vec;
-		std::generate_n(std::back_inserter(vec), popcount, [&]() { return Entity::Random(as, hs, ds, min_active, max_active); });
-		return { vec };
-    }
-
-    auto Entities() const { return entities; }
-
-    void Selection(std::size_t popcount)
-    {
-        sort();
-        entities.erase(entities.begin() + std::min(popcount, size()), entities.end());
-    }
-    Population Reproduce() const
-    {
-        Population next;
-        const int64_t size = entities.size();
-        for (int64_t i = 0; i < size; i++)
-        {
-            auto partner_index = rnd<int>(0, size-1);
-            next.add(Child(entities[i], entities[partner_index]));
-        }
-        return next;
-    }
-    void Mutation(Probability mutation)
-    {
-        for (std::size_t i = 1; i < entities.size(); i++)
-            entities[i].mutate(mutation);
-    }
-    void add(Population pop)
-    {
-        std::copy(pop.entities.begin(), pop.entities.end(), std::back_inserter(entities));
-    }
-    std::size_t size() const { return entities.size(); }
-    std::wstring to_wstring()
-    {
-        sort();
-        std::wstring ret;
-        for (int i = 0; i < 4; i ++)
-            ret += ::to_wstring(entities[i]);
-        return ret;
-    }
-};
-
-std::wstring to_wstring(Population& pop) { return pop.to_wstring(); }
-
+constexpr BitBoard L02X = 0x00000000000042FFULL;
 constexpr BitBoard L0 = 0x00000000000000FFULL;
 constexpr BitBoard L1 = 0x000000000000FF00ULL;
 constexpr BitBoard L2 = 0x0000000000FF0000ULL;
@@ -381,7 +30,9 @@ constexpr BitBoard D6 = 0x0000010204081020ULL;
 constexpr BitBoard D7 = 0x0001020408102040ULL;
 constexpr BitBoard D8 = 0x0102040810204080ULL;
 constexpr BitBoard C8 = 0x8040201008040201ULL;
+constexpr BitBoard B4 = 0x0000000000000F0FULL;
 constexpr BitBoard B5 = 0x0000000000001F1FULL;
+constexpr BitBoard B6 = 0x0000000000003F3FULL;
 constexpr BitBoard Q0 = 0x0000000000070707ULL;
 constexpr BitBoard Q1 = 0x0000000000070707ULL << 9;
 constexpr BitBoard Q2 = 0x0000000000070707ULL << 18;
@@ -402,529 +53,299 @@ constexpr BitBoard C3ppp = 0x81410000000103C7ULL;
 constexpr BitBoard C4pp = C4 | C3pp;
 constexpr BitBoard AA = 0x000000010105031FULL;
 
-template <typename Iterator>
-class IteratorWrapper final : public OutputIterator
+auto CreateMatrix(const DenseIndexer& indexer, const std::vector<Position>& pos)
 {
-    Iterator it;
+    const auto row_size = indexer.variations;
+    const auto cols = indexer.reduced_size;
+    const auto rows = pos.size();
+    MatrixCSR<uint32_t> mat(row_size, cols, rows);
 
-public:
-    IteratorWrapper(Iterator it) : it(it) {}
-    IteratorWrapper &operator*() override { return *this; }
-    IteratorWrapper &operator++() override
-    {
-        ++it;
-        return *this;
-    }
-    IteratorWrapper &operator=(int index) override
-    {
-        *it = index;
-        return *this;
-    }
-};
-
-auto CreateMatrix(const ConfigIndexer& config_indexer, const std::vector<Position> &positions)
-{
-    const auto entries_per_row = config_indexer.group_order;
-    const auto cols = config_indexer.reduced_size;
-    const auto rows = positions.size();
-    MatrixCSR<uint32_t> mat(entries_per_row, cols, rows);
-
-    const int64_t size = positions.size();
+    const int64_t size = pos.size();
     #pragma omp parallel for schedule(dynamic, 64)
     for (int64_t i = 0; i < size; i++)
-    {
-        IteratorWrapper output_it(mat.begin() + i * entries_per_row);
-        config_indexer.generate(output_it, positions[i]);
-    }
+        for (int j = 0; j < indexer.variations; j++)
+            mat.begin(i)[j] = indexer.DenseIndex(pos[i], j);
     return mat;
 }
 
-std::vector<Position> train_positions;
-std::vector<Position> test_positions;
-Vector train_scores, test_scores;
-
-double fitness_eval(const Entity& entity)
+Vector FittedWeights(const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
 {
-    auto phenotype = entity.Phenotype();
-    auto config_indexer = CreateConfigIndexer(phenotype);
-    auto train_mat = CreateMatrix(*config_indexer, train_positions);
-    auto test_mat = CreateMatrix(*config_indexer, test_positions);
-    Vector weights(config_indexer->reduced_size, 0);
-
-    DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(100));
-    PCG solver(transposed(train_mat) * train_mat, P, weights, transposed(train_mat) * train_scores);
+    auto indexer = CreateDenseIndexer(patterns);
+    auto matrix = CreateMatrix(*indexer, pos);
+    Vector weights(indexer->reduced_size, 0);
+    DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(1000));
+    PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
     solver.Iterate(10);
-    double fit = SampleStandardDeviation(test_scores - test_mat * solver.GetX());
-
-    return fit + std::max(0, entity.PhenoCost()-32);
+    return solver.GetX();
 }
 
-
-#pragma pack(1)
-struct DensePositionScore
+Vector EvalWeights(const Vector& weights, const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
 {
-    Position pos;
-    int8_t score;
-};
-#pragma pack(pop)
+    auto indexer = CreateDenseIndexer(patterns);
+    auto matrix = CreateMatrix(*indexer, pos);
+    return score - matrix * weights;
+}
 
-//int main(int argc, char *argv[])
+//auto FittedEvaluator(const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
 //{
-//    //auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, Ep, C3p1, B5 }); // 6.38253
-//    //auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, Epp, C3p1, B5 }); // 6.46631
-//    //auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B5 }); //6.38712
-//    //auto config_indexer = CreateConfigIndexer({ L02X, L1, L2, L3, D4, D5, D6, D7, Comet, C3p1, B6 }); // 6.5572
-//
-//    HashTablePVS tt{1'000'000};
-//    Search::PV pvs{tt};
-//
-//    for (int i = 18; i <= 22; i++)
-//    {
-//        const auto input = R"(G:\Reversi\rnd\e)" + std::to_string(i) + ".psc";
-//        std::vector<DensePositionScore> data;
-//        ReadFile<DensePositionScore>(std::back_inserter(data), input);
-//        for (int i = 0; i < data.size(); i++)
-//        {
-//        	if (i < 800'000)
-//        	{
-//        		test_positions.push_back(data[i].pos);
-//        		test_scores.push_back(data[i].score);
-//        	}
-//        	else
-//        	{
-//        		train_positions.push_back(data[i].pos);
-//        		train_scores.push_back(data[i].score);
-//        	}
-//        }
-//    }
-//
-//    //for (int e = 5; e < 10; e++)
-//    //    std::generate_n(std::back_inserter(train_positions), 1'000'000, PosGen::Random_with_empty_count(e /*empty_count*/, 13));
-//    //for (int e = 5; e < 10; e++)
-//    //    std::generate_n(std::back_inserter(test_positions), 250'000, PosGen::Random_with_empty_count(e /*empty_count*/, 113));
-//
-//    std::cout << "Generated" << std::endl;
-//
-//    //const int64_t train_size = static_cast<int64_t>(train_positions.size());
-//    //train_scores = Vector(train_size);
-//    //#pragma omp parallel for schedule(dynamic, 64)
-//    //for (int64_t i = 0; i < train_size; i++)
-//    //    train_scores[i] = pvs.Eval(train_positions[i]).window.lower();
-//
-//    //const int64_t test_size = static_cast<int64_t>(test_positions.size());
-//    //test_scores = Vector(test_size);
-//    //#pragma omp parallel for schedule(dynamic, 64)
-//    //for (int64_t i = 0; i < test_size; i++)
-//    //    test_scores[i] = pvs.Eval(test_positions[i]).window.lower();
-//
-//    //std::cout << "Solved" << std::endl;
-//
-//    Population pop;
-//    Chromosome chr;
-//    chr.activator = Activator({true, true, true, true, true, false, true, true});
-//    chr.actors.emplace_back(std::make_unique<AsymmetricActor>(B5));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- # - - - - # -"
-//        "# # # # # # # #"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "# # # # # # # #"
-//        "- # - - - - # -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L2));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L3));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - # # # # - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(C4));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(
-//        "# # - - - - - -"
-//        "# # # - - - - -"
-//        "- # # # - - - -"
-//        "- - # # - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"_BitBoard));
-//    pop.add(Population(std::vector<Entity>{Entity(chr)}));
-//
-//    chr.actors.clear();
-//    chr.actors.emplace_back(std::make_unique<AsymmetricActor>(B5));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - # # # # - -"
-//        "- - - # # - - -"
-//        "- - - # # - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "# - - - - - - #"
-//        "# # - - - - # #"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- # - - - - # -"
-//        "- - - - - - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- # # - - # # -"
-//        "# # - - - - # #"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- # - - - - # -"
-//        "# # # # # # # #"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - # # # # - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(C4));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(
-//        "# # - - - - - -"
-//        "# # # - - - - -"
-//        "- # # # - - - -"
-//        "- - # # - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"_BitBoard));
-//    pop.add(Population(std::vector<Entity>{Entity(chr)}));
-//
-//    chr.actors.clear();
-//    chr.actors.emplace_back(std::make_unique<AsymmetricActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - # - -"
-//        "- - - # # # # -"
-//        "- - - # # # # #"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"
-//        "# # # # # # # #"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "# # # # # # # #"
-//        "- # - - - - # -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L2));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L3));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - # # # # - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(C4));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(
-//        "# # - - - - - -"
-//        "# # # - - - - -"
-//        "- # # # - - - -"
-//        "- - # # - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"_BitBoard));
-//    pop.add(Population(std::vector<Entity>{Entity(chr)}));
-//
-//    chr.actors.clear();
-//    chr.actors.emplace_back(std::make_unique<AsymmetricActor>(B5));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"
-//        "# # # # # # # #"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "# # # # # # # #"
-//        "- # - - - - # -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L2));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L3));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - # # # # - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(C4));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(
-//        "# # - - - - - -"
-//        "# # # - - - - -"
-//        "- # # # - - - -"
-//        "- - # # - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"_BitBoard));
-//    pop.add(Population(std::vector<Entity>{Entity(chr)}));
-//
-//    chr.actors.clear();
-//    chr.actors.emplace_back(std::make_unique<AsymmetricActor>(B5));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L0));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L1));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L2));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(L3));
-//    chr.actors.emplace_back(std::make_unique<HorizontalActor>(
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - # # - - -"
-//        "- - # # # # - -"
-//        "- - - # # - - -"
-//        "- - - - - - - -"_BitBoard));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(C4));
-//    chr.actors.emplace_back(std::make_unique<DiagonalActor>(
-//        "# # - - - - - -"
-//        "# # # - - - - -"
-//        "- # # # - - - -"
-//        "- - # # - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"
-//        "- - - - - - - -"_BitBoard));
-//    pop.add(Population(std::vector<Entity>{Entity(chr)}));
-//    pop.add(Population::Random(20, 1 /*asymmetrics*/, 5 /*horizontals*/, 2 /*diagonals*/, 8, 8));
-//    for (int i = 0; i < 10000; i++)
-//    {
-//        std::wcout << L"Generation " << i << L" @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n"
-//            << to_wstring(pop) << L"\n";
-//
-//        Population next = pop.Reproduce();
-//        next.Mutation(std::sin(i) * 0.3 + 0.4);
-//        pop.Selection(15);
-//        pop.add(next);
-//        pop.Selection(20);
-//    }
-//    return 0;
+//    Vector weights = FittedWeights(patterns, pos, score);
+//    return Pattern::CreateEvaluator(patterns, Pattern::Weights{weights.begin(), weights.end()});
 //}
 
-/*
-fitness: 6.252528
---------
---------
---------
---------
---------
------#--
----####-
----#####
 
---------
---------
-#-------
--------#
---------
----##---
---###---
---##----
+auto Split(const std::vector<PosScore>& pos_score, int test_size, 
+           std::vector<Position>& test_pos, Vector& test_score,
+           std::vector<Position>& train_pos, Vector& train_score)
+{
+    for (int i = 0; i < test_size; i++)
+    {
+        test_pos.push_back(pos_score[i].pos);
+        test_score.push_back(pos_score[i].score);
+    }
+    for (int i = test_size; i < pos_score.size(); i++)
+    {
+        train_pos.push_back(pos_score[i].pos);
+        train_score.push_back(pos_score[i].score);
+    }
+}
 
---------  --------  --------  --------  --------
---------  --------  --------  --------  --------
---------  --------  --------  --------  --------
---------  --------  --------  --------  --------
---------  --------  #------#  #-####-#  ---##---
----##---  --------  #-####-#  --------  --####--
---------  ########  --------  --------  ---##---
-########  -#----#-  --------  --------  --------
+struct dDE
+{
+    int d, D, E;
+    auto operator<=>(const dDE&) const noexcept = default;
 
---------
---------
---------
---------
--------#
-------##
------###
-----####
+    std::string to_string() const { return "(" + std::to_string(d) + "," + std::to_string(D) + "," + std::to_string(E) + ")"; }
+};
 
-##------
-###-----
--###----
---##----
---------
---------
---------
---------
-*/
+std::string to_string(const dDE& o)
+{
+    return o.to_string();
+}
+
+std::ostream& operator<<(std::ostream& os, const dDE& o)
+{
+    return os << to_string(o);
+}
+
+float MagicFormula(const dDE& arg, const std::vector<float>& param)
+{
+    return (std::expf(param[0] * arg.d) + param[1]) * std::powf(arg.D - arg.d, param[2]) * (param[3] * arg.E + param[4]);
+    float s = param[0] * arg.d + param[1] * arg.D + param[2] * arg.E;
+    return param[3] * s * s + param[4] * s + param[5];
+}
+
+void MagicFormulaFit()
+{
+    const int max_empty_count = 24;
+    const int size = 500;
+
+    std::mt19937_64 rnd_engine;
+    std::uniform_real_distribution<float> dst{-1, 1};
+
+    std::map<dDE, float> SD;
+
+    std::vector<int> score = Load<int>(R"(G:\Reversi\weights\dDE.w)");
+    for (int E = 1; E <= max_empty_count; E++)
+    {
+        for (int D = 0; D <= E; D++)
+        {
+            for (int d = 0; d < D; d++)
+            {
+                std::vector<int> diff;
+                for (int i = 0; i < size; i++)
+                {
+                    int j = (max_empty_count + 1) * ((E - 1) * size + i);
+                    assert(score[j + d] != undefined_score);
+                    assert(score[j + D] != undefined_score);
+                    diff.push_back(score[j + d] - score[j + D]);
+                }
+                SD[{d,D,E}] = StandardDeviation(diff);
+            }
+        }
+    }
+    for (auto& sd : SD)
+        std::cout << sd.first << ": " << sd.second << "\n";
+
+    float best_value = 1'000'000'000;
+    std::vector<float> best_param{-0.25, 1.5, 0.25, 1, 1, 1};
+
+    float mean = 0;
+    for (const auto& sd : SD)
+        mean += sd.second;
+    mean /= SD.size();
+
+    float SS_tot = 0;
+    for (const auto& sd : SD)
+    {
+        float diff = sd.second - mean;
+        SS_tot += diff * diff;
+    }
+
+    float factor = 0.1;
+    for (int i = 0; i < 1'000'000'000; i++)
+    {
+        std::vector<float> param;
+        for (int i = 0; i < best_param.size(); i++)
+            param.push_back(best_param[i] + dst(rnd_engine) * factor);
+
+        float SS_res = 0;
+        for (const auto& sd : SD)
+        {
+            float mf = MagicFormula(sd.first, param);
+            float diff = mf - sd.second;
+            SS_res += diff * diff;
+        }
+        float R_sq = 1.0f - SS_res / SS_tot;
+        if (SS_res < best_value)
+        {
+            best_value = SS_res;
+            best_param = param;
+            std::cout << R_sq << ": ";
+            for (auto p : best_param)
+                std::cout << p << ","; 
+            std::cout << std::endl;
+        }
+    }
+}
+
+void TestSD(const std::vector<Position>& pos)
+{
+    PatternEval pattern_eval = DefaultPatternEval();
+    HashTablePVS tt{ 10'000'000 };
+    std::vector<int> diff;
+    for (int i = 0; i < pos.size(); i++)
+        diff.push_back(PVS{ tt, pattern_eval }.Score(pos[i]) - PVS{ tt, pattern_eval }.Score(pos[i], 0));
+    std::cout << StandardDeviation(diff) << std::endl;
+}
 
 int main()
 {
-    std::vector<std::vector<BitBoard>> ppp = {
-        //std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}, // 6.32
-        //std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}, // 6.21
-        //std::vector<BitBoard>{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2},
-        std::vector<BitBoard>{ // 5.11, 6.11, 6.63, 6.95, 7.18, 7.35, 7.50
-            B5
-            ,
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- # - - - - # -"
-            "# # # # # # # #"_BitBoard
-            ,
-            "# - - - - - - #"
-            "# # - - - - # #"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- # - - - - # -"
-            "- - - - - - - -"_BitBoard
-            ,
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- # # - - # # -"
-            "# # - - - - # #"_BitBoard
-            ,
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - # # # # - -"
-            "- - - # # - - -"
-            "- - - # # - - -"_BitBoard
-            ,C4
-            ,
-            "# # - - - - - -"
-            "# # # - - - - -"
-            "- # # # - - - -"
-            "- - # # - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"
-            "- - - - - - - -"_BitBoard
-    }
+    MagicFormulaFit();
+    return 0;
+    // 
+    // Tested on e22 - e24
+    //std::vector<BitBoard> patterns{Q0, C3p2, L02X, Ep, L1, L2, L3, D8, D7, D6, D5, D4}; // 12 Pattern => edax 3.85
+    //std::vector<BitBoard> patterns{Q0, B5, L02X, L1, L2, L3, D8, D7, D6, D5, D4}; // 11 Pattern => Logistello 7.55 from https://skatgame.net/mburo/ps/improve.pdf
+    //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}; // 12 Pattern => 3.92
+    //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2}; // 12 Pattern => 3.93
+    //std::vector<BitBoard> patterns{L02X, L1, L2, L3, D5, D6, D7, Comet, B5, C3p2, Q0}; // 11 Pattern => 3.73
+    //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}; // 10 Pattern => 3.96
+    std::vector<BitBoard> patterns{B5, C4, L02X, // 7 Pattern => 3.73, 4 Pattern => 3.88
+        "# - - - - - - #"
+        "# # - - - - # #"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- # - - - - # -"
+        "- - - - - - - -"_BitBoard
+        ,
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- # # - - # # -"
+        "# # - - - - # #"_BitBoard
+        ,
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - # # # # - -"
+        "- - - # # - - -"
+        "- - - # # - - -"_BitBoard
+        ,
+        "# # - - - - - -"
+        "# # # - - - - -"
+        "- # # # - - - -"
+        "- - # # - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"
+        "- - - - - - - -"_BitBoard
     };
+    Save(R"(G:\Reversi\weights\pattern.w)", patterns);
 
-    std::vector<DensePositionScore> data1;
-    std::vector<DensePositionScore> data2;
-    std::vector<DensePositionScore> data3;
-    std::vector<DensePositionScore> data4;
-    std::vector<DensePositionScore> data5;
-    ReadFile<DensePositionScore>(std::back_inserter(data1), R"(G:\Reversi\rnd\e18.psc)");
-    ReadFile<DensePositionScore>(std::back_inserter(data2), R"(G:\Reversi\rnd\e19.psc)");
-    ReadFile<DensePositionScore>(std::back_inserter(data3), R"(G:\Reversi\rnd\e20.psc)");
-    ReadFile<DensePositionScore>(std::back_inserter(data4), R"(G:\Reversi\rnd\e21.psc)");
-    ReadFile<DensePositionScore>(std::back_inserter(data5), R"(G:\Reversi\rnd\e22.psc)");
+    const int test_size = 50'000;
 
-    for (int i = 990'000; i < 1'000'000; i++)
+    auto indexer = CreateDenseIndexer(patterns);
+    std::cout << "Weights to fit: " << indexer->reduced_size << std::endl;
+
+    for (int block = 0; block < 8; block++)
     {
-        test_positions.push_back(data1[i].pos);
-        test_positions.push_back(data2[i].pos);
-        test_positions.push_back(data3[i].pos);
-        test_positions.push_back(data4[i].pos);
-        test_positions.push_back(data5[i].pos);
-        test_scores.push_back(data1[i].score);
-        test_scores.push_back(data2[i].score);
-        test_scores.push_back(data3[i].score);
-        test_scores.push_back(data4[i].score);
-        test_scores.push_back(data5[i].score);
+        std::vector<Position> test_pos, train_pos;
+        Vector test_score, train_score;
+        for (int e = block * 3 + 1; e < block * 3 + 4; e++)
+        {
+            if (e >= 0 && e < 25)
+            {
+                auto data = Load<PosScore>(R"(G:\Reversi\rnd\e)" + std::to_string(e) + ".psc");
+                Split(data, test_size, test_pos, test_score, train_pos, train_score);
+            }
+        }
+        for (auto& ele : test_score)
+            ele /= 2;
+        for (auto& ele : train_score)
+            ele /= 2;
+
+        const auto start = std::chrono::high_resolution_clock::now();
+        auto matrix = CreateMatrix(*indexer, train_pos);
+        Vector weights(indexer->reduced_size, 0);
+        DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(1000));
+        PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * train_score);
+        solver.Iterate(10);
+        weights = FittedWeights(patterns, train_pos, train_score);
+        const auto stop = std::chrono::high_resolution_clock::now();
+
+        Save(R"(G:\Reversi\weights\block)" + std::to_string(block) + ".w", weights);
+
+        auto test_matrix = CreateMatrix(*indexer, test_pos);
+        auto train_error = matrix * weights - train_score;
+        auto test_error = test_matrix * weights - test_score;
+
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)
+            << "\tTrainAvgAbsError: " << Avg(train_error, [](double x){ return std::abs(x); })
+    	    << "\t TestAvgAbsError: " << Avg(test_error, [](double x){ return std::abs(x); })
+            << "\tTrainSD: " << StandardDeviation(train_error)
+            << "\t TestSD: " << StandardDeviation(test_error)
+            << std::endl;
     }
 
-    for (int j = 1; j < 100; j++)
+    PatternEval pattern_eval = DefaultPatternEval();
+    HashTablePVS tt{ 100'000'000 };
+    const int size = 500;
+    const int max_empty_count = 24;
+
+    std::vector<Position> pos;
+    for (int empty_count = 1; empty_count <= max_empty_count; empty_count++)
+        std::generate_n(
+            std::back_inserter(pos),
+            size,
+            PosGen::RandomPlayed(empty_count)
+        );
+
+    std::vector<int> score(pos.size() * (max_empty_count + 1), undefined_score);
+
+    #pragma omp parallel for schedule(dynamic,1)
+    for (int i = 0; i < pos.size(); i++)
     {
-        train_positions.clear();
-        train_scores.clear();
-    	for (int i = 0; i < j * 10'000; i++)
-    	{
-            train_positions.push_back(data1[i].pos);
-            train_positions.push_back(data2[i].pos);
-            train_positions.push_back(data3[i].pos);
-            train_positions.push_back(data4[i].pos);
-            train_positions.push_back(data5[i].pos);
-            train_scores.push_back(data1[i].score);
-            train_scores.push_back(data2[i].score);
-            train_scores.push_back(data3[i].score);
-            train_scores.push_back(data4[i].score);
-            train_scores.push_back(data5[i].score);
-    	}
+        int j = i * (max_empty_count + 1);
+        for (int d = 0; d <= pos[i].EmptyCount(); d++)
+            score[j + d] = PVS{ tt, pattern_eval }.Score(pos[i], d);
 
-    	for (const auto& patterns : ppp)
-    	{
-    		const auto start = std::chrono::high_resolution_clock::now();
-    		auto config_indexer = CreateConfigIndexer(patterns);
-    		auto train_mat = CreateMatrix(*config_indexer, train_positions);
-    		auto test_mat = CreateMatrix(*config_indexer, test_positions);
-
-    		Vector weights(config_indexer->reduced_size, 0);
-
-    		DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(1000));
-    		PCG solver(transposed(train_mat) * train_mat, P, weights, transposed(train_mat) * train_scores);
-    		solver.Iterate(10);
-    		const auto end = std::chrono::high_resolution_clock::now();
-    		const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    		const auto milliseconds = duration.count();
-    		std::cout << milliseconds << "ms. Reduced size: " << config_indexer->reduced_size
-    			<< "\tTrainError: " << SampleStandardDeviation(train_scores - train_mat * solver.GetX())
-    			<< "\t TestError: " << SampleStandardDeviation(test_scores - test_mat * solver.GetX()) << std::endl;
-    	}
+        #pragma omp critical
+        {
+            std::cout << "e" << pos[i].EmptyCount() << "{";
+            for (int d = 0; d <= pos[i].EmptyCount(); d++)
+                std::cout << score[j + d] << ",";
+            std::cout << "}" << std::endl;
+        }
     }
+    Save(R"(G:\Reversi\weights\dDE.w)", score);
+
+    MagicFormulaFit();
     return 0;
 }

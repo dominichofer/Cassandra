@@ -4,6 +4,8 @@
     <ClInclude Include="Integers.h" />
     <ClInclude Include="FForum.h" />
     <ClInclude Include="IO.h" />
+    <ClInclude Include="PosScore.h" />
+    <ClInclude Include="File.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />

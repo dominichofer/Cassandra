@@ -28,20 +28,20 @@ class MatrixCSR : public IMatrix
 public:
 	using index_type = IndexType;
 private:
-	const std::size_t entires_per_row;
+	const std::size_t row_size;
 	const std::size_t cols;
 	std::vector<index_type> col_indices;
 public:
-	MatrixCSR(std::size_t entires_per_row, std::size_t cols, std::size_t rows = 0) noexcept
-		: entires_per_row(entires_per_row)
+	MatrixCSR(std::size_t row_size, std::size_t cols, std::size_t rows = 0)
+		: row_size(row_size)
 		, cols(cols)
-		, col_indices(rows * entires_per_row)
+		, col_indices(rows * row_size)
 	{
 		if (std::numeric_limits<index_type>::max() < cols)
 			throw std::runtime_error("Template type 'index_type' is too small to represent 'cols'.");
 	}
 
-	std::size_t Rows() const noexcept override { return col_indices.size() / entires_per_row; }
+	std::size_t Rows() const noexcept override { return col_indices.size() / row_size; }
 	std::size_t Cols() const noexcept override { return cols; }
 	std::size_t size() const noexcept override { return col_indices.size(); }
 
@@ -51,18 +51,18 @@ public:
 	auto end() noexcept { return col_indices.end(); }
 	auto end() const noexcept { return col_indices.end(); }
 	auto cend() const noexcept { return col_indices.cend(); }
-	auto begin(std::size_t row) noexcept { return col_indices.begin() + row * entires_per_row; }
-	auto begin(std::size_t row) const noexcept { return col_indices.begin() + row * entires_per_row; }
-	auto cbegin(std::size_t row) const noexcept { return col_indices.cbegin() + row * entires_per_row; }
-	auto end(std::size_t row) noexcept { return col_indices.begin() + (row + 1) * entires_per_row; }
-	auto end(std::size_t row) const noexcept { return col_indices.begin() + (row + 1) * entires_per_row; }
-	auto cend(std::size_t row) const noexcept { return col_indices.cbegin() + (row + 1) * entires_per_row; }
+	auto begin(std::size_t row) noexcept { return col_indices.begin() + row * row_size; }
+	auto begin(std::size_t row) const noexcept { return col_indices.begin() + row * row_size; }
+	auto cbegin(std::size_t row) const noexcept { return col_indices.cbegin() + row * row_size; }
+	auto end(std::size_t row) noexcept { return col_indices.begin() + (row + 1) * row_size; }
+	auto end(std::size_t row) const noexcept { return col_indices.begin() + (row + 1) * row_size; }
+	auto cend(std::size_t row) const noexcept { return col_indices.cbegin() + (row + 1) * row_size; }
 
 	Vector operator*(const Vector& x) const override
 	{
 		if(x.size() != cols)
 			throw std::runtime_error("Size mismatch.");
-		if(entires_per_row % 4 != 0)
+		if(row_size % 4 != 0)
 			throw std::runtime_error("entires_per_row must be equal to 0 (mod 4).");
 
 		const int64_t rows = static_cast<int64_t>(Rows());
@@ -71,9 +71,9 @@ public:
 		for (int64_t i = 0; i < rows; i++)
 		{
 			double sum = 0; // prevents cache thrashing
-			for (auto j = i * entires_per_row; j < (i + 1) * entires_per_row; j+=4)
+			for (auto j = i * row_size; j < (i + 1) * row_size; j+=4)
 				sum += x[col_indices[j+0]] + x[col_indices[j+1]] + x[col_indices[j+2]] + x[col_indices[j+3]];
-			result[i] = sum;
+			result[i] = static_cast<Vector::value_type>(sum);
 		}
 		return result;
 	}
@@ -101,7 +101,7 @@ public:
 
 	// Jacobi Preconditioner Square
 	// Returns 1 / diag(A' * A)
-	Vector JacobiPreconditionerSquare(double infinity = std::numeric_limits<double>::infinity()) const
+	Vector JacobiPreconditionerSquare(Vector::value_type infinity = std::numeric_limits<Vector::value_type>::infinity()) const
 	{
 		return inv(DiagATA(), infinity);
 	}
@@ -146,7 +146,7 @@ namespace
 
 				#pragma omp for nowait
 				for (int64_t i = 0; i < cols; i++)
-					for (auto j = i * m.entires_per_row; j < (i + 1) * m.entires_per_row; j++)
+					for (auto j = i * m.row_size; j < (i + 1) * m.row_size; j++)
 						local_result[m.col_indices[j]] += x[i];
 
 				#pragma omp critical
@@ -180,7 +180,7 @@ namespace
 			if (l.begin() != r.begin())
 				return l * (r * x);
 
-			if(r.entires_per_row % 4 != 0)
+			if(r.row_size % 4 != 0)
 				throw std::runtime_error("entires_per_row must be equal to 0 (mod 4).");
 
 			const int64_t rows = static_cast<int64_t>(r.Rows());
@@ -192,15 +192,13 @@ namespace
 				#pragma omp for nowait schedule(dynamic,64)
 				for (int64_t i = 0; i < rows; i++)
 				{
+					const auto begin = i * r.row_size;
+					const auto end = begin + r.row_size;
 					double sum = 0;
-					for (auto j = i * r.entires_per_row; j < (i + 1) * r.entires_per_row; j+=4)
-						sum += x[r.col_indices[j+0]] + x[r.col_indices[j+1]] + x[r.col_indices[j+2]] + x[r.col_indices[j+3]];
-					for (auto j = i * r.entires_per_row; j < (i + 1) * r.entires_per_row; j+=4) {
-						local_result[r.col_indices[j+0]] += sum;
-						local_result[r.col_indices[j+1]] += sum;
-						local_result[r.col_indices[j+2]] += sum;
-						local_result[r.col_indices[j+3]] += sum;
-					}
+					for (auto j = begin; j < end; j++)
+						sum += x[r.col_indices[j]];
+					for (auto j = begin; j < end; j++)
+						local_result[r.col_indices[j]] += static_cast<Vector::value_type>(sum);
 				}
 
 				#pragma omp critical

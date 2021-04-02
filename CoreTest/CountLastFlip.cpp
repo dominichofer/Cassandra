@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "Core/Core.h"
 
 namespace CountLastFlip_test
 {
@@ -6,7 +7,7 @@ namespace CountLastFlip_test
 	{
 		const auto seed = 13;
 		std::mt19937_64 rnd_engine(seed);
-		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
+		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, -1)(rnd_engine); };
 
 		for (int i = 0; i < 100'000; i++)
 		{
@@ -14,7 +15,7 @@ namespace CountLastFlip_test
 			const auto P = r & ~BitBoard(move);
 			const auto O = ~r & ~BitBoard(move);
 			Position pos(P, O);
-			ASSERT_EQ(2 * popcount(Flips(pos, move)), CountLastFlip(pos, move));
+			ASSERT_EQ(popcount(Flips(pos, move)), CountLastFlip(pos, move));
 		}
 	}
 

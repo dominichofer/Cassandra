@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "Core/Core.h"
 
 namespace Bit
 {
@@ -29,12 +30,4 @@ namespace Bit
 		ASSERT_EQ(popcount(3ULL), 2);
 		ASSERT_EQ(popcount(0xFFFFFFFFFFFFFFFFULL), 64);
 	}
-
-	TEST(Bit, reduce_or)
-	{
-		ASSERT_EQ(reduce_or(int64x4{}), 0);
-		ASSERT_EQ(reduce_or(int64x4{1,2,4,8}), 1|2|4|8);
-		ASSERT_EQ(reduce_or(int64x4{-1,2,4,8}), -1);
-	}
-	
 }

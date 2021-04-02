@@ -47,7 +47,7 @@ public:
 			double sum = 0; // prevents cache thrashing
 			for (std::size_t j = 0; j < cols; j++)
 				sum += this->operator()(i, j) * x[j];
-			result[i] = sum;
+			result[i] = static_cast<Vector::value_type>(sum);
 		}
 		return result;
 	}

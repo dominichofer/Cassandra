@@ -2,154 +2,167 @@
 
 using namespace Pattern;
 
-constexpr BitBoard PatternH{ 0x00000000000000E7ULL }; // HorizontalSymmetric
-constexpr BitBoard PatternD{ 0x8040201008040303ULL }; // DiagonalSymmetric
-constexpr BitBoard PatternA{ 0x000000000000000FULL }; // Asymmetric
-static const auto WeightsH = Weights(CreateConfigIndexer(PatternH)->reduced_size, 0);
-static const auto WeightsD = Weights(CreateConfigIndexer(PatternD)->reduced_size, 0);
-static const auto WeightsA = Weights(CreateConfigIndexer(PatternA)->reduced_size, 0);
-
+constexpr BitBoard HorizontalSymmetric{ 0x00000000000000E7ULL };
+constexpr BitBoard DiagonalSymmetric{ 0x8040201008040303ULL };
+constexpr BitBoard Asymmetric{ 0x000000000000000FULL };
 TEST(MetaTest, HorizontalSymmetric)
 {
-	ASSERT_EQ(PatternH, FlipHorizontal(PatternH));
+	ASSERT_EQ(HorizontalSymmetric, FlipHorizontal(HorizontalSymmetric));
 }
 
 TEST(MetaTest, DiagonalSymmetric)
 {
-	ASSERT_EQ(PatternD, FlipDiagonal(PatternD));
+	ASSERT_EQ(DiagonalSymmetric, FlipDiagonal(DiagonalSymmetric));
 }
 
 TEST(MetaTest, Asymmetric)
 {
-	ASSERT_NE(PatternA, FlipHorizontal(PatternA));
-	ASSERT_NE(PatternA, FlipDiagonal(PatternA));
+	ASSERT_NE(Asymmetric, FlipHorizontal(Asymmetric));
+	ASSERT_NE(Asymmetric, FlipDiagonal(Asymmetric));
 }
 
-TEST(ConfigIndexer, CreateConfigIndexer_HorizontalSymmetric)
+TEST(DenseIndexer, CreateDenseIndexer_HorizontalSymmetric)
 {
-	const auto ci = CreateConfigIndexer(PatternH);
+	const auto indexer = CreateDenseIndexer(HorizontalSymmetric);
+	ASSERT_EQ(indexer->variations, 4);
 
-	ASSERT_EQ(ci->group_order, 4);
-	ASSERT_EQ(ci->Patterns()[0], PatternH);
-	ASSERT_EQ(ci->Patterns().size(), 4);
+	std::vector<int> indices;
+	for (const Position& pos : Configurations(HorizontalSymmetric))
+		indices.push_back(indexer->DenseIndex(pos, 0));
+	std::sort(indices.begin(), indices.end());
+
+	for (int i = 0; i < indexer->reduced_size; i++)
+		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
 }
 
-TEST(ConfigIndexer, CreateConfigIndexer_DiagonalSymmetric)
+TEST(DenseIndexer, CreateDenseIndexer_DiagonalSymmetric)
 {
-	const auto ci = CreateConfigIndexer(PatternD);
+	const auto indexer = CreateDenseIndexer(DiagonalSymmetric);
+	ASSERT_EQ(indexer->variations, 4);
 
-	ASSERT_EQ(ci->group_order, 4);
-	ASSERT_EQ(ci->Patterns()[0], PatternD);
-	ASSERT_EQ(ci->Patterns().size(), 4);
+	std::vector<int> indices;
+	for (const Position& pos : Configurations(DiagonalSymmetric))
+		indices.push_back(indexer->DenseIndex(pos, 0));
+	std::sort(indices.begin(), indices.end());
+
+	for (int i = 0; i < indexer->reduced_size; i++)
+		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
 }
 
-TEST(ConfigIndexer, CreateConfigIndexer_Asymmetric)
+TEST(DenseIndexer, CreateDenseIndexer_Asymmetric)
 {
-	const auto ci = CreateConfigIndexer(PatternA);
+	const auto indexer = CreateDenseIndexer(Asymmetric);
+	ASSERT_EQ(indexer->variations, 8);
 
-	ASSERT_EQ(ci->group_order, 8);
-	ASSERT_EQ(ci->Patterns()[0], PatternA);
-	ASSERT_EQ(ci->Patterns().size(), 8);
+	std::vector<int> indices;
+	for (const Position& pos : Configurations(Asymmetric))
+		indices.push_back(indexer->DenseIndex(pos, 0));
+	std::sort(indices.begin(), indices.end());
+
+	for (int i = 0; i < indexer->reduced_size; i++)
+		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
 }
 
-TEST(Evaluator, CreateEvaluator_works_for_horizontal_symmetric_pattern)
+TEST(DenseIndexer, CreateDenseIndexer_Group)
 {
-	const auto p = CreateEvaluator(PatternH, WeightsH);
+	const auto indexer = CreateDenseIndexer({HorizontalSymmetric, DiagonalSymmetric, Asymmetric});
+	ASSERT_EQ(indexer->variations, 16);
 
-	ASSERT_EQ(p->Pattern, PatternH);
-}
+	std::vector<int> indices;
+	for (const Position& pos : Configurations(HorizontalSymmetric))
+		indices.push_back(indexer->DenseIndex(pos, 0));
+	for (const Position& pos : Configurations(DiagonalSymmetric))
+		indices.push_back(indexer->DenseIndex(pos, 4));
+	for (const Position& pos : Configurations(Asymmetric))
+		indices.push_back(indexer->DenseIndex(pos, 8));
 
-TEST(Evaluator, CreateEvaluator_works_for_diagonal_symmetric_pattern)
-{
-	const auto p = CreateEvaluator(PatternD, WeightsD);
-
-	ASSERT_EQ(p->Pattern, PatternD);
-}
-
-TEST(Evaluator, CreateEvaluator_works_for_asymmetric_pattern)
-{
-	const auto p = CreateEvaluator(PatternA, WeightsA);
-
-	ASSERT_EQ(p->Pattern, PatternA);
+	for (int i = 0; i < indexer->reduced_size; i++)
+		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
 }
 
 void Test_SymmetryIndependance(const BitBoard pattern, const Weights& compressed)
 {
 	const auto eval = CreateEvaluator(pattern, compressed);
 
-	// Assert score's independance of flips
+	// Assert score's independance of symmetry flips
 	for (auto config : Configurations(pattern))
 	{
-		const auto score = eval->Eval(config);
-		for (std::size_t i = 1; i < 8; i++)
-		{
-			switch (i)
-			{
-				case 1: config.FlipHorizontal(); break;
-				case 2: config.FlipVertical(); break;
-				case 3: config.FlipHorizontal(); break;
-				case 4: config.FlipDiagonal(); break;
-				case 5: config.FlipHorizontal(); break;
-				case 6: config.FlipVertical(); break;
-				case 7: config.FlipHorizontal(); break;
-			}
-			auto other = eval->Eval(config);
-			ASSERT_EQ(score, other);
-		}
+		const auto score_0 = eval->Eval(config);
+		config.FlipHorizontal();
+		const auto score_1 = eval->Eval(config);
+		config.FlipVertical();
+		const auto score_2 = eval->Eval(config);
+		config.FlipHorizontal();
+		const auto score_3 = eval->Eval(config);
+		config.FlipDiagonal();
+		const auto score_4 = eval->Eval(config);
+		config.FlipHorizontal();
+		const auto score_5 = eval->Eval(config);
+		config.FlipVertical();
+		const auto score_6 = eval->Eval(config);
+		config.FlipHorizontal();
+		const auto score_7 = eval->Eval(config);
+
+		ASSERT_EQ(score_0, score_1);
+		ASSERT_EQ(score_0, score_2);
+		ASSERT_EQ(score_0, score_3);
+		ASSERT_EQ(score_0, score_4);
+		ASSERT_EQ(score_0, score_5);
+		ASSERT_EQ(score_0, score_6);
+		ASSERT_EQ(score_0, score_7);
 	}
 }
 
 TEST(Evaluator, HorizontalSymmetric_is_independant_of_symmetry)
 {
-	Test_SymmetryIndependance(PatternH, WeightsH);
+	const auto weights = Weights(CreateDenseIndexer(HorizontalSymmetric)->reduced_size, 0);
+	Test_SymmetryIndependance(HorizontalSymmetric, weights);
 }
 
 TEST(Evaluator, DiagonalSymmetric_is_independant_of_symmetry)
 {
-	Test_SymmetryIndependance(PatternD, WeightsD);
+	const auto weights = Weights(CreateDenseIndexer(DiagonalSymmetric)->reduced_size, 0);
+	Test_SymmetryIndependance(DiagonalSymmetric, weights);
 }
 
 TEST(Evaluator, Asymmetric_is_independant_of_symmetry)
 {
-	Test_SymmetryIndependance(PatternA, WeightsA);
+	const auto weights = Weights(CreateDenseIndexer(Asymmetric)->reduced_size, 0);
+	Test_SymmetryIndependance(Asymmetric, weights);
 }
 
-void Test_LegalWeights(BitBoard pattern)
+void Test_Expansion(BitBoard pattern)
 {
-	auto config_indexer = CreateConfigIndexer(pattern);
+	auto indexer = CreateDenseIndexer(pattern);
 
-	Weights compressed(config_indexer->reduced_size);
+	Weights compressed(indexer->reduced_size);
 	std::iota(compressed.begin(), compressed.end(), 1);
 	auto evaluator = CreateEvaluator(pattern, compressed);
 	PosGen::Random rnd(78);
 
-	for (std::size_t i = 0; i < 100'000; i++)
+	for (int i = 0; i < 100'000; i++)
 	{
-		const auto pos = rnd();
+		Position pos = rnd();
 
-		std::vector<int> configs;
-		config_indexer->generate(std::back_inserter(configs), pos);
 		float sum = 0;
-		for (const auto& it : configs)
-			sum += compressed[it];
+		for (int i = 0; i < indexer->variations; i++)
+			sum += compressed[indexer->DenseIndex(pos, i)];
 
-		auto score = evaluator->Eval(pos);
-
-		ASSERT_EQ(sum, score);
+		ASSERT_EQ(sum, evaluator->Eval(pos));
 	}
 }
 
-TEST(Evaluator, LegalWeights_HorizontalSymmetric)
+TEST(Evaluator, Weights_Expansion_HorizontalSymmetric)
 {
-	Test_LegalWeights(PatternH);
+	Test_Expansion(HorizontalSymmetric);
 }
 
-TEST(Evaluator, LegalWeights_DiagonalSymmetric)
+TEST(Evaluator, Weights_Expansion_DiagonalSymmetric)
 {
-	Test_LegalWeights(PatternD);
+	Test_Expansion(DiagonalSymmetric);
 }
 
-TEST(Evaluator, LegalWeights_Asymmetric)
+TEST(Evaluator, Weights_Expansion_Asymmetric)
 {
-	Test_LegalWeights(PatternA);
+	Test_Expansion(Asymmetric);
 }

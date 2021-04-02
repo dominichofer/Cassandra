@@ -1,16 +1,7 @@
-#include "NegaMax.h"
+#include "Algorithm.h"
 #include <algorithm>
 
-using namespace Search;
-
-Result NegaMax::Eval(Position pos, Intensity)
-{
-	node_counter = 0;
-	Score score = Eval_triage(pos);
-	return Result::ExactScore(score, pos.EmptyCount(), Selectivity::None, Field::invalid, node_counter);
-}
-
-Score NegaMax::Eval_triage(const Position& pos)
+int NegaMax::Eval(const Position& pos)
 {
 	Moves moves{ pos.Empties() };
 	const auto move1 = moves.ExtractFirst();
@@ -26,35 +17,38 @@ Score NegaMax::Eval_triage(const Position& pos)
 	}
 }
 
-Score NegaMax::Eval_0(const Position& pos)
+int NegaMax::Eval_0(const Position& pos)
 {
-	node_counter++;
+	assert(pos.EmptyCount() == 0);
+	node_count++;
 	return EvalGameOver(pos);
 }
 
-Score NegaMax::Eval_1(const Position& pos, const Field move1)
+int NegaMax::Eval_1(const Position& pos, Field move1)
 {
-	const Score score = static_cast<Score>(2 * popcount(pos.Player())) - 63; // == popcount(pos.P) - popcount(pos.O)
+	assert(pos.EmptyCount() == 1);
+	const int score = popcount(pos.Player()) - 31; // Assumes Player can play.
 
 	if (const auto diff = CountLastFlip(pos, move1))
 	{
-		node_counter += 2;
-		return score + diff + 1;
+		node_count += 2;
+		return score + diff;
 	}
 	if (const auto diff = CountLastFlip(PlayPass(pos), move1))
 	{
-		node_counter += 3;
+		node_count += 3;
 		return score - diff - 1;
 	}
 
-	node_counter++;
-	return (score > 0) ? score + 1 : score - 1;
+	node_count++;
+	return (score > 0) ? score : score - 1;
 }
 
-Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
+int NegaMax::Eval_2(const Position& pos, Field move1, Field move2)
 {
-	node_counter++;
-	Score score = -infinity;
+	assert(pos.EmptyCount() == 2);
+	node_count++;
+	int score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
 		score = -Eval_1(Play(pos, move1, flips), move2);
@@ -62,7 +56,7 @@ Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 	if (const auto flips = Flips(pos, move2))
 		score = std::max(score, -Eval_1(Play(pos, move2, flips), move1));
 
-	if (score != -infinity)
+	if (score != -inf_score)
 		return score;
 
 	const auto passed = PlayPass(pos);
@@ -71,10 +65,11 @@ Score NegaMax::Eval_2(const Position& pos, const Field move1, const Field move2)
 	return EvalGameOver(pos);
 }
 
-Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2, const Field move3)
+int NegaMax::Eval_3(const Position& pos, Field move1, Field move2, Field move3)
 {
-	node_counter++;
-	Score score = -infinity;
+	assert(pos.EmptyCount() == 3);
+	node_count++;
+	int score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
 		score = -Eval_2(Play(pos, move1, flips), move2, move3);
@@ -85,7 +80,7 @@ Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2,
 	if (const auto flips = Flips(pos, move3))
 		score = std::max(score, -Eval_2(Play(pos, move3, flips), move1, move2));
 
-	if (score != -infinity)
+	if (score != -inf_score)
 		return score;
 
 	const auto passed = PlayPass(pos);
@@ -94,13 +89,13 @@ Score NegaMax::Eval_3(const Position& pos, const Field move1, const Field move2,
 	return EvalGameOver(pos);
 }
 
-Score NegaMax::Eval_N(const Position& pos)
+int NegaMax::Eval_N(const Position& pos)
 {
-	if (pos.EmptyCount() <= 3)
-		return Eval_triage(pos);
+	assert(pos.EmptyCount() >= 3);
+	if (pos.EmptyCount() == 3)
+		return Eval(pos);
 
-	node_counter++;
-
+	node_count++;
 	const Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{
@@ -110,9 +105,8 @@ Score NegaMax::Eval_N(const Position& pos)
 		return EvalGameOver(pos);
 	}
 
-	Score score = -infinity;
+	int score = -inf_score;
 	for (const auto& move : moves)
 		score = std::max(score, -Eval_N(Play(pos, move)));
-
 	return score;
 }

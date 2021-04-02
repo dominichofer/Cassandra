@@ -27,7 +27,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -74,6 +74,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Pattern\Pattern.vcxproj">
+      <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

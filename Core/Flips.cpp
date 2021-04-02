@@ -1,8 +1,14 @@
 #include "Position.h"
 #include "Bit.h"
+#include "MoreTypes.h"
 #include <array>
 
-alignas(64) static const std::array<int64, 1024> masks = {
+#ifdef __CUDA_ARCH__
+	__constant__ static const uint64 masks[1024] = {
+#else
+	static const std::array<int64, 1024> masks = {
+#endif
+
 	0x00000000000000feI64, 0x0101010101010100I64, 0x8040201008040200I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64,
 	0x00000000000000fcI64, 0x0202020202020200I64, 0x0080402010080400I64, 0x0000000000000100I64, 0x0000000000000001I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64,
 	0x00000000000000f8I64, 0x0404040404040400I64, 0x0000804020100800I64, 0x0000000000010200I64, 0x0000000000000003I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64,
@@ -69,18 +75,21 @@ alignas(64) static const std::array<int64, 1024> masks = {
 	0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x0000000000000000I64, 0x7f00000000000000I64, 0x0080808080808080I64, 0x0040201008040201I64, 0x0000000000000000I64,
 };
 
-BitBoard Flips(const Position& pos, Field move) noexcept
+
+#ifdef __AVX2__
+
+CUDA_CALLABLE BitBoard Flips(const Position& pos, Field move) noexcept
 {
 	const int64x4 P(pos.Player());
 	const int64x4 O(pos.Opponent());
-	const int64x4 mask1(_mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + static_cast<uint64>(move) * 8 + 0)));
-	const int64x4 mask2(_mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + static_cast<uint64>(move) * 8 + 4)));
+	const int64x4 mask1(masks.data() + static_cast<uint64>(move) * 8 + 0);
+	const int64x4 mask2(masks.data() + static_cast<uint64>(move) * 8 + 4);
 
 	int64x4 outflank1 = andnot(O, mask1);
 	// look for non-opponent LS1B
 	outflank1 &= -outflank1;
 	outflank1 &= P;
-	outflank1 += (outflank1 != int64x4{});
+	outflank1 += ~cmpeq(outflank1, int64x4{});
 	const int64x4 flip1 = outflank1 & mask1;
 
 	// isolate non-opponent MS1B by clearing lower bits
@@ -95,3 +104,71 @@ BitBoard Flips(const Position& pos, Field move) noexcept
 
 	return reduce_or(flip1 | flip2);
 }
+
+#else
+
+CUDA_CALLABLE BitBoard Flips(const Position& pos, Field move) noexcept
+{
+	const uint64 P = pos.Player();
+	const uint64 O = pos.Opponent();
+	const uint64 m = static_cast<uint64>(move);
+
+	uint64 outflank0 = ~O & masks[m * 8 + 0];
+	uint64 outflank1 = ~O & masks[m * 8 + 1];
+	uint64 outflank2 = ~O & masks[m * 8 + 2];
+	uint64 outflank3 = ~O & masks[m * 8 + 3];
+
+	// look for non-opponent LS1B
+	outflank0 &= -outflank0;
+	outflank1 &= -outflank1;
+	outflank2 &= -outflank2;
+	outflank3 &= -outflank3;
+
+	outflank0 &= P;
+	outflank1 &= P;
+	outflank2 &= P;
+	outflank3 &= P;
+
+	outflank0 -= static_cast<uint64_t>(outflank0 != 0);
+	outflank1 -= static_cast<uint64_t>(outflank1 != 0);
+	outflank2 -= static_cast<uint64_t>(outflank2 != 0);
+	outflank3 -= static_cast<uint64_t>(outflank3 != 0);
+
+	uint64 flip = outflank0 & masks[m * 8 + 0]
+				| outflank1 & masks[m * 8 + 1]
+				| outflank2 & masks[m * 8 + 2]
+				| outflank3 & masks[m * 8 + 3];
+
+	// isolate non-opponent MS1B by clearing lower bits
+	uint64 outflank4 = (P & masks[m * 8 + 4]) << 1;
+	uint64 outflank5 = (P & masks[m * 8 + 5]) << 8;
+	uint64 outflank6 = (P & masks[m * 8 + 6]) << 9;
+	uint64 outflank7 = (P & masks[m * 8 + 7]) << 7;
+
+	uint64 eraser4 = ~O & masks[m * 8 + 4];
+	uint64 eraser5 = ~O & masks[m * 8 + 5];
+	uint64 eraser6 = ~O & masks[m * 8 + 6];
+	uint64 eraser7 = ~O & masks[m * 8 + 7];
+
+	eraser4 |= eraser4 >> 1;
+	eraser5 |= eraser5 >> 8;
+	eraser6 |= eraser6 >> 9;
+	eraser7 |= eraser7 >> 7;
+
+	eraser4 |= eraser4 >> 2;
+	eraser5 |= eraser5 >> 16;
+	eraser6 |= eraser6 >> 18;
+	eraser7 |= eraser7 >> 14;
+
+	eraser4 |= eraser4 >> 4;
+	eraser5 |= eraser5 >> 32;
+	eraser6 |= eraser6 >> 36;
+	eraser7 |= eraser7 >> 28;
+
+	// set mask bits higher than outflank
+	return flip | -(~eraser4 & outflank4) & masks[m * 8 + 4]
+				| -(~eraser5 & outflank5) & masks[m * 8 + 5]
+				| -(~eraser6 & outflank6) & masks[m * 8 + 6]
+				| -(~eraser7 & outflank7) & masks[m * 8 + 7];
+}
+#endif

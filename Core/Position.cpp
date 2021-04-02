@@ -88,43 +88,77 @@ Position FlipToUnique(Position pos) noexcept
 	return pos;
 }
 
-Score EvalGameOver(const Position& pos) noexcept
+std::string SingleLine(const Position& pos)
+{
+	auto str = std::string(64, '-') + " X";
+	for (int i = 0; i < 64; i++)
+	{
+		if (pos.Player().Get(static_cast<Field>(63 - i)))
+			str[i] = 'X';
+		else if (pos.Opponent().Get(static_cast<Field>(63 - i)))
+			str[i] = 'O';
+	}
+	return str;
+}
+
+std::string MultiLine(const Position& pos)
+{
+	Moves moves = PossibleMoves(pos);
+	std::string board =
+		"  H G F E D C B A  \n"
+		"8 - - - - - - - - 8\n"
+		"7 - - - - - - - - 7\n"
+		"6 - - - - - - - - 6\n"
+		"5 - - - - - - - - 5\n"
+		"4 - - - - - - - - 4\n"
+		"3 - - - - - - - - 3\n"
+		"2 - - - - - - - - 2\n"
+		"1 - - - - - - - - 1\n"
+		"  H G F E D C B A  ";
+
+	for (int i = 0; i < 64; i++)
+	{
+		auto& field = board[22 + 2 * i + 4 * (i / 8)];
+
+		if (pos.Player().Get(static_cast<Field>(63 - i)))
+			field = 'X';
+		else if (pos.Opponent().Get(static_cast<Field>(63 - i)))
+			field = 'O';
+		else if (moves.contains(static_cast<Field>(63 - i)))
+			field = '+';
+	}
+	return board;
+}
+
+
+
+int EvalGameOver(const Position& pos) noexcept
 {
 	const auto Ps = popcount(pos.Player());
 	const auto Os = popcount(pos.Opponent());
 	if (Ps > Os)
-		return 64 - 2 * Os;
+		return 32 - Os;
 	if (Ps < Os)
-		return 2 * Ps - 64;
+		return Ps - 32;
 	return 0;
 }
 
-Position Play(const Position& pos, Field move, BitBoard flips)
+CUDA_CALLABLE Position Play(const Position& pos, Field move, BitBoard flips)
 {
 	assert((pos.Opponent() & flips) == flips); // only flipping opponent stones.
 
 	return { pos.Opponent() ^ flips, pos.Player() ^ flips ^ BitBoard(move) };
 }
 
-Position Play(const Position& pos, Field move)
+CUDA_CALLABLE Position Play(const Position& pos, Field move)
 {
-	assert(pos.Empties().Get(move)); // move field is free.
+	//assert(pos.Empties().Get(move)); // move field is free.
 
 	const auto flips = Flips(pos, move);
 	return Play(pos, move, flips);
 }
 
-Position TryPlay(const Position& pos, Field move) noexcept(false)
-{
-	assert(pos.Empties().Get(move)); // move field is free.
-
-	const auto flips = Flips(pos, move);
-	if (flips)
-		return Play(pos, move, flips);
-	throw;
-}
-
-Position PlayPass(const Position& pos) noexcept
+CUDA_CALLABLE Position PlayPass(const Position& pos) noexcept
 {
 	return { pos.Opponent(), pos.Player() };
 }

@@ -1,23 +1,42 @@
 #pragma once
 #include "Core/Position.h"
-#include <cstdint>
+#include <array>
 #include <memory>
 #include <vector>
 
 namespace Pattern
 {
+	using Weights = std::vector<float>;
+
+	// Interface
 	class Evaluator
 	{
 	public:
-		Evaluator(BitBoard pattern) : Pattern(pattern) {}
+		struct MaskAndValue
+		{
+			BitBoard mask{};
+			float value{};
+		};
 
 		virtual float Eval(const Position&) const = 0;
-
-		const BitBoard Pattern;
+		virtual std::vector<MaskAndValue> DetailedEval(const Position&) const = 0;
 	};
 
-	using Weights = std::vector<float>;
 
-	std::unique_ptr<Evaluator> CreateEvaluator(BitBoard pattern, std::vector<Weights>);
 	std::unique_ptr<Evaluator> CreateEvaluator(BitBoard pattern, const Weights& compressed);
+	std::unique_ptr<Evaluator> CreateEvaluator(const std::vector<BitBoard>& pattern, const Weights& compressed);
 }
+
+class PatternEval final : public Pattern::Evaluator
+{
+	const int block_size = 3;
+	std::array<std::shared_ptr<Evaluator>, 65> evals;
+public:
+	PatternEval();
+	PatternEval(const std::vector<BitBoard>& pattern, const std::vector<Pattern::Weights>& compressed);
+
+	float Eval(const Position&) const override;
+	std::vector<MaskAndValue> DetailedEval(const Position&) const override;
+};
+
+PatternEval DefaultPatternEval();

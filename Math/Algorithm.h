@@ -12,7 +12,7 @@ inline Vector sqrt(Vector x)
 	return x;
 }
 
-inline double dot(const Vector& a, const Vector& b)
+inline Vector::value_type dot(const Vector& a, const Vector& b)
 {
 	assert(a.size() == b.size());
 
@@ -21,25 +21,10 @@ inline double dot(const Vector& a, const Vector& b)
 	#pragma omp parallel for reduction(+ : sum)
 	for (int64_t i = 0; i < size; i++)
 		sum += a[i] * b[i];
-	return sum;
+	return static_cast<Vector::value_type>(sum);
 }
 
-inline double norm(const Vector& v)
+inline Vector::value_type norm(const Vector& v)
 {
-	return std::sqrt(dot(v, v));
-}
-
-template <typename Vector>
-double SampleStandardDeviation(const Vector& vec)
-{
-	double E_of_X = 0;
-	double E_of_X_sq = 0;
-	for (std::size_t i = 0; i < vec.size(); i++)
-	{
-		const double x = vec[i];
-		const double N = static_cast<double>(i + 1);
-		E_of_X += (x - E_of_X) / N;
-		E_of_X_sq += (x * x - E_of_X_sq) / N;
-	}
-	return std::sqrt(E_of_X_sq - E_of_X * E_of_X);
+	return static_cast<Vector::value_type>(std::sqrt(dot(v, v)));
 }

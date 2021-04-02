@@ -7,19 +7,23 @@
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
     <ClCompile Include="Stability.cpp" />
-    <ClCompile Include="Bit.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
+    <ClCompile Include="HasMoves.cpp" />
+    <ClCompile Include="Interval.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Moves.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="BitBoard.h" />
-    <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PositionGenerator.h" />
+    <ClInclude Include="MoreTypes.h" />
+    <ClInclude Include="Ranges.h" />
+    <ClInclude Include="ConfidenceLevel.h" />
+    <ClInclude Include="Interval.h" />
   </ItemGroup>
 </Project>

@@ -7,5 +7,6 @@
     <ClInclude Include="Solver.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="MatrixInterface.h" />
+    <ClInclude Include="Statistics.h" />
   </ItemGroup>
 </Project>

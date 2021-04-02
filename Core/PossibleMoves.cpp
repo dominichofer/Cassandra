@@ -1,38 +1,20 @@
+#include "Bit.h"
 #include "Position.h"
 
-Moves PossibleMoves(const Position& pos) noexcept
+CUDA_CALLABLE Moves PossibleMoves(const Position& pos) noexcept
 {
-	#if defined(__AVX512F__)
+	#ifdef __NVCC__
+		return detail::PossibleMoves_x64(pos);
+	#elif defined(__AVX512F__)
 		return detail::PossibleMoves_AVX512(pos);
-	#else
+	#elif defined(__AVX2__)
 		return detail::PossibleMoves_AVX2(pos);
+	#else
+		return detail::PossibleMoves_x64(pos);
 	#endif
 }
 
-bool HasMoves(const Position& pos) noexcept
-{
-	const int64x4 maskO = int64x4(pos.Opponent()) & int64x4(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
-	const int64x4 P(pos.Player());
-
-	int64x4 flip1 = maskO & (P << int64x4(1, 8, 7, 9));
-	flip1 |= maskO & (flip1 << int64x4(1, 8, 7, 9));
-	const int64x4 mask1 = maskO & (maskO << int64x4(1, 8, 7, 9));
-	flip1 |= mask1 & (flip1 << int64x4(2, 16, 14, 18));
-	flip1 |= mask1 & (flip1 << int64x4(2, 16, 14, 18));
-	flip1 <<= int64x4(1, 8, 7, 9);
-	if (pos.Empties() & static_cast<uint64>(reduce_or(flip1)))
-		return true;
-
-	int64x4 flip2 = maskO & (P >> int64x4(1, 8, 7, 9));
-	flip2 |= maskO & (flip2 >> int64x4(1, 8, 7, 9));
-	const int64x4 mask2 = maskO & (maskO >> int64x4(1, 8, 7, 9));
-	flip2 |= mask2 & (flip2 >> int64x4(2, 16, 14, 18));
-	flip2 |= mask2 & (flip2 >> int64x4(2, 16, 14, 18));
-	flip2 >>= int64x4(1, 8, 7, 9);
-	return pos.Empties() & static_cast<uint64>(reduce_or(flip2));
-}
-
-#if defined(__AVX512F__)
+#ifdef __AVX512F__
 Moves detail::PossibleMoves_AVX512(const Position& pos) noexcept
 {
 	// 6 x SHIFT, 7 x AND, 5 x OR, 1 x NOT
@@ -56,6 +38,7 @@ Moves detail::PossibleMoves_AVX512(const Position& pos) noexcept
 }
 #endif
 
+#ifdef __AVX2__
 Moves detail::PossibleMoves_AVX2(const Position& pos) noexcept
 {
 	// 8 x OR, 12 x SHIFT, 11 x AND, 1 x NOT, 1 x reduce_or
@@ -92,8 +75,9 @@ Moves detail::PossibleMoves_AVX2(const Position& pos) noexcept
 	// 1 x NOT, 2 x OR, 1 x AND, 1 x function call
 	return pos.Empties() & static_cast<uint64>(reduce_or(flip1 | flip2));
 }
+#endif
 
-Moves detail::PossibleMoves_x64(const Position& pos) noexcept
+CUDA_CALLABLE Moves detail::PossibleMoves_x64(const Position& pos) noexcept
 {
 	// 48 x SHIFT, 42 x AND, 32 x OR, 1 x NOT
 	// = 123 OPs

@@ -27,7 +27,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -68,9 +68,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BitBoard.cpp" />
-    <ClCompile Include="Bit.cpp" />
     <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Flips.cpp" />
+    <ClCompile Include="HasMoves.cpp" />
+    <ClCompile Include="Interval.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
@@ -78,11 +79,14 @@
     <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="ConfidenceLevel.h" />
+    <ClInclude Include="Interval.h" />
+    <ClInclude Include="Ranges.h" />
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="HashTable.h" />
+    <ClInclude Include="MoreTypes.h" />
     <ClInclude Include="Moves.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Position.h" />

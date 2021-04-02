@@ -1,122 +1,265 @@
 #pragma once
 #include "Core/Core.h"
-#include "Interval.h"
+
+#include "Pattern/Evaluator.h"
+#include "Objects.h"
+#include "HashTablePVS.h"
+
 #include <cassert>
 #include <cstdint>
 #include <cmath>
+#include <compare>
+#include <string>
+#include <stack>
 
 namespace Search
-{	
-	class Selectivity
+{
+	class XmlTag
 	{
-		//  Phi       z
-		// 0.00 ~=  0.00%
-		// 0.10 ~=  7.97%
-		// 0.20 ~= 15.85%
-		// 0.30 ~= 23.58%
-		// 0.40 ~= 31.08%
-		// 0.50 ~= 38.29%
-		// 0.60 ~= 45.15%
-		// 0.70 ~= 51.61%
-		// 0.80 ~= 57.63%
-		// 0.90 ~= 63.19%
-		// 1.00 ~= 68.27%
-		// 1.10 ~= 72.87% <- edax
-		// 1.20 ~= 76.99%
-		// 1.30 ~= 80.64%
-		// 1.40 ~= 83.85%
-		// 1.50 ~= 86.64% <- edax, logistello
-		// 1.60 ~= 89.04%
-		// 1.70 ~= 91.09%
-		// 1.80 ~= 92.81%
-		// 1.90 ~= 94.26%
-		// 2.00 ~= 95.45% <- edax
-		// 2.10 ~= 96.43%
-		// 2.20 ~= 97.22%
-		// 2.30 ~= 97.86%
-		// 2.40 ~= 98.36%
-		// 2.50 ~= 98.76%
-		// 2.60 ~= 99.07% <- edax
-		// 2.70 ~= 99.31%
-		// 2.80 ~= 99.49%
-		// 2.90 ~= 99.63%
-		// 3.00 ~= 99.73%
-		// 3.10 ~= 99.81%
-		// 3.20 ~= 99.86%
-		// 3.30 ~= 99.90% <- edax
+		struct Property {
+			std::string name, value;
+			std::string to_string() const { return name + "='" + value + "'"; }
+		};
+		std::string to_string(const Property& prop) const { return prop.to_string(); }
 
-		double Phi(double z) { return std::erf(z / std::sqrt(2)); } // TODO: Why is this private and why is it there? it's unused.
+		std::string name;
+		std::vector<Property> props;
+
+		std::string content() const {
+			std::string str = name;
+			for (const auto& prop : props)
+				str += " " + to_string(prop);
+			return str;
+		}
 	public:
-		float quantile;
+		XmlTag(std::string name) noexcept : name(std::move(name)) {}
 
-		Selectivity() = delete;
-		constexpr explicit Selectivity(float quantile) : quantile(quantile) { assert((quantile >= 0) || (quantile == None.quantile)); }
-		static const Selectivity None;
-		static const Selectivity Infinit;
-
-		[[nodiscard]] bool operator==(const Selectivity& o) const noexcept { return quantile == o.quantile; }
-		[[nodiscard]] bool operator!=(const Selectivity& o) const noexcept { return quantile != o.quantile; }
-		[[nodiscard]] bool operator<(const Selectivity& o) const noexcept { return quantile > o.quantile; }
-		[[nodiscard]] bool operator>(const Selectivity& o) const noexcept { return quantile < o.quantile; }
-		[[nodiscard]] bool operator<=(const Selectivity& o) const noexcept { return quantile >= o.quantile; }
-		[[nodiscard]] bool operator>=(const Selectivity& o) const noexcept { return quantile <= o.quantile; }
+		void Add(std::string name, std::string value) {
+			props.emplace_back(std::move(name), std::move(value));
+		}
+		std::string start_tag() const { return "<" + content() + ">"; }
+		std::string end_tag() const { return "</" + name + ">"; }
+		std::string empty_tag() const { return "<" + content() + " />"; }
 	};
 
-	[[nodiscard]] inline Selectivity min(Selectivity l, Selectivity r) noexcept { return (l < r) ? l : r; }
-	[[nodiscard]] inline Selectivity max(Selectivity l, Selectivity r) noexcept { return (l < r) ? r : l; }
-
-	struct Intensity
-	{
-		OpenInterval window;
-		unsigned int depth;
-		Selectivity selectivity;
-
-		Intensity() = delete;
-		Intensity(OpenInterval window, unsigned int depth, Selectivity selectivity)
-			: window(window), depth(depth), selectivity(selectivity) {}
-
-		static Intensity Exact(Position);
-
-		[[nodiscard]] bool operator==(const Intensity& o) const noexcept { return (window == o.window) && (depth == o.depth) && (selectivity == o.selectivity); }
-		[[nodiscard]] bool operator!=(const Intensity& o) const noexcept { return (window != o.window) || (depth != o.depth) || (selectivity != o.selectivity); }
-
-		// Intensity with inverted window.
-		[[nodiscard]] Intensity operator-() const; // TODO: Remove?
-
-		// Subtracts depth.
-		[[nodiscard]] Intensity operator-(int depth) const; // TODO: Remove?
-
-		[[nodiscard]] Intensity next() const;
-	};
-
-	class Result
+	class Node
 	{
 	public:
-		// TODO: Because members are public, the constraint can be violated.
-		ClosedInterval window;
-		unsigned int depth;
-		Selectivity selectivity;
-		Field best_move;
-		std::size_t node_count;
-
-		Result() = delete;
-		Result(ClosedInterval window, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count);
-
-		static Result ExactScore(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
-		static Result MaxBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
-		static Result MinBound(Score, unsigned int depth, Selectivity, Field best_move, std::size_t node_count);
-
-		static Result ExactScore(Score, Intensity, Field best_move, std::size_t node_count);
-		static Result MaxBound(Score, Intensity, Field best_move, std::size_t node_count);
-		static Result MinBound(Score, Intensity, Field best_move, std::size_t node_count);
-
-		// Result with inverted window.
-		[[nodiscard]] Result operator-() const;
+		virtual std::string to_string(int indentations = 0) const = 0;
 	};
 
-	struct Algorithm
+	class Cut_Node final : public Node
 	{
-		virtual Result Eval(Position, Intensity) = 0;
-		Result Eval(Position pos) { return Eval(pos, Intensity::Exact(pos)); }
+		std::string reason;
+		Result result;
+	public:
+		Cut_Node(std::string reason, Result result) noexcept : reason(std::move(reason)), result(std::move(result)) {}
+		std::string to_string(int indentations = 0) const override {
+			XmlTag tag("Cut");
+			tag.Add("reason", reason);
+			tag.Add("result", ::to_string(result));
+			return std::string(indentations, '\t') + tag.empty_tag();
+		}
 	};
-}
+
+	class TT_Node final : public Node
+	{
+		TT_Info info;
+	public:
+		TT_Node(TT_Info info) noexcept : info(std::move(info)) {}
+		std::string to_string(int indentations = 0) const override {
+			XmlTag tag("TT_Node");
+			tag.Add("best_move", ::to_string(info.best_move));
+			tag.Add("result", ::to_string(info.result));
+			return std::string(indentations, '\t') + tag.empty_tag();
+		}
+	};
+
+	class Search_Node final : public Node
+	{
+	protected:
+		Field move = Field::invalid;
+		std::string name;
+		Position pos;
+		Request request;
+		std::vector<std::unique_ptr<Node>> children;
+		std::optional<Result> result;
+
+	public:
+		Search_Node(std::string name, const Position& pos, const Request& request) noexcept : name(std::move(name)), pos(pos), request(request) {}
+		Search_Node() = default;
+		Search_Node(const Search_Node&) = delete;
+		Search_Node(Search_Node&&) = default;
+		Search_Node& operator=(const Search_Node&) = delete;
+		Search_Node& operator=(Search_Node&&) = default;
+		~Search_Node() = default;
+
+		void Add(std::unique_ptr<Node>&& child) { children.push_back(std::move(child)); }
+
+		void Add(Field move, Result result) {
+			dynamic_cast<Search_Node&>(*children.back()).move = move;
+			dynamic_cast<Search_Node&>(*children.back()).result = std::move(result);
+		}
+
+		std::string to_string(int indentations = 0) const {
+			using std::to_string;
+			using ::to_string;
+			XmlTag tag(name);
+			tag.Add("request", to_string(request));
+			if (result.has_value())
+				tag.Add("result", to_string(result.value()));
+			tag.Add("move", to_string(move));
+			tag.Add("empty_count", to_string(pos.EmptyCount()));
+			tag.Add("pos", to_string(pos));
+
+			std::string str = std::string(indentations, '\t') + tag.start_tag() + '\n';
+			for (const auto& child : children)
+				str += child->to_string(indentations + 1) + '\n';
+			return str + std::string(indentations, '\t') + tag.end_tag();
+		}
+	};
+
+	class Logger
+	{
+		std::stack<Search_Node> stack;
+	public:
+		Logger() = default;
+		Logger(const Logger&) {}
+		Logger(Logger&&) = default;
+		Logger& operator=(const Logger&) {}
+		Logger& operator=(Logger&&) = default;
+		~Logger() = default;
+
+		void AddSearch(std::string name, const Position& pos, const Request& request) {
+			stack.emplace(std::move(name), pos, request);
+		}
+		void FinalizeSearch() {
+			if (stack.size() > 1) {
+				auto top = std::move(stack.top());
+				stack.pop();
+				stack.top().Add(std::make_unique<Search_Node>(std::move(top)));
+			}
+		}
+		void Add(std::string reason, const Result& result) {
+			stack.top().Add(std::make_unique<Cut_Node>(std::move(reason), result));
+			FinalizeSearch();
+		}
+		void Add(TT_Info info) {
+			stack.top().Add(std::make_unique<TT_Node>(std::move(info)));
+		}
+		void Add(Field move, Result result) {
+			stack.top().Add(move, std::move(result));
+		}
+		void clear() { while (not stack.empty()) stack.pop(); }
+		std::string to_string() const { return stack.top().to_string(); }
+	};
+
+	inline std::string to_string(const Logger& logger) { return logger.to_string(); }
+
+	class Algorithm
+	{
+	public:
+		uint64 node_count = 0;
+		//Logger log;
+		
+		virtual std::unique_ptr<Algorithm> Clone() const = 0;
+
+		// If the requested intensity is to search exact:
+		// - and the score is in the requested window, the result window is a singleton, the score.
+		// - and the score is above the requested window, the result window is [x,max_score] where x >= score.
+		// - and the score is below the requested window, the result window is [min_score,x] where x <= score.
+		// result.intensity >= requested.intensity.
+		// A requested certainty of "90%" means, that any given node can be cut (fail high, fail low) if a shallow search
+		// showed that there's a "90%" chance that the original search will result in a cut anyway.
+		virtual Result Eval(const Position&, const Request&) = 0;
+
+		int Score(const Position& pos, int depth) { return Eval(pos, Request::Certain(depth)).window.lower(); }
+		int Score(const Position& pos) { return Score(pos, pos.EmptyCount()); }
+	};
+};
+
+class NegaMax : public Search::Algorithm
+{
+public:
+	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<NegaMax>(); }
+
+	Search::Result Eval(const Position& pos, const Search::Request& request) override { return Search::Result::ExactFailSoft(request, pos, Eval(pos)); }
+	int Eval(const Position&);
+protected:
+	int Eval_0(const Position&);
+	int Eval_1(const Position&, Field);
+private:
+	int Eval_2(const Position&, Field, Field);
+	int Eval_3(const Position&, Field, Field, Field);
+	int Eval_N(const Position&);
+};
+
+class AlphaBetaFailHard final : public NegaMax
+{
+public:
+	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<AlphaBetaFailHard>(); }
+
+	Search::Result Eval(const Position&, const Search::Request&) override;
+	int Eval(const Position&, OpenInterval);
+private:
+	int Eval_0(const Position&, OpenInterval);
+	int Eval_1(const Position&, OpenInterval, Field);
+	int Eval_2(const Position&, OpenInterval, Field, Field);
+	int Eval_3(const Position&, OpenInterval, Field, Field, Field);
+	int Eval_N(const Position&, OpenInterval);
+};
+
+class AlphaBetaFailSoft : public NegaMax
+{
+	static constexpr int Eval_to_ParitySort = 6;
+public:
+	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<AlphaBetaFailSoft>(); }
+
+	Search::Result Eval(const Position&, const Search::Request&) override;
+	int Eval(const Position&, OpenInterval);
+private:
+	int Eval_2(const Position&, OpenInterval, Field, Field);
+	int Eval_3(const Position&, OpenInterval, Field, Field, Field);
+	int Eval_P(const Position&, OpenInterval); // Parity based move ordering.
+	int Eval_N(const Position&, OpenInterval);
+};
+
+class PVS : public AlphaBetaFailSoft
+{
+	static constexpr int PVS_to_AlphaBetaFailSoft = 10;
+	static constexpr int ZWS_to_AlphaBetaFailSoft = 10;
+protected:
+	HashTablePVS& tt;
+	Pattern::Evaluator& evaluator;
+public:
+	PVS(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
+	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<PVS>(tt, evaluator); }
+
+	Search::Result Eval(const Position&, const Search::Request&) override;
+private:
+	std::optional<Search::Result> MPC(const Position&, const Search::Request&);
+	Search::Result PVS_N(const Position&, const Search::Request&);
+	Search::Result ZWS_N(const Position&, const Search::Request&);
+	int Eval_d0(const Position&);
+	int Eval_d1(const Position&, const OpenInterval&);
+	Search::Result Eval_dN(const Position&, const Search::Request&);
+};
+
+class IDAB final : public PVS
+{
+public:
+	IDAB(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : PVS(tt, evaluator) {}
+	virtual std::unique_ptr<Algorithm> Clone() const { return std::make_unique<IDAB>(tt, evaluator); }
+
+	Search::Result Eval(const Position&, const Search::Request&) override;
+};
+
+[[nodiscard]] Search::Request NextZWS(const Search::Request&, const Search::Findings&) noexcept;
+[[nodiscard]] Search::Request NextFWS(const Search::Request&, const Search::Findings&) noexcept;
+
+[[nodiscard]] Search::Result AllMovesSearched(const Search::Request&, const Search::Findings&) noexcept;
+
+
+
+int32_t MoveOrderingScorer(const Position&, Field move) noexcept;
+int32_t MoveOrderingScorer(const Position&, Field move, Field best_move) noexcept;

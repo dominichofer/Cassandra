@@ -12,7 +12,7 @@ TEST(EvalGameOver, full_of_player)
 		"X X X X X X X X"
 		"X X X X X X X X"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), +64);
+	ASSERT_EQ(EvalGameOver(pos), +64 / 2);
 }
 
 TEST(EvalGameOver, full_of_opponent)
@@ -27,7 +27,7 @@ TEST(EvalGameOver, full_of_opponent)
 		"O O O O O O O O"
 		"O O O O O O O O"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), -64);
+	ASSERT_EQ(EvalGameOver(pos), -64 / 2);
 }
 
 TEST(EvalGameOver, half_half)
@@ -42,7 +42,7 @@ TEST(EvalGameOver, half_half)
 		"O O O O O O O O"
 		"O O O O O O O O"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), 0);
+	ASSERT_EQ(EvalGameOver(pos), 0 / 2);
 }
 
 TEST(EvalGameOver, empties_count_toward_player)
@@ -51,13 +51,13 @@ TEST(EvalGameOver, empties_count_toward_player)
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
-		"- - - X X - - -"
+		"- - - O X - - -"
 		"- - - X X - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), +64);
+	ASSERT_EQ(EvalGameOver(pos), +62 / 2);
 }
 
 TEST(EvalGameOver, empties_count_toward_opponent)
@@ -66,11 +66,11 @@ TEST(EvalGameOver, empties_count_toward_opponent)
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
-		"- - - O O - - -"
+		"- - - X O - - -"
 		"- - - O O - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), -64);
+	ASSERT_EQ(EvalGameOver(pos), -62 / 2);
 }

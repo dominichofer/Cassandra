@@ -1,275 +1,337 @@
-#include "PrincipalVariation.h"
-#include "SortedMoves.h"
 #include "Core/Core.h"
+#include "Algorithm.h"
+#include "SortedMoves.h"
+#include <cmath>
 #include <algorithm>
+#include <iostream>
 
 using namespace Search;
 
-Result Search::StableStonesAnalysis(const Position& pos)
+float Sigma(int D, int d, int E) noexcept
 {
-	auto opponent_stables = popcount(StableStones(pos));
-	auto window = ClosedInterval(min_score, max_score - 2*opponent_stables);
-	return Result(window, pos.EmptyCount(), Selectivity::None, Field::invalid, 0 /*nodes*/);
+	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.191047,1.00824,0.24472,-0.0118514,1.13362);
+	//float alpha = -0.21311527f;
+	//float beta = 1.06454983f;
+	//float gamma = 0.26639884f;
+	//float delta = -0.02005392f;
+	//float epsilon = 2.09164003f;
+
+	float sigma = (std::expf(alpha * d) + beta) * std::powf(D - d, gamma) * (delta * E + epsilon);
+	assert(sigma > 0.0f);
+	return sigma;
 }
 
-void Search::Limits::Improve(const Result& novum)
+Result PVS::Eval(const Position& pos, const Request& request)
 {
-	if ((novum.depth < requested.depth) || (novum.selectivity > requested.selectivity))
-		return; // novum uninteresting
-
-	assert(possible.Overlaps(novum.window));
-
-	if (novum.window.Contains(possible))
-		return; // the possible window does not benefit from novum.
-
-	worst_depth = std::min(worst_depth, novum.depth);
-	worst_selectivity = std::max(worst_selectivity, novum.selectivity);
-	//node_count += novum.node_count; // TODO: Uncomment!
-
-	if (possible.Contains(novum.window))
-		best_move = novum.best_move;
-	else
-		best_move = Field::invalid;
-
-	possible = Overlap(possible, novum.window);
+	return PVS_N(pos, request);
 }
 
-void Search::Limits::Improve(const std::optional<Result>& novum)
+std::optional<Result> PVS::MPC(const Position& pos, const Request& request)
 {
-	if (novum.has_value())
-		Improve(novum.value());
-}
+	if ((request.depth() < 4) || (request.certainty() == ConfidenceLevel::Certain()))
+		return std::nullopt;
 
-bool Search::Limits::HasResult() const
-{
-	return (possible.IsSingleton()) // exact score found
-		|| (possible > requested.window) // above window of interest
-		|| (possible < requested.window); // below window of interest
-}
+	// log.AddSearch("MPC", pos, request);
+	float sigma_0 = Sigma(request.depth(), 0, pos.EmptyCount());
+	//int upper_0 = static_cast<int>(std::ceil(request.window.upper() + sigma_0 * request.certainty().sigmas()));
+	//int lower_0 = static_cast<int>(std::floor(request.window.lower() - sigma_0 * request.certainty().sigmas()));
+	//float upper_0 = request.window.upper() + sigma_0 * request.certainty().sigmas();
+	//float lower_0 = request.window.lower() - sigma_0 * request.certainty().sigmas();
+	float eval_0 = evaluator.Eval(pos);
+	//if (eval_0 >= upper_0) {
+	//	float sigmas = (eval_0 - request.window.upper()) / sigma_0;
+	//	auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {request.window.upper(), max_score} };
+	//	// log.Add("Upper cut", result);
+	//	return result;
+	//}
+	//if (eval_0 <= lower_0) {
+	//	float sigmas = (request.window.lower() - eval_0) / sigma_0;
+	//	auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {min_score, request.window.lower()} };
+	//	// log.Add("Lower cut", result);
+	//	return result;
+	//}
 
-
-
-Search::StatusQuo::StatusQuo(const Limits& limits) noexcept
-	: requested(limits.requested)
-	, searching(limits.requested.window)
-	, possible(limits.possible)
-{
-	if (limits.possible.Contains(limits.requested.window))
-		return; // The requested window does not benefit from the limits.
-
-	searching = Overlap(limits.requested.window, OpenInterval(limits.possible));
-	worst_depth = limits.worst_depth;
-	worst_selectivity = limits.worst_selectivity;
-	node_count = limits.node_count;
-}
-
-Intensity Search::StatusQuo::NextPvsIntensity() const noexcept
-{
-	return Intensity(-searching, requested.depth - 1, requested.selectivity);
-}
-
-Intensity Search::StatusQuo::NextZwsIntensity() const noexcept
-{
-	return Intensity(-OpenInterval(searching.lower(), searching.lower()+1), requested.depth - 1, requested.selectivity);
-}
-
-bool StatusQuo::Improve(const Result& novum, Field move)
-{
-	worst_depth = std::min(worst_depth, novum.depth + 1);
-	worst_selectivity = std::max(worst_selectivity, novum.selectivity);
-	node_count += novum.node_count;
-
-	if (novum.window > searching) // upper cut
+	for (int reduced_depth : {1})
 	{
-		best_interval = ClosedInterval(novum.window.lower(), max_score);
-		best_move = move;
-		return true;
+	float sigma = Sigma(request.depth(), reduced_depth, pos.EmptyCount());
+	int upper = static_cast<int>(std::ceil(request.window.upper() + sigma * request.certainty().sigmas()));
+	int lower = static_cast<int>(std::floor(request.window.lower() - sigma * request.certainty().sigmas()));
+
+	if (upper < max_score && eval_0 >= upper) {
+		Request upper_zws = Request::Certain(reduced_depth, {upper-1, upper});
+		Result shallow_result = ZWS_N(pos, upper_zws);
+		if (shallow_result.window > upper_zws.window) { // Fail high
+			float sigmas = (shallow_result.window.lower() - request.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
+			assert(sigmas > request.certainty().sigmas());
+			auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {request.window.upper(), max_score} };
+			// log.Add("Upper cut", result);
+			return result;
+		}
 	}
 
-	if (best_interval == ClosedInterval::Whole())
-	{
-		best_interval = novum.window;
-		best_move = move;
+	if (lower > min_score && eval_0 <= lower) {
+		Request lower_zws = Request::Certain(reduced_depth, {lower, lower+1});
+		Result shallow_result = ZWS_N(pos, lower_zws);
+		if (shallow_result.window < lower_zws.window) { // Fail low
+			float sigmas = (request.window.lower() - shallow_result.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
+			auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {min_score, request.window.lower()} };
+			// log.Add("Lower cut", result);
+			return result;
+		}
 	}
-	else
-	{
-		if (novum.window.upper() <= best_interval.lower())
-			;
-		else if (novum.window.lower() >= best_interval.upper())
-			best_move = move;
-		else
-			best_move = Field::invalid;
+	}
+	// log.FinalizeSearch();
+	return std::nullopt;
+}
 
-		best_interval.try_increase_upper(novum.window.upper());
-		best_interval.try_increase_lower(novum.window.lower());
+Result PVS::PVS_N(const Position& pos, const Request& request)
+{
+	// log.AddSearch("PVS", pos, request);
+	if (request.depth() <= 1) {
+		auto result = Eval_dN(pos, request);
+		// log.Add("depth == 0", result);
+		return result;
+	}
+	if (pos.EmptyCount() <= PVS_to_AlphaBetaFailSoft && request.depth() == pos.EmptyCount()) {
+		auto result = AlphaBetaFailSoft::Eval(pos, request);
+		// log.Add("low empty count", result);
+		return result;
 	}
 
-	return searching.try_increase_lower(novum.window.lower());
-}
-
-inline uint64_t OpponentsExposed(const Position& pos) noexcept
-{
-	auto b = pos.Empties();
-	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
-	b |= (b >> 8) | (b << 8);
-	return b & pos.Opponent();
-}
-
-int32_t MoveOrderingScorer(const Position& pos, Field move) noexcept
-{
-	static const int8_t FieldValue[64] = {
-		9, 2, 8, 6, 6, 8, 2, 9,
-		2, 1, 3, 4, 4, 3, 1, 2,
-		8, 3, 7, 5, 5, 7, 3, 8,
-		6, 4, 5, 0, 0, 5, 4, 6,
-		6, 4, 5, 0, 0, 5, 4, 6,
-		8, 3, 7, 5, 5, 7, 3, 8,
-		2, 1, 3, 4, 4, 3, 1, 2,
-		9, 2, 8, 6, 6, 8, 2, 9,
-	};
-
-	const auto next_pos = Play(pos, move);
-	const auto next_possible_moves = PossibleMoves(next_pos);
-	const auto mobility_score = next_possible_moves.size() << 17;
-	const auto corner_mobility_score = ((next_possible_moves.contains(Field::A1) ? 1 : 0)
-									  + (next_possible_moves.contains(Field::A8) ? 1 : 0) 
-									  + (next_possible_moves.contains(Field::H1) ? 1 : 0) 
-									  + (next_possible_moves.contains(Field::H8) ? 1 : 0)) << 18;
-	const auto opponents_exposed_score = popcount(OpponentsExposed(next_pos)) << 6;
-	const auto field_score = FieldValue[static_cast<uint8_t>(move)];
-	return field_score - mobility_score - corner_mobility_score - opponents_exposed_score;
-}
-
-
-Result PV::Eval(Position pos, Intensity requested)
-{
-	return PVS_N(pos, requested);
-}
-
-Result PV::PVS_N(const Position& pos, const Intensity& requested)
-{
-	if (pos.EmptyCount() <= 4)
-		return AlphaBetaFailSoft{}.Eval(pos, requested);
-	
+	node_count++;
 	Moves moves = PossibleMoves(pos);
-	if (!moves)
-	{
+	if (!moves) {
 		const auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -PVS_N(passed, -requested);
-		return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
+		if (HasMoves(passed)) {
+			auto result = -PVS_N(passed, -request);
+			// log.Add(Field::pass, result);
+			// log.Add("No more moves", result);
+			return result;
+		}
+		auto result = Result::Exact(pos, EvalGameOver(pos));
+		// log.Add("Game Over", result);
+		return result;
+	}
+	if (auto max = StabilityBasedMaxScore(pos); max < request) {
+		auto result = Result::CertainFailLow(pos.EmptyCount(), max);
+		// log.Add("Stability", result);
+		return result;
 	}
 
-	Limits limits(requested);
-
-	limits.Improve(StableStonesAnalysis(pos));
-	limits.Improve(tt.LookUp(pos));
-	if (limits.HasResult())
-		return limits.GetResult();
-
-	StatusQuo status_quo(limits);
-	TT_Updater tt_updater(pos, tt, status_quo);
+	Findings findings;
+	if (auto look_up = tt.LookUp(pos); look_up.has_value()) {
+		// log.Add(look_up.value());
+		auto& result = look_up.value().result;
+		if (result.intensity >= request.intensity) {
+			if (result.window.IsSingleton() || !result.window.Overlaps(request.window)) {
+				// log.Add("TT", result);
+				return result;
+			}
+			findings.best_score = result.window.lower();
+			findings.lowest_intensity = result.intensity;
+		}
+		findings.best_move = look_up.value().best_move;
+	}
+	if (auto mpc = MPC(pos, request); mpc.has_value()) {
+		// log.Add("Prob cut", mpc.value());
+		return mpc.value();
+	}
+	// IID
+	if (findings.best_move == Field::invalid) {
+		int reduced_depth = (request.depth() == pos.EmptyCount()) ? request.depth() - 10 : request.depth() - 2;
+		if (reduced_depth >= 3) {
+			PVS_N(pos, {{reduced_depth, request.intensity.certainty}, OpenInterval::Whole()});
+			if (auto look_up = tt.LookUp(pos); look_up.has_value())
+				findings.best_move = look_up.value().best_move;
+		}
+	}
 
 	bool first = true;
-	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
+	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move, findings.best_move); });
 	for (const auto& move : sorted_moves)
 	{
-		if (!first)
+		if (not first)
 		{
-			const auto result = -ZWS_N(Play(pos, move.second), status_quo.NextZwsIntensity());
-			if (result.window < status_quo.SearchWindow())
-			{
-				status_quo.Improve(result, move.second);
-				continue;
+			auto zws = NextZWS(request, findings);
+			auto result = -ZWS_N(Play(pos, move.second), zws) + 1;
+			// log.Add(move.second, result);
+			if (result > request) { // Beta cut
+				result = Result::FailHigh(result);
+				tt.Update(pos, {result, move.second});
+				// log.Add("Beta cut", result);
+				return result;
 			}
-			if (result.window > status_quo.SearchWindow())
-			{
-				status_quo.Improve(result, move.second);
-				if (status_quo.IsUpperCut())
-					return status_quo.GetResult();
+			if (not (result > -zws)) {
+				findings.Add(result, move.second);
+				continue;
 			}
 		}
 		first = false;
 
-		const auto result = -PVS_N(Play(pos, move.second), status_quo.NextPvsIntensity());
-		status_quo.Improve(result, move.second);
-		if (status_quo.IsUpperCut())
-			return status_quo.GetResult();
+		auto result = -PVS_N(Play(pos, move.second), NextFWS(request, findings)) + 1;
+		// log.Add(move.second, result);
+		findings.Add(result, move.second);
+		if (result > request) { // Beta cut
+			result = Result::FailHigh(result);
+			tt.Update(pos, {result, move.second});
+			// log.Add("Beta cut", result);
+			return result;
+		}
+		findings.Add(result, move.second);
 	}
-
-	return status_quo.GetResult();
+	const auto result = AllMovesSearched(request, findings);
+	tt.Update(pos, {result, findings.best_move});
+	// log.Add("No more moves", result);
+	return result;
 }
 
-Result PV::ZWS_N(const Position& pos, const Intensity& requested)
+Result PVS::ZWS_N(const Position& pos, const Request& request)
 {
-	if (pos.EmptyCount() <= 7)
-		return ZWS_A(pos, requested);
-
-	Moves moves = PossibleMoves(pos);
-	if (!moves)
-	{ 
-		const auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -ZWS_N(passed, -requested);
-		return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
+	// log.AddSearch("ZWS", pos, request);
+	if (request.depth() <= 1) {
+		auto result = Eval_dN(pos, request);
+		// log.Add("depth == 0", result);
+		return result;
+	}
+	if (pos.EmptyCount() <= ZWS_to_AlphaBetaFailSoft && request.depth() == pos.EmptyCount()) {
+		auto result = AlphaBetaFailSoft::Eval(pos, request);
+		// log.Add("low empty count", result);
+		return result;
 	}
 
-	Limits limits(requested);
+	node_count++;
+	Moves moves = PossibleMoves(pos);
+	if (!moves) {
+		const auto passed = PlayPass(pos);
+		if (HasMoves(passed)) {
+			auto result = -PVS_N(passed, -request);
+			// log.Add(Field::pass, result);
+			// log.Add("No more moves", result);
+			return result;
+		}
+		auto result = Result::Exact(pos, EvalGameOver(pos));
+		// log.Add("Game Over", result);
+		return result;
+	}
+	if (auto max = StabilityBasedMaxScore(pos); max < request) {
+		auto result = Result::CertainFailLow(pos.EmptyCount(), max);
+		// log.Add("Stability", result);
+		return result;
+	}
 
-	limits.Improve(StableStonesAnalysis(pos));
-	limits.Improve(tt.LookUp(pos));
-	if (limits.HasResult())
-		return limits.GetResult();
+	Findings findings;
+	if (auto look_up = tt.LookUp(pos); look_up.has_value()) {
+		// log.Add(look_up.value());
+		auto& result = look_up.value().result;
+		if (result.intensity >= request.intensity) {
+			if (result.window.IsSingleton() || !result.window.Overlaps(request.window)) {
+				// log.Add("TT", result);
+				return result;
+			}
+			findings.best_score = result.window.lower();
+			findings.lowest_intensity = result.intensity;
+		}
+		findings.best_move = look_up.value().best_move;
+	}
+	if (auto mpc = MPC(pos, request); mpc.has_value()) {
+		// log.Add("Prob cut", mpc.value());
+		return mpc.value();
+	}
+	if (auto look_up = tt.LookUp(pos); look_up.has_value()) {
+		// log.Add(look_up.value());
+		auto& result = look_up.value().result;
+		if (result.intensity >= request.intensity) {
+			if (result.window.IsSingleton() || !result.window.Overlaps(request.window)) {
+				// log.Add("TT", result);
+				return result;
+			}
+			findings.best_score = result.window.lower();
+			findings.lowest_intensity = result.intensity;
+		}
+		findings.best_move = look_up.value().best_move;
+	}
+	// ETC
+	for (const auto& move : moves)
+	{
+		Position next = Play(pos, move);
+		//if (auto max = StabilityBasedMaxScore(next); -max > request) {
+		//	auto result = Result::CertainFailHigh(pos.EmptyCount(), -max);
+		//	// log.Add("Stability", result);
+		//	return result;
+		//}
+		if (auto look_up = tt.LookUp(next); look_up.has_value()) {
+			// log.Add(look_up.value());
+			auto result = -look_up.value().result + 1;
+			if (result.intensity >= request.intensity) {
+				if (result.window > request.window) {
+					// log.Add("TT", result);
+					return result;
+				}
+			}
+		}
+	}
 
-	StatusQuo status_quo(limits);
-	TT_Updater tt_updater(pos, tt, status_quo);
-
-	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
+	SortedMoves sorted_moves(moves, [&](Field move) 
+							 {
+								 int score = MoveOrderingScorer(pos, move, findings.best_move);
+								 int sort_depth = std::clamp((request.intensity.depth + ((findings.best_move == Field::invalid) ? 0 : -2) - 15) / 3, 0, 6);
+								 return score - (PVS_N(Play(pos, move), Request::Certain(sort_depth)).window.lower() << 16);
+							 });
+	//SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move, findings.best_move); });
 	for (const auto& move : sorted_moves)
 	{
-		const auto result = -ZWS_N(Play(pos, move.second), status_quo.NextPvsIntensity());
-		status_quo.Improve(result, move.second);
-		if (status_quo.IsUpperCut())
-			return status_quo.GetResult();
+		auto result = -ZWS_N(Play(pos, move.second), NextZWS(request, findings)) + 1;
+		// log.Add(move.second, result);
+		if (result > request) { // Beta cut
+			result = Result::FailHigh(result);
+			tt.Update(pos, {result, move.second});
+			// log.Add("Beta cut", result);
+			return result;
+		}
+		findings.Add(result, move.second);
 	}
-
-	return status_quo.GetResult();
+	const auto result = AllMovesSearched(request, findings);
+	tt.Update(pos, {result, findings.best_move});
+	// log.Add("No more moves", result);
+	return result;
 }
 
-Result PV::ZWS_A(const Position& pos, const Intensity& requested)
+int PVS::Eval_d0(const Position& pos)
 {
-	if (pos.EmptyCount() <= 4)
-		return AlphaBetaFailSoft{}.Eval(pos, requested);
+	node_count++;
+	int unbound_score = static_cast<int>(std::round(evaluator.Eval(pos)));
+	return std::clamp(unbound_score, min_score, max_score);
+}
 
+int PVS::Eval_d1(const Position& pos, const OpenInterval& w)
+{
+	node_count++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
-	{ 
+	{
 		const auto passed = PlayPass(pos);
 		if (HasMoves(passed))
-			return -ZWS_N(passed, -requested);
-		return Result::ExactScore(EvalGameOver(pos), requested, Field::invalid, 1 /*node_count*/);
+			return -Eval_d1(passed, -w);
+		return EvalGameOver(pos);
 	}
 
-	StatusQuo status_quo(requested);
-	Moves parity_moves = moves;
-	parity_moves.Filter(pos.ParityQuadrants());
-	for (const auto& move : parity_moves)
+	int best_score = -inf_score;
+	for (const auto& move : moves)
 	{
-		const auto result = -ZWS_N(Play(pos, move), status_quo.NextPvsIntensity());
-		status_quo.Improve(result, move);
-		if (status_quo.IsUpperCut())
-			return status_quo.GetResult();
+		const auto score = -Eval_d0(Play(pos, move));
+		if (score > w)
+			return score;
+		best_score = std::max(best_score, score);
 	}
+	return best_score;
+}
 
-	Moves non_parity_moves = moves;
-	non_parity_moves.Filter(~pos.ParityQuadrants());
-	for (const auto& move : non_parity_moves)
-	{
-		const auto result = -ZWS_N(Play(pos, move), status_quo.NextPvsIntensity());
-		status_quo.Improve(result, move);
-		if (status_quo.IsUpperCut())
-			return status_quo.GetResult();
-	}
-
-	return status_quo.GetResult();
+Result PVS::Eval_dN(const Position& pos, const Request& request)
+{
+	int score;
+	if (request.depth() == 0)
+		score = Eval_d0(pos);
+	else
+		score = Eval_d1(pos, request);
+	return Result::CertainFailSoft(request, request.depth(), score);
 }

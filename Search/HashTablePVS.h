@@ -1,75 +1,79 @@
 #pragma once
 #include "Core/Core.h"
-#include "Algorithm.h"
+#include "Objects.h"
 #include <cstdint>
 #include <atomic>
 #include <optional>
 
-using PVS_Info = Search::Result;
-
-// TODO: Maybe this helps because it has a smaller memory footprint.
-//struct PVS_Info
-//{
-//	// This class' size is critial
-//
-//	int8_t min = -Search::infinity;
-//	int8_t max = +Search::infinity;
-//	int8_t depth = -1;
-//	uint8_t selectivity = 99;
-//	uint8_t cost = 0;
-//	CBestMoves best_moves{};
-//
-//	PvsInfo() = default;
-//	PvsInfo(int8_t min, int8_t max, int8_t depth, uint8_t selectivity, CBestMoves, uint64_t node_count);
-//};
-
-class SpinlockMutex
+class Spinlock
 {
 	std::atomic_flag spinlock{};
 public:
-	void lock() { while (spinlock.test_and_set(std::memory_order_acquire)) continue; }
-	void unlock() { spinlock.clear(std::memory_order_release); }
+	[[nodiscard]] bool try_lock() noexcept { return spinlock.test_and_set(std::memory_order_acquire); }
+	void lock() noexcept { while (try_lock()) continue; }
+	void unlock() noexcept { spinlock.clear(std::memory_order_release); }
 };
 
-struct Node
+struct TT_Info
 {
-	Position key =
-		"X X X X X X X X"
-		"X X X X X X X X"
-		"X X X X X X X X"
-		"X X X X X X X X"
-		"X X X X X X X X"
-		"X X X X X X X X"
-		"X X X X X X X X"
-		"X X X X X X X X"_pos;
+	Search::Result result{ {0, ConfidenceLevel{0}}, ClosedInterval::Whole() };
+	Field best_move = Field::invalid;
 
-	PVS_Info value{ ClosedInterval::Whole(), 0, Search::Selectivity::None, Field::invalid, 0 };
+	TT_Info() noexcept = default;
+	TT_Info(const Search::Result& result, Field best_move) noexcept
+		: result(result), best_move(best_move) {}
+
+	[[nodiscard]] operator Search::Result() const noexcept { return result; }
 };
 
 class OneNode
 {
-	mutable SpinlockMutex mutex{};
-	Node node{};
-
 public:
-	OneNode() noexcept = default;
-	OneNode(const OneNode&) noexcept;
-	OneNode& operator=(const OneNode&) noexcept;
+	using key_type = Position;
+	using value_type = TT_Info;
 
-	void Update(Position, const PVS_Info&);
-	std::optional<PVS_Info> LookUp(Position) const;
+	OneNode() noexcept = default;
+
+	void Update(const key_type&, const value_type&);
+	[[nodiscard]] std::optional<value_type> LookUp(const key_type&) const;
 	void Clear();
 
-	std::size_t NumberOfNonEmptyNodes() const;
+private:
+	mutable Spinlock mutex{};
+	key_type key{};
+	value_type value{};
 };
 
-// TODO: Implement TwoNode. It may help.
+static_assert(sizeof(OneNode) <= std::hardware_constructive_interference_size);
 
-struct HashTablePVS : public HashTable<Position, PVS_Info, OneNode>
+//class TwoNode
+//{
+//public:
+//	using key_type = Position;
+//	using value_type = TT_Info;
+//
+//	TwoNode() noexcept = default;
+//
+//	void Update(const key_type&, const value_type&);
+//	std::optional<value_type> LookUp(const key_type&) const;
+//	void Clear();
+//
+//private:
+//	mutable Spinlock mutex{};
+//	key_type key{};
+//	value_type value{};
+//};
+//
+//static_assert(sizeof(TwoNode) <= std::hardware_constructive_interference_size);
+
+// TODO: Implement TwoNode. It might help.
+
+class HashTablePVS : public HashTable<OneNode>
 {
-	HashTablePVS(uint64_t buckets) 
+public:
+	HashTablePVS(std::size_t buckets)
 		: HashTable(buckets, 
-			[](const Position& key)
+			[](const Position& key) noexcept
 			{ 
 				uint64_t P = key.Player();
 				uint64_t O = key.Opponent();

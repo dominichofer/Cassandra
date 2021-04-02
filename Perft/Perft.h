@@ -1,22 +1,46 @@
 #pragma once
 #include "Core/Position.h"
+#include "Hashtable.h"
 
-std::size_t Correct(int depth);
+int64 Correct(int depth);
 
-namespace Basic
+class BasicPerft
 {
-	std::size_t perft(const Position&, int depth);
-	std::size_t perft(int depth);
-}
+public:
+	virtual int64 calculate(const Position&, int depth);
+	virtual int64 calculate(int depth);
 
-namespace Unrolled2
-{
-	std::size_t perft(const Position&, int depth);
-	std::size_t perft(int depth);
-}
+	virtual void clear() {};
+};
 
-namespace HashTableMap
+class UnrolledPerft : public BasicPerft
 {
-	std::size_t perft(const Position&, int depth, std::size_t BytesRAM);
-	std::size_t perft(int depth, std::size_t BytesRAM);
-}
+protected:
+	const int initial_unroll;
+private:
+	int64 calculate_0();
+	int64 calculate_1(const Position&);
+	int64 calculate_2(const Position&);
+protected:
+	int64 calculate_n(const Position&, int depth);
+public:
+	UnrolledPerft(int initial_unroll) : initial_unroll(initial_unroll) {}
+
+	int64 calculate(const Position&, int depth) override;
+	int64 calculate(int depth) override;
+};
+
+class HashTablePerft : public UnrolledPerft
+{
+protected:
+	BigNodeHashTable hash_table;
+
+	int64 calculate_n(const Position&, int depth);
+public:
+	HashTablePerft(std::size_t bytes, int initial_unroll);
+
+	int64 calculate(const Position&, int depth) override;
+	int64 calculate(int depth) override;
+
+	void clear() override { hash_table.Clear(); }
+};

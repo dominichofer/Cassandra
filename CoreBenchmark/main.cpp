@@ -1,8 +1,48 @@
 #include "benchmark/benchmark.h"
 #include "Core/Core.h"
 #include <random>
+#include "Pattern/Evaluator.h"
+#include "Pattern/DenseIndexer.h"
 
 using namespace detail;
+using namespace Pattern;
+
+constexpr BitBoard PatternH{ 0x00000000000000E7ULL }; // HorizontalSymmetric
+constexpr BitBoard PatternD{ 0x8040201008040303ULL }; // DiagonalSymmetric
+constexpr BitBoard PatternA{ 0x000000000000000FULL }; // Asymmetric
+static const auto WeightsH = Weights(CreateDenseIndexer(PatternH)->reduced_size, 0);
+static const auto WeightsD = Weights(CreateDenseIndexer(PatternD)->reduced_size, 0);
+static const auto WeightsA = Weights(CreateDenseIndexer(PatternA)->reduced_size, 0);
+
+void PatternEvalH(benchmark::State& state)
+{
+	auto indexer = CreateDenseIndexer(PatternH);
+
+	Weights compressed(indexer->reduced_size);
+	std::iota(compressed.begin(), compressed.end(), 1);
+	auto evaluator = CreateEvaluator(PatternH, compressed);
+	auto gen = PosGen::Random(13);
+
+	for (auto _ : state)
+		benchmark::DoNotOptimize(evaluator->Eval(gen()));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(PatternEvalH);
+
+void PatternEvalA(benchmark::State& state)
+{
+	auto indexer = CreateDenseIndexer(PatternA);
+
+	Weights compressed(indexer->reduced_size);
+	std::iota(compressed.begin(), compressed.end(), 1);
+	auto evaluator = CreateEvaluator(PatternA, compressed);
+	auto gen = PosGen::Random(13);
+
+	for (auto _ : state)
+		benchmark::DoNotOptimize(evaluator->Eval(gen()));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(PatternEvalA);
 
 void FlipCodiagonal(benchmark::State& state)
 {
@@ -63,6 +103,24 @@ void popcount(benchmark::State& state)
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(popcount);
+
+void HasMoves_x64(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(HasMoves_x64(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(HasMoves_x64);
+
+void HasMoves_AVX2(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+	for (auto _ : state)
+		benchmark::DoNotOptimize(HasMoves_AVX2(pos));
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(HasMoves_AVX2);
 
 void HasMoves(benchmark::State& state)
 {
@@ -148,9 +206,7 @@ BENCHMARK(StableStones);
 
 void EvalGameOver(benchmark::State& state)
 {
-	PosGen::Random rnd;
-	const Position pos = rnd();
-
+	auto pos = PosGen::Random{}();
 	for (auto _ : state)
 		benchmark::DoNotOptimize(EvalGameOver(pos));
 	state.SetItemsProcessed(state.iterations());
@@ -160,35 +216,10 @@ BENCHMARK(EvalGameOver);
 void PosGen_Random(benchmark::State& state)
 {
 	PosGen::Random rnd;
-
 	for (auto _ : state)
 		benchmark::DoNotOptimize(rnd());
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PosGen_Random);
-
-void PosGen_Random_empty_count(benchmark::State& state)
-{
-	const uint64_t empty_count = state.range(0);
-	PosGen::Random_with_empty_count rnd(empty_count);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(rnd());
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PosGen_Random_empty_count)->Arg(0)->Arg(20)->Arg(40)->Arg(60);
-
-void PosGen_RandomPlayed(benchmark::State& state)
-{
-	auto player1 = RandomPlayer();
-	auto player2 = RandomPlayer();
-	const uint64_t empty_count = state.range(0);
-	PosGen::Played generate(player1, player2, empty_count);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(generate());
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PosGen_RandomPlayed)->Arg(0)->Arg(20)->Arg(40)->Arg(60);
 
 BENCHMARK_MAIN();

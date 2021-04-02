@@ -1,6 +1,6 @@
 #include "pch.h"
 
-const PositionScore Zero_empty_0 = {
+const PosScore Zero_empty_0 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
 	"X X X X X X X X"
@@ -8,9 +8,9 @@ const PositionScore Zero_empty_0 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
 	"X X X X X X X X"
-	"O O O O O O O O"_pos, 0 };
+	"O O O O O O O O"_pos, 0 / 2  };
 
-const PositionScore Zero_empty_1 = {
+const PosScore Zero_empty_1 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
 	"X X X X X X X X"
@@ -18,9 +18,9 @@ const PositionScore Zero_empty_1 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
 	"X X X X X X X X"
-	"X X X X X X X X"_pos, +16 };
+	"X X X X X X X X"_pos, +16 / 2  };
 
-const PositionScore Zero_empty_2 = {
+const PosScore Zero_empty_2 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
 	"X X X X X X X X"
@@ -28,9 +28,9 @@ const PositionScore Zero_empty_2 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
 	"O O O O O O O O"
-	"O O O O O O O O"_pos, -16 };
+	"O O O O O O O O"_pos, -16 / 2  };
 
-const PositionScore One_empty_0 = {
+const PosScore One_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -38,9 +38,9 @@ const PositionScore One_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"X X X X X X X -"_pos, +64 };
+	"X X X X X X X -"_pos, +64 / 2  };
 
-const PositionScore One_empty_1 = {
+const PosScore One_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -48,9 +48,9 @@ const PositionScore One_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X O O"
-	"X X X X X X O -"_pos, +64 };
+	"X X X X X X O -"_pos, +64 / 2  };
 
-const PositionScore One_empty_2 = {
+const PosScore One_empty_2 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -58,9 +58,9 @@ const PositionScore One_empty_2 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"O X X X X X X -"_pos, +48 };
+	"O X X X X X X -"_pos, +48 / 2  };
 
-const PositionScore One_empty_3 = {
+const PosScore One_empty_3 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -68,9 +68,9 @@ const PositionScore One_empty_3 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X O"
-	"O X X X X X X -"_pos, +62 };
+	"O X X X X X X -"_pos, +62 / 2  };
 
-const PositionScore Two_empty_0 = {
+const PosScore Two_empty_0 = {
 	"X X X X X X X -"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -78,9 +78,9 @@ const PositionScore Two_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"X X X X X X X -"_pos, +64 };
+	"X X X X X X X -"_pos, +64 / 2  };
 
-const PositionScore Two_empty_1 = {
+const PosScore Two_empty_1 = {
 	"X X X X X X O -"
 	"X X X X X X O O"
 	"X X X X X X X X"
@@ -88,9 +88,9 @@ const PositionScore Two_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X O O"
-	"X X X X X X O -"_pos, +64 };
+	"X X X X X X O -"_pos, +64 / 2  };
 
-const PositionScore Two_empty_2 = {
+const PosScore Two_empty_2 = {
 	"X X X X X X X  "
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -98,9 +98,9 @@ const PositionScore Two_empty_2 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"O X X X X X X -"_pos, +22 };
+	"O X X X X X X -"_pos, +22 / 2  };
 
-const PositionScore Two_empty_3 = {
+const PosScore Two_empty_3 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -108,9 +108,9 @@ const PositionScore Two_empty_3 = {
 	"X X X X X O X X"
 	"X X X X X X X O"
 	"X X X X X X O -"
-	"O X X X X X X -"_pos, +54 };
+	"O X X X X X X -"_pos, +54 / 2  };
 
-const PositionScore Three_empty_0 = {
+const PosScore Three_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -118,9 +118,9 @@ const PositionScore Three_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"X X X X X - - -"_pos, +64 };
+	"X X X X X - - -"_pos, +64 / 2  };
 
-const PositionScore Three_empty_1 = {
+const PosScore Three_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -128,9 +128,9 @@ const PositionScore Three_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X O X"
-	"X X X X X - - -"_pos, +64 };
+	"X X X X X - - -"_pos, +64 / 2  };
 
-const PositionScore Three_empty_2 = {
+const PosScore Three_empty_2 = {
 	"X X X X X O O O"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -138,9 +138,9 @@ const PositionScore Three_empty_2 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"X X X X X - - -"_pos, +16 };
+	"X X X X X - - -"_pos, +16 / 2  };
 
-const PositionScore Three_empty_3 = {
+const PosScore Three_empty_3 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -148,9 +148,9 @@ const PositionScore Three_empty_3 = {
 	"X X X X X O X X"
 	"X X X X X X X -"
 	"X X X X X X O -"
-	"O X X X X X X -"_pos, +58 };
+	"O X X X X X X -"_pos, +58 / 2  };
 
-const PositionScore Four_empty_0 = {
+const PosScore Four_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -158,9 +158,9 @@ const PositionScore Four_empty_0 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"X X X X - - - -"_pos, +64 };
+	"X X X X - - - -"_pos, +64 / 2  };
 
-const PositionScore Four_empty_1 = {
+const PosScore Four_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -168,9 +168,9 @@ const PositionScore Four_empty_1 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X O O O O O"
-	"X X X O - - - -"_pos, +64 };
+	"X X X O - - - -"_pos, +64 / 2  };
 
-const PositionScore Four_empty_2 = {
+const PosScore Four_empty_2 = {
 	"X X X X O O O O"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -178,9 +178,9 @@ const PositionScore Four_empty_2 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
-	"X X X X - - - -"_pos, +0 };
+	"X X X X - - - -"_pos, +0 / 2  };
 
-const PositionScore Four_empty_3 = {
+const PosScore Four_empty_3 = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -188,10 +188,10 @@ const PositionScore Four_empty_3 = {
 	"X X X X X X X X"
 	"X X X O O X X X"
 	"X X O X X O X X"
-	"X X - - - - X X"_pos, +56 };
+	"X X - - - - X X"_pos, +56 / 2  };
 
 
-const PositionScore Five_empty = {
+const PosScore Five_empty = {
 	"X X X X X X X -"
 	"X X X X X X X O"
 	"X X X X X X X X"
@@ -199,251 +199,195 @@ const PositionScore Five_empty = {
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X O X O X O X O"
-	"X - X - X - X -"_pos, +64 };
+	"X - X - X - X -"_pos, +64 / 2  };
 
 
-class NegaMax : public ::testing::Test
+class NegaMaxTest : public ::testing::Test
 {
 public:
-	void Test(PositionScore pos_score)
+	void Test(PosScore pos_score)
 	{
 		const Position pos = pos_score.pos;
-		const Score correct = pos_score.score;
+		const int correct = pos_score.score;
 
-		const auto result = Search::NegaMax{}.Eval(pos, Search::Intensity::Exact(pos));
+		const auto result = NegaMax{}.Eval(pos);
 				
-		ASSERT_EQ(result.window.lower(), correct);
-		ASSERT_EQ(result.window.upper(), correct);
+		ASSERT_EQ(result, correct);
 	}
 };
 
-TEST_F(NegaMax, Zero_empty_0) { Test(Zero_empty_0); }
-TEST_F(NegaMax, Zero_empty_1) { Test(Zero_empty_1); }
-TEST_F(NegaMax, Zero_empty_2) { Test(Zero_empty_2); }
-TEST_F(NegaMax, One_empty_0) { Test(One_empty_0); }
-TEST_F(NegaMax, One_empty_1) { Test(One_empty_1); }
-TEST_F(NegaMax, One_empty_2) { Test(One_empty_2); }
-TEST_F(NegaMax, One_empty_3) { Test(One_empty_3); }
-TEST_F(NegaMax, Two_empty_0) { Test(Two_empty_0); }
-TEST_F(NegaMax, Two_empty_1) { Test(Two_empty_1); }
-TEST_F(NegaMax, Two_empty_2) { Test(Two_empty_2); }
-TEST_F(NegaMax, Two_empty_3) { Test(Two_empty_3); }
-TEST_F(NegaMax, Three_empty_0) { Test(Three_empty_0); }
-TEST_F(NegaMax, Three_empty_1) { Test(Three_empty_1); }
-TEST_F(NegaMax, Three_empty_2) { Test(Three_empty_2); }
-TEST_F(NegaMax, Three_empty_3) { Test(Three_empty_3); }
-TEST_F(NegaMax, Four_empty_0) { Test(Four_empty_0); }
-TEST_F(NegaMax, Four_empty_1) { Test(Four_empty_1); }
-TEST_F(NegaMax, Four_empty_2) { Test(Four_empty_2); }
-TEST_F(NegaMax, Four_empty_3) { Test(Four_empty_3); }
-TEST_F(NegaMax, Five_empty) { Test(Five_empty); }
+TEST_F(NegaMaxTest, Zero_empty_0) { Test(Zero_empty_0); }
+TEST_F(NegaMaxTest, Zero_empty_1) { Test(Zero_empty_1); }
+TEST_F(NegaMaxTest, Zero_empty_2) { Test(Zero_empty_2); }
+TEST_F(NegaMaxTest, One_empty_0) { Test(One_empty_0); }
+TEST_F(NegaMaxTest, One_empty_1) { Test(One_empty_1); }
+TEST_F(NegaMaxTest, One_empty_2) { Test(One_empty_2); }
+TEST_F(NegaMaxTest, One_empty_3) { Test(One_empty_3); }
+TEST_F(NegaMaxTest, Two_empty_0) { Test(Two_empty_0); }
+TEST_F(NegaMaxTest, Two_empty_1) { Test(Two_empty_1); }
+TEST_F(NegaMaxTest, Two_empty_2) { Test(Two_empty_2); }
+TEST_F(NegaMaxTest, Two_empty_3) { Test(Two_empty_3); }
+TEST_F(NegaMaxTest, Three_empty_0) { Test(Three_empty_0); }
+TEST_F(NegaMaxTest, Three_empty_1) { Test(Three_empty_1); }
+TEST_F(NegaMaxTest, Three_empty_2) { Test(Three_empty_2); }
+TEST_F(NegaMaxTest, Three_empty_3) { Test(Three_empty_3); }
+TEST_F(NegaMaxTest, Four_empty_0) { Test(Four_empty_0); }
+TEST_F(NegaMaxTest, Four_empty_1) { Test(Four_empty_1); }
+TEST_F(NegaMaxTest, Four_empty_2) { Test(Four_empty_2); }
+TEST_F(NegaMaxTest, Four_empty_3) { Test(Four_empty_3); }
+TEST_F(NegaMaxTest, Five_empty) { Test(Five_empty); }
 
 
-class AlphaBetaFailHard : public ::testing::Test
+class AlphaBetaFailHardTest : public ::testing::Test
 {
 public:
-	void Test(const Position& pos, const Score& correct, const OpenInterval& requested)
+	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
-		const auto result = Search::AlphaBetaFailHard{}.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
+		const int result = AlphaBetaFailHard{}.Eval(pos, w);
 
-		ASSERT_TRUE(result.window.Contains(correct));
-
-		if (correct < requested) // fail low
-		{
-			// [-----------------------] possible
-			// ---------(-----)--------- requested
-			// ----[]------------------- correct
-			// [--------]--------------- result
-			ASSERT_EQ(result.window.lower(), min_score);
-			ASSERT_EQ(result.window.upper(), requested.lower());
-		}
-		else if (requested < correct) // fail high
-		{
-			// [-----------------------] possible
-			// ---------(-----)--------- requested
-			// -------------------[]---- correct
-			// ---------------[--------] result
-			ASSERT_EQ(result.window.lower(), requested.upper());
-			ASSERT_EQ(result.window.upper(), max_score);
-		}
+		if (correct < w) // fail low
+			ASSERT_EQ(result, w.lower());
+		else if (correct > w) // fail high
+			ASSERT_EQ(result, w.upper());
 		else // score found
-		{
-			ASSERT_EQ(result.window.lower(), correct);
-			ASSERT_EQ(result.window.upper(), correct);
-		}
+			ASSERT_EQ(result, correct);
 	}
 
-	void Test(const PositionScore& pos)
+	void Test(const PosScore& pos)
 	{
 		Test(pos.pos, pos.score, OpenInterval::Whole());
 	}
 
-	void Test_all_windows(const Position& pos, const Score& correct)
+	void Test_all_windows(const Position& pos,  int correct)
 	{
 		for (int lower : range(min_score, max_score + 1))
 			for (int upper : range(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
-	void Test_all_windows(const PositionScore& pos)
+	void Test_all_windows(const PosScore& pos)
 	{
 		Test_all_windows(pos.pos, pos.score);
 	}
 };
 
-TEST_F(AlphaBetaFailHard, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
-TEST_F(AlphaBetaFailHard, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
-TEST_F(AlphaBetaFailHard, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
-TEST_F(AlphaBetaFailHard, One_empty_0) { Test_all_windows(One_empty_0); }
-TEST_F(AlphaBetaFailHard, One_empty_1) { Test_all_windows(One_empty_1); }
-TEST_F(AlphaBetaFailHard, One_empty_2) { Test_all_windows(One_empty_2); }
-TEST_F(AlphaBetaFailHard, One_empty_3) { Test_all_windows(One_empty_3); }
-TEST_F(AlphaBetaFailHard, Two_empty_0) { Test_all_windows(Two_empty_0); }
-TEST_F(AlphaBetaFailHard, Two_empty_1) { Test_all_windows(Two_empty_1); }
-TEST_F(AlphaBetaFailHard, Two_empty_2) { Test_all_windows(Two_empty_2); }
-TEST_F(AlphaBetaFailHard, Two_empty_3) { Test_all_windows(Two_empty_3); }
-TEST_F(AlphaBetaFailHard, Three_empty_0) { Test_all_windows(Three_empty_0); }
-TEST_F(AlphaBetaFailHard, Three_empty_1) { Test_all_windows(Three_empty_1); }
-TEST_F(AlphaBetaFailHard, Three_empty_2) { Test_all_windows(Three_empty_2); }
-TEST_F(AlphaBetaFailHard, Three_empty_3) { Test_all_windows(Three_empty_3); }
-TEST_F(AlphaBetaFailHard, Four_empty_0) { Test_all_windows(Four_empty_0); }
-TEST_F(AlphaBetaFailHard, Four_empty_1) { Test_all_windows(Four_empty_1); }
-TEST_F(AlphaBetaFailHard, Four_empty_2) { Test_all_windows(Four_empty_2); }
-TEST_F(AlphaBetaFailHard, Four_empty_3) { Test_all_windows(Four_empty_3); }
-TEST_F(AlphaBetaFailHard, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(AlphaBetaFailHard, FForum_1) { Test(FForum[1]); }
-TEST_F(AlphaBetaFailHard, FForum_2) { Test(FForum[2]); }
-TEST_F(AlphaBetaFailHard, FForum_3) { Test(FForum[3]); }
-TEST_F(AlphaBetaFailHard, FForum_4) { Test(FForum[4]); }
-TEST_F(AlphaBetaFailHard, FForum_5) { Test(FForum[5]); }
-TEST_F(AlphaBetaFailHard, FForum_6) { Test(FForum[6]); }
-TEST_F(AlphaBetaFailHard, FForum_7) { Test(FForum[7]); }
-TEST_F(AlphaBetaFailHard, FForum_8) { Test(FForum[8]); }
-TEST_F(AlphaBetaFailHard, FForum_9) { Test(FForum[9]); }
-TEST_F(AlphaBetaFailHard, FForum_10) { Test(FForum[10]); }
+TEST_F(AlphaBetaFailHardTest, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
+TEST_F(AlphaBetaFailHardTest, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
+TEST_F(AlphaBetaFailHardTest, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
+TEST_F(AlphaBetaFailHardTest, One_empty_0) { Test_all_windows(One_empty_0); }
+TEST_F(AlphaBetaFailHardTest, One_empty_1) { Test_all_windows(One_empty_1); }
+TEST_F(AlphaBetaFailHardTest, One_empty_2) { Test_all_windows(One_empty_2); }
+TEST_F(AlphaBetaFailHardTest, One_empty_3) { Test_all_windows(One_empty_3); }
+TEST_F(AlphaBetaFailHardTest, Two_empty_0) { Test_all_windows(Two_empty_0); }
+TEST_F(AlphaBetaFailHardTest, Two_empty_1) { Test_all_windows(Two_empty_1); }
+TEST_F(AlphaBetaFailHardTest, Two_empty_2) { Test_all_windows(Two_empty_2); }
+TEST_F(AlphaBetaFailHardTest, Two_empty_3) { Test_all_windows(Two_empty_3); }
+TEST_F(AlphaBetaFailHardTest, Three_empty_0) { Test_all_windows(Three_empty_0); }
+TEST_F(AlphaBetaFailHardTest, Three_empty_1) { Test_all_windows(Three_empty_1); }
+TEST_F(AlphaBetaFailHardTest, Three_empty_2) { Test_all_windows(Three_empty_2); }
+TEST_F(AlphaBetaFailHardTest, Three_empty_3) { Test_all_windows(Three_empty_3); }
+TEST_F(AlphaBetaFailHardTest, Four_empty_0) { Test_all_windows(Four_empty_0); }
+TEST_F(AlphaBetaFailHardTest, Four_empty_1) { Test_all_windows(Four_empty_1); }
+TEST_F(AlphaBetaFailHardTest, Four_empty_2) { Test_all_windows(Four_empty_2); }
+TEST_F(AlphaBetaFailHardTest, Four_empty_3) { Test_all_windows(Four_empty_3); }
+TEST_F(AlphaBetaFailHardTest, Five_empty) { Test_all_windows(Five_empty); }
+TEST_F(AlphaBetaFailHardTest, FForum_1) { Test(FForum[1]); }
+TEST_F(AlphaBetaFailHardTest, FForum_2) { Test(FForum[2]); }
+TEST_F(AlphaBetaFailHardTest, FForum_3) { Test(FForum[3]); }
+TEST_F(AlphaBetaFailHardTest, FForum_4) { Test(FForum[4]); }
+TEST_F(AlphaBetaFailHardTest, FForum_5) { Test(FForum[5]); }
+TEST_F(AlphaBetaFailHardTest, FForum_6) { Test(FForum[6]); }
+TEST_F(AlphaBetaFailHardTest, FForum_7) { Test(FForum[7]); }
+TEST_F(AlphaBetaFailHardTest, FForum_8) { Test(FForum[8]); }
+TEST_F(AlphaBetaFailHardTest, FForum_9) { Test(FForum[9]); }
+TEST_F(AlphaBetaFailHardTest, FForum_10) { Test(FForum[10]); }
 
 
-class AlphaBetaFailSoft : public ::testing::Test
+class AlphaBetaFailSoftTest : public ::testing::Test
 {
 public:
-	void Test(const Position& pos, const Score& correct, const OpenInterval& requested)
+	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
-		const auto result = Search::AlphaBetaFailSoft{}.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
+		const auto result = AlphaBetaFailSoft{}.Eval(pos, w);
 
-		ASSERT_TRUE(result.window.Contains(correct));
-		
-		if (correct < requested) // fail low
-		{
-			// [-----------------------] possible
-			// ---------(-----)--------- requested
-			// ----[]------------------- correct
-			// [----]]]]]--------------- result
-			ASSERT_EQ(min_score, result.window.lower());
-
-			ASSERT_LE(correct, result.window.upper());
-			ASSERT_LE(result.window.upper(), requested.lower());
-		}
-		else if (requested < correct) // fail high
-		{
-			// [-----------------------] possible
-			// ---------(-----)--------- requested
-			// -------------------[]---- correct
-			// ---------------[[[[[----] result
-			ASSERT_LE(requested.upper(), result.window.lower());
-			ASSERT_LE(result.window.lower(), correct);
-
-			ASSERT_EQ(result.window.upper(), max_score);
-		}
+		if (correct < w) // fail low
+			ASSERT_LE(result, w.lower());
+		else if (correct > w) // fail high
+			ASSERT_GE(result, w.upper());
 		else // score found
-		{
-			ASSERT_EQ(result.window.lower(), correct);
-			ASSERT_EQ(result.window.upper(), correct);
-		}
+			ASSERT_EQ(result, correct);
 	}
 
-	void Test(const PositionScore& pos)
+	void Test(const PosScore& pos)
 	{
 		Test(pos.pos, pos.score, OpenInterval::Whole());
 	}
 
-	void Test_all_windows(const Position& pos, const Score& correct)
+	void Test_all_windows(const Position& pos, const int& correct)
 	{
 		for (int lower : range(min_score, max_score + 1))
 			for (int upper : range(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
-	void Test_all_windows(const PositionScore& pos)
+	void Test_all_windows(const PosScore& pos)
 	{
 		Test_all_windows(pos.pos, pos.score);
 	}
 };
 
-TEST_F(AlphaBetaFailSoft, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
-TEST_F(AlphaBetaFailSoft, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
-TEST_F(AlphaBetaFailSoft, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
-TEST_F(AlphaBetaFailSoft, One_empty_0) { Test_all_windows(One_empty_0); }
-TEST_F(AlphaBetaFailSoft, One_empty_1) { Test_all_windows(One_empty_1); }
-TEST_F(AlphaBetaFailSoft, One_empty_2) { Test_all_windows(One_empty_2); }
-TEST_F(AlphaBetaFailSoft, One_empty_3) { Test_all_windows(One_empty_3); }
-TEST_F(AlphaBetaFailSoft, Two_empty_0) { Test_all_windows(Two_empty_0); }
-TEST_F(AlphaBetaFailSoft, Two_empty_1) { Test_all_windows(Two_empty_1); }
-TEST_F(AlphaBetaFailSoft, Two_empty_2) { Test_all_windows(Two_empty_2); }
-TEST_F(AlphaBetaFailSoft, Two_empty_3) { Test_all_windows(Two_empty_3); }
-TEST_F(AlphaBetaFailSoft, Three_empty_0) { Test_all_windows(Three_empty_0); }
-TEST_F(AlphaBetaFailSoft, Three_empty_1) { Test_all_windows(Three_empty_1); }
-TEST_F(AlphaBetaFailSoft, Three_empty_2) { Test_all_windows(Three_empty_2); }
-TEST_F(AlphaBetaFailSoft, Three_empty_3) { Test_all_windows(Three_empty_3); }
-TEST_F(AlphaBetaFailSoft, Four_empty_0) { Test_all_windows(Four_empty_0); }
-TEST_F(AlphaBetaFailSoft, Four_empty_1) { Test_all_windows(Four_empty_1); }
-TEST_F(AlphaBetaFailSoft, Four_empty_2) { Test_all_windows(Four_empty_2); }
-TEST_F(AlphaBetaFailSoft, Four_empty_3) { Test_all_windows(Four_empty_3); }
-TEST_F(AlphaBetaFailSoft, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(AlphaBetaFailSoft, FForum_1) { Test(FForum[1]); }
-TEST_F(AlphaBetaFailSoft, FForum_2) { Test(FForum[2]); }
-TEST_F(AlphaBetaFailSoft, FForum_3) { Test(FForum[3]); }
-TEST_F(AlphaBetaFailSoft, FForum_4) { Test(FForum[4]); }
-TEST_F(AlphaBetaFailSoft, FForum_5) { Test(FForum[5]); }
-TEST_F(AlphaBetaFailSoft, FForum_6) { Test(FForum[6]); }
-TEST_F(AlphaBetaFailSoft, FForum_7) { Test(FForum[7]); }
-TEST_F(AlphaBetaFailSoft, FForum_8) { Test(FForum[8]); }
-TEST_F(AlphaBetaFailSoft, FForum_9) { Test(FForum[9]); }
-TEST_F(AlphaBetaFailSoft, FForum_10) { Test(FForum[10]); }
+TEST_F(AlphaBetaFailSoftTest, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
+TEST_F(AlphaBetaFailSoftTest, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
+TEST_F(AlphaBetaFailSoftTest, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
+TEST_F(AlphaBetaFailSoftTest, One_empty_0) { Test_all_windows(One_empty_0); }
+TEST_F(AlphaBetaFailSoftTest, One_empty_1) { Test_all_windows(One_empty_1); }
+TEST_F(AlphaBetaFailSoftTest, One_empty_2) { Test_all_windows(One_empty_2); }
+TEST_F(AlphaBetaFailSoftTest, One_empty_3) { Test_all_windows(One_empty_3); }
+TEST_F(AlphaBetaFailSoftTest, Two_empty_0) { Test_all_windows(Two_empty_0); }
+TEST_F(AlphaBetaFailSoftTest, Two_empty_1) { Test_all_windows(Two_empty_1); }
+TEST_F(AlphaBetaFailSoftTest, Two_empty_2) { Test_all_windows(Two_empty_2); }
+TEST_F(AlphaBetaFailSoftTest, Two_empty_3) { Test_all_windows(Two_empty_3); }
+TEST_F(AlphaBetaFailSoftTest, Three_empty_0) { Test_all_windows(Three_empty_0); }
+TEST_F(AlphaBetaFailSoftTest, Three_empty_1) { Test_all_windows(Three_empty_1); }
+TEST_F(AlphaBetaFailSoftTest, Three_empty_2) { Test_all_windows(Three_empty_2); }
+TEST_F(AlphaBetaFailSoftTest, Three_empty_3) { Test_all_windows(Three_empty_3); }
+TEST_F(AlphaBetaFailSoftTest, Four_empty_0) { Test_all_windows(Four_empty_0); }
+TEST_F(AlphaBetaFailSoftTest, Four_empty_1) { Test_all_windows(Four_empty_1); }
+TEST_F(AlphaBetaFailSoftTest, Four_empty_2) { Test_all_windows(Four_empty_2); }
+TEST_F(AlphaBetaFailSoftTest, Four_empty_3) { Test_all_windows(Four_empty_3); }
+TEST_F(AlphaBetaFailSoftTest, Five_empty) { Test_all_windows(Five_empty); }
+TEST_F(AlphaBetaFailSoftTest, FForum_1) { Test(FForum[1]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_2) { Test(FForum[2]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_3) { Test(FForum[3]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_4) { Test(FForum[4]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_5) { Test(FForum[5]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_6) { Test(FForum[6]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_7) { Test(FForum[7]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_8) { Test(FForum[8]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_9) { Test(FForum[9]); }
+TEST_F(AlphaBetaFailSoftTest, FForum_10) { Test(FForum[10]); }
 
-class PV : public ::testing::Test
+class PVSTest : public ::testing::Test
 {
 public:
 	HashTablePVS tt{ 1 };
+	PatternEval pe;
 
-	void Test(const Position& pos, const Score& correct, const OpenInterval& requested)
+	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
-		const auto result = Search::PV{ tt }.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
+		const auto result = PVS{ tt, pe }.Eval(pos, Search::Request(Search::Intensity::Exact(pos), w));
 
 		ASSERT_TRUE(result.window.Contains(correct));
 
-		if (correct < requested) // fail low
+		if (correct < w) // fail low
 		{
-			// [-----------------------] possible
-			// ---------(-----)--------- requested
-			// ----[]------------------- correct
-			// [[[[[]]]]]--------------- result
-			ASSERT_LE(min_score, result.window.lower());
-			ASSERT_LE(result.window.lower(), correct);
-
-			ASSERT_LE(correct, result.window.upper());
-			ASSERT_LE(result.window.upper(), requested.lower());
+			ASSERT_EQ(result.window.lower(), min_score);
+			ASSERT_LE(result.window.upper(), w.lower());
 		}
-		else if (requested < correct) // fail high
+		else if (correct > w) // fail high
 		{
-			// [-----------------------] possible
-			// ---------(-----)--------- requested
-			// -------------------[]---- correct
-			// ---------------[[[[[]]]]] result
-			ASSERT_LE(requested.upper(), result.window.lower());
-			ASSERT_LE(result.window.lower(), correct);
-
-			ASSERT_LE(correct, result.window.upper());
-			ASSERT_LE(result.window.upper(), max_score);
+			ASSERT_EQ(result.window.upper(), max_score);
+			ASSERT_GE(result.window.lower(), w.upper());
 		}
 		else // score found
 		{
@@ -452,85 +396,86 @@ public:
 		}
 	}
 
-	void Test(const PositionScore& pos)
+	void Test(const PosScore& pos)
 	{
 		Test(pos.pos, pos.score, OpenInterval::Whole());
 	}
 
-	void Test_all_windows(const Position& pos, const Score& correct)
+	void Test_all_windows(const Position& pos, const int& correct)
 	{
 		for (int lower : range(min_score, max_score + 1))
 			for (int upper : range(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
-	void Test_all_windows(const PositionScore& pos)
+	void Test_all_windows(const PosScore& pos)
 	{
 		Test_all_windows(pos.pos, pos.score);
 	}
 };
 
-TEST_F(PV, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
-TEST_F(PV, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
-TEST_F(PV, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
-TEST_F(PV, One_empty_0) { Test_all_windows(One_empty_0); }
-TEST_F(PV, One_empty_1) { Test_all_windows(One_empty_1); }
-TEST_F(PV, One_empty_2) { Test_all_windows(One_empty_2); }
-TEST_F(PV, One_empty_3) { Test_all_windows(One_empty_3); }
-TEST_F(PV, Two_empty_0) { Test_all_windows(Two_empty_0); }
-TEST_F(PV, Two_empty_1) { Test_all_windows(Two_empty_1); }
-TEST_F(PV, Two_empty_2) { Test_all_windows(Two_empty_2); }
-TEST_F(PV, Two_empty_3) { Test_all_windows(Two_empty_3); }
-TEST_F(PV, Three_empty_0) { Test_all_windows(Three_empty_0); }
-TEST_F(PV, Three_empty_1) { Test_all_windows(Three_empty_1); }
-TEST_F(PV, Three_empty_2) { Test_all_windows(Three_empty_2); }
-TEST_F(PV, Three_empty_3) { Test_all_windows(Three_empty_3); }
-TEST_F(PV, Four_empty_0) { Test_all_windows(Four_empty_0); }
-TEST_F(PV, Four_empty_1) { Test_all_windows(Four_empty_1); }
-TEST_F(PV, Four_empty_2) { Test_all_windows(Four_empty_2); }
-TEST_F(PV, Four_empty_3) { Test_all_windows(Four_empty_3); }
-TEST_F(PV, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(PV, FForum_1) { Test(FForum[1]); }
-TEST_F(PV, FForum_2) { Test(FForum[2]); }
-TEST_F(PV, FForum_3) { Test(FForum[3]); }
-TEST_F(PV, FForum_4) { Test(FForum[4]); }
-TEST_F(PV, FForum_5) { Test(FForum[5]); }
-TEST_F(PV, FForum_6) { Test(FForum[6]); }
-TEST_F(PV, FForum_7) { Test(FForum[7]); }
-TEST_F(PV, FForum_8) { Test(FForum[8]); }
-TEST_F(PV, FForum_9) { Test(FForum[9]); }
-TEST_F(PV, FForum_10) { Test(FForum[10]); }
+TEST_F(PVSTest, Zero_empty_0) { Test_all_windows(Zero_empty_0); }
+TEST_F(PVSTest, Zero_empty_1) { Test_all_windows(Zero_empty_1); }
+TEST_F(PVSTest, Zero_empty_2) { Test_all_windows(Zero_empty_2); }
+TEST_F(PVSTest, One_empty_0) { Test_all_windows(One_empty_0); }
+TEST_F(PVSTest, One_empty_1) { Test_all_windows(One_empty_1); }
+TEST_F(PVSTest, One_empty_2) { Test_all_windows(One_empty_2); }
+TEST_F(PVSTest, One_empty_3) { Test_all_windows(One_empty_3); }
+TEST_F(PVSTest, Two_empty_0) { Test_all_windows(Two_empty_0); }
+TEST_F(PVSTest, Two_empty_1) { Test_all_windows(Two_empty_1); }
+TEST_F(PVSTest, Two_empty_2) { Test_all_windows(Two_empty_2); }
+TEST_F(PVSTest, Two_empty_3) { Test_all_windows(Two_empty_3); }
+TEST_F(PVSTest, Three_empty_0) { Test_all_windows(Three_empty_0); }
+TEST_F(PVSTest, Three_empty_1) { Test_all_windows(Three_empty_1); }
+TEST_F(PVSTest, Three_empty_2) { Test_all_windows(Three_empty_2); }
+TEST_F(PVSTest, Three_empty_3) { Test_all_windows(Three_empty_3); }
+TEST_F(PVSTest, Four_empty_0) { Test_all_windows(Four_empty_0); }
+TEST_F(PVSTest, Four_empty_1) { Test_all_windows(Four_empty_1); }
+TEST_F(PVSTest, Four_empty_2) { Test_all_windows(Four_empty_2); }
+TEST_F(PVSTest, Four_empty_3) { Test_all_windows(Four_empty_3); }
+TEST_F(PVSTest, Five_empty) { Test_all_windows(Five_empty); }
+TEST_F(PVSTest, FForum_1) { Test(FForum[1]); }
+TEST_F(PVSTest, FForum_2) { Test(FForum[2]); }
+TEST_F(PVSTest, FForum_3) { Test(FForum[3]); }
+TEST_F(PVSTest, FForum_4) { Test(FForum[4]); }
+TEST_F(PVSTest, FForum_5) { Test(FForum[5]); }
+TEST_F(PVSTest, FForum_6) { Test(FForum[6]); }
+TEST_F(PVSTest, FForum_7) { Test(FForum[7]); }
+TEST_F(PVSTest, FForum_8) { Test(FForum[8]); }
+TEST_F(PVSTest, FForum_9) { Test(FForum[9]); }
+TEST_F(PVSTest, FForum_10) { Test(FForum[10]); }
 
-class PV_TT : public ::testing::Test
+class PVS_TT : public ::testing::Test
 {
 public:
 	HashTablePVS tt{ 1'000 };
+	PatternEval pe;
 	
-	void Test(const Position& pos, const Score& correct, const OpenInterval& requested)
+	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
-		const auto result = Search::PV{ tt }.Eval(pos, Search::Intensity(requested, pos.EmptyCount(), Search::Selectivity::None));
+		const auto result = PVS{ tt, pe }.Eval(pos, Search::Request({Search::Intensity::Exact(pos)}, w));
 
 		ASSERT_TRUE(result.window.Contains(correct));
 
-		if (correct < requested) // fail low
+		if (correct < w) // fail low
 		{
 			// [-----------------------] possible
-			// ---------(-----)--------- requested
+			// ---------(-----)--------- w
 			// ----[]------------------- correct
 			// [[[[[]]]]]--------------- result
 			ASSERT_LE(min_score, result.window.lower());
 			ASSERT_LE(result.window.lower(), correct);
 
 			ASSERT_LE(correct, result.window.upper());
-			ASSERT_LE(result.window.upper(), requested.lower());
+			ASSERT_LE(result.window.upper(), w.lower());
 		}
-		else if (requested < correct) // fail high
+		else if (w < correct) // fail high
 		{
 			// [-----------------------] possible
-			// ---------(-----)--------- requested
+			// ---------(-----)--------- w
 			// -------------------[]---- correct
 			// ---------------[[[[[]]]]] result
-			ASSERT_LE(requested.upper(), result.window.lower());
+			ASSERT_LE(w.upper(), result.window.lower());
 			ASSERT_LE(result.window.lower(), correct);
 
 			ASSERT_LE(correct, result.window.upper());
@@ -543,31 +488,31 @@ public:
 		}
 	}
 
-	void Test(const PositionScore& pos)
+	void Test(const PosScore& pos)
 	{
 		Test(pos.pos, pos.score, OpenInterval::Whole());
 	}
 
-	void Test_all_windows(const Position& pos, const Score& correct)
+	void Test_all_windows(const Position& pos, const int& correct)
 	{
 		for (int lower : range(min_score, max_score + 1))
 			for (int upper : range(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
-	void Test_all_windows(const PositionScore& pos)
+	void Test_all_windows(const PosScore& pos)
 	{
 		Test_all_windows(pos.pos, pos.score);
 	}
 };
 
-TEST_F(PV_TT, FForum_1) { Test(FForum[1]); }
-TEST_F(PV_TT, FForum_2) { Test(FForum[2]); }
-TEST_F(PV_TT, FForum_3) { Test(FForum[3]); }
-TEST_F(PV_TT, FForum_4) { Test(FForum[4]); }
-TEST_F(PV_TT, FForum_5) { Test(FForum[5]); }
-TEST_F(PV_TT, FForum_6) { Test(FForum[6]); }
-TEST_F(PV_TT, FForum_7) { Test(FForum[7]); }
-TEST_F(PV_TT, FForum_8) { Test(FForum[8]); }
-TEST_F(PV_TT, FForum_9) { Test(FForum[9]); }
-TEST_F(PV_TT, FForum_10) { Test(FForum[10]); }
+TEST_F(PVS_TT, FForum_1) { Test(FForum[1]); }
+TEST_F(PVS_TT, FForum_2) { Test(FForum[2]); }
+TEST_F(PVS_TT, FForum_3) { Test(FForum[3]); }
+TEST_F(PVS_TT, FForum_4) { Test(FForum[4]); }
+TEST_F(PVS_TT, FForum_5) { Test(FForum[5]); }
+TEST_F(PVS_TT, FForum_6) { Test(FForum[6]); }
+TEST_F(PVS_TT, FForum_7) { Test(FForum[7]); }
+TEST_F(PVS_TT, FForum_8) { Test(FForum[8]); }
+TEST_F(PVS_TT, FForum_9) { Test(FForum[9]); }
+TEST_F(PVS_TT, FForum_10) { Test(FForum[10]); }

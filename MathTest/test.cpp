@@ -8,7 +8,7 @@ TEST(Mat_Vec, Multiplication)
 
 	for (int i = 0; i < A.Rows(); i++)
 		for (int j = 0; j < A.Cols(); j++)
-			A(i, j) = i * 10 + j;
+			A(i, j) = static_cast<float>(i * 10 + j);
 
 	for (int i = 0; i < x.size(); i++)
 		x[i] = i;
@@ -58,7 +58,7 @@ TEST(CG, Mat_Vec)
 	const std::size_t size = 4;
 	Matrix<float> A(size, size);
 	Vector x(size);
-	Vector x0(size);
+	Vector _0(size);
 
 	std::mt19937_64 rnd_engine(13);
 	auto rnd = [&rnd_engine]() { return std::uniform_real_distribution<float>(0, 1)(rnd_engine); };
@@ -66,18 +66,18 @@ TEST(CG, Mat_Vec)
 	for (int i = 0; i < A.Rows(); i++)
 		for (int j = 0; j < A.Cols(); j++)
 			A(i, j) = rnd();
-	A += Transposed(A) + size * Matrix<float>::Id(size); // makes it positive-definite
+	A += Transposed(A) + size * Matrix<float>::Id(size); // makes it positive definite
 
 	for (int i = 0; i < x.size(); i++)
 		x[i] = i;
 
 	Vector b = A * x;
 
-	CG cg(A, b, x0);
+	CG cg(A, b, _0);
 	cg.Iterate(size);
 
 	EXPECT_LT(cg.Residuum(), 1e-8);
-	EXPECT_LT(norm(cg.Error()), 1e-6);
+	EXPECT_LT(norm(cg.Error()), 1e-4);
 }
 
 //TEST(CG, MatCSR_Vec)
@@ -86,7 +86,7 @@ TEST(CG, Mat_Vec)
 //	Matrix<float> B(size, size);
 //	MatrixCSR<float, uint8_t> A(size);
 //	Vector x(size);
-//	Vector x0(size);
+//	Vector _0(size);
 //
 //	std::mt19937_64 rnd_engine(13);
 //	auto rnd = [&rnd_engine]() { return std::uniform_real_distribution<float>(0, 1)(rnd_engine); };
@@ -109,7 +109,7 @@ TEST(CG, Mat_Vec)
 //
 //	Vector b = A * x;
 //
-//	CG solver(A, b, x0);
+//	CG solver(A, b, _0);
 //	solver.Iterate(size);
 //
 //	EXPECT_LT(solver.Residuum(), 1e-8);
@@ -122,7 +122,7 @@ TEST(CG, Mat_Vec)
 //	Matrix<float> B(size, size);
 //	MatrixCSR<float, uint8_t> A(size);
 //	Vector x(size);
-//	Vector x0(size);
+//	Vector _0(size);
 //
 //	std::mt19937_64 rnd_engine(13);
 //	auto rnd = [&rnd_engine]() { return std::uniform_real_distribution<float>(0, 1)(rnd_engine); };
@@ -145,7 +145,7 @@ TEST(CG, Mat_Vec)
 //
 //	Vector b = A * x;
 //
-//	LSQR solver(A, b, x0);
+//	LSQR solver(A, b, _0);
 //	solver.Iterate(size);
 //
 //	EXPECT_LT(solver.Residuum(), 1e-5);

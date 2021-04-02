@@ -1,5 +1,21 @@
 #include "BitBoard.h"
 #include "Bit.h"
+#include <array>
+
+std::string to_string(Field f) noexcept
+{
+	static const std::array<std::string, 65> field_names = {
+		"A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1",
+		"A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2",
+		"A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3",
+		"A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4",
+		"A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5",
+		"A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6",
+		"A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7",
+		"A8", "B8", "C8", "D8", "E8", "F8", "G8", "H8", "--"
+	};
+	return field_names[static_cast<uint8_t>(f)];
+}
 
 void BitBoard::FlipCodiagonal() noexcept
 {
@@ -102,4 +118,33 @@ BitBoard FlipVertical(BitBoard b) noexcept
 {
 	b.FlipVertical();
 	return b;
+}
+
+std::string SingleLine(const BitBoard& bb)
+{
+	std::string str(64, '-');
+	for (int i = 0; i < 64; i++)
+		if (bb.Get(static_cast<Field>(63 - i)))
+			str[i] = L'#';
+	return str;
+}
+
+std::string MultiLine(const BitBoard& bb)
+{
+	std::string board =
+		"  H G F E D C B A  \n"
+		"8 - - - - - - - - 8\n"
+		"7 - - - - - - - - 7\n"
+		"6 - - - - - - - - 6\n"
+		"5 - - - - - - - - 5\n"
+		"4 - - - - - - - - 4\n"
+		"3 - - - - - - - - 3\n"
+		"2 - - - - - - - - 2\n"
+		"1 - - - - - - - - 1\n"
+		"  H G F E D C B A  ";
+
+	for (int i = 0; i < 64; i++)
+		if (bb.Get(static_cast<Field>(63 - i)))
+			board[22 + 2 * i + 4 * (i / 8)] = '#';
+	return board;
 }

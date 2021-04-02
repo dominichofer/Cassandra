@@ -1,5 +1,6 @@
 #include "PositionGenerator.h"
 #include "Bit.h"
+#include <set>
 
 Position PosGen::Random::operator()()
 {
@@ -9,20 +10,28 @@ Position PosGen::Random::operator()()
 	//  50% chance to be empty.
 
 	auto rnd = [this]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
-	BitBoard a = rnd() & mask;
-	BitBoard b = rnd() & mask;
+	BitBoard a = rnd();
+	BitBoard b = rnd();
 	return { a & ~b, b & ~a };
 }
 
-Position PosGen::Random_with_empty_count::operator()()
+std::vector<Position> PosGen::Random::operator()(int num)
+{
+	std::set<Position> pos;
+	while (pos.size() < num)
+		pos.insert((*this)());
+	return { pos.begin(), pos.end() };
+}
+
+Position PosGen::RandomWithEmptyCount::operator()()
 {
 	auto dichotron = [this]() { return std::uniform_int_distribution<int>(0, 1)(rnd_engine) == 0; };
 
 	BitBoard P = 0;
 	BitBoard O = 0;
-	for (std::size_t e = 64; e > empty_count; e--)
+	for (int e = 64; e > empty_count; e--)
 	{
-		auto rnd = std::uniform_int_distribution<std::size_t>(0, e - 1)(rnd_engine);
+		auto rnd = std::uniform_int_distribution<int>(0, e - 1)(rnd_engine);
 		auto bit = BitBoard(PDep(1ULL << rnd, Position(P, O).Empties()));
 
 		if (dichotron())
@@ -33,102 +42,15 @@ Position PosGen::Random_with_empty_count::operator()()
 	return { P, O };
 }
 
-
-PosGen::All_after_nth_ply::All_after_nth_ply(std::size_t plies, std::size_t plies_per_pass, Position start)
-	: plies(plies), plies_per_pass(plies_per_pass)
+std::vector<Position> PosGen::RandomWithEmptyCount::operator()(int num)
 {
-	stack.push({ start, PossibleMoves(start) });
+	std::set<Position> pos;
+	while (pos.size() < num)
+		pos.insert((*this)());
+	return { pos.begin(), pos.end() };
 }
 
-std::optional<Position> PosGen::All_after_nth_ply::operator()()
-{
-	if (!stack.empty() && (plies == 0))
-	{
-		auto pos = stack.top().pos;
-		stack.pop();
-		return pos;
-	}
-
-	while (!stack.empty())
-	{
-		auto& pos = stack.top().pos;
-		auto& moves = stack.top().moves;
-
-		assert(stack.size() <= plies);
-
-		if (!moves)
-		{
-			stack.pop();
-			continue;
-		}
-
-		Position next = Play(pos, moves.ExtractFirst());
-		if (stack.size() == plies)
-			return next;
-
-		auto possible_moves = PossibleMoves(next);
-		if (!possible_moves)
-		{
-			for (std::size_t i = 0; i < plies_per_pass; i++)
-				stack.push({ next, Moves{0} });
-			Position next = PlayPass(next);
-			possible_moves = PossibleMoves(next);
-			if (stack.size() == plies && !!possible_moves)
-				return next;
-		}
-		stack.push({ next, possible_moves });
-	}
-	return std::nullopt;
-}
-
-
-PosGen::All_with_empty_count::All_with_empty_count(std::size_t empty_count, Position start)
-	: empty_count(empty_count)
-{
-	if (start.EmptyCount() < empty_count)
-		throw;
-	stack.push({ start, PossibleMoves(start) });
-}
-
-std::optional<Position> PosGen::All_with_empty_count::operator()()
-{
-	if (!stack.empty() && (stack.top().pos.EmptyCount() == empty_count))
-	{
-		auto pos = stack.top().pos;
-		stack.pop();
-		return pos;
-	}
-
-	while (!stack.empty())
-	{
-		auto& pos = stack.top().pos;
-		auto& moves = stack.top().moves;
-
-		assert(pos.EmptyCount() > empty_count);
-
-		if (!moves)
-		{
-			stack.pop();
-			continue;
-		}
-
-		Position next = Play(pos, moves.ExtractFirst());
-		if (next.EmptyCount() == empty_count)
-			return next;
-
-		auto possible_moves = PossibleMoves(next);
-		if (!possible_moves)
-		{ // next has no possible moves. It will be skipped.
-			Position next = PlayPass(next);
-			possible_moves = PossibleMoves(next);
-		}
-		stack.push({ next, possible_moves });
-	}
-	return std::nullopt;
-}
-
-
-PosGen::Played::Played(Player& first, Player& second, std::size_t empty_count, Position start)
+PosGen::Played::Played(Player& first, Player& second, int empty_count, Position start)
 	: first(first), second(second), empty_count(empty_count), start(start)
 {
 	if (start.EmptyCount() < empty_count)
@@ -156,4 +78,98 @@ Position PosGen::Played::operator()()
 		if (old == pos) // both players passed
 			pos = start; // restart
 	}
+}
+
+std::vector<Position> PosGen::Played::operator()(int num)
+{
+	std::set<Position> pos;
+	while (pos.size() < num)
+		pos.insert((*this)());
+	return { pos.begin(), pos.end() };
+}
+
+ChildrenGenerator::Iterator::Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept
+	: plies(plies), pass_is_a_ply(pass_is_a_ply)
+{
+	stack.reserve(plies);
+
+	if (stack.size() == plies) {
+		stack.emplace_back(start, Moves{});
+		return;
+	}
+
+	const auto moves = PossibleMoves(start);
+	if (moves)
+		stack.emplace_back(start, moves);
+	else
+	{
+		const auto passed = PlayPass(start);
+		const auto passed_moves = PossibleMoves(passed);
+		if (passed_moves)
+		{
+			if (pass_is_a_ply)
+			{
+				stack.emplace_back(start, Moves{});
+				if (stack.size() == plies + 1)
+					return;
+			}
+			stack.emplace_back(passed, passed_moves);
+		}
+	}
+	if (stack.size() == plies + 1)
+		return;
+	++(*this);
+}
+
+ChildrenGenerator::Iterator& ChildrenGenerator::Iterator::operator++()
+{
+	while (!stack.empty())
+	{
+		if (stack.size() == plies + 1 || !stack.back().moves) {
+			stack.pop_back();
+			continue;
+		}
+
+		const auto move = stack.back().moves.ExtractFirst();
+		const auto pos = Play(stack.back().pos, move);
+
+		if (stack.size() == plies) {
+			stack.emplace_back(pos, Moves{});
+			return *this;
+		}
+
+		const auto moves = PossibleMoves(pos);
+		if (moves)
+			stack.emplace_back(pos, moves);
+		else
+		{
+			const auto passed = PlayPass(pos);
+			const auto passed_moves = PossibleMoves(passed);
+			if (passed_moves)
+			{
+				if (pass_is_a_ply)
+				{
+					stack.emplace_back(pos, Moves{});
+					if (stack.size() == plies + 1)
+						return *this;
+				}
+				stack.emplace_back(passed, passed_moves);
+			}
+		}
+		if (stack.size() == plies + 1)
+			return *this;
+	}
+	return *this;
+}
+
+ChildrenGenerator Children(Position start, int plies, bool pass_is_a_ply)
+{
+	assert(plies > 0);
+	return {start, plies, pass_is_a_ply};
+}
+
+ChildrenGenerator Children(Position start, int empty_count)
+{
+	assert(start.EmptyCount() > empty_count);
+	return {start, start.EmptyCount() - empty_count, false};
 }

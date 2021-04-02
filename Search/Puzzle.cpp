@@ -1,41 +1,51 @@
 #include "Puzzle.h"
-#include <cassert>
 
-Puzzle::Puzzle(::Position position, Search::Intensity intensity, Search::Result result)
-	: position(position)
-	, intensity(intensity)
-	, result(result)
+Puzzle Puzzle::Certain(::Position pos, int min_depth, int max_depth)
 {
-	assert(intensity.depth <= position.EmptyCount());
+	Puzzle puzzle(pos);
+	for (int d = min_depth; d <= max_depth; d++)
+		puzzle.Add(Search::Request::Certain(d));
+	return puzzle;
 }
 
-Puzzle::Puzzle(::Position position, Search::Intensity intensity)
-	: position(position)
-	, intensity(intensity)
-	, result({})
+void Puzzle::Solve(const Search::Algorithm& algorithm)
 {
-	assert(intensity.depth <= position.EmptyCount());
+	auto alg = algorithm.Clone();
+	const auto start = std::chrono::high_resolution_clock::now();
+	for (const Search::Request& req : request)
+		result.push_back(alg->Eval(pos, req));
+	const auto stop = std::chrono::high_resolution_clock::now();
+
+	node_count = alg->node_count;
+	duration = stop - start;
 }
 
-Puzzle Puzzle::Exact(::Position pos)
+bool Project::SolveNext(const Search::Algorithm& alg)
 {
-	return Puzzle(pos, Search::Intensity::Exact(pos));
+	std::size_t index = next++;
+	if (index >= puzzle.size())
+		return false;
+	puzzle[index].Solve(alg);
+	solved++;
+	if (IsSolved())
+		completion_task(puzzle);
+	return true;
 }
 
-bool Puzzle::IsSolved() const
+void Project::Solve(const Search::Algorithm& alg)
 {
-	return result.has_value()
-		&& (result.value().depth >= intensity.depth)
-		&& (result.value().selectivity <= intensity.selectivity);
+	while (SolveNext(alg))
+		continue;
 }
 
-void Puzzle::Reset()
+bool ProjectDB::IsSolved() const
 {
-	result = std::nullopt;
+	return std::all_of(project.begin(), project.end(), [](const Project& p){ return p.IsSolved(); });
 }
 
-void Puzzle::Solve(Search::Algorithm& algorithm, bool force)
+void ProjectDB::SolveNext(const Search::Algorithm& alg)
 {
-	if (force || !IsSolved())
-		result = algorithm.Eval(position, intensity);
+	for (auto& p : project)
+		if (p.SolveNext(alg))
+			return;
 }

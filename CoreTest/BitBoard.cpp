@@ -20,13 +20,13 @@ namespace Flip
 	{
 		for (int i = 0; i < 8; i++)
 			for (int j = 0; j < 8; j++)
-				ASSERT_EQ(FlipVertical(BitBoard::Bit(i, j)), BitBoard::Bit(7 - i, j));
+				ASSERT_EQ(FlipVertical(BitBoard::Bit(i, j)), BitBoard::Bit(i, 7 - j));
 	}
 
 	TEST(FlipHorizontal, bitwise)
 	{
 		for (int i = 0; i < 8; i++)
 			for (int j = 0; j < 8; j++)
-				ASSERT_EQ(FlipHorizontal(BitBoard::Bit(i, j)), BitBoard::Bit(i, 7 - j));
+				ASSERT_EQ(FlipHorizontal(BitBoard::Bit(i, j)), BitBoard::Bit(7 - i, j));
 	}
 }

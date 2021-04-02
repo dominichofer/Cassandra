@@ -261,8 +261,8 @@ def Train(epochs, scheduler_step_size, lr, weight_decay, model, test, train, mod
     print('number of trainable parameters =', count_parameters(model))
     model = nn.DataParallel(model).to(device)
 
-    test_loader = DataLoader(TensorDataset(*test), num_workers=8, batch_size=8*1024, shuffle=True, pin_memory=True)
-    train_loader = DataLoader(TensorDataset(*train), num_workers=8, batch_size=8*1024, shuffle=True, pin_memory=True)
+    test_loader = DataLoader(TensorDataset(*test), num_workers=4, batch_size=8*1024, shuffle=True, pin_memory=True)
+    train_loader = DataLoader(TensorDataset(*train), num_workers=4, batch_size=8*1024, shuffle=True, pin_memory=True)
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=scheduler_step_size, gamma=0.1)
@@ -311,8 +311,10 @@ if __name__ == '__main__':
     train_size = 950_000
 
     test, train = GetData([20], test_size, train_size)
+    _, tmp = GetData([19,21], 0, test_size + train_size)
+    train += tmp
     test = to_tensor_2x8x8(test)
-    train = to_tensor_2x8x8(train)
+    train = to_tensor_2x8x8_with_symmetrie(train)
     print('DataLoaded')
     
     results = []
@@ -327,19 +329,13 @@ if __name__ == '__main__':
     #        for lr in [0.01, 0.02, 0.1]:
     #            results.append(Train(25, 20, lr, 0, ResNet([width]*(n+1), ResNet_Bottleneck), test, train, "ResNet_Bottleneck", width, n))
           
-    #for width in [64]:
-    #    for n in range(11, 21):
-    #        results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
+    for width in [64]:
+        for n in [9]:
+            #results.append(Train(25, 20, 0.05, 0.0001, ResNet([width]*(n+1), ResNet_Basic), test, train, "ResNet_Basic", width, n))
+            #results.append(Train(25, 20, 0.05, 0.0001, ResNet([width]*(n+1), ResNet_Bottleneck), test, train, "ResNet_Bottleneck", width, n))
+            results.append(Train(25, 20, 0.05, 0.0001, ResNet([width]*(n+1), SE_Basic), test, train, "SE_Basic", width, n))
+            #results.append(Train(25, 20, 0.05, 0.0001, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
             
-    #for width in [128]:
-    #    for n in range(1, 11):
-    #        results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
-            
-    for width in [256]:
-        for n in range(2, 6):
-            results.append(Train(25, 20, 0.05, 0, ResNet([width]*(n+1), SE_Bottleneck), test, train, "SE_Bottleneck", width, n))
-
-
     #for n in range(2, 22):
     #    results.append(Train(55, 50, 0.02, 0, ResNet([64]*n, ResNet_Basic), test, train))
 

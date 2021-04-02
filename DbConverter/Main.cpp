@@ -1,39 +1,85 @@
+#include "IO/IO.h"
+#include "Math/Statistics.h"
+#include "Core/Core.h"
 #include <iostream>
 #include <fstream>
-#include "IO/IO.h"
+#include <execution>
+#include <algorithm>
+
 
 #pragma pack(1)
-struct DensePositionScore
+struct PosResDur
 {
 	Position pos;
-	int8_t score;
-};
-#pragma pack(pop)
+	uint64 value;
+	double duration;
 
-template <typename Vector>
-double SampleStandardDeviation(const Vector& vec)
+	bool operator==(const PosResDur& o) const { return pos == o.pos; }
+	bool operator<(const PosResDur& o) const { return pos < o.pos; }
+};
+#pragma pack()
+
+std::vector<PosResDur> ReadFile(const std::filesystem::path& path)
 {
-	double E_of_X = 0;
-	double E_of_X_sq = 0;
-	for (std::size_t i = 0; i < vec.size(); i++)
+	std::vector<PosResDur> content;
+	std::fstream stream(path, std::ios::in | std::ios::binary);
+	auto eof = [&](){ stream.peek(); return stream.eof(); };
+	while (stream && not eof())
 	{
-		const double x = vec[i].score;
-		const double N = static_cast<double>(i + 1);
-		E_of_X += (x - E_of_X) / N;
-		E_of_X_sq += (x * x - E_of_X_sq) / N;
+		PosResDur buffer;
+		stream.read(reinterpret_cast<char*>(&buffer), sizeof(PosResDur));
+		content.push_back(buffer);
 	}
-	return std::sqrt(E_of_X_sq - E_of_X * E_of_X);
+	stream.close();
+	return content;
 }
 
 int main()
 {
-	for (int i = 0; i < 61; i++)
-	{
-		const auto input = R"(G:\Reversi\rnd\e)" + std::to_string(i) + ".psc";
+	//for (int i = 6; i < 7; i++)
+	//{
+	//	std::vector<Position> v;
+	//	for (auto pos : Children(Position::Start(), i, true))
+	//		v.push_back(FlipToUnique(pos));
+	//	std::sort(v.begin(), v.end());
+	//	auto it = std::unique(v.begin(), v.end());
+	//	for (auto pos : v)
+	//		std::cout << "![Image](https://raw.githubusercontent.com/PanicSheep/ReversiPerftCUDA/master/docs/"
+	//			<< SingleLine(pos) << ",png) " << 
+	//	std::cout << i << " " << std::distance(v.begin(), it) << std::endl;
+	//}
+	//for (int i = 6; i < 7; i++)
+	//{
+		//std::vector<PosRes> pos;
+		//for (const auto& p : Children(Position::Start(), i, true))
+		//	pos.push_back({FlipToUnique(p), 0});
+		//std::sort(std::execution::par_unseq, pos.begin(), pos.end());
+		//auto last = std::unique(std::execution::par_unseq, pos.begin(), pos.end());
+		//pos.erase(last, pos.end()); 
+		//std::cout << i << ": " << pos.size() << std::endl;
+		//WriteToFile(R"(G:\Reversi\perft\ply)" + std::to_string(i) + ".pos", pos);
 
-		std::vector<DensePositionScore> data;
-		ReadFile<DensePositionScore>(std::back_inserter(data), input);
-		std::cout << i << ": " << SampleStandardDeviation(data) << "\n";
-	}
+		std::locale locale("");
+		std::cout.imbue(locale);
+
+		std::vector<PosResDur> results = ReadFile(R"(G:\Reversi\perft\perft20_ply6.pos)");
+		//uint64 sum = 0;
+		int counter = 0;
+		for (const auto& p : results/*Children(Position::Start(), 6, true)*/)
+		{
+			//uint64 value = std::lower_bound(results.begin(), results.end(), PosRes{FlipToUnique(p), 0})->value;
+			std::cout << "|" << counter++ << "|![Image](https://raw.githubusercontent.com/PanicSheep/ReversiPerftCUDA/master/docs/ply6/"
+				<< SingleLine(p.pos).substr(0, 64) << ".png)|" << p.value << "|" << std::endl;
+			//sum += value;
+		}
+		//std::cout << sum;
+		//std::cout << i << ": " << pos.size() << std::endl;
+		//WriteToFile(R"(G:\Reversi\perft\ply)" + std::to_string(i) + ".pos", pos);
+		
+
+		//std::vector<PosScore> data;
+		//ReadPosScoreFile(std::back_inserter(data), input);
+		//std::cout << i << ": " << SampleStandardDeviation(data, [](const auto& x) { return x.score; }) << "\n";
+	//}
 	return 0;
 }

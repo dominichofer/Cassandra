@@ -1,63 +1,73 @@
 #include "Algorithm.h"
-#include <limits>
+#include <algorithm>
 
 using namespace Search;
 
-const Selectivity Selectivity::None = Selectivity(std::numeric_limits<decltype(Selectivity::quantile)>::infinity());
-const Selectivity Selectivity::Infinit = Selectivity(0);
-
-Intensity Intensity::Exact(Position pos)
+Request NextZWS(const Request& request, const Findings& findings) noexcept
 {
-	return { OpenInterval::Whole(), static_cast<unsigned int>(pos.EmptyCount()), Selectivity::None };
+	auto lower = std::max(request.window.lower(), findings.best_score);
+	return { {request.depth() - 1, request.certainty()}, -OpenInterval{lower, lower + 1} };
 }
 
-Intensity Intensity::operator-() const
+Request NextFWS(const Request& request, const Findings& findings) noexcept
 {
-	return { -window, depth, selectivity };
+	auto lower = std::max(request.window.lower(), findings.best_score);
+	return { {request.depth() - 1, request.certainty()}, -OpenInterval{lower, request.window.upper()} };
 }
 
-Intensity Intensity::operator-(int d) const
+Result AllMovesSearched(const Request& request, const Findings& findings) noexcept
 {
-	return { window, depth - d, selectivity };
+	assert(findings.lowest_intensity >= request.intensity);
+	int score = findings.best_score;
+	if (score < request.window) // Failed low
+		return Result::FailLow(findings.lowest_intensity, score);
+	return Result::FoundScore(findings.lowest_intensity, score);
 }
 
-Intensity Intensity::next() const
+void Findings::Add(const Result& result, Field move) noexcept
 {
-	return { -window, depth - 1, selectivity };
+	if (result.window.upper() > best_score)
+	{
+		best_score = result.window.upper();
+		best_move = move;
+	}
+	lowest_intensity = std::min(lowest_intensity, result.intensity);
 }
 
-Result::Result(ClosedInterval window, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count)
-	: window(window), depth(depth), selectivity(selectivity), best_move(best_move), node_count(node_count)
-{}
-
-Result Result::ExactScore(Score score, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count)
+uint64_t OpponentsExposed(const Position& pos) noexcept
 {
-	return { { score, score }, depth, selectivity, best_move, node_count };
-}
-Result Result::ExactScore(Score score, Intensity intensity, Field best_move, std::size_t node_count)
-{
-	return ExactScore(score, intensity.depth, intensity.selectivity, best_move, node_count);
+	auto b = pos.Empties();
+	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
+	b |= (b >> 8) | (b << 8);
+	return b & pos.Opponent();
 }
 
-Result Result::MaxBound(Score score, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count)
+int32_t MoveOrderingScorer(const Position& pos, Field move) noexcept
 {
-	return { { min_score, score }, depth, selectivity, best_move, node_count };
-}
-Result Result::MaxBound(Score score, Intensity intensity, Field best_move, std::size_t node_count)
-{
-	return MaxBound(score, intensity.depth, intensity.selectivity, best_move, node_count);
+	static const int8_t FieldValue[64] = {
+		9, 2, 8, 6, 6, 8, 2, 9,
+		2, 1, 3, 4, 4, 3, 1, 2,
+		8, 3, 7, 5, 5, 7, 3, 8,
+		6, 4, 5, 0, 0, 5, 4, 6,
+		6, 4, 5, 0, 0, 5, 4, 6,
+		8, 3, 7, 5, 5, 7, 3, 8,
+		2, 1, 3, 4, 4, 3, 1, 2,
+		9, 2, 8, 6, 6, 8, 2, 9,
+	};
+
+	auto next_pos = Play(pos, move);
+	auto next_possible_moves = PossibleMoves(next_pos);
+	auto mobility_score = next_possible_moves.size() << 17;
+	next_possible_moves.Filter(BitBoard::Corners());
+	auto corner_mobility_score = next_possible_moves.size() << 18;
+	auto opponents_exposed_score = popcount(OpponentsExposed(next_pos)) << 6;
+	auto field_score = FieldValue[static_cast<uint8_t>(move)];
+	return field_score - mobility_score - corner_mobility_score - opponents_exposed_score;
 }
 
-Result Result::MinBound(Score score, unsigned int depth, Selectivity selectivity, Field best_move, std::size_t node_count)
+int32_t MoveOrderingScorer(const Position& pos, Field move, Field best_move) noexcept
 {
-	return { { score, max_score }, depth, selectivity, best_move, node_count };
-}
-Result Result::MinBound(Score score, Intensity intensity, Field best_move, std::size_t node_count)
-{
-	return MinBound(score, intensity.depth, intensity.selectivity, best_move, node_count);
-}
-
-Result Result::operator-() const
-{
-	return { -window, depth, selectivity, best_move, node_count };
+	if (move == best_move)
+		return 1 << 30;
+	return MoveOrderingScorer(pos, move);
 }

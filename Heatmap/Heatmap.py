@@ -3,12 +3,23 @@ import numpy.random
 import matplotlib.pyplot as plt
 
 # Generate some test data
-x = np.random.normal(0, 20, 5_000_000)
-x = np.clip(x, -64, 64)
-x = np.around(x / 2, decimals=0) * 2
+#x = np.random.normal(0, 20, 5_000_000)
+#x = np.clip(x, -64, 64)
+#x = np.around(x / 2, decimals=0) * 2
 
-y = x + np.random.normal(0, 6.2, np.size(x))
-y = np.clip(y, -64, 64)
+#y = x + np.random.normal(0, 6.2, np.size(x))
+#y = np.clip(y, -64, 64)
+
+x = []
+y = []
+
+import csv
+with open('C:\\Users\\Dominic\\source\\repos\\Cassandra\\bin\\log.log', newline='') as csvfile:
+    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+    l = [row for row in reader]
+    x = np.array([float(x) for x,y in l])
+    y = np.array([float(y) for x,y in l])
+
 
 r_squared = np.corrcoef(x, y)[0,1]**2
 std = numpy.std(x - y)

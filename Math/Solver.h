@@ -11,7 +11,7 @@ public:
 	virtual ~IterativeSolver() = default;
 
 	virtual void Reinitialize() = 0;
-	virtual void Reinitialize(Vector x0) = 0;
+	virtual void Reinitialize(Vector _0) = 0;
 	virtual void Iterate(int n) = 0;
 	virtual double Residuum() const = 0;
 	virtual Vector Error() const = 0;
@@ -53,8 +53,8 @@ class CG : public IterativeSolver
 public:
 	// A: has to be symmetric and positive-definite.
 	template <typename Matrix>
-	CG(Matrix A_, Vector x0, Vector b_)
-		: A(std::make_unique<Matrix>(std::move(A_))), x(std::move(x0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
+	CG(Matrix A_, Vector _0, Vector b_)
+		: A(std::make_unique<Matrix>(std::move(A_))), x(std::move(_0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
 	{
 		if (A->Cols() != A->Rows()) throw std::runtime_error("Size mismatch.");
 		if (A->Cols() != x.size()) throw std::runtime_error("Size mismatch.");
@@ -65,9 +65,9 @@ public:
 
 	void Reinitialize() override { p = r = Error(); }
 
-	void Reinitialize(Vector x0) override
+	void Reinitialize(Vector _0) override
 	{
-		x = std::move(x0);
+		x = std::move(_0);
 		Reinitialize();
 	}
 
@@ -102,8 +102,8 @@ class PCG : public IterativeSolver
 public:
 	// A: has to be symmetric and positive-definite.
 	template <typename Matrix>
-	PCG(Matrix A_, const Preconditioner& P, Vector x0, Vector b_)
-		: A(std::make_unique<Matrix>(std::move(A_))), P(P), x(std::move(x0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
+	PCG(Matrix A_, const Preconditioner& P, Vector _0, Vector b_)
+		: A(std::make_unique<Matrix>(std::move(A_))), P(P), x(std::move(_0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
 	{
 		if (A->Cols() != A->Rows()) throw std::runtime_error("Size mismatch.");
 		if (A->Cols() != x.size()) throw std::runtime_error("Size mismatch.");
@@ -118,9 +118,9 @@ public:
 		p = z = P.apply(r);
 	}
 
-	void Reinitialize(Vector x0) override
+	void Reinitialize(Vector _0) override
 	{
-		x = std::move(x0);
+		x = std::move(_0);
 		Reinitialize();
 	}
 
@@ -130,13 +130,13 @@ public:
 		// 10n x O(vec)  Room for optimization to 5n x O(vec)
 		for (int k = 0; k < n; k++)
 		{
-			const auto r_dot_z_old = dot(r, z);
-			const auto A_p = A * p;
-			const auto alpha = r_dot_z_old / dot(p, A_p);
+			const Vector::value_type r_dot_z_old = dot(r, z);
+			const Vector A_p = A * p;
+			const Vector::value_type alpha = r_dot_z_old / dot(p, A_p);
 			x += alpha * p;
 			r -= alpha * A_p;
 			z = P.apply(r);
-			const auto beta = dot(r, z) / r_dot_z_old;
+			const double beta = dot(r, z) / r_dot_z_old;
 			p = z + beta * p;
 		}
 	}
@@ -158,8 +158,8 @@ class LSQR : public IterativeSolver
 	double alpha{ 0 }, beta{ 0 }, phi{ 0 }, rho{ 0 }, phi_bar{ 0 }, rho_bar{ 0 }, residuum;
 public:
 	// A: has to be symmetric and positive-definite.
-	LSQR(const Matrix& A, Vector x0, const Vector& b)
-		: A(A), b(b), x(std::move(x0)), u(A.Rows()), v(A.Cols()), w(A.Cols())
+	LSQR(const Matrix& A, Vector _0, const Vector& b)
+		: A(A), b(b), x(std::move(_0)), u(A.Rows()), v(A.Cols()), w(A.Cols())
 	{
 		if (A.Cols() != x.size()) throw;
 		if (A.Rows() != b.size()) throw;
@@ -178,9 +178,9 @@ public:
 		residuum = phi_bar * alpha * std::abs(rho_bar / rho);
 	}
 
-	void Reinitialize(Vector x0) override
+	void Reinitialize(Vector _0) override
 	{
-		x = std::move(x0);
+		x = std::move(_0);
 		Reinitialize();
 	}
 

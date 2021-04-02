@@ -27,7 +27,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -69,16 +69,19 @@
   <ItemGroup>
     <ClCompile Include="Evaluator.cpp" />
     <ClCompile Include="Helpers.cpp" />
-    <ClCompile Include="ConfigIndexer.cpp" />
+    <ClCompile Include="DenseIndexer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Evaluator.h" />
     <ClInclude Include="Helpers.h" />
-    <ClInclude Include="ConfigIndexer.h" />
+    <ClInclude Include="DenseIndexer.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\IO\IO.vcxproj">
+      <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -12,17 +12,17 @@ public:
 	[[nodiscard]] BitBoard StableStones(const Position&) const; // Stable stones of the opponent
 
 private:
-	static uint64_t FullLineHorizontal(uint64_t discs);
-	static uint64_t FullLineVertival(uint64_t discs);
-	static uint64_t FullLineDiagonal(uint64_t discs);
-	static uint64_t FullLineCodiagonal(uint64_t discs);
+	[[nodiscard]] static uint64_t FullLineHorizontal(uint64_t discs);
+	[[nodiscard]] static uint64_t FullLineVertival(uint64_t discs);
+	[[nodiscard]] static uint64_t FullLineDiagonal(uint64_t discs);
+	[[nodiscard]] static uint64_t FullLineCodiagonal(uint64_t discs);
 
 	std::array<std::array<uint8_t, 256>, 256> edge_stables{};
 };
 
 StabilityAnalyzer::StabilityAnalyzer()
 {
-	for (std::size_t empty_count = 56; empty_count <= 64; empty_count++)
+	for (int empty_count = 56; empty_count <= 64; empty_count++)
 		for (uint64_t p = 0; p < 256; p++)
 			for (uint64_t o = 0; o < 256; o++)
 			{
@@ -58,8 +58,9 @@ BitBoard StabilityAnalyzer::StableEdges(const Position& pos) const
 {
 	// 2 x AND, 2 X SHIFT, 3 x OR, 4 x PEXT, 2 X PDEP
 	// 13 OPs
-	constexpr uint64_t L0_Left = 0x8080808080808080ULL;
-	constexpr uint64_t L0_Right = 0x0101010101010101ULL;
+	
+	constexpr uint64_t L0_Left = BitBoard::VerticalLine(7);
+	constexpr uint64_t L0_Right = BitBoard::VerticalLine(0);
 
 	const auto stable_L0_Bottom = edge_stables[static_cast<uint8_t>(pos.Player())][static_cast<uint8_t>(pos.Opponent())];
 	const auto stable_L0_Top = static_cast<uint64_t>(edge_stables[pos.Player() >> 56][pos.Opponent() >> 56]) << 56;
@@ -78,7 +79,7 @@ BitBoard StabilityAnalyzer::StableStones(const Position& pos) const
 	const uint64_t full_d = FullLineDiagonal(discs);
 	const uint64_t full_c = FullLineCodiagonal(discs);
 	uint64_t new_stables = StableEdges(pos) & pos.Opponent();
-	new_stables |= full_h & full_v & full_d & full_c & pos.Opponent() & 0x007E7E7E7E7E7E00ULL;
+	new_stables |= full_h & full_v & full_d & full_c & pos.Opponent() & ~BitBoard::Edges();
 
 	uint64_t stables = 0;
 	while (new_stables & ~stables)
@@ -88,7 +89,7 @@ BitBoard StabilityAnalyzer::StableStones(const Position& pos) const
 		const uint64_t stables_v = (stables >> 8) | (stables << 8) | full_v;
 		const uint64_t stables_d = (stables >> 9) | (stables << 9) | full_d;
 		const uint64_t stables_c = (stables >> 7) | (stables << 7) | full_c;
-		new_stables = stables_h & stables_v & stables_d & stables_c & pos.Opponent() & 0x007E7E7E7E7E7E00ULL;
+		new_stables = stables_h & stables_v & stables_d & stables_c & pos.Opponent() & ~BitBoard::Edges();
 	}
 	return stables;
 }
@@ -165,4 +166,9 @@ BitBoard StableEdges(const Position& pos)
 BitBoard StableStones(const Position& pos)
 {
 	return sa.StableStones(pos);
+}
+
+int StabilityBasedMaxScore(const Position& pos)
+{
+	return max_score - popcount(StableStones(pos));
 }

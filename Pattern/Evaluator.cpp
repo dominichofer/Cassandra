@@ -1,134 +1,203 @@
+#include "IO/IO.h"
 #include "Evaluator.h"
 #include "Helpers.h"
-#include "ConfigIndexer.h"
+#include "DenseIndexer.h"
+#include <array>
 #include <cassert>
 #include <iterator>
 
 using namespace Pattern;
 
-class HorizontalSymmetricEvaluator final : public Evaluator
+template <int variations>
+class Simple final : public Evaluator
 {
-	const BitBoard m_pattern_C, m_pattern_D, m_pattern_V;
-	Weights m_w0, m_w1, m_w2, m_w3;
+	static_assert(variations == 4 || variations == 8);
+
+	std::vector<BitBoard> masks;
+	std::vector<Weights> weights;
 public:
-	HorizontalSymmetricEvaluator(BitBoard pattern, std::vector<Weights> weights)
-		: Evaluator(pattern)
-		, m_pattern_C(FlipCodiagonal(pattern))
-		, m_pattern_D(FlipDiagonal(pattern))
-		, m_pattern_V(FlipVertical(pattern))
-		, m_w0(std::move(weights[0]))
-		, m_w1(std::move(weights[1]))
-		, m_w2(std::move(weights[2]))
-		, m_w3(std::move(weights[3]))
+	// masks: The symmetric variations of the pattern.
+	// weights: The corresponding weights.
+	Simple(std::vector<BitBoard> masks, std::vector<Weights> weights)
+		: masks(std::move(masks))
+		, weights(std::move(weights))
 	{
-		assert(pattern == FlipHorizontal(pattern));
+		assert(this->masks.size() == variations);
+		assert(this->weights.size() == variations);
 	}
 
-	float Eval(const Position& pos) const final
+	float Eval(const Position& pos) const override
 	{
-		return m_w0[Index(pos, Pattern)]
-			+ m_w1[Index(pos, m_pattern_C)]
-			+ m_w2[Index(pos, m_pattern_D)]
-			+ m_w3[Index(pos, m_pattern_V)];
+		float sum = 0;
+		for (int i = 0; i < variations; i++)
+			sum += weights[i][FastIndex(pos, masks[i])];
+		return sum;
+	}
+
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+	{
+		std::vector<MaskAndValue> ret;
+		for (int i = 0; i < variations; i++)
+			ret.emplace_back(masks[i], weights[i][FastIndex(pos, masks[i])]);
+		return ret;
 	}
 };
 
-class DiagonalSymmetricEvaluator final : public Evaluator
+// Composite
+class SumGroup final : public Evaluator
 {
-	const BitBoard m_pattern_C, m_pattern_H, m_pattern_V;
-	Weights m_w0, m_w1, m_w2, m_w3;
+	std::vector<std::unique_ptr<Evaluator>> components;
 public:
-	DiagonalSymmetricEvaluator(BitBoard pattern, std::vector<Weights> weights)
-		: Evaluator(pattern)
-		, m_pattern_C(FlipCodiagonal(pattern))
-		, m_pattern_H(FlipHorizontal(pattern))
-		, m_pattern_V(FlipVertical(pattern))
-		, m_w0(std::move(weights[0]))
-		, m_w1(std::move(weights[1]))
-		, m_w2(std::move(weights[2]))
-		, m_w3(std::move(weights[3]))
-	{
-		assert(pattern == FlipDiagonal(pattern));
-	}
-
-	float Eval(const Position& pos) const final
-	{
-		return m_w0[Index(pos, Pattern)]
-			+ m_w1[Index(pos, m_pattern_C)]
-			+ m_w2[Index(pos, m_pattern_H)]
-			+ m_w3[Index(pos, m_pattern_V)];
-	}
-};
-
-class AsymmetricEvaluator final : public Evaluator
-{
-	const BitBoard m_pattern_C, m_pattern_D, m_pattern_H, m_pattern_V, m_patternHC, m_patternHD, m_patternHV;
-	Weights m_w0, m_w1, m_w2, m_w3, m_w4, m_w5, m_w6, m_w7;
-public:
-	AsymmetricEvaluator(BitBoard pattern, std::vector<Weights> weights)
-		: Evaluator(pattern)
-		, m_pattern_C(FlipCodiagonal(pattern))
-		, m_pattern_D(FlipDiagonal(pattern))
-		, m_pattern_H(FlipHorizontal(pattern))
-		, m_pattern_V(FlipVertical(pattern))
-		, m_patternHC(FlipCodiagonal(FlipHorizontal(pattern)))
-		, m_patternHD(FlipDiagonal(FlipHorizontal(pattern)))
-		, m_patternHV(FlipVertical(FlipHorizontal(pattern)))
-		, m_w0(std::move(weights[0]))
-		, m_w1(std::move(weights[1]))
-		, m_w2(std::move(weights[2]))
-		, m_w3(std::move(weights[3]))
-		, m_w4(std::move(weights[4]))
-		, m_w5(std::move(weights[5]))
-		, m_w6(std::move(weights[6]))
-		, m_w7(std::move(weights[7]))
+	SumGroup(std::vector<std::unique_ptr<Evaluator>> evaluators)
+		: components(std::move(evaluators))
 	{}
 
-	float Eval(const Position& pos) const final
+	float Eval(const Position& pos) const override
 	{
-		return m_w0[Index(pos, Pattern)]
-			+ m_w1[Index(pos, m_pattern_C)]
-			+ m_w2[Index(pos, m_pattern_D)]
-			+ m_w3[Index(pos, m_pattern_H)]
-			+ m_w4[Index(pos, m_pattern_V)]
-			+ m_w5[Index(pos, m_patternHC)]
-			+ m_w6[Index(pos, m_patternHD)]
-			+ m_w7[Index(pos, m_patternHV)];
+		float sum = 0;
+		for (std::size_t i = 0; i < components.size(); i++)
+			sum += components[i]->Eval(pos);
+		return sum;
+	}
+
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+	{
+		std::vector<MaskAndValue> ret;
+		for (std::size_t i = 0; i < components.size(); i++)
+		{
+			auto tmp = components[i]->DetailedEval(pos);
+			ret.insert(ret.end(), tmp.begin(), tmp.end());
+		}
+		return ret;
 	}
 };
 
-std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, std::vector<Weights> weights)
+class GameOver final : public Evaluator
 {
-	if (pattern == FlipHorizontal(pattern))
-		return std::make_unique<HorizontalSymmetricEvaluator>(pattern, std::move(weights));
-	if (pattern == FlipDiagonal(pattern))
-		return std::make_unique<DiagonalSymmetricEvaluator>(pattern, std::move(weights));
-	return std::make_unique<AsymmetricEvaluator>(pattern, std::move(weights));
+public:
+	GameOver() noexcept = default;
+
+	float Eval(const Position& pos) const override
+	{
+		return static_cast<float>(EvalGameOver(pos));
+	}
+
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+	{ 
+		return {{~BitBoard{}, static_cast<float>(EvalGameOver(pos))}};
+	}
+};
+
+class Zero final : public Evaluator
+{
+public:
+	Zero() noexcept = default;
+
+	float Eval(const Position& pos) const override
+	{
+		return 0;
+	}
+
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+	{ 
+		return {{BitBoard{}, 0}};
+	}
+};
+
+//class EmptyCountSwitch final : public Evaluator
+//{
+//	std::array<std::shared_ptr<Evaluator>, 65> evals;
+//public:
+//	EmptyCountSwitch(std::array<std::shared_ptr<Evaluator>, 65> evaluators)
+//		: evals(std::move(evaluators))
+//	{}
+//
+//	float Eval(const Position& pos) const override
+//	{
+//		return evals[pos.EmptyCount()]->Eval(pos);
+//	}
+//
+//	//std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+//	//{
+//	//	return evals[pos.EmptyCount()]->DetailedEval(pos);
+//	//}
+//};
+
+PatternEval::PatternEval()
+{
+	std::shared_ptr<Evaluator> zero_eval = std::make_shared<Zero>();
+	for (auto& eval : evals)
+		eval = zero_eval;
+	evals[0] = std::make_unique<GameOver>();
+}
+
+PatternEval::PatternEval(const std::vector<BitBoard>& pattern, const std::vector<Pattern::Weights>& compressed)
+	: PatternEval()
+{
+	int empty_count = 1;
+	for (const auto& w : compressed)
+	{
+		std::shared_ptr<Evaluator> eval = CreateEvaluator(pattern, w);
+		for (int i = 0; i < block_size; i++)
+			evals[empty_count++] = eval;
+	}
+}
+
+PatternEval DefaultPatternEval()
+{
+	std::vector<BitBoard> pattern = Load<BitBoard>(R"(G:\Reversi\weights\pattern.w)");
+	std::vector<Pattern::Weights> weights;
+	for (int i = 0; i < 8; i++)
+		weights.push_back(Load<Pattern::Weights::value_type>(R"(G:\Reversi\weights\block)" + std::to_string(i) + ".w"));
+	return { pattern, weights };
+}
+
+float PatternEval::Eval(const Position& pos) const
+{
+	return evals[pos.EmptyCount()]->Eval(pos);
+}
+
+std::vector<PatternEval::MaskAndValue> PatternEval::DetailedEval(const Position& pos) const
+{
+	return evals[pos.EmptyCount()]->DetailedEval(pos);
 }
 
 std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, const Weights& compressed)
 {
-	const auto config_indexer = CreateConfigIndexer(pattern);
-	const auto multiplicity = config_indexer->group_order;
-	const std::size_t full_size = Pow_int(3, popcount(pattern));
-	const auto patterns = config_indexer->Patterns();
+	const auto indexer = CreateDenseIndexer(pattern);
+	const auto full_size = pown(3, popcount(pattern));
 
 	// Reserve memory for weights
-	std::vector<Weights> weights(multiplicity);
-	for (auto& w : weights)
-		w.resize(full_size);
+	std::vector<Weights> weights;
+	for (int i = 0; i < indexer->variations; i++)
+		weights.push_back(Weights(full_size));
 
 	// Decompress weights
-	for (std::size_t i = 0; i < multiplicity; i++)
-		for (const auto& config : Configurations(patterns[i]))
-		{
-			std::vector<int> indices;
-			indices.reserve(multiplicity);
+	for (int i = 0; i < indexer->variations; i++)
+	{
+		BitBoard variation = indexer->PatternVariation(i);
+		for (const Position& config : Configurations(variation))
+			weights[i][FastIndex(config, variation)] = compressed[indexer->DenseIndex(config, i)];
+	}
 
-			config_indexer->generate(std::back_inserter(indices), config);
+	std::vector<BitBoard> variations;
+	for (int i = 0; i < indexer->variations; i++)
+		variations.push_back(indexer->PatternVariation(i));
 
-			weights[i][Index(config, patterns[i])] = compressed[indices[i]];
-		}
+	if (indexer->variations == 4)
+		return std::make_unique<Simple<4>>(std::move(variations), std::move(weights));
+	return std::make_unique<Simple<8>>(std::move(variations), std::move(weights));
+}
 
-	return CreateEvaluator(pattern, std::move(weights));
+std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const std::vector<BitBoard>& patterns, const Weights& compressed)
+{
+	std::vector<std::unique_ptr<Evaluator>> evals;
+	int offset = 0;
+	for (const auto& p : patterns)
+	{
+		auto size = CreateDenseIndexer(p)->reduced_size;
+		evals.push_back(Pattern::CreateEvaluator(p, {compressed.begin() + offset, compressed.begin() + offset + size}));
+		offset += size;
+	}
+	return std::make_unique<SumGroup>(std::move(evals));
 }

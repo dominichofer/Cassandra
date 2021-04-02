@@ -1,16 +1,6 @@
 #include "Helpers.h"
 #include <array>
 
-int Pow_int(int base, unsigned int exponent)
-{
-	if (exponent == 0)
-		return 1;
-	if (exponent % 2 == 0)
-		return Pow_int(base * base, exponent / 2);
-
-	return base * Pow_int(base, exponent - 1);
-}
-
 class SumPow3Cache
 {
 	std::array<int, (1ULL << 16)> m_cache{};
@@ -20,7 +10,7 @@ class SumPow3Cache
 		int sum = 0;
 		while (exp != 0U)
 		{
-			sum += Pow_int(3, countr_zero(exp));
+			sum += pown(3, countr_zero(exp));
 			RemoveLSB(exp);
 		}
 		return sum;
@@ -31,12 +21,12 @@ public:
 		for (std::size_t i = 0; i < std::size(m_cache); i++)
 			m_cache[i] = sum_pow3(i);
 	}
-	[[nodiscard]] uint64_t SumPow3(uint64_t exp) const noexcept { return m_cache[exp]; }
+	[[nodiscard]] int SumPow3(uint64_t exp) const noexcept { return m_cache[exp]; }
 };
 
 static SumPow3Cache sum_pow_3_cache;
 
-int Index(const Position& pos, const BitBoard pattern) noexcept
+int FastIndex(const Position& pos, const BitBoard pattern) noexcept
 {
 	return sum_pow_3_cache.SumPow3(PExt(pos.Player(), pattern))
 		+ sum_pow_3_cache.SumPow3(PExt(pos.Opponent(), pattern)) * 2;
@@ -45,34 +35,30 @@ int Index(const Position& pos, const BitBoard pattern) noexcept
 	// 1 x _mm256_reduce_add_epi32 (6 OPs)
 	// = 27 OPs
 
-	//auto P_1 = _mm256_set1_epi32(PExt(pos.Player(), pattern));
-	//auto P_2 = P_1;
-	//auto O_1 = _mm256_set1_epi32(PExt(pos.Opponent(), pattern));
-	//auto O_2 = O_1;
-	//const auto iota_1 = _mm256_set_epi32(0, 1, 2, 3, 4, 5, 6, 7);
-	//const auto iota_2 = _mm256_set_epi32(8, 9, 10, 11, 12, 13, 14, 15);
-	//const auto pow3_1 = _mm256_set_epi32(1, 3, 9, 27, 81, 243, 729, 2187);
-	//const auto pow3_2 = _mm256_set_epi32(6561, 19683, 59049, 177147, 531441, 1594323, 4782969, 14348907);
-	//const auto one = _mm256_set1_epi32(1);
+	//int32x8 P_1(PExt(pos.Player(), pattern));
+	//int32x8 P_2 = P_1;
+	//int32x8 O_1(PExt(pos.Opponent(), pattern));
+	//int32x8 O_2 = O_1;
+	//const int32x8 iota_1(0, 1, 2, 3, 4, 5, 6, 7);
+	//const int32x8 iota_2(8, 9, 10, 11, 12, 13, 14, 15);
+	//const int32x8 pow3_1(1, 3, 9, 27, 81, 243, 729, 2187);
+	//const int32x8 pow3_2(6561, 19683, 59049, 177147, 531441, 1594323, 4782969, 14348907);
+	//const int32x8 one(1);
 
-	//P_1 = _mm256_and_si256(_mm256_srlv_epi32(P_1, iota_1), one);
-	//P_2 = _mm256_and_si256(_mm256_srlv_epi32(P_2, iota_2), one);
-	//O_1 = _mm256_and_si256(_mm256_srlv_epi32(O_1, iota_1), one);
-	//O_2 = _mm256_and_si256(_mm256_srlv_epi32(O_2, iota_2), one);
+	//P_1 = (P_1 >> iota_1) & one;
+	//P_2 = (P_2 >> iota_2) & one;
+	//O_1 = (O_1 >> iota_1) & one;
+	//O_2 = (O_2 >> iota_2) & one;
 
-	//auto mask_1 = _mm256_cmpeq_epi32(P_1, one);
-	//auto mask_2 = _mm256_cmpeq_epi32(P_2, one);
-	//auto mask_3 = _mm256_cmpeq_epi32(O_1, one);
-	//auto mask_4 = _mm256_cmpeq_epi32(O_2, one);
+	//auto mask_1 = cmpeq(P_1, one);
+	//auto mask_2 = cmpeq(P_2, one);
+	//auto mask_3 = cmpeq(O_1, one);
+	//auto mask_4 = cmpeq(O_2, one);
 
-	//P_1 = _mm256_and_si256(mask_1, pow3_1);
-	//P_2 = _mm256_and_si256(mask_2, pow3_2);
-	//O_1 = _mm256_and_si256(mask_3, pow3_1);
-	//O_2 = _mm256_and_si256(mask_4, pow3_2);
-
-	//O_1 = _mm256_add_epi32(O_1, O_1); // simulates a "*2".
-	//O_2 = _mm256_add_epi32(O_2, O_2); // simulates a "*2".
+	//P_1 = mask_1 & pow3_1;
+	//P_2 = mask_2 & pow3_2;
+	//O_1 = mask_3 & pow3_1;
+	//O_2 = mask_4 & pow3_2;
 	//
-	//auto x = _mm256_add_epi32(_mm256_add_epi32(P_1, P_2), _mm256_add_epi32(O_1, O_2));
-	//return _mm256_reduce_add_epi32(x);
+	//return reduce_add(P_1 + P_2 + O_1 + O_1 + O_2 + O_2);
 }

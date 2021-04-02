@@ -9,7 +9,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision as tv
-from torch.utils.data import DataLoader, TensorDataset
+from PIL import Image, ImageDraw
+import sys
 
 class BitBoard:
     def __init__(self, b:numpy.uint64=0):
@@ -52,14 +53,14 @@ class Position:
         self.O = O
 
 def PlayPass(pos:Position):
-    return Position(pos.Opponent(), pos.P)
+    return Position(pos.O, pos.P)
 
 def FlipsInOneDirection(pos:Position, x, y, dx, dy) -> BitBoard:
     flips = BitBoard()
     x += dx
     y += dy
     while (x >= 0) and (x < 8) and (y >= 0) and (y < 8):
-        if pos.Opponent()[x,y]:
+        if pos.O[x,y]:
             flips[x,y] = True
         elif pos.P[x,y]:
             return flips
@@ -80,12 +81,12 @@ def Flips(pos:Position, x, y) -> BitBoard:
          | FlipsInOneDirection(pos, x, y, +1, +1)
 
 def PossibleMoves(pos:Position) -> BitBoard:
-    maskO = pos.Opponent() & BitBoard(0x7E7E7E7E7E7E7E7E)
+    maskO = pos.O & BitBoard(0x7E7E7E7E7E7E7E7E)
     
     flip1 = maskO & (pos.P << 1);
     flip2 = maskO & (pos.P >> 1);
-    flip3 = pos.Opponent() & (pos.P << 8);
-    flip4 = pos.Opponent() & (pos.P >> 8);
+    flip3 = pos.O & (pos.P << 8);
+    flip4 = pos.O & (pos.P >> 8);
     flip5 = maskO & (pos.P << 7);
     flip6 = maskO & (pos.P >> 7);
     flip7 = maskO & (pos.P << 9);
@@ -93,8 +94,8 @@ def PossibleMoves(pos:Position) -> BitBoard:
 
     flip1 |= maskO & (flip1 << 1);
     flip2 |= maskO & (flip2 >> 1);
-    flip3 |= pos.Opponent() & (flip3 << 8);
-    flip4 |= pos.Opponent() & (flip4 >> 8);
+    flip3 |= pos.O & (flip3 << 8);
+    flip4 |= pos.O & (flip4 >> 8);
     flip5 |= maskO & (flip5 << 7);
     flip6 |= maskO & (flip6 >> 7);
     flip7 |= maskO & (flip7 << 9);
@@ -102,7 +103,7 @@ def PossibleMoves(pos:Position) -> BitBoard:
 
     mask1 = maskO & (maskO << 1);
     mask2 = mask1 >> 1;
-    mask3 = pos.Opponent() & (pos.Opponent() << 8);
+    mask3 = pos.O & (pos.O << 8);
     mask4 = mask3 >> 8;
     mask5 = maskO & (maskO << 7);
     mask6 = mask5 >> 7;
@@ -136,7 +137,7 @@ def PossibleMoves(pos:Position) -> BitBoard:
     flip7 <<= 9;
     flip8 >>= 9;
 
-    return ~(pos.P | pos.Opponent()) & (flip1 | flip2 | flip3 | flip4 | flip5 | flip6 | flip7 | flip8);
+    return ~(pos.P | pos.O) & (flip1 | flip2 | flip3 | flip4 | flip5 | flip6 | flip7 | flip8);
 
 
 class State():
@@ -277,376 +278,68 @@ class DrawingPanel(wx.Panel):
                 elif possible_moves[x,y]:
                     self.DrawX(dc, wx.Colour("red"), x, y)
 
-def HeatMap(x,y):
-    r_squared = numpy.corrcoef(x, y)[0,1]**2
-    std = numpy.std(x - y)
+def to_png(pos):
+    d = 10
+    out = Image.new("RGB", (8*d+1,8*d+1), (0,0,0))
+    draw = ImageDraw.Draw(out)
 
-    heatmap, xedges, yedges = numpy.histogram2d(x, y, bins=(65, 129), range=((-64,64),(-64,64)))
+    # Board
+    for x in range(8):
+        for y in range(8):
+            draw.rectangle([x*d, y*d, (x+1)*d, (y+1)*d], (0,100,0), (0,50,0))
+    # Small black dots
+    for x in [2,6]:
+        for y in [2,6]:
+            draw.ellipse([x*d-0.05*d, y*d-0.05*d, x*d+0.05*d+1, y*d+0.05*d+1], (0,50,0), (0,50,0))
 
-    plt.text(35, -55, '$R^2$={:.3f}\n$\sigma$={:.3f}'.format(r_squared, std))
-    plt.set_cmap('gist_heat_r')
-    plt.imshow(heatmap.T, extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], origin='lower')
-    plt.show()
-    
-class ConvBn2d(nn.Module):
-    def __init__(self, in_size, out_size, kernel_size, padding):
-        super(ConvBn2d, self).__init__()
-        self.conv = nn.Conv2d(in_size, out_size, kernel_size, padding=padding, bias=False)
-        self.bn = nn.BatchNorm2d(out_size)
+    possible_moves = PossibleMoves(pos)
+    for x in range(8):
+        for y in range(8):
+            if pos.P[x,y]:
+                draw.ellipse([x*d+0.075*d+1, y*d+0.075*d+1, (x+1)*d-0.075*d, (y+1)*d-0.075*d], (0,0,0), (0,0,0))
+            elif pos.O[x,y]:
+                draw.ellipse([x*d+0.075*d+1, y*d+0.075*d+1, (x+1)*d-0.075*d, (y+1)*d-0.075*d], (255,255,255), (255,255,255))
+            elif possible_moves[x,y]:
+                draw.line([x*d+0.4*d, y*d+0.4*d, (x+1)*d-0.4*d, (y+1)*d-0.4*d], (255,0,0), int(d/20))
+                draw.line([x*d+0.4*d, (y+1)*d-0.4*d, (x+1)*d-0.4*d, y*d+0.4*d], (255,0,0), int(d/20))
+                
+    name = ''
+    for y in range(8):
+        for x in range(8):
+            if pos.P[x,y]:
+                name += 'X'
+            elif pos.O[x,y]:
+                name += 'O'
+            else:
+                name += '-'
 
-    def forward(self, x):
-        return self.bn(self.conv(x))
+    out.save(f'G:\\Reversi\\perft\\ply7\\{name}.png')
 
-class ConvBnRelu2d(nn.Module):
-    def __init__(self, in_size, out_size, kernel_size, padding):
-        super(ConvBnRelu2d, self).__init__()
-        self.conv_bn = ConvBn2d(in_size, out_size, kernel_size, padding)
-
-    def forward(self, x):
-        return F.relu(self.conv_bn(x), inplace=True)
-
-class Res1(nn.Module):
-    def __init__(self, external, internal):
-        super(Res1, self).__init__()
-        self.layer1 = ConvBnRelu2d(internal, internal, 3, 1) # 3x3
-        self.layer2 = ConvBnRelu2d(internal, internal, 3, 1) # 3x3
-
-    def forward(self, x):
-        y = self.layer1(x)
-        y = self.layer2(y)
-        return F.relu(x + y, inplace=True)
-
-class Res2(nn.Module):
-    def __init__(self, external, internal):
-        super(Res2, self).__init__()
-        self.layer1 = ConvBnRelu2d(external, internal, 1, 0) # 1x1
-        self.layer2 = ConvBnRelu2d(internal, internal, 3, 1) # 3x3
-        self.layer3 = ConvBn2d(internal, external, 1, 0) # 1x1
-
-    def forward(self, x):
-        y = self.layer1(x)
-        y = self.layer2(y)
-        y = self.layer3(y)
-        return F.relu(x + y, inplace=True)
-
-#class Res2(nn.Module):
-#    def __init__(self, external, internal):
-#        super(Res2, self).__init__()
-#        self.layer1 = ConvBnRelu2d(external, internal, 1, 0) # 1x1
-#        self.layer2 = ConvBnRelu2d(internal, internal, 3, 1) # 3x3
-#        self.layer3 = ConvBn2d(internal, external, 1, 0) # 1x1
-
-#    def forward(self, x):
-#        y = self.layer1(x)
-#        y = self.layer2(y)
-#        y = self.layer3(y)
-#        return F.relu(x + y, inplace=True)
-
-class SELayer(nn.Module):
-    def __init__(self, channel, reduction=4):
-        super(SELayer, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-            nn.Linear(channel, channel // reduction, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Linear(channel // reduction, channel, bias=False),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        b, c, _, _ = x.size()
-        y = self.avg_pool(x).view(b, c)
-        y = self.fc(y).view(b, c, 1, 1)
-        return x * y.expand_as(x)
-
-class ValueHead(nn.Module):
-    def __init__(self, external, internal):
-        super(ValueHead, self).__init__()
-        self.layer1 = ConvBnRelu2d(external, 1, 1, 0)
-        self.full = nn.Linear(internal, internal)
-        self.shrink = nn.Linear(internal, 1)
-
-    def forward(self, x):
-        y = self.layer1(x)
-        y = F.relu(self.full(y.flatten(1, -1)), inplace=True)
-        return F.hardtanh(self.shrink(y), -64, 64, inplace=True)
-
-def conv3x3(in_planes, out_planes, stride=1):
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
-
-
-class SEBasicBlock(nn.Module):
-    expansion = 1
-
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None,
-                 *, reduction=4):
-        super(SEBasicBlock, self).__init__()
-        self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv2 = conv3x3(planes, planes, 1)
-        self.bn2 = nn.BatchNorm2d(planes)
-        self.se = SELayer(planes, reduction)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        residual = x
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.se(out)
-
-        if self.downsample is not None:
-            residual = self.downsample(x)
-
-        out += residual
-        out = self.relu(out)
-
-        return out
-
-
-class SEBottleneck(nn.Module):
-    expansion = 4
-
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
-                 base_width=64, dilation=1, norm_layer=None,
-                 *, reduction=4):
-        super(SEBottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
-        self.bn2 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
-        self.bn3 = nn.BatchNorm2d(planes)
-        self.relu = nn.ReLU(inplace=True)
-        self.se = SELayer(planes, reduction)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        residual = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-        out = self.se(out)
-
-        if self.downsample is not None:
-            residual = self.downsample(x)
-
-        out += residual
-        out = self.relu(out)
-
-        return out
-
-def ResNet(skip_channels, internal_channels:list):
-    # has 3*depth+3 hidden layers
-    return nn.Sequential(
-        ConvBnRelu2d(2, skip_channels, 3, 1), # 3x3
-        *[SEBottleneck(skip_channels, ic) for ic in internal_channels],
-        ValueHead(skip_channels, 64)
-        )
-
-def count_parameters(model):
-    total_param = 0
-    for name, param in model.named_parameters():
-        if param.requires_grad:
-            num_param = numpy.prod(param.size())
-            #if param.dim() > 1:
-            #    print(name, ':', 'x'.join(str(x) for x in list(param.size())), '=', num_param)
-            #else:
-            #    print(name, ':', num_param)
-            total_param += num_param
-    return total_param
-
-class Drawer:
-    def __init__(self):
-        self.epoch = []
-        self.train = []
-        self.test = []
-
-        plt.ion()
-        self.fig = plt.figure()
-        self.sub = self.fig.add_subplot(111)
-        self.plot()
-
-    def plot(self):
-        self.sub.plot(self.epoch, self.train, 'b-', self.epoch, self.test, 'r-')
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-
-    def add(self, train, test):
-        self.epoch.append(len(self.epoch))
-        self.train.append(train)
-        self.test.append(test)
-        self.plot()
-
-def Data(e):
-    with open("G:\\Reversi\\rnd\\e{}.psc".format(e), "rb") as file:
-        for i in range(200_000):
-        #while True:
+def DataGenerator():
+    chunk_size = struct.calcsize('<QQQQ')
+    with open(f'G:\\Reversi\\perft\\perft21_ply7.pos', "rb") as file:
+        while True:
             try:
-                P, O, sc = struct.unpack('<QQb', file.read(struct.calcsize('<QQb')))
-                yield Position(P, O), sc
+                P, O, *_ = struct.unpack('<QQQQ', file.read(chunk_size))
+                yield Position(P, O)
             except:
                 break
 
-def to_list(pos:Position):
-    return [1 if pos.P[i, j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.Opponent()[i, j] else 0 for i in range(8) for j in range(8)]
-
-def to_list_8(pos:Position):
-    return [1 if pos.P[i, j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.Opponent()[i, j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.P[i, 7-j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.Opponent()[i, 7-j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.P[7-i, j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.Opponent()[7-i, j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.P[7-i, 7-j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.Opponent()[7-i, 7-j] else 0 for i in range(8) for j in range(8)] \
-         + [1 if pos.P[i, j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.Opponent()[i, j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.P[i, 7-j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.Opponent()[i, 7-j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.P[7-i, j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.Opponent()[7-i, j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.P[7-i, 7-j] else 0 for j in range(8) for i in range(8)] \
-         + [1 if pos.Opponent()[7-i, 7-j] else 0 for j in range(8) for i in range(8)]
-
-def GetDataTensor():
-    test_pos = []
-    test_sc = []
-    train_pos = []
-    train_sc = []
-    for e in range(18,23):
-        for index, (pos, sc) in enumerate(Data(e)):
-            if index < 50_000:
-                test_pos = torch.cat((test_pos, torch.tensor(to_list(pos), dtype=torch.float)), 0)
-                test_sc = torch.cat((test_sc, torch.tensor([sc], dtype=torch.float)), 0)
-            else:
-                train_pos = torch.cat((train_pos, torch.tensor(to_list_8(pos), dtype=torch.float)), 0)
-                train_sc = torch.cat((train_sc, torch.tensor([sc]*8, dtype=torch.float)), 0)
-    return test_pos, test_sc, train_pos, train_sc
-
-def GetData():
-    train = []
-    test = []
-    for e in range(18, 23):
-        for index, data in enumerate(Data(e)):
-            if index < 50_000:
-                test.append(data)
-            else:
-                train.append(data)
-    return train, test
-
-def collate_fn(data):
-    pos, sc = zip(*data)
-    pos = torch.tensor([to_list(x) for x in pos], dtype=torch.float).view(-1, 2, 8, 8)
-    sc = torch.tensor(sc, dtype=torch.float)
-    return pos, sc
-
-def collate_fn_8(data):
-    pos, sc = zip(*data)
-    pos = torch.tensor([to_list_8(x) for x in pos], dtype=torch.float).view(-1, 2, 8, 8)
-    sc = torch.tensor([x for x in sc for _ in range(8)], dtype=torch.float)
-    return pos, sc
-
 if __name__ == '__main__':
-    #import random
-    #device = torch.device("cuda")
-    #model = nn.DataParallel(ResNet(64, [64]*9)).to(device)
-    ##model.load_state_dict(torch.load("G:\\Reversi\\ResNet_64_64_9.w"))
-    #model.eval()
-
-    #for i in range(100):
-    #    x = [to_list(Position(random.getrandbits(64), random.getrandbits(64))) for _ in range(32)]
-    #    x = torch.tensor(x, dtype=torch.float, requires_grad=False).view(-1, 3, 8, 8)
-    #    start = time.time()
-    #    model(x.to(device))
-    #    end = time.time()
-    #    print(end-start)
-
-    drawer = Drawer()
-    device = torch.device("cuda")
-
-    train, test = GetData()
-    train = collate_fn_8(train)
-    test = collate_fn(test)
-    #test_pos, test_sc, train_pos, train_sc = GetDataTensor()
-    print('DataLoaded')
-    
-    test_size = len(test[0])
-    train_size = len(train[0])
-    test_loader = DataLoader(TensorDataset(*test), batch_size=8*1024, shuffle=True, pin_memory=True)
-    train_loader = DataLoader(TensorDataset(*train), batch_size=8*1024, shuffle=True, pin_memory=True)
-    loss_fn = nn.MSELoss()
-
-    for depth in range(9,10):
-        model = ResNet(64, [64]*depth)
-        #model.eval()
-        #start = time.time()
-        #for i in range(1000):
-        #    model(test[0][i].view(-1, 2, 8, 8))
-        #stop = time.time()
-        #model.train()
-        #print("CPU inference time: ", stop-start)
-        model = nn.DataParallel(model).to(device)
-        #model.load_state_dict(torch.load("G:\\Reversi\\SE9.w"))
-        print('number of trainable parameters =', count_parameters(model))
-
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0001)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=8, gamma=0.1)
-
-        for epoch in range(22):
-            start = time.time()
-            train_loss = 0
-            for x, y in train_loader:
-                #x = torch.tensor(to_list(x), dtype=torch.float).view(x.size()[0], 2, 8, 8).to(device)
-                #y = torch.tensor(y, dtype=torch.float).to(device)
-                loss = loss_fn(model(x.to(device)).view(-1), y.to(device))
-                train_loss += loss.item() * x.size()[0]
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-            train_loss = math.sqrt(train_loss / train_size)
-            end = time.time()
-
-            with torch.no_grad():
-                model.eval()
-                test_loss = 0
-                for x, y in test_loader:
-                    #x = torch.tensor(to_list(x), dtype=torch.float, requires_grad=False).view(x.size()[0], 2, 8, 8).to(device)
-                    #y = torch.tensor(y, dtype=torch.float, requires_grad=False).to(device)
-                    loss = loss_fn(model(x.to(device)).view(-1), y.to(device))
-                    test_loss += loss.item() * x.size()[0]
-                test_loss = math.sqrt(test_loss / test_size)
-                model.train()
-
-                drawer.add(train_loss, test_loss)
-                print(epoch, train_loss, test_loss, end - start)
-
-            scheduler.step()
-            torch.save(model.state_dict(), "G:\\Reversi\\SE9.w")
-                #HeatMap(y_pred.cpu().detach().numpy(), y.cpu().detach().numpy())
-
-    #with open("G:\\Reversi\\rnd\\e1.psc", "rb") as file:
-    #    file.seek(100000*struct.calcsize('<QQb'))
-    #    data = struct.unpack('<QQ', file.read(struct.calcsize('<QQ')))
+    #to_png(Position(BitBoard(0x0000000810000000), BitBoard(0x0000001008000000)))
+    #name = ''
+    #for x in range(8):
+    #    for y in range(8):
+    #        if pos.P[x,y]:
+    #            name += 'X'
+    #        elif pos.O[x,y]:
+    #            name += 'O'
+    #        else:
+    #            name += '-'
+    #print(name)
+    for pos in DataGenerator():
+        to_png(pos)
 
     #app = wx.App()
-    #frame = PositionFrame(Position(BitBoard(data[0]), BitBoard(data[1])))
-    ##frame = PositionFrame(Position(BitBoard(0x0000001800000000), BitBoard(0x0000000018000000)))
+    #frame = PositionFrame(Position(BitBoard(0x0000000810000000), BitBoard(0x0000001008000000)))
     #app.MainLoop()
