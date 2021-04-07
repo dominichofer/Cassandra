@@ -149,6 +149,9 @@ PatternEval DefaultPatternEval()
 	std::vector<Pattern::Weights> weights;
 	for (int i = 0; i < 8; i++)
 		weights.push_back(Load<Pattern::Weights::value_type>(R"(G:\Reversi\weights\block)" + std::to_string(i) + ".w"));
+	weights.push_back(weights.back());
+	weights.push_back(weights.back());
+	weights.push_back(weights.back());
 	return { pattern, weights };
 }
 

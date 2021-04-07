@@ -1,3 +1,6 @@
 [submodule "benchmark"]
 	path = benchmark
 	url = ../../google/benchmark.git
+[submodule "SymbolicDifferentiation"]
+	path = SymbolicDifferentiation
+	url = ../SymbolicDifferentiation.git

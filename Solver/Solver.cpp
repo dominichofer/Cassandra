@@ -64,7 +64,7 @@ void print(std::size_t index, unsigned int depth, int eval, int correct, std::ch
 int main(int argc, char* argv[])
 {
 	PatternEval pattern_eval = DefaultPatternEval();
-	HashTablePVS tt{ 10'000'000 };
+	HashTablePVS tt{ 100'000'000 };
 	uint64 node_count = 0;
 	std::chrono::nanoseconds duration{ 0 };
 	std::vector<int> score_diff;
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 	//Search::AlphaBetaFailSoft algorithm;
 	auto start = std::chrono::high_resolution_clock::now();
 	//#pragma omp parallel for reduction(+:node_count)
-	for (int i = 20; i < 40; i++)
+	for (int i = 1; i < 80; i++)
 	{
 		IDAB algorithm{ tt, pattern_eval };
 		//tt.Clear();

@@ -8,6 +8,7 @@
 #include "Math/Vector.h"
 #include "Math/Solver.h"
 #include "Math/Statistics.h"
+#include "SymbolicDifferentiation/SymbolicDifferentiation/SymExp.h"
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -76,7 +77,7 @@ Vector FittedWeights(const std::vector<BitBoard>& patterns, const std::vector<Po
     DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(1000));
     PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
     solver.Iterate(10);
-    return solver.GetX();
+    return solver.X();
 }
 
 Vector EvalWeights(const Vector& weights, const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
@@ -109,29 +110,146 @@ auto Split(const std::vector<PosScore>& pos_score, int test_size,
     }
 }
 
-struct dDE
-{
-    int d, D, E;
-    auto operator<=>(const dDE&) const noexcept = default;
+//struct dDE
+//{
+//    int d, D, E;
+//    auto operator<=>(const dDE&) const noexcept = default;
+//
+//    std::string to_string() const { return "(" + std::to_string(d) + "," + std::to_string(D) + "," + std::to_string(E) + ")"; }
+//};
+//
+//std::string to_string(const dDE& o) { return o.to_string(); }
+//std::ostream& operator<<(std::ostream& os, const dDE& o) { return os << to_string(o); }
+//
+//float MagicFormula(const dDE& arg, const std::vector<float>& param)
+//{
+//    return (std::expf(param[0] * arg.d) + param[1]) * std::powf(arg.D - arg.d, param[2]) * (param[3] * arg.E + param[4]);
+//    float s = param[0] * arg.d + param[1] * arg.D + param[2] * arg.E;
+//    return param[3] * s * s + param[4] * s + param[5];
+//}
 
-    std::string to_string() const { return "(" + std::to_string(d) + "," + std::to_string(D) + "," + std::to_string(E) + ")"; }
-};
+//// The Jacobian matrix
+//// of a given function of parameters and variables, at param_value and x. // TODO: Improve docu!
+//template <class T, class Function = std::identity>
+//Matrix<double> Jacobian(const SymExp& fkt,
+//                        const std::vector<Var>& param, const std::vector<Var>& variables,
+//                        const std::vector<double>& param_value, const std::vector<T>& x, Function trafo = {})
+//{
+//    assert(df_dparam.size() == param.size());
+//    assert(df_dparam.size() == param_value.size());
+//
+//    const std::size_t p_size = param.size();
+//    const std::size_t x_size = x.size();
+//
+//    std::vector<SymExp> df = fkt.DeriveAt(param, param_value);
+//
+//    Matrix<double> J(x_size, p_size);
+//    for (std::size_t i = 0; i < x_size; i++)
+//    {
+//        auto variables_value = trafo(x[i]);
+//        for (std::size_t j = 0; j < p_size; j++)
+//            J(i, j) = df[j].Eval(variables, variables_value).value();
+//    }
+//    return J;
+//}
 
-std::string to_string(const dDE& o)
+// The Jacobian matrix
+// of a given function of parameters and variables, at param_value and x. // TODO: Improve docu!
+template <class T>
+DenseMatrix<double> Jacobian(const std::function<std::vector<double>(T)>& df, const std::vector<T>& x, std::size_t params)
 {
-    return o.to_string();
+    DenseMatrix<double> J(x.size(), params);
+    for (std::size_t i = 0; i < x.size(); i++)
+    {
+        std::vector<double> tmp = df(x[i]);
+        for (std::size_t j = 0; j < params; j++)
+            J(i, j) = tmp[j];
+    }
+    return J;
 }
 
-std::ostream& operator<<(std::ostream& os, const dDE& o)
+// Cholesky decomposition
+DenseMatrix<double> Cholesky(const DenseMatrix<double>& A)
 {
-    return os << to_string(o);
+    // Cholesky–Banachiewicz algorithm from
+    // https://en.wikipedia.org/wiki/Cholesky_decomposition#The_Cholesky%E2%80%93Banachiewicz_and_Cholesky%E2%80%93Crout_algorithms
+
+    assert(A.Rows() == A.Cols());
+    const std::size_t size = A.Rows();
+
+    DenseMatrix<double> L(size, size);
+    for (int i = 0; i < size; i++)
+        for (int j = 0; j <= i; j++)
+        {
+            double sum = 0;
+            for (int k = 0; k < j; k++)
+                sum += L(i, k) * L(j, k);
+
+            if (i == j)
+                L(i, j) = std::sqrt(A(i, i) - sum);
+            else
+                L(i, j) = 1.0 / L(j,j) * (A(i, j) - sum);
+        }
+    return L;
 }
 
-float MagicFormula(const dDE& arg, const std::vector<float>& param)
+Vector forward_substitution(const DenseMatrix<double>& L, Vector b)
 {
-    return (std::expf(param[0] * arg.d) + param[1]) * std::powf(arg.D - arg.d, param[2]) * (param[3] * arg.E + param[4]);
-    float s = param[0] * arg.d + param[1] * arg.D + param[2] * arg.E;
-    return param[3] * s * s + param[4] * s + param[5];
+    for (int i = 0; i < b.size(); i++)
+    {
+        for (int j = 0; j < i; j++)
+            b[i] -= L(i, j) * b[j];
+        b[i] /= L(i, i);
+    }
+    return b;
+}
+
+Vector backward_substitution(const DenseMatrix<double>& U, Vector b)
+{
+    for (int i = b.size() - 1; i >= 0; i--)
+    {
+        for (int j = i + 1; j < b.size(); j++)
+            b[i] -= U(i, j) * b[j];
+        b[i] /= U(i, i);
+    }
+    return b;
+}
+
+template <class T>
+std::vector<double> NonLinearLeastSquares(const SymExp& fkt,
+                                          const std::vector<Var>& params, const std::vector<Var>& variables,
+                                          const std::vector<T>& x, const std::vector<double>& y,
+                                          Vector params_values)
+{
+    // From https://en.wikipedia.org/wiki/Non-linear_least_squares
+    assert(x.size() == y.size());
+    const std::size_t size = x.size();
+
+    Vector delta_y(size);
+    double norm_old = 1e300;
+
+    for (int iter = 1; iter <= 1'000'000; iter++)
+    {
+        SymExpVec df = fkt.DeriveAt(params, params_values);
+        DenseMatrix<double> J = Jacobian<std::vector<double>>(
+            [&](const std::vector<double>& x_i){ return df.At(variables, x_i).value(); },
+            x,
+            params.size());
+        DenseMatrix<double> JT = transposed(J);
+
+        auto fkt_at_param = fkt.At(params, params_values);
+        for (int i = 0; i < size; i++)
+            delta_y[i] = y[i] - fkt_at_param.At(variables, x[i]).value();
+
+        double norm_new = norm(delta_y);
+        if ((norm_old - norm_new) / norm_old < 0.0001)
+            break;
+        norm_old = norm_new;
+
+        DenseMatrix<double> L = Cholesky(JT * J);
+        params_values += backward_substitution(transposed(L), forward_substitution(L, JT * delta_y));
+    }
+    return params_values;
 }
 
 void MagicFormulaFit()
@@ -139,10 +257,7 @@ void MagicFormulaFit()
     const int max_empty_count = 24;
     const int size = 500;
 
-    std::mt19937_64 rnd_engine;
-    std::uniform_real_distribution<float> dst{-1, 1};
-
-    std::map<dDE, float> SD;
+    std::map<std::vector<double>, double> SD;
 
     std::vector<int> score = Load<int>(R"(G:\Reversi\weights\dDE.w)");
     for (int E = 1; E <= max_empty_count; E++)
@@ -159,15 +274,27 @@ void MagicFormulaFit()
                     assert(score[j + D] != undefined_score);
                     diff.push_back(score[j + d] - score[j + D]);
                 }
-                SD[{d,D,E}] = StandardDeviation(diff);
+                SD[{double(d),double(D),double(E)}] = StandardDeviation(diff);
             }
         }
     }
-    for (auto& sd : SD)
-        std::cout << sd.first << ": " << sd.second << "\n";
+    //for (auto& sd : SD)
+    //    std::cout << sd.first << ": " << sd.second << "\n";
 
-    float best_value = 1'000'000'000;
-    std::vector<float> best_param{-0.25, 1.5, 0.25, 1, 1, 1};
+    Var d,D,E,alpha,beta,gamma,delta,epsilon;
+    SymExp model = (exp(alpha * d) + beta) * pow(D - d, gamma) * (delta * E + epsilon);
+
+    std::vector<std::vector<double>> x;
+    std::vector<double> y;
+    x.reserve(SD.size());
+    y.reserve(SD.size());
+    for (auto& sd : SD)
+    {
+        x.push_back(sd.first);
+        y.push_back(sd.second);
+    }
+
+    auto params = NonLinearLeastSquares(model, {alpha,beta,gamma,delta,epsilon}, {d,D,E}, x, y, {-0.3, 1, 0.3, 0, 2});
 
     float mean = 0;
     for (const auto& sd : SD)
@@ -180,32 +307,59 @@ void MagicFormulaFit()
         float diff = sd.second - mean;
         SS_tot += diff * diff;
     }
-
-    float factor = 0.1;
-    for (int i = 0; i < 1'000'000'000; i++)
+    float SS_res = 0;
+    for (const auto& sd : SD)
     {
-        std::vector<float> param;
-        for (int i = 0; i < best_param.size(); i++)
-            param.push_back(best_param[i] + dst(rnd_engine) * factor);
-
-        float SS_res = 0;
-        for (const auto& sd : SD)
-        {
-            float mf = MagicFormula(sd.first, param);
-            float diff = mf - sd.second;
-            SS_res += diff * diff;
-        }
-        float R_sq = 1.0f - SS_res / SS_tot;
-        if (SS_res < best_value)
-        {
-            best_value = SS_res;
-            best_param = param;
-            std::cout << R_sq << ": ";
-            for (auto p : best_param)
-                std::cout << p << ","; 
-            std::cout << std::endl;
-        }
+        float diff = model.At({d,D,E}, sd.first).At({alpha,beta,gamma,delta,epsilon}, params).value() - sd.second;
+        SS_res += diff * diff;
     }
+    float R_sq = 1.0f - SS_res / SS_tot;
+
+    std::cout << R_sq << ": ";
+    for (auto p : params)
+        std::cout << p << ","; 
+    std::cout << std::endl;
+
+    float best_value = 1'000'000'000;
+    //std::vector<float> best_param{-0.25, 1.5, 0.25, 1, 1, 1};
+
+    //float mean = 0;
+    //for (const auto& sd : SD)
+    //    mean += sd.second;
+    //mean /= SD.size();
+
+    //float SS_tot = 0;
+    //for (const auto& sd : SD)
+    //{
+    //    float diff = sd.second - mean;
+    //    SS_tot += diff * diff;
+    //}
+
+    //float factor = 0.1;
+    //for (int i = 0; i < 1'000'000'000; i++)
+    //{
+    //    std::vector<float> param;
+    //    for (int i = 0; i < best_param.size(); i++)
+    //        param.push_back(best_param[i] + dst(rnd_engine) * factor);
+
+    //    float SS_res = 0;
+    //    for (const auto& sd : SD)
+    //    {
+    //        float mf = MagicFormula(sd.first, param);
+    //        float diff = mf - sd.second;
+    //        SS_res += diff * diff;
+    //    }
+    //    float R_sq = 1.0f - SS_res / SS_tot;
+    //    if (SS_res < best_value)
+    //    {
+    //        best_value = SS_res;
+    //        best_param = param;
+    //        std::cout << R_sq << ": ";
+    //        for (auto p : best_param)
+    //            std::cout << p << ","; 
+    //        std::cout << std::endl;
+    //    }
+    //}
 }
 
 void TestSD(const std::vector<Position>& pos)
@@ -220,53 +374,53 @@ void TestSD(const std::vector<Position>& pos)
 
 int main()
 {
-    MagicFormulaFit();
-    return 0;
-    // 
+    //MagicFormulaFit();
+    //return 0;
+     
     // Tested on e22 - e24
-    //std::vector<BitBoard> patterns{Q0, C3p2, L02X, Ep, L1, L2, L3, D8, D7, D6, D5, D4}; // 12 Pattern => edax 3.85
+    std::vector<BitBoard> patterns{Q0, C3p2, L02X, Ep, L1, L2, L3, D8, D7, D6, D5, D4}; // 12 Pattern => edax 3.85
     //std::vector<BitBoard> patterns{Q0, B5, L02X, L1, L2, L3, D8, D7, D6, D5, D4}; // 11 Pattern => Logistello 7.55 from https://skatgame.net/mburo/ps/improve.pdf
     //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}; // 12 Pattern => 3.92
     //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2}; // 12 Pattern => 3.93
     //std::vector<BitBoard> patterns{L02X, L1, L2, L3, D5, D6, D7, Comet, B5, C3p2, Q0}; // 11 Pattern => 3.73
     //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}; // 10 Pattern => 3.96
-    std::vector<BitBoard> patterns{B5, C4, L02X, // 7 Pattern => 3.73, 4 Pattern => 3.88
-        "# - - - - - - #"
-        "# # - - - - # #"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- # - - - - # -"
-        "- - - - - - - -"_BitBoard
-        ,
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- # # - - # # -"
-        "# # - - - - # #"_BitBoard
-        ,
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - # # # # - -"
-        "- - - # # - - -"
-        "- - - # # - - -"_BitBoard
-        ,
-        "# # - - - - - -"
-        "# # # - - - - -"
-        "- # # # - - - -"
-        "- - # # - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"
-        "- - - - - - - -"_BitBoard
-    };
+    //std::vector<BitBoard> patterns{B5, C4, L02X, // 7 Pattern => 3.73, 4 Pattern => 3.88
+    //    "# - - - - - - #"
+    //    "# # - - - - # #"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- # - - - - # -"
+    //    "- - - - - - - -"_BitBoard
+    //    ,
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- # # - - # # -"
+    //    "# # - - - - # #"_BitBoard
+    //    ,
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - # # # # - -"
+    //    "- - - # # - - -"
+    //    "- - - # # - - -"_BitBoard
+    //    ,
+    //    "# # - - - - - -"
+    //    "# # # - - - - -"
+    //    "- # # # - - - -"
+    //    "- - # # - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"
+    //    "- - - - - - - -"_BitBoard
+    //};
     Save(R"(G:\Reversi\weights\pattern.w)", patterns);
 
     const int test_size = 50'000;
@@ -297,7 +451,7 @@ int main()
         DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(1000));
         PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * train_score);
         solver.Iterate(10);
-        weights = FittedWeights(patterns, train_pos, train_score);
+        weights = solver.X();
         const auto stop = std::chrono::high_resolution_clock::now();
 
         Save(R"(G:\Reversi\weights\block)" + std::to_string(block) + ".w", weights);
@@ -307,8 +461,8 @@ int main()
         auto test_error = test_matrix * weights - test_score;
 
         std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)
-            << "\tTrainAvgAbsError: " << Avg(train_error, [](double x){ return std::abs(x); })
-    	    << "\t TestAvgAbsError: " << Avg(test_error, [](double x){ return std::abs(x); })
+            << "\tTrainAvgAbsError: " << Average(train_error, [](double x){ return std::abs(x); })
+    	    << "\t TestAvgAbsError: " << Average(test_error, [](double x){ return std::abs(x); })
             << "\tTrainSD: " << StandardDeviation(train_error)
             << "\t TestSD: " << StandardDeviation(test_error)
             << std::endl;

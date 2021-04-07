@@ -9,7 +9,7 @@ using namespace Search;
 
 float Sigma(int D, int d, int E) noexcept
 {
-	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.191047,1.00824,0.24472,-0.0118514,1.13362);
+	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.200953,0.959614,0.256754,-0.010297,1.15328);
 	//float alpha = -0.21311527f;
 	//float beta = 1.06454983f;
 	//float gamma = 0.26639884f;

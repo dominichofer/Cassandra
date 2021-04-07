@@ -1,9 +1,10 @@
 #pragma once
-#include <memory>
-#include <functional>
 #include "Algorithm.h"
 #include "Vector.h"
 #include "MatrixInterface.h"
+#include <memory>
+#include <functional>
+#include <stdexcept>
 
 class IterativeSolver
 {
@@ -11,11 +12,11 @@ public:
 	virtual ~IterativeSolver() = default;
 
 	virtual void Reinitialize() = 0;
-	virtual void Reinitialize(Vector _0) = 0;
+	virtual void Reinitialize(Vector) = 0;
 	virtual void Iterate(int n) = 0;
 	virtual double Residuum() const = 0;
 	virtual Vector Error() const = 0;
-	virtual const Vector& GetX() const = 0;
+	virtual Vector X() const = 0;
 };
 
 class Preconditioner
@@ -35,39 +36,29 @@ public:
 	Vector revert(const Vector& x) const override { return d.elementwise_division(x); }
 };
 
-
-inline std::tuple<double, Vector> decompose(const Vector& x)
-{
-	const auto n = norm(x);
-	return std::tuple(n, x / n);
-}
-
-inline Vector operator*(const std::unique_ptr<IMatrix>& m, const Vector& v) { return m->operator*(v); }
-
 // Conjugate Gradient method
 // Solves A * x = b for x.
-class CG : public IterativeSolver
+class CG final : public IterativeSolver
 {
-	std::unique_ptr<IMatrix> A;
+	const Matrix& A;
 	Vector x, b, p, r;
 public:
 	// A: has to be symmetric and positive-definite.
-	template <typename Matrix>
-	CG(Matrix A_, Vector _0, Vector b_)
-		: A(std::make_unique<Matrix>(std::move(A_))), x(std::move(_0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
+	CG(const Matrix& A, Vector x0, Vector b)
+		: A(A), x(std::move(x0)), b(std::move(b))
 	{
-		if (A->Cols() != A->Rows()) throw std::runtime_error("Size mismatch.");
-		if (A->Cols() != x.size()) throw std::runtime_error("Size mismatch.");
-		if (A->Rows() != b.size()) throw std::runtime_error("Size mismatch.");
+		if (A.Cols() != A.Rows()) throw std::runtime_error("Size mismatch.");
+		if (A.Cols() != x.size()) throw std::runtime_error("Size mismatch.");
+		if (A.Rows() != this->b.size()) throw std::runtime_error("Size mismatch.");
 		Reinitialize();
 	}
 	~CG() override = default;
 
 	void Reinitialize() override { p = r = Error(); }
 
-	void Reinitialize(Vector _0) override
+	void Reinitialize(Vector start) override
 	{
-		x = std::move(_0);
+		x = std::move(start);
 		Reinitialize();
 	}
 
@@ -89,25 +80,24 @@ public:
 
 	double Residuum() const override { return dot(r, r); }
 	Vector Error() const override { return b - A * x; }
-	const Vector& GetX() const override { return x; }
+	Vector X() const override { return x; }
 };
 
 // Preconditioned Conjugate Gradient method
 // Solves A * P(y) = b, where P(y) = x, for x.
-class PCG : public IterativeSolver
+class PCG final : public IterativeSolver
 {
-	std::unique_ptr<IMatrix> A;
+	const Matrix& A;
 	const Preconditioner& P;
 	Vector b, x, z, r, p;
 public:
 	// A: has to be symmetric and positive-definite.
-	template <typename Matrix>
-	PCG(Matrix A_, const Preconditioner& P, Vector _0, Vector b_)
-		: A(std::make_unique<Matrix>(std::move(A_))), P(P), x(std::move(_0)), b(std::move(b_)), r(A->Cols()), p(A->Cols())
+	PCG(const Matrix& A, const Preconditioner& P, Vector x0, Vector b)
+		: A(A), P(P), x(std::move(x0)), b(std::move(b))
 	{
-		if (A->Cols() != A->Rows()) throw std::runtime_error("Size mismatch.");
-		if (A->Cols() != x.size()) throw std::runtime_error("Size mismatch.");
-		if (A->Rows() != b.size()) throw std::runtime_error("Size mismatch.");
+		if (A.Rows() != A.Cols()) throw std::runtime_error("Size mismatch.");
+		if (A.Cols() != x.size()) throw std::runtime_error("Size mismatch.");
+		if (A.Rows() != this->b.size()) throw std::runtime_error("Size mismatch.");
 		Reinitialize();
 	}
 	~PCG() override = default;
@@ -118,9 +108,9 @@ public:
 		p = z = P.apply(r);
 	}
 
-	void Reinitialize(Vector _0) override
+	void Reinitialize(Vector x0) override
 	{
-		x = std::move(_0);
+		x = std::move(x0);
 		Reinitialize();
 	}
 
@@ -143,12 +133,11 @@ public:
 
 	double Residuum() const override { return dot(r, r); }
 	Vector Error() const override { return b - A * x; }
-	const Vector& GetX() const override { return x; }
+	Vector X() const override { return x; }
 };
 
 // Least Squares QR Method
 // Solves A * x = b for x, or minimizes ||A*x-b||.
-template <typename Matrix>
 class LSQR : public IterativeSolver
 {
 	// Source of algorithm: https://web.stanford.edu/group/SOL/software/lsqr/lsqr-toms82a.pdf
@@ -158,11 +147,11 @@ class LSQR : public IterativeSolver
 	double alpha{ 0 }, beta{ 0 }, phi{ 0 }, rho{ 0 }, phi_bar{ 0 }, rho_bar{ 0 }, residuum;
 public:
 	// A: has to be symmetric and positive-definite.
-	LSQR(const Matrix& A, Vector _0, const Vector& b)
-		: A(A), b(b), x(std::move(_0)), u(A.Rows()), v(A.Cols()), w(A.Cols())
+	LSQR(const Matrix& A, Vector x0, Vector b)
+		: A(A), b(std::move(b)), x(std::move(x0)), u(A.Rows()), v(A.Cols()), w(A.Cols())
 	{
 		if (A.Cols() != x.size()) throw;
-		if (A.Rows() != b.size()) throw;
+		if (A.Rows() != this->b.size()) throw;
 		Reinitialize();
 	}
 	~LSQR() override = default;
@@ -178,9 +167,9 @@ public:
 		residuum = phi_bar * alpha * std::abs(rho_bar / rho);
 	}
 
-	void Reinitialize(Vector _0) override
+	void Reinitialize(Vector x0) override
 	{
-		x = std::move(_0);
+		x = std::move(x0);
 		Reinitialize();
 	}
 
@@ -207,5 +196,5 @@ public:
 
 	double Residuum() const override { return residuum; }
 	Vector Error() const override { return b - A * x; }
-	const Vector& GetX() const override { return x; }
+	Vector X() const override { return x; }
 };

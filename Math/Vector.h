@@ -5,40 +5,44 @@
 #include <cmath>
 #include <limits>
 #include <vector>
+#include <initializer_list>
 #include <omp.h>
 
 class Vector
 {
 public:
-	using value_type = float;
+	using value_type = double;
 private:
 	std::vector<value_type> data;
 public:
 	Vector(std::vector<value_type> data) noexcept : data(std::move(data)) {}
+	Vector(std::initializer_list<value_type> list) noexcept : data(list) {}
 	Vector(std::size_t size = 0, value_type value = 0) : data(size, value) {}
 
-	[[nodiscard]] auto operator==(const Vector& o) const noexcept { return data == o.data; }
-	[[nodiscard]] auto operator!=(const Vector& o) const noexcept { return data != o.data; }
+	operator std::vector<value_type>() const { return data; }
 
-	std::size_t size() const noexcept { return data.size(); }
+	[[nodiscard]] bool operator==(const Vector&) const noexcept = default;
+	[[nodiscard]] bool operator!=(const Vector&) const noexcept = default;
+
+	[[nodiscard]] std::size_t size() const noexcept { return data.size(); }
 	void push_back(value_type x) noexcept { data.push_back(x); }
-	void clear() noexcept { data.clear(); }
 	void reserve(std::size_t new_capacity) noexcept { data.reserve(new_capacity); }
+	void clear() noexcept { data.clear(); }
 
 	template <typename Iterator>
 	void insert(std::vector<value_type>::const_iterator where, Iterator first, Iterator last) { data.insert(where, first, last); }
 
-	auto begin() noexcept { return data.begin(); }
-	auto begin() const noexcept { return data.begin(); }
-	auto cbegin() const noexcept { return data.cbegin(); }
-	auto end() noexcept { return data.end(); }
-	auto end() const noexcept { return data.end(); }
-	auto cend() const noexcept { return data.cend(); }
+	[[nodiscard]] auto begin() noexcept { return data.begin(); }
+	[[nodiscard]] auto begin() const noexcept { return data.begin(); }
+	[[nodiscard]] auto cbegin() const noexcept { return data.cbegin(); }
+	[[nodiscard]] auto end() noexcept { return data.end(); }
+	[[nodiscard]] auto end() const noexcept { return data.end(); }
+	[[nodiscard]] auto cend() const noexcept { return data.cend(); }
 
-	value_type& operator[](std::size_t i) noexcept { return data[i]; }
-	value_type& operator()(std::size_t i) noexcept { return data[i]; }
-	const value_type& operator[](std::size_t i) const noexcept { return data[i]; }
-	const value_type& operator()(std::size_t i) const noexcept { return data[i]; }
+	[[nodiscard]] value_type& operator[](std::size_t i) noexcept { return data[i]; }
+	[[nodiscard]] value_type& operator()(std::size_t i) noexcept { return data[i]; }
+	[[nodiscard]] const value_type& operator[](std::size_t i) const noexcept { return data[i]; }
+	[[nodiscard]] const value_type& operator()(std::size_t i) const noexcept { return data[i]; }
 
 	Vector& operator+=(const Vector& x) 
 	{
@@ -120,10 +124,7 @@ inline Vector inv(Vector x, Vector::value_type infinity = std::numeric_limits<Ve
 {
 	const int64_t size = x.size();
 	#pragma omp parallel for
-	for(int64_t i = 0; i < size; i++)
-		if (x[i] == 0)
-			x[i] = infinity;
-		else
-			x[i] = Vector::value_type(1) / x[i];
+	for (int64_t i = 0; i < size; i++)
+		x[i] = x[i] == 0 ? infinity : Vector::value_type(1) / x[i];
 	return x;
 }

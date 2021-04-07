@@ -433,7 +433,7 @@ double fitness_eval(const Entity& entity)
     DiagonalPreconditioner P(train_mat.JacobiPreconditionerSquare(100));
     PCG solver(transposed(train_mat) * train_mat, P, weights, transposed(train_mat) * train_scores);
     solver.Iterate(10);
-    double fit = StandardDeviation(test_scores - test_mat * solver.GetX());
+    double fit = StandardDeviation(test_scores - test_mat * solver.X());
 
     return fit + std::max(0, entity.PhenoCost()-32);
 }

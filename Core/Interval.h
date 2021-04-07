@@ -44,7 +44,6 @@ public:
 	OpenInterval& operator-=(ClosedInterval) noexcept;
 
 	[[nodiscard]] bool empty() const noexcept { return m_lower + 1 == m_upper; }
-	[[nodiscard]] int Span() const noexcept { return m_upper - m_lower; }
 
 	[[nodiscard]] bool Contains(int s) const noexcept { return (m_lower < s) && (s < m_upper); }
 	[[nodiscard]] bool Contains(OpenInterval o) const noexcept { return (m_lower <= o.m_lower) && (o.m_upper <= m_upper); }
@@ -69,7 +68,6 @@ public:
 	ClosedInterval& operator-=(OpenInterval) noexcept;
 
 	[[nodiscard]] bool IsSingleton() const noexcept { return m_lower == m_upper; }
-	[[nodiscard]] int Span() const noexcept { return m_upper - m_lower; }
 	
 	[[nodiscard]] bool Contains(int s) const noexcept { return (m_lower <= s) && (s <= m_upper); }
 	[[nodiscard]] bool Contains(OpenInterval o) const noexcept { return OpenInterval(*this).Contains(o); }
@@ -106,9 +104,6 @@ public:
 
 [[nodiscard]] OpenInterval Hull(OpenInterval l, OpenInterval r) noexcept;
 [[nodiscard]] ClosedInterval Hull(ClosedInterval l, ClosedInterval r) noexcept;
-
-[[nodiscard]] inline int Span(OpenInterval i) noexcept { return i.Span(); }
-[[nodiscard]] inline int Span(ClosedInterval i) noexcept { return i.Span(); }
 
 
 [[nodiscard]] inline std::string to_string(const OpenInterval& i) { return "(" + std::to_string(i.lower()) + "," + std::to_string(i.upper()) + ")"; }

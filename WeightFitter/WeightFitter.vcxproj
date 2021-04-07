@@ -82,6 +82,9 @@
     <ClCompile Include="WeightFitter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SymbolicDifferentiation\SymbolicDifferentiation\SymbolicDifferentiation.vcxproj">
+      <Project>{b2c18363-5423-4c92-9ef0-2eff1d429ac5}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
     </ProjectReference>
