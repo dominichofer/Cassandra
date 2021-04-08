@@ -9,7 +9,7 @@ using namespace Search;
 
 float Sigma(int D, int d, int E) noexcept
 {
-	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.200953,0.959614,0.256754,-0.010297,1.15328);
+	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.177749,0.94009,0.262592,-0.00963084,1.12554);
 	//float alpha = -0.21311527f;
 	//float beta = 1.06454983f;
 	//float gamma = 0.26639884f;
@@ -28,7 +28,7 @@ Result PVS::Eval(const Position& pos, const Request& request)
 
 std::optional<Result> PVS::MPC(const Position& pos, const Request& request)
 {
-	if ((request.depth() < 4) || (request.certainty() == ConfidenceLevel::Certain()))
+	if ((request.certainty() == ConfidenceLevel::Certain()))
 		return std::nullopt;
 
 	// log.AddSearch("MPC", pos, request);
@@ -58,7 +58,7 @@ std::optional<Result> PVS::MPC(const Position& pos, const Request& request)
 	int lower = static_cast<int>(std::floor(request.window.lower() - sigma * request.certainty().sigmas()));
 
 	if (upper < max_score && eval_0 >= upper) {
-		Request upper_zws = Request::Certain(reduced_depth, {upper-1, upper});
+		Request upper_zws = Request(reduced_depth, request.certainty(), {upper-1, upper});
 		Result shallow_result = ZWS_N(pos, upper_zws);
 		if (shallow_result.window > upper_zws.window) { // Fail high
 			float sigmas = (shallow_result.window.lower() - request.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
@@ -70,7 +70,7 @@ std::optional<Result> PVS::MPC(const Position& pos, const Request& request)
 	}
 
 	if (lower > min_score && eval_0 <= lower) {
-		Request lower_zws = Request::Certain(reduced_depth, {lower, lower+1});
+		Request lower_zws = Request(reduced_depth, request.certainty(), {lower, lower+1});
 		Result shallow_result = ZWS_N(pos, lower_zws);
 		if (shallow_result.window < lower_zws.window) { // Fail low
 			float sigmas = (request.window.lower() - shallow_result.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());

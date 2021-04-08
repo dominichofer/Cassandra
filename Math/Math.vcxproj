@@ -80,9 +80,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="DenseMatrix.h" />
     <ClInclude Include="MatrixCSR.h" />
-    <ClInclude Include="MatrixInterface.h" />
+    <ClInclude Include="Matrix.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="Vector.h" />

@@ -7,7 +7,7 @@
 #include <limits>
 #include <stdexcept>
 #include "Vector.h"
-#include "MatrixInterface.h"
+#include "Matrix.h"
 
 // Compressed Sparse Row Matrix
 // With fixed number of elements per row. With only 1 as element but the matrix can have multiple entries per element.
@@ -51,17 +51,13 @@ public:
 	{
 		if (x.size() != Cols())
 			throw std::runtime_error("Size mismatch.");
-		//if (row_size % 4 != 0)
-		//	throw std::runtime_error("'row_size' is not equivalent to 0 (mod 4).");
 
 		const int64_t rows = static_cast<int64_t>(Rows());
 		Vector result(rows, 0);
-		#pragma omp parallel for schedule(dynamic,64)
+		#pragma omp parallel for
 		for (int64_t i = 0; i < rows; i++)
 		{
 			double sum = 0; // prevents cache thrashing
-			//for (auto j = i * row_size; j < (i + 1) * row_size; j+=4)
-			//	sum += x[col_indices[j+0]] + x[col_indices[j+1]] + x[col_indices[j+2]] + x[col_indices[j+3]]; // TODO: Test if unrolling is worth it!
 			for (auto j = i * row_size; j < (i + 1) * row_size; j++)
 				sum += x[col_indices[j]];
 			result[i] = static_cast<Vector::value_type>(sum);
@@ -80,7 +76,7 @@ public:
 		#pragma omp parallel
 		{
 			Vector local_result(cols, 0); // prevents cache thrashing
-			#pragma omp for nowait schedule(dynamic,64)
+			#pragma omp for nowait
 			for (int64_t i = 0; i < rows; i++)
 				for (auto j = i * row_size; j < (i + 1) * row_size; j++)
 					local_result[col_indices[j]] += x[i];
@@ -101,7 +97,7 @@ public:
 		{
 			Vector local_ret(cols, 0); // prevents cache thrashing
 
-			#pragma omp for nowait schedule(dynamic,64)
+			#pragma omp for nowait schedule(static)
 			for (int64_t i = 0; i < col_indices.size(); i++)
 				local_ret[col_indices[i]] += 1.0;
 

@@ -45,7 +45,7 @@ constexpr uint32 operator""_ui32(uint64 v) { return uint32(v); }
 constexpr uint64 operator""_ui64(uint64 v) { return uint64(v); }
 
 #ifdef __AVX2__
-template <class intN, uint M>
+template <typename intN, uint M>
 class intNxM;
 
 using int8x16 = intNxM<int8, 16>;
@@ -91,7 +91,7 @@ namespace detail
 	[[nodiscard]] inline __m256i andnot_si(__m256i l, __m256i r) noexcept { return _mm256_andnot_si256(l, r); }
 };
 
-template <class intN, uint M>
+template <typename intN, uint M>
 class intNxM
 {
 	constexpr static bool is_128_bit = sizeof(intN) * 8 * M == 128;

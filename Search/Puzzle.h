@@ -81,7 +81,7 @@ public:
 	[[nodiscard]] bool IsSolved() const;
 	void SolveNext(const Search::Algorithm&);
 
-	template <class ExecutionPolicy>
+	template <typename ExecutionPolicy>
 	void Solve(ExecutionPolicy policy, const Search::Algorithm& alg)
 	{
 		uint threads = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy> ? std::thread::hardware_concurrency() : 1;

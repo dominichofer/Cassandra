@@ -5,10 +5,10 @@
 #include <utility>
 #include <vector>
 
-template <class _Ty, class = void>
+template <typename _Ty, class = void>
 static constexpr bool is_iterator_v = false;
 
-template <class T>
+template <typename T>
 static constexpr bool is_iterator_v<T, std::void_t<typename std::iterator_traits<T>::iterator_category>> = true;
 
 // page-locked host memory

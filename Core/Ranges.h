@@ -4,7 +4,7 @@
 #include <vector>
 #include <numeric>
 
-template <class T>
+template <typename T>
 inline std::vector<T> range(T begin, T end)
 {
 	std::vector<T> elements(end - begin);

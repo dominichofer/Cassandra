@@ -59,7 +59,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PerftCuda", "PerftCuda\Perf
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OEIS", "OEIS\OEIS.vcxproj", "{EAB4A0F5-AB0B-41CC-B915-27B409138B59}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SymbolicDifferentiation", "..\SymbolicDifferentiation\SymbolicDifferentiation\SymbolicDifferentiation.vcxproj", "{B2C18363-5423-4C92-9EF0-2EFF1D429AC5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SymbolicDifferentiation", "SymbolicDifferentiation\SymbolicDifferentiation\SymbolicDifferentiation.vcxproj", "{B2C18363-5423-4C92-9EF0-2EFF1D429AC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

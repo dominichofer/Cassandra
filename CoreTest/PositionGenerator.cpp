@@ -46,7 +46,7 @@ namespace OEIS_Tests
 		std::sort(all.begin(), all.end());
 
 		// Counts Othello positions that occure once and only once in the list.
-		const int64_t size = all.size();
+		const int64_t size = static_cast<int64_t>(all.size());
 		if (size < 2)
 			return size;
 

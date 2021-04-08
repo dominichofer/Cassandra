@@ -1,7 +1,7 @@
 #pragma once
 #include "Algorithm.h"
 #include "Vector.h"
-#include "MatrixInterface.h"
+#include "Matrix.h"
 #include <memory>
 #include <functional>
 #include <stdexcept>

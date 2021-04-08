@@ -4,6 +4,7 @@
 #include "Pattern/DenseIndexer.h"
 #include "Pattern/Evaluator.h"
 #include "Math/Matrix.h"
+#include "Math/DenseMatrix.h"
 #include "Math/MatrixCSR.h"
 #include "Math/Vector.h"
 #include "Math/Solver.h"
@@ -61,8 +62,8 @@ auto CreateMatrix(const DenseIndexer& indexer, const std::vector<Position>& pos)
     const auto rows = pos.size();
     MatrixCSR<uint32_t> mat(row_size, cols, rows);
 
-    const int64_t size = pos.size();
-    #pragma omp parallel for schedule(dynamic, 64)
+    const int64_t size = static_cast<int64_t>(pos.size());
+    #pragma omp parallel for schedule(static)
     for (int64_t i = 0; i < size; i++)
         for (int j = 0; j < indexer.variations; j++)
             mat.begin(i)[j] = indexer.DenseIndex(pos[i], j);
@@ -130,10 +131,10 @@ auto Split(const std::vector<PosScore>& pos_score, int test_size,
 
 //// The Jacobian matrix
 //// of a given function of parameters and variables, at param_value and x. // TODO: Improve docu!
-//template <class T, class Function = std::identity>
-//Matrix<double> Jacobian(const SymExp& fkt,
+//template <typename T, class Function = std::identity>
+//Matrix<float> Jacobian(const SymExp& fkt,
 //                        const std::vector<Var>& param, const std::vector<Var>& variables,
-//                        const std::vector<double>& param_value, const std::vector<T>& x, Function trafo = {})
+//                        const std::vector<float>& param_value, const std::vector<T>& x, Function trafo = {})
 //{
 //    assert(df_dparam.size() == param.size());
 //    assert(df_dparam.size() == param_value.size());
@@ -143,7 +144,7 @@ auto Split(const std::vector<PosScore>& pos_score, int test_size,
 //
 //    std::vector<SymExp> df = fkt.DeriveAt(param, param_value);
 //
-//    Matrix<double> J(x_size, p_size);
+//    Matrix<float> J(x_size, p_size);
 //    for (std::size_t i = 0; i < x_size; i++)
 //    {
 //        auto variables_value = trafo(x[i]);
@@ -155,13 +156,13 @@ auto Split(const std::vector<PosScore>& pos_score, int test_size,
 
 // The Jacobian matrix
 // of a given function of parameters and variables, at param_value and x. // TODO: Improve docu!
-template <class T>
-DenseMatrix<double> Jacobian(const std::function<std::vector<double>(T)>& df, const std::vector<T>& x, std::size_t params)
+template <typename T>
+DenseMatrix<float> Jacobian(const std::function<std::vector<float>(T)>& df, const std::vector<T>& x, std::size_t params)
 {
-    DenseMatrix<double> J(x.size(), params);
+    DenseMatrix<float> J(x.size(), params);
     for (std::size_t i = 0; i < x.size(); i++)
     {
-        std::vector<double> tmp = df(x[i]);
+        std::vector<float> tmp = df(x[i]);
         for (std::size_t j = 0; j < params; j++)
             J(i, j) = tmp[j];
     }
@@ -169,7 +170,7 @@ DenseMatrix<double> Jacobian(const std::function<std::vector<double>(T)>& df, co
 }
 
 // Cholesky decomposition
-DenseMatrix<double> Cholesky(const DenseMatrix<double>& A)
+DenseMatrix<float> Cholesky(const DenseMatrix<float>& A)
 {
     // Cholesky–Banachiewicz algorithm from
     // https://en.wikipedia.org/wiki/Cholesky_decomposition#The_Cholesky%E2%80%93Banachiewicz_and_Cholesky%E2%80%93Crout_algorithms
@@ -177,11 +178,11 @@ DenseMatrix<double> Cholesky(const DenseMatrix<double>& A)
     assert(A.Rows() == A.Cols());
     const std::size_t size = A.Rows();
 
-    DenseMatrix<double> L(size, size);
+    DenseMatrix<float> L(size, size);
     for (int i = 0; i < size; i++)
         for (int j = 0; j <= i; j++)
         {
-            double sum = 0;
+            float sum = 0;
             for (int k = 0; k < j; k++)
                 sum += L(i, k) * L(j, k);
 
@@ -193,7 +194,7 @@ DenseMatrix<double> Cholesky(const DenseMatrix<double>& A)
     return L;
 }
 
-Vector forward_substitution(const DenseMatrix<double>& L, Vector b)
+Vector forward_substitution(const DenseMatrix<float>& L, Vector b)
 {
     for (int i = 0; i < b.size(); i++)
     {
@@ -204,7 +205,7 @@ Vector forward_substitution(const DenseMatrix<double>& L, Vector b)
     return b;
 }
 
-Vector backward_substitution(const DenseMatrix<double>& U, Vector b)
+Vector backward_substitution(const DenseMatrix<float>& U, Vector b)
 {
     for (int i = b.size() - 1; i >= 0; i--)
     {
@@ -215,10 +216,10 @@ Vector backward_substitution(const DenseMatrix<double>& U, Vector b)
     return b;
 }
 
-template <class T>
-std::vector<double> NonLinearLeastSquares(const SymExp& fkt,
+template <typename T>
+std::vector<float> NonLinearLeastSquares(const SymExp& fkt,
                                           const std::vector<Var>& params, const std::vector<Var>& variables,
-                                          const std::vector<T>& x, const std::vector<double>& y,
+                                          const std::vector<T>& x, const std::vector<float>& y,
                                           Vector params_values)
 {
     // From https://en.wikipedia.org/wiki/Non-linear_least_squares
@@ -226,27 +227,27 @@ std::vector<double> NonLinearLeastSquares(const SymExp& fkt,
     const std::size_t size = x.size();
 
     Vector delta_y(size);
-    double norm_old = 1e300;
+    float norm_old = 1e100;
 
-    for (int iter = 1; iter <= 1'000'000; iter++)
+    for (int iter = 1; iter <= 100; iter++)
     {
         SymExpVec df = fkt.DeriveAt(params, params_values);
-        DenseMatrix<double> J = Jacobian<std::vector<double>>(
-            [&](const std::vector<double>& x_i){ return df.At(variables, x_i).value(); },
+        DenseMatrix<float> J = Jacobian<std::vector<float>>(
+            [=](const std::vector<float>& x_i){ return df.At(variables, x_i).value(); },
             x,
             params.size());
-        DenseMatrix<double> JT = transposed(J);
+        DenseMatrix<float> JT = transposed(J);
 
         auto fkt_at_param = fkt.At(params, params_values);
-        for (int i = 0; i < size; i++)
+        for (std::size_t i = 0; i < size; i++)
             delta_y[i] = y[i] - fkt_at_param.At(variables, x[i]).value();
 
-        double norm_new = norm(delta_y);
-        if ((norm_old - norm_new) / norm_old < 0.0001)
+        float norm_new = norm(delta_y);
+        if ((norm_old - norm_new) < 1e-4 * norm_old)
             break;
         norm_old = norm_new;
 
-        DenseMatrix<double> L = Cholesky(JT * J);
+        DenseMatrix<float> L = Cholesky(JT * J);
         params_values += backward_substitution(transposed(L), forward_substitution(L, JT * delta_y));
     }
     return params_values;
@@ -255,9 +256,9 @@ std::vector<double> NonLinearLeastSquares(const SymExp& fkt,
 void MagicFormulaFit()
 {
     const int max_empty_count = 24;
-    const int size = 500;
+    const int size = 200;
 
-    std::map<std::vector<double>, double> SD;
+    std::map<std::vector<float>, float> SD;
 
     std::vector<int> score = Load<int>(R"(G:\Reversi\weights\dDE.w)");
     for (int E = 1; E <= max_empty_count; E++)
@@ -274,7 +275,7 @@ void MagicFormulaFit()
                     assert(score[j + D] != undefined_score);
                     diff.push_back(score[j + d] - score[j + D]);
                 }
-                SD[{double(d),double(D),double(E)}] = StandardDeviation(diff);
+                SD[{float(d),float(D),float(E)}] = StandardDeviation(diff);
             }
         }
     }
@@ -284,36 +285,23 @@ void MagicFormulaFit()
     Var d,D,E,alpha,beta,gamma,delta,epsilon;
     SymExp model = (exp(alpha * d) + beta) * pow(D - d, gamma) * (delta * E + epsilon);
 
-    std::vector<std::vector<double>> x;
-    std::vector<double> y;
+    std::vector<std::vector<float>> x;
+    std::vector<float> y;
     x.reserve(SD.size());
     y.reserve(SD.size());
-    for (auto& sd : SD)
-    {
+    for (auto& sd : SD) {
         x.push_back(sd.first);
         y.push_back(sd.second);
     }
 
     auto params = NonLinearLeastSquares(model, {alpha,beta,gamma,delta,epsilon}, {d,D,E}, x, y, {-0.3, 1, 0.3, 0, 2});
+    auto parameterized_model = model.At({alpha,beta,gamma,delta,epsilon}, params);
 
-    float mean = 0;
-    for (const auto& sd : SD)
-        mean += sd.second;
-    mean /= SD.size();
+    std::vector<float> err(x.size());
+    for (std::size_t i = 0; i < x.size(); i++)
+        err[i] = parameterized_model.At({d,D,E}, x[i]).value() - y[i];
 
-    float SS_tot = 0;
-    for (const auto& sd : SD)
-    {
-        float diff = sd.second - mean;
-        SS_tot += diff * diff;
-    }
-    float SS_res = 0;
-    for (const auto& sd : SD)
-    {
-        float diff = model.At({d,D,E}, sd.first).At({alpha,beta,gamma,delta,epsilon}, params).value() - sd.second;
-        SS_res += diff * diff;
-    }
-    float R_sq = 1.0f - SS_res / SS_tot;
+    float R_sq = 1.0f - Variance(err) / Variance(y);
 
     std::cout << R_sq << ": ";
     for (auto p : params)
@@ -374,8 +362,8 @@ void TestSD(const std::vector<Position>& pos)
 
 int main()
 {
-    //MagicFormulaFit();
-    //return 0;
+    MagicFormulaFit();
+    return 0;
      
     // Tested on e22 - e24
     std::vector<BitBoard> patterns{Q0, C3p2, L02X, Ep, L1, L2, L3, D8, D7, D6, D5, D4}; // 12 Pattern => edax 3.85
@@ -461,8 +449,8 @@ int main()
         auto test_error = test_matrix * weights - test_score;
 
         std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)
-            << "\tTrainAvgAbsError: " << Average(train_error, [](double x){ return std::abs(x); })
-    	    << "\t TestAvgAbsError: " << Average(test_error, [](double x){ return std::abs(x); })
+            << "\tTrainAvgAbsError: " << Average(train_error, [](float x){ return std::abs(x); })
+    	    << "\t TestAvgAbsError: " << Average(test_error, [](float x){ return std::abs(x); })
             << "\tTrainSD: " << StandardDeviation(train_error)
             << "\t TestSD: " << StandardDeviation(test_error)
             << std::endl;
@@ -470,7 +458,7 @@ int main()
 
     PatternEval pattern_eval = DefaultPatternEval();
     HashTablePVS tt{ 100'000'000 };
-    const int size = 500;
+    const int size = 200;
     const int max_empty_count = 24;
 
     std::vector<Position> pos;

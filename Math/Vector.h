@@ -11,7 +11,7 @@
 class Vector
 {
 public:
-	using value_type = double;
+	using value_type = float;
 private:
 	std::vector<value_type> data;
 public:
@@ -47,8 +47,8 @@ public:
 	Vector& operator+=(const Vector& x) 
 	{
 		assert(data.size() == x.size());
-		const int64_t size = data.size();
-		#pragma omp parallel for
+		const int64_t size = static_cast<int64_t>(data.size());
+		#pragma omp parallel for schedule(static)
 		for (int64_t i = 0; i < size; i++)
 			data[i] += x[i];
 		return *this;
@@ -57,8 +57,8 @@ public:
 	Vector& operator-=(const Vector& x)
 	{
 		assert(data.size() == x.size());
-		const int64_t size = data.size();
-		#pragma omp parallel for
+		const int64_t size = static_cast<int64_t>(data.size());
+		#pragma omp parallel for schedule(static)
 		for (int64_t i = 0; i < size; i++)
 			data[i] -= x[i];
 		return *this;
@@ -66,8 +66,8 @@ public:
 
 	Vector& operator*=(value_type m)
 	{
-		const int64_t size = data.size();
-		#pragma omp parallel for
+		const int64_t size = static_cast<int64_t>(data.size());
+		#pragma omp parallel for schedule(static)
 		for (int64_t i = 0; i < size; i++)
 			data[i] *= m;
 		return *this;
@@ -75,8 +75,8 @@ public:
 
 	Vector& operator/=(value_type m) 
 	{
-		const int64_t size = data.size();
-		#pragma omp parallel for
+		const int64_t size = static_cast<int64_t>(data.size());
+		#pragma omp parallel for schedule(static)
 		for (int64_t i = 0; i < size; i++)
 			data[i] /= m;
 		return *this;
@@ -84,8 +84,8 @@ public:
 
 	Vector elementwise_multiplication(Vector x) const
 	{
-		const int64_t size = data.size();
-		#pragma omp parallel for
+		const int64_t size = static_cast<int64_t>(data.size());
+		#pragma omp parallel for schedule(static)
 		for (int64_t i = 0; i < size; i++)
 			x[i] *= data[i];
 		return x;
@@ -93,8 +93,8 @@ public:
 
 	Vector elementwise_division(Vector x) const
 	{
-		const int64_t size = data.size();
-		#pragma omp parallel for
+		const int64_t size = static_cast<int64_t>(data.size());
+		#pragma omp parallel for schedule(static)
 		for (int64_t i = 0; i < size; i++)
 			x[i] /= data[i];
 		return x;
@@ -108,8 +108,8 @@ inline Vector operator-(      Vector  l, const Vector&  r) { return l -= r; }
 inline Vector operator-(const Vector& l,       Vector&& r)
 {
 	assert(l.size() == r.size());
-	const int64_t size = r.size();
-	#pragma omp parallel for
+	const int64_t size = static_cast<int64_t>(r.size());
+	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
 		r[i] = l[i] - r[i];
 	return r;
@@ -122,8 +122,8 @@ inline Vector operator/(Vector vec, Vector::value_type mul) { return vec /= mul;
 
 inline Vector inv(Vector x, Vector::value_type infinity = std::numeric_limits<Vector::value_type>::infinity())
 {
-	const int64_t size = x.size();
-	#pragma omp parallel for
+	const int64_t size = static_cast<int64_t>(x.size());
+	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
 		x[i] = x[i] == 0 ? infinity : Vector::value_type(1) / x[i];
 	return x;

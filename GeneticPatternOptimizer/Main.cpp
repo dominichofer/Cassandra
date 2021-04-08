@@ -1,7 +1,7 @@
 #include "Core/Core.h"
 #include "IO/IO.h"
 #include "Pattern/DenseIndexer.h"
-#include "Math/Matrix.h"
+#include "Math/DenseMatrix.h"
 #include "Math/MatrixCSR.h"
 #include "Math/Vector.h"
 #include "Math/Solver.h"
@@ -339,7 +339,7 @@ public:
     Population Reproduce() const
     {
         Population next;
-        const int64_t size = entities.size();
+        const int64_t size = static_cast<int64_t>(entities.size());
         for (int64_t i = 0; i < size; i++)
         {
             auto partner_index = rnd<int>(0, size-1);
@@ -411,7 +411,7 @@ auto CreateMatrix(const DenseIndexer& indexer, const std::vector<Position>& pos)
     MatrixCSR<uint32_t> mat(row_size, cols, rows);
 
     const int64 size = pos.size();
-    #pragma omp parallel for schedule(dynamic, 64)
+    #pragma omp parallel for
     for (int64_t i = 0; i < size; i++)
         for (int j = 0; j < indexer.variations; j++)
             mat.begin(i)[j] = indexer.DenseIndex(pos[i], j);
@@ -476,13 +476,13 @@ int main(int argc, char *argv[])
 
     //const int64_t train_size = static_cast<int64_t>(train_positions.size());
     //train_scores = Vector(train_size);
-    //#pragma omp parallel for schedule(dynamic, 64)
+    //#pragma omp parallel for
     //for (int64_t i = 0; i < train_size; i++)
     //    train_scores[i] = pvs.Eval(train_positions[i]).window.lower();
 
     //const int64_t test_size = static_cast<int64_t>(test_positions.size());
     //test_scores = Vector(test_size);
-    //#pragma omp parallel for schedule(dynamic, 64)
+    //#pragma omp parallel for
     //for (int64_t i = 0; i < test_size; i++)
     //    test_scores[i] = pvs.Eval(test_positions[i]).window.lower();
 
