@@ -21,11 +21,11 @@ public:
 
 	operator std::vector<value_type>() const { return data; }
 
-	[[nodiscard]] bool operator==(const Vector&) const noexcept = default;
-	[[nodiscard]] bool operator!=(const Vector&) const noexcept = default;
+	[[nodiscard]] auto operator<=>(const Vector&) const noexcept = default;
 
 	[[nodiscard]] std::size_t size() const noexcept { return data.size(); }
-	void push_back(value_type x) noexcept { data.push_back(x); }
+	void push_back(const value_type& x) noexcept { data.push_back(x); }
+	void push_back(value_type&& x) noexcept { data.push_back(std::move(x)); }
 	void reserve(std::size_t new_capacity) noexcept { data.reserve(new_capacity); }
 	void clear() noexcept { data.clear(); }
 

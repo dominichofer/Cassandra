@@ -9,7 +9,7 @@
 #include "Math/Vector.h"
 #include "Math/Solver.h"
 #include "Math/Statistics.h"
-#include "SymbolicDifferentiation/SymbolicDifferentiation/SymExp.h"
+#include "Math/SymExp.h"
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -111,160 +111,13 @@ auto Split(const std::vector<PosScore>& pos_score, int test_size,
     }
 }
 
-//struct dDE
-//{
-//    int d, D, E;
-//    auto operator<=>(const dDE&) const noexcept = default;
-//
-//    std::string to_string() const { return "(" + std::to_string(d) + "," + std::to_string(D) + "," + std::to_string(E) + ")"; }
-//};
-//
-//std::string to_string(const dDE& o) { return o.to_string(); }
-//std::ostream& operator<<(std::ostream& os, const dDE& o) { return os << to_string(o); }
-//
-//float MagicFormula(const dDE& arg, const std::vector<float>& param)
-//{
-//    return (std::expf(param[0] * arg.d) + param[1]) * std::powf(arg.D - arg.d, param[2]) * (param[3] * arg.E + param[4]);
-//    float s = param[0] * arg.d + param[1] * arg.D + param[2] * arg.E;
-//    return param[3] * s * s + param[4] * s + param[5];
-//}
-
-//// The Jacobian matrix
-//// of a given function of parameters and variables, at param_value and x. // TODO: Improve docu!
-//template <typename T, class Function = std::identity>
-//Matrix<float> Jacobian(const SymExp& fkt,
-//                        const std::vector<Var>& param, const std::vector<Var>& variables,
-//                        const std::vector<float>& param_value, const std::vector<T>& x, Function trafo = {})
-//{
-//    assert(df_dparam.size() == param.size());
-//    assert(df_dparam.size() == param_value.size());
-//
-//    const std::size_t p_size = param.size();
-//    const std::size_t x_size = x.size();
-//
-//    std::vector<SymExp> df = fkt.DeriveAt(param, param_value);
-//
-//    Matrix<float> J(x_size, p_size);
-//    for (std::size_t i = 0; i < x_size; i++)
-//    {
-//        auto variables_value = trafo(x[i]);
-//        for (std::size_t j = 0; j < p_size; j++)
-//            J(i, j) = df[j].Eval(variables, variables_value).value();
-//    }
-//    return J;
-//}
-
-// The Jacobian matrix
-// of a given function of parameters and variables, at param_value and x. // TODO: Improve docu!
-template <typename T>
-DenseMatrix<float> Jacobian(const std::function<std::vector<float>(T)>& df, const std::vector<T>& x, std::size_t params)
+std::pair<std::vector<Vector>, Vector> LoadData(int max_empty_count, int size)
 {
-    DenseMatrix<float> J(x.size(), params);
-    for (std::size_t i = 0; i < x.size(); i++)
-    {
-        std::vector<float> tmp = df(x[i]);
-        for (std::size_t j = 0; j < params; j++)
-            J(i, j) = tmp[j];
-    }
-    return J;
-}
-
-// Cholesky decomposition
-DenseMatrix<float> Cholesky(const DenseMatrix<float>& A)
-{
-    // Cholesky–Banachiewicz algorithm from
-    // https://en.wikipedia.org/wiki/Cholesky_decomposition#The_Cholesky%E2%80%93Banachiewicz_and_Cholesky%E2%80%93Crout_algorithms
-
-    assert(A.Rows() == A.Cols());
-    const std::size_t size = A.Rows();
-
-    DenseMatrix<float> L(size, size);
-    for (int i = 0; i < size; i++)
-        for (int j = 0; j <= i; j++)
-        {
-            float sum = 0;
-            for (int k = 0; k < j; k++)
-                sum += L(i, k) * L(j, k);
-
-            if (i == j)
-                L(i, j) = std::sqrt(A(i, i) - sum);
-            else
-                L(i, j) = 1.0 / L(j,j) * (A(i, j) - sum);
-        }
-    return L;
-}
-
-Vector forward_substitution(const DenseMatrix<float>& L, Vector b)
-{
-    for (int i = 0; i < b.size(); i++)
-    {
-        for (int j = 0; j < i; j++)
-            b[i] -= L(i, j) * b[j];
-        b[i] /= L(i, i);
-    }
-    return b;
-}
-
-Vector backward_substitution(const DenseMatrix<float>& U, Vector b)
-{
-    for (int i = b.size() - 1; i >= 0; i--)
-    {
-        for (int j = i + 1; j < b.size(); j++)
-            b[i] -= U(i, j) * b[j];
-        b[i] /= U(i, i);
-    }
-    return b;
-}
-
-template <typename T>
-std::vector<float> NonLinearLeastSquares(const SymExp& fkt,
-                                          const std::vector<Var>& params, const std::vector<Var>& variables,
-                                          const std::vector<T>& x, const std::vector<float>& y,
-                                          Vector params_values)
-{
-    // From https://en.wikipedia.org/wiki/Non-linear_least_squares
-    assert(x.size() == y.size());
-    const std::size_t size = x.size();
-
-    Vector delta_y(size);
-    float norm_old = 1e100;
-
-    for (int iter = 1; iter <= 100; iter++)
-    {
-        SymExpVec df = fkt.DeriveAt(params, params_values);
-        DenseMatrix<float> J = Jacobian<std::vector<float>>(
-            [=](const std::vector<float>& x_i){ return df.At(variables, x_i).value(); },
-            x,
-            params.size());
-        DenseMatrix<float> JT = transposed(J);
-
-        auto fkt_at_param = fkt.At(params, params_values);
-        for (std::size_t i = 0; i < size; i++)
-            delta_y[i] = y[i] - fkt_at_param.At(variables, x[i]).value();
-
-        float norm_new = norm(delta_y);
-        if ((norm_old - norm_new) < 1e-4 * norm_old)
-            break;
-        norm_old = norm_new;
-
-        DenseMatrix<float> L = Cholesky(JT * J);
-        params_values += backward_substitution(transposed(L), forward_substitution(L, JT * delta_y));
-    }
-    return params_values;
-}
-
-void MagicFormulaFit()
-{
-    const int max_empty_count = 24;
-    const int size = 200;
-
     std::map<std::vector<float>, float> SD;
 
     std::vector<int> score = Load<int>(R"(G:\Reversi\weights\dDE.w)");
     for (int E = 1; E <= max_empty_count; E++)
-    {
         for (int D = 0; D <= E; D++)
-        {
             for (int d = 0; d < D; d++)
             {
                 std::vector<int> diff;
@@ -277,92 +130,67 @@ void MagicFormulaFit()
                 }
                 SD[{float(d),float(D),float(E)}] = StandardDeviation(diff);
             }
-        }
-    }
+
     //for (auto& sd : SD)
     //    std::cout << sd.first << ": " << sd.second << "\n";
 
-    Var d,D,E,alpha,beta,gamma,delta,epsilon;
-    SymExp model = (exp(alpha * d) + beta) * pow(D - d, gamma) * (delta * E + epsilon);
-
-    std::vector<std::vector<float>> x;
-    std::vector<float> y;
+    std::vector<Vector> x;
+    Vector y;
     x.reserve(SD.size());
     y.reserve(SD.size());
     for (auto& sd : SD) {
         x.push_back(sd.first);
         y.push_back(sd.second);
     }
+    return {x, y};
+};
 
-    auto params = NonLinearLeastSquares(model, {alpha,beta,gamma,delta,epsilon}, {d,D,E}, x, y, {-0.3, 1, 0.3, 0, 2});
-    auto parameterized_model = model.At({alpha,beta,gamma,delta,epsilon}, params);
-
-    std::vector<float> err(x.size());
+Vector Error(const SymExp& function, const Vars& vars,
+             const std::vector<Vector>& x, const Vector& y)
+{
+    Vector err(x.size());
     for (std::size_t i = 0; i < x.size(); i++)
-        err[i] = parameterized_model.At({d,D,E}, x[i]).value() - y[i];
+        err[i] = function.At(vars, x[i]).value() - y[i];
+    return err;
+}
+
+void FitModel(const SymExp& model, const Vars& params, const Vars& vars,
+              const std::vector<Vector>& x, const Vector& y,
+              Vector params_values)
+{
+    auto fitted_params = NonLinearLeastSquaresFit(model, params, vars, x, y, params_values);
+    auto fitted_model = model.At(params, fitted_params);
+    auto err = Error(fitted_model, vars, x, y);
 
     float R_sq = 1.0f - Variance(err) / Variance(y);
 
     std::cout << R_sq << ": ";
-    for (auto p : params)
-        std::cout << p << ","; 
+    for (auto p : fitted_params)
+        std::cout << p << ", "; 
     std::cout << std::endl;
-
-    float best_value = 1'000'000'000;
-    //std::vector<float> best_param{-0.25, 1.5, 0.25, 1, 1, 1};
-
-    //float mean = 0;
-    //for (const auto& sd : SD)
-    //    mean += sd.second;
-    //mean /= SD.size();
-
-    //float SS_tot = 0;
-    //for (const auto& sd : SD)
-    //{
-    //    float diff = sd.second - mean;
-    //    SS_tot += diff * diff;
-    //}
-
-    //float factor = 0.1;
-    //for (int i = 0; i < 1'000'000'000; i++)
-    //{
-    //    std::vector<float> param;
-    //    for (int i = 0; i < best_param.size(); i++)
-    //        param.push_back(best_param[i] + dst(rnd_engine) * factor);
-
-    //    float SS_res = 0;
-    //    for (const auto& sd : SD)
-    //    {
-    //        float mf = MagicFormula(sd.first, param);
-    //        float diff = mf - sd.second;
-    //        SS_res += diff * diff;
-    //    }
-    //    float R_sq = 1.0f - SS_res / SS_tot;
-    //    if (SS_res < best_value)
-    //    {
-    //        best_value = SS_res;
-    //        best_param = param;
-    //        std::cout << R_sq << ": ";
-    //        for (auto p : best_param)
-    //            std::cout << p << ","; 
-    //        std::cout << std::endl;
-    //    }
-    //}
 }
 
-void TestSD(const std::vector<Position>& pos)
+void FitModels()
 {
-    PatternEval pattern_eval = DefaultPatternEval();
-    HashTablePVS tt{ 10'000'000 };
-    std::vector<int> diff;
-    for (int i = 0; i < pos.size(); i++)
-        diff.push_back(PVS{ tt, pattern_eval }.Score(pos[i]) - PVS{ tt, pattern_eval }.Score(pos[i], 0));
-    std::cout << StandardDeviation(diff) << std::endl;
+    auto [x, y] = LoadData(24, 200);
+
+    Var d{"d"}, D{"D"}, E{"E"};
+    Var alpha, beta, gamma, delta, epsilon, zeta;
+
+    SymExp limbo_model = (exp(alpha * d) + beta) * pow(D - d, gamma) * (delta * E + epsilon);
+
+    SymExp edax_model = alpha * E + beta * D + gamma * d;
+    edax_model = (delta * pow(edax_model, Var(2)) + epsilon * edax_model + zeta)/Var(2);
+    std::cout << edax_model << std::endl;
+
+    //FitModel(limbo_model, {alpha, beta, gamma, delta, epsilon}, {d, D, E}, x, y, {-0.2, 1, 0.25, 0, 1});
+    FitModel(edax_model, {alpha, beta, gamma, delta, epsilon, zeta}, {d, D, E}, x, y, {-0.10026799, 0.31027733, -0.57772603, 0.07585621, 1.16492647, 5.4171698});
+    //-0.10026799, 0.31027733, -0.57772603, 0.07585621, 1.16492647, 5.4171698;
 }
 
 int main()
 {
-    MagicFormulaFit();
+    FitModels();
     return 0;
      
     // Tested on e22 - e24
@@ -488,6 +316,6 @@ int main()
     }
     Save(R"(G:\Reversi\weights\dDE.w)", score);
 
-    MagicFormulaFit();
+    FitModels();
     return 0;
 }

@@ -30,6 +30,9 @@ public:
 
 	std::size_t Rows() const noexcept override { return rows; }
 	std::size_t Cols() const noexcept override { return cols; }
+	
+	      value_type& operator()(std::size_t i, std::size_t j)       { return data[i * cols + j]; }
+	const value_type& operator()(std::size_t i, std::size_t j) const { return data[i * cols + j]; }
 
 	Vector Ax(const Vector& x) const override
 	{
@@ -71,8 +74,6 @@ public:
 
 	//Vector ATAx(const Vector& x) const override { return ATx(Ax(x)); }
 
-	      value_type& operator()(std::size_t i, std::size_t j)       { return data[i * cols + j]; }
-	const value_type& operator()(std::size_t i, std::size_t j) const { return data[i * cols + j]; }
 
 	DenseMatrix<value_type>& operator+=(const DenseMatrix<value_type>& o) 
 	{

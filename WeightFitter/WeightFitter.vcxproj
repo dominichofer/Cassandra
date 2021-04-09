@@ -100,9 +100,6 @@
     <ProjectReference Include="..\Solver\Solver.vcxproj">
       <Project>{a12ec4f8-a856-42ab-a161-748b365e783e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\SymbolicDifferentiation\SymbolicDifferentiation\SymbolicDifferentiation.vcxproj">
-      <Project>{b2c18363-5423-4c92-9ef0-2eff1d429ac5}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
