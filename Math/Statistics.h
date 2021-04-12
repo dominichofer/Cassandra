@@ -6,7 +6,7 @@
 #include <type_traits>
 
 // population variance
-template <class Iterator, class Function = std::identity>
+template <typename Iterator, typename Function = std::identity>
 double Variance(Iterator first, Iterator last, Function trafo = {})
 {
 	static_assert(std::is_convertible_v<std::iterator_traits<Iterator>::value_type, double>);
@@ -23,27 +23,27 @@ double Variance(Iterator first, Iterator last, Function trafo = {})
 }
 
 // population variance
-template <class Container, class Function = std::identity>
+template <typename Container, typename Function = std::identity>
 double Variance(const Container& c, Function trafo = {})
 {
 	return Variance(c.begin(), c.end(), trafo);
 }
 
 // population standard deviation
-template <class Iterator, class Function = std::identity>
+template <typename Iterator, typename Function = std::identity>
 double StandardDeviation(Iterator first, Iterator last, Function trafo = {})
 {
 	return std::sqrt(Variance(first, last, trafo));
 }
 
 // population standard deviation
-template <class Container, class Function = std::identity>
+template <typename Container, typename Function = std::identity>
 double StandardDeviation(const Container& c, Function trafo = {})
 {
 	return StandardDeviation(c.begin(), c.end(), trafo);
 }
 
-template <class Iterator, class Function = std::identity>
+template <typename Iterator, typename Function = std::identity>
 double Average(Iterator first, Iterator last, Function trafo = {})
 {
 	static_assert(std::is_convertible_v<std::iterator_traits<Iterator>::value_type, double>);
@@ -57,7 +57,7 @@ double Average(Iterator first, Iterator last, Function trafo = {})
 	return E_of_X;
 }
 
-template <class Container, class Function = std::identity>
+template <typename Container, typename Function = std::identity>
 double Average(const Container& c, Function trafo = {})
 {
 	return Average(c.begin(), c.end(), trafo);
@@ -66,7 +66,7 @@ double Average(const Container& c, Function trafo = {})
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the best model if the true model is not in the set of candidates.
-template <class Iterator, class Function = std::identity>
+template <typename Iterator, typename Function = std::identity>
 double AIC(Iterator first_error, Iterator last_error, std::size_t parameters, Function trafo = {})
 {
 	std::size_t n = std::distance(first_error, last_error);
@@ -76,7 +76,7 @@ double AIC(Iterator first_error, Iterator last_error, std::size_t parameters, Fu
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the best model if the true model is not in the set of candidates.
-template <class Container, class Function = std::identity>
+template <typename Container, typename Function = std::identity>
 double AIC(const Container& c, std::size_t parameters, Function trafo = {})
 {
 	std::size_t n = c.size();
@@ -86,7 +86,7 @@ double AIC(const Container& c, std::size_t parameters, Function trafo = {})
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the true model if it's in the set of candidates.
-template <class Iterator, class Function = std::identity>
+template <typename Iterator, typename Function = std::identity>
 double BIC(Iterator first_error, Iterator last_error, std::size_t parameters, Function trafo = {})
 {
 	std::size_t n = std::distance(first_error, last_error);
@@ -96,7 +96,7 @@ double BIC(Iterator first_error, Iterator last_error, std::size_t parameters, Fu
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the true model if it's in the set of candidates.
-template <class Container, class Function = std::identity>
+template <typename Container, typename Function = std::identity>
 double BIC(const Container& c, std::size_t parameters, Function trafo = {})
 {
 	std::size_t n = c.size();

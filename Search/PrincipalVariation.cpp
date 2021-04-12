@@ -9,16 +9,13 @@ using namespace Search;
 
 float Sigma(int D, int d, int E) noexcept
 {
-	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.177749,0.94009,0.262592,-0.00963084,1.12554);
-	//float alpha = -0.21311527f;
-	//float beta = 1.06454983f;
-	//float gamma = 0.26639884f;
-	//float delta = -0.02005392f;
-	//float epsilon = 2.09164003f;
+	static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.177498, 0.938986, 0.261467, -0.0096483, 1.12807);
+	return (std::expf(alpha * d) + beta) * std::powf(D - d, gamma) * (delta * E + epsilon);
 
-	float sigma = (std::expf(alpha * d) + beta) * std::powf(D - d, gamma) * (delta * E + epsilon);
-	assert(sigma > 0.0f);
-	return sigma;
+	//static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.0090121, 0.0348359, -0.0836982, 2.59089, 2.51293);
+	//float sigma = alpha * E + beta * D + gamma * d;
+	//sigma = sigma * sigma + delta * sigma + epsilon;
+	//return sigma;
 }
 
 Result PVS::Eval(const Position& pos, const Request& request)

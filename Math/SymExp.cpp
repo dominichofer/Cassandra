@@ -6,7 +6,7 @@ using namespace AST;
 
 int Symbol::counter = 1;
 
-SymExp::SymExp(float value) noexcept : root(std::make_unique<Value>(value))
+SymExp::SymExp(double value) noexcept : root(std::make_unique<Value>(value))
 {}
 
 SymExp::SymExp(std::string name) noexcept : root(std::make_unique<Symbol>(std::move(name)))
@@ -61,18 +61,9 @@ SymExp log(SymExp s)
 	return SymExp{ std::make_unique<Log>(std::move(s.root)) };
 }
 
-SymExp SymExp::At(const Var& var, float value) const
+SymExp SymExp::At(const Var& var, double value) const
 {
 	return SymExp{ root->Eval(static_cast<Symbol&>(*var.root), value)->Simplify() };
-}
-
-SymExp SymExp::At(const Vars& vars, const Vector& values) const
-{
-	assert(vars.size() == values.size());
-	SymExp tmp = *this;
-	for (std::size_t i = 0; i <vars.size(); i++)
-		tmp = tmp.At(vars[i], values[i]);
-	return tmp;
 }
 
 SymExp SymExp::Derive(const Var& var) const
@@ -85,15 +76,6 @@ SymExps SymExp::Derive(const Vars& vars) const
 	std::vector<SymExp> ret;
 	for (const auto& var : vars)
 		ret.push_back(Derive(var));
-	return ret;
-}
-
-SymExps SymExp::DeriveAt(const Vars& vars, const Vector& values) const
-{
-	assert(vars.size() == values.size());
-	std::vector<SymExp> ret;
-	for (std::size_t i = 0; i < vars.size(); i++)
-		ret.push_back(Derive(vars[i]).At(vars, values));
 	return ret;
 }
 
@@ -112,13 +94,13 @@ bool SymExp::has_value() const
 	return root->has_value();
 }
 
-float SymExp::value() const
+double SymExp::value() const
 {
 	return root->value();
 }
 
 
-SymExps SymExps::At(const Var& var, float value) const
+SymExps SymExps::At(const Var& var, double value) const
 {
 	std::vector<SymExp> ret;
 	ret.reserve(vec.size());
@@ -127,18 +109,9 @@ SymExps SymExps::At(const Var& var, float value) const
 	return { ret };
 }
 
-SymExps SymExps::At(const Vars& vars, const Vector& values) const
+std::vector<double> SymExps::value() const
 {
-	std::vector<SymExp> ret;
-	ret.reserve(vec.size());
-	for (const auto& v : vec)
-		ret.push_back(v.At(vars, values));
-	return { ret };
-}
-
-Vector SymExps::value() const
-{
-	Vector ret;
+	std::vector<double> ret;
 	ret.reserve(vec.size());
 	for (const auto& v : vec)
 		ret.push_back(v.value());
@@ -152,47 +125,47 @@ Var::Var() noexcept : SymExp(std::make_unique<Symbol>())
 Var::Var(std::string name) noexcept : SymExp(std::make_unique<Symbol>(std::move(name)))
 {}
 
-Var::Var(float value) noexcept : SymExp(std::make_unique<Value>(value))
+Var::Var(double value) noexcept : SymExp(std::make_unique<Value>(value))
 {}
 
 
 
-std::unique_ptr<Node> Neg::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Neg::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Neg>(node->Eval(s, value));
 }
 
-std::unique_ptr<Node> Add::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Add::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Add>(l->Eval(s, value), r->Eval(s, value));
 }
 
-std::unique_ptr<Node> Sub::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Sub::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Sub>(l->Eval(s, value), r->Eval(s, value));
 }
 
-std::unique_ptr<Node> Mul::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Mul::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Mul>(l->Eval(s, value), r->Eval(s, value));
 }
 
-std::unique_ptr<Node> Div::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Div::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Div>(l->Eval(s, value), r->Eval(s, value));
 }
 
-std::unique_ptr<Node> Pow::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Pow::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Pow>(l->Eval(s, value), r->Eval(s, value));
 }
 
-std::unique_ptr<Node> Exp::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Exp::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Exp>(node->Eval(s, value));
 }
 
-std::unique_ptr<Node> Log::Eval(const Symbol& s, float value) const
+std::unique_ptr<Node> Log::Eval(const Symbol& s, double value) const
 {
 	return std::make_unique<Log>(node->Eval(s, value));
 }
@@ -325,7 +298,7 @@ std::unique_ptr<Node> Div::Simplify() const
 	if (L->has_value() and L->value() == 0)
 		return std::make_unique<Value>(0);
 	if (R->has_value() and R->value() == 0)
-		return std::make_unique<Value>(std::numeric_limits<float>::infinity());
+		return std::make_unique<Value>(std::numeric_limits<double>::infinity());
 	if (R->has_value() and R->value() == 1)
 		return L;
 	return std::make_unique<Div>(std::move(L), std::move(R));

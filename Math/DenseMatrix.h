@@ -6,11 +6,10 @@
 #include "Vector.h"
 #include "Matrix.h"
 
-template <class ValueType>
 class DenseMatrix final : public Matrix
 {
 public:
-	using value_type = ValueType;
+	using value_type = double;
 	const std::size_t rows, cols;
 	std::vector<value_type> data;
 public:
@@ -25,7 +24,7 @@ public:
 		return m;
 	}
 
-	[[nodiscard]] auto operator==(const DenseMatrix& o) const noexcept { return (row == o.rows) && (cols == o.cols) && (data == o.data); }
+	[[nodiscard]] auto operator==(const DenseMatrix& o) const noexcept { return (rows == o.rows) && (cols == o.cols) && (data == o.data); }
 	[[nodiscard]] auto operator!=(const DenseMatrix& o) const noexcept { return !(*this == o); }
 
 	std::size_t Rows() const noexcept override { return rows; }
@@ -72,10 +71,7 @@ public:
 		return result;
 	}
 
-	//Vector ATAx(const Vector& x) const override { return ATx(Ax(x)); }
-
-
-	DenseMatrix<value_type>& operator+=(const DenseMatrix<value_type>& o) 
+	DenseMatrix& operator+=(const DenseMatrix& o) 
 	{
 		if (Rows() != o.Rows() || Cols() != o.Cols())
 			throw std::runtime_error("Size mismatch.");
@@ -87,7 +83,7 @@ public:
 		return *this;
 	}
 
-	DenseMatrix<value_type>& operator-=(const DenseMatrix<value_type>& o)
+	DenseMatrix& operator-=(const DenseMatrix& o)
 	{
 		if (Rows() != o.Rows() || Cols() != o.Cols())
 			throw std::runtime_error("Size mismatch.");
@@ -99,7 +95,7 @@ public:
 		return *this;
 	}
 
-	DenseMatrix<value_type>& operator*=(const value_type& m) 
+	DenseMatrix& operator*=(const value_type& m) 
 	{
 		const int64_t size = static_cast<int64_t>(data.size());
 		#pragma omp parallel for schedule(static)
@@ -108,7 +104,7 @@ public:
 		return *this;
 	}
 
-	DenseMatrix<value_type>& operator/=(const value_type& m) 
+	DenseMatrix& operator/=(const value_type& m) 
 	{
 		const int64_t size = static_cast<int64_t>(data.size());
 		#pragma omp parallel for schedule(static)
@@ -118,40 +114,51 @@ public:
 	}
 };
 
-template <typename T> DenseMatrix<T> operator+(      DenseMatrix<T>  a, const DenseMatrix<T>&  b) { return a += b; }
-template <typename T> DenseMatrix<T> operator+(const DenseMatrix<T>& a,       DenseMatrix<T>&& b) { return b += a; }
+inline DenseMatrix operator+(      DenseMatrix  a, const DenseMatrix&  b) { return a += b; }
+inline DenseMatrix operator+(const DenseMatrix& a,       DenseMatrix&& b) { return b += a; }
 
-template <typename T> DenseMatrix<T> operator-(      DenseMatrix<T>  a, const DenseMatrix<T>&  b) { return a -= b; }
-template <typename T> DenseMatrix<T> operator-(const DenseMatrix<T>& l,       DenseMatrix<T>&& r)
+inline DenseMatrix operator-(      DenseMatrix  a, const DenseMatrix&  b) { return a -= b; }
+inline DenseMatrix operator-(const DenseMatrix& l,       DenseMatrix&& r)
 {
-	assert(l.size() == r.size());
-	const int64_t size = static_cast<int64_t>(r.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		r[i] = l[i] - r[i];
+	assert(l.Cols() == r.Cols());
+	assert(l.Rows() == r.Rows());
+	for (int i = 0; i < l.Rows(); i++)
+		for (int j = 0; j < l.Cols(); j++)
+			r(i,j) += l(i,j) - r(i,j);
 	return r;
 }
 
-template <typename T> DenseMatrix<T> operator*(const DenseMatrix<T>& l, const DenseMatrix<T>& r)
+inline DenseMatrix operator*(const DenseMatrix& l, const DenseMatrix& r)
 {
 	assert(l.Cols() == r.Rows());
-	DenseMatrix<T> ret(l.Rows(), r.Cols());
+	DenseMatrix ret(l.Rows(), r.Cols());
 	for (int i = 0; i < ret.Rows(); i++)
 		for (int j = 0; j < ret.Cols(); j++)
 			for (int k = 0; k < l.Cols(); k++)
 				ret(i,j) += l(i,k) * r(k,j);
 	return ret;
 }
-template <typename T> DenseMatrix<T> operator*(DenseMatrix<T> mat, const T& mul) { return mat *= mul; }
-template <typename T> DenseMatrix<T> operator*(const T& mul, DenseMatrix<T> mat) { return mat *= mul; }
+inline DenseMatrix operator*(DenseMatrix mat, DenseMatrix::value_type mul) { return mat *= mul; }
+inline DenseMatrix operator*(DenseMatrix::value_type mul, DenseMatrix mat) { return mat *= mul; }
 
-template <typename T> DenseMatrix<T> operator/(DenseMatrix<T> a, const T& b) { return a /= b; }
+inline DenseMatrix operator/(DenseMatrix a, DenseMatrix::value_type b) { return a /= b; }
 
-
-template <typename T>
-DenseMatrix<T> transposed(const DenseMatrix<T>& in)
+inline std::string to_string(const DenseMatrix& m)
 {
-	DenseMatrix<T> out(in.Cols(), in.Rows());
+	std::string s = "{";
+	for (std::size_t i = 0; i < m.Rows(); i++)
+	{
+		s += '{';
+		for (std::size_t j = 0; j < m.Cols(); j++)
+			s += std::to_string(m(i, j)) + ", ";
+		s += "},\n";
+	}
+	return s + '}';
+}
+
+inline DenseMatrix transposed(const DenseMatrix& in)
+{
+	DenseMatrix out(in.Cols(), in.Rows());
 	for (std::size_t i = 0; i < in.Rows(); i++)
 		for (std::size_t j = 0; j < in.Cols(); j++)
 			out(j, i) = in(i, j);

@@ -64,7 +64,7 @@ public:
 		return *this;
 	}
 
-	Vector& operator*=(value_type m)
+	Vector& operator*=(const value_type& m)
 	{
 		const int64_t size = static_cast<int64_t>(data.size());
 		#pragma omp parallel for schedule(static)
@@ -73,7 +73,7 @@ public:
 		return *this;
 	}
 
-	Vector& operator/=(value_type m) 
+	Vector& operator/=(const value_type& m) 
 	{
 		const int64_t size = static_cast<int64_t>(data.size());
 		#pragma omp parallel for schedule(static)

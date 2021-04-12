@@ -10,6 +10,7 @@
 #include "Math/Solver.h"
 #include "Math/Statistics.h"
 #include "Math/SymExp.h"
+#include "Math/Algorithm.h"
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -81,7 +82,10 @@ Vector FittedWeights(const std::vector<BitBoard>& patterns, const std::vector<Po
     return solver.X();
 }
 
-Vector EvalWeights(const Vector& weights, const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
+Vector EvalWeights(const Vector& weights, 
+                          const std::vector<BitBoard>& patterns, 
+                          const std::vector<Position>& pos, 
+                          const Vector& score)
 {
     auto indexer = CreateDenseIndexer(patterns);
     auto matrix = CreateMatrix(*indexer, pos);
@@ -113,7 +117,7 @@ auto Split(const std::vector<PosScore>& pos_score, int test_size,
 
 std::pair<std::vector<Vector>, Vector> LoadData(int max_empty_count, int size)
 {
-    std::map<std::vector<float>, float> SD;
+    std::map<std::vector<Vector::value_type>, Vector::value_type> SD;
 
     std::vector<int> score = Load<int>(R"(G:\Reversi\weights\dDE.w)");
     for (int E = 1; E <= max_empty_count; E++)
@@ -128,11 +132,11 @@ std::pair<std::vector<Vector>, Vector> LoadData(int max_empty_count, int size)
                     assert(score[j + D] != undefined_score);
                     diff.push_back(score[j + d] - score[j + D]);
                 }
-                SD[{float(d),float(D),float(E)}] = StandardDeviation(diff);
+                SD[{Vector::value_type(d),Vector::value_type(D),Vector::value_type(E)}] = StandardDeviation(diff);
             }
 
     //for (auto& sd : SD)
-    //    std::cout << sd.first << ": " << sd.second << "\n";
+    //    std::cout << sd.first[0] << "," << sd.first[1] << "," << sd.first[2] << "," << ": " << sd.second << "\n";
 
     std::vector<Vector> x;
     Vector y;
@@ -180,11 +184,11 @@ void FitModels()
     SymExp limbo_model = (exp(alpha * d) + beta) * pow(D - d, gamma) * (delta * E + epsilon);
 
     SymExp edax_model = alpha * E + beta * D + gamma * d;
-    edax_model = (delta * pow(edax_model, Var(2)) + epsilon * edax_model + zeta)/Var(2);
+    edax_model = edax_model * edax_model + delta * edax_model + epsilon;
     std::cout << edax_model << std::endl;
 
-    //FitModel(limbo_model, {alpha, beta, gamma, delta, epsilon}, {d, D, E}, x, y, {-0.2, 1, 0.25, 0, 1});
-    FitModel(edax_model, {alpha, beta, gamma, delta, epsilon, zeta}, {d, D, E}, x, y, {-0.10026799, 0.31027733, -0.57772603, 0.07585621, 1.16492647, 5.4171698});
+    FitModel(limbo_model, {alpha, beta, gamma, delta, epsilon}, {d, D, E}, x, y, {-0.2, 1, 0.25, 0, 1});
+    FitModel(edax_model, {alpha, beta, gamma, delta, epsilon}, {d, D, E}, x, y, {-0.1, 0.3, -0.5, 1, 5});
     //-0.10026799, 0.31027733, -0.57772603, 0.07585621, 1.16492647, 5.4171698;
 }
 

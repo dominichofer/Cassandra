@@ -16,10 +16,10 @@ TEST(Statistics, Var)
 
 TEST(DenseMatrix, mult)
 {
-	DenseMatrix<float> A(4, 3);
+	DenseMatrix A(4, 3);
 	for (int i = 0; i < A.Rows(); i++)
 		for (int j = 0; j < A.Cols(); j++)
-			A(i, j) = static_cast<float>(i * 10 + j);
+			A(i, j) = i * 10 + j;
 
 	Vector x = {1,2,3};
 	Vector b = {0,0,0,0};
@@ -33,7 +33,7 @@ TEST(DenseMatrix, mult)
 TEST(MatrixCSR, mult)
 {
 	MatrixCSR<int> A(1, 3, 4);
-	DenseMatrix<int> AA(4, 3);
+	DenseMatrix AA(4, 3);
 	*(A.begin() + 0) = 0; AA(0,0) = 1;
 	*(A.begin() + 1) = 2; AA(1,2) = 1;
 	*(A.begin() + 2) = 1; AA(2,1) = 1;
@@ -51,7 +51,7 @@ TEST(MatrixCSR, mult)
 TEST(CG, DenseMatrix)
 {
 	const std::size_t size = 4;
-	DenseMatrix<float> A(size, size);
+	DenseMatrix A(size, size);
 	Vector x = {1,2,3,4};
 	Vector x0(size);
 
@@ -61,7 +61,7 @@ TEST(CG, DenseMatrix)
 	for (int i = 0; i < A.Rows(); i++)
 		for (int j = 0; j < A.Cols(); j++)
 			A(i, j) = rnd();
-	A += transposed(A) + static_cast<float>(size) * DenseMatrix<float>::Id(size); // makes it positive definite
+	A += transposed(A) + static_cast<float>(size) * DenseMatrix::Id(size); // makes it positive definite
 
 	Vector b = A * x;
 
