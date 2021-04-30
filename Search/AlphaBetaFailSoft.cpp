@@ -76,7 +76,8 @@ int AlphaBetaFailSoft::Eval_3(const Position& pos, OpenInterval w, const Field m
 		if (score > w)
 			return score;
 		w.TryIncreaseLower(score);
-		bestscore = std::max(bestscore, score);
+		if (score > bestscore)
+			bestscore = score;
 	}
 
 	if (const auto flips = Flips(pos, move3))
@@ -123,7 +124,8 @@ int AlphaBetaFailSoft::Eval_P(const Position& pos, OpenInterval w)
 			if (score > w)
 				return score;
 			w.TryIncreaseLower(score);
-			bestscore = std::max(bestscore, score);
+			if (score > bestscore)
+				bestscore = score;
 		}
 	return bestscore;
 }
