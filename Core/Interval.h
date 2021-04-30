@@ -21,10 +21,10 @@ public:
 
 	[[nodiscard]] virtual bool Constrained() const noexcept = 0;
 
-	bool TryIncreaseLower(int s) { if (s > m_lower) { m_lower = s; assert(Constrained()); return true; } return false; }
-	bool TryDecreaseLower(int s) { if (s < m_lower) { m_lower = s; assert(Constrained()); return true; } return false; }
-	bool TryIncreaseUpper(int s) { if (s > m_upper) { m_upper = s; assert(Constrained()); return true; } return false; }
-	bool TryDecreaseUpper(int s) { if (s < m_upper) { m_upper = s; assert(Constrained()); return true; } return false; }
+	void TryIncreaseLower(int s) { if (s > m_lower) m_lower = s; }
+	void TryDecreaseLower(int s) { if (s < m_lower) m_lower = s; }
+	void TryIncreaseUpper(int s) { if (s > m_upper) m_upper = s; }
+	void TryDecreaseUpper(int s) { if (s < m_upper) m_upper = s; }
 };
 
 class ClosedInterval;
