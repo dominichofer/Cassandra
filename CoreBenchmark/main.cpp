@@ -1,8 +1,8 @@
 #include "benchmark/benchmark.h"
 #include "Core/Core.h"
-#include <random>
 #include "Pattern/Evaluator.h"
 #include "Pattern/DenseIndexer.h"
+#include <random>
 
 using namespace detail;
 
@@ -232,16 +232,5 @@ void PatternEvalA(benchmark::State& state)
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PatternEvalA);
-
-void DefaultPatternEval(benchmark::State& state)
-{
-	auto evaluator = DefaultPatternEval();
-	auto gen = PosGen::Random(13);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(evaluator.Eval(gen()));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(DefaultPatternEval);
 
 BENCHMARK_MAIN();

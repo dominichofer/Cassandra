@@ -71,15 +71,22 @@
     <ClInclude Include="File.h" />
     <ClInclude Include="Integers.h" />
     <ClInclude Include="IO.h" />
+    <ClInclude Include="PatternEval.h" />
     <ClInclude Include="PosScore.h" />
+    <ClInclude Include="Puzzle.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />
     <ClCompile Include="IO.cpp" />
+    <ClCompile Include="PatternEval.cpp" />
+    <ClCompile Include="Puzzle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Search\Search.vcxproj">
+      <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

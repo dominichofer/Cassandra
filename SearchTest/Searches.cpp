@@ -241,7 +241,7 @@ TEST_F(NegaMaxTest, Five_empty) { Test(Five_empty); }
 class AlphaBetaFailHardTest : public ::testing::Test
 {
 public:
-	void Test(const Position& pos, const int& correct, const OpenInterval& w)
+	void Test(const Position& pos, int correct, OpenInterval w)
 	{
 		const int result = AlphaBetaFailHard{}.Eval(pos, w);
 
@@ -253,9 +253,9 @@ public:
 			ASSERT_EQ(result, correct);
 	}
 
-	void Test(const PosScore& pos)
+	void Test(const Puzzle& puzzle)
 	{
-		Test(pos.pos, pos.score, OpenInterval::Whole());
+		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos,  int correct)
@@ -318,9 +318,9 @@ public:
 			ASSERT_EQ(result, correct);
 	}
 
-	void Test(const PosScore& pos)
+	void Test(const Puzzle& puzzle)
 	{
-		Test(pos.pos, pos.score, OpenInterval::Whole());
+		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos, const int& correct)
@@ -396,9 +396,9 @@ public:
 		}
 	}
 
-	void Test(const PosScore& pos)
+	void Test(const Puzzle& puzzle)
 	{
-		Test(pos.pos, pos.score, OpenInterval::Whole());
+		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos, const int& correct)
@@ -488,9 +488,9 @@ public:
 		}
 	}
 
-	void Test(const PosScore& pos)
+	void Test(const Puzzle& puzzle)
 	{
-		Test(pos.pos, pos.score, OpenInterval::Whole());
+		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos, const int& correct)

@@ -41,69 +41,67 @@ void print(std::size_t index, const Search::Result& eval, int correct, std::chro
 	std::cout << std::endl;
 }
 
-void print(std::size_t index, unsigned int depth, int eval, int correct, std::chrono::nanoseconds duration, uint64 node_count)
+//void print(std::size_t index, int depth, int eval, int correct, std::chrono::nanoseconds duration, uint64 node_count)
+void PrintPuzzle(const Puzzle& puzzle)
 {
-	std::locale locale("");
-	std::cout.imbue(locale);
-	std::cout << std::setw(3) << std::to_string(index) << "|";
-	std::cout << std::setw(6) << std::to_string(depth) << "|";
-	std::cout << " " << DoubleDigitSignedInt(eval) << " |";
-	std::cout << " " << DoubleDigitSignedInt(correct) << " |";
-	if (eval == correct)
-		std::cout << "     |";
-	else
-		std::cout << " " << DoubleDigitSignedInt(eval - correct) << " |";
-	std::cout << std::setw(16) << std::chrono::duration_cast<std::chrono::milliseconds>(duration) << "|";
-	std::cout << std::setw(16) << node_count << "|";
+	static int index = 0;
+	#pragma omp critical
+	{
+		index++;
 
-	if (duration.count() > 0)
-		std::cout << std::setw(12) << static_cast<std::size_t>(static_cast<long double>(node_count) * std::nano::den / duration.count());
-	std::cout << std::endl;
+		std::locale locale("");
+		std::cout.imbue(locale);
+		std::cout << std::setw(3) << std::to_string(index) << "|";
+		std::cout << std::setw(6) << to_string(puzzle.Result().intensity) << "|";
+		std::cout << " " << DoubleDigitSignedInt(puzzle.Score()) << " |";
+		std::cout << " " << DoubleDigitSignedInt(0) << " |";
+		//if (eval == correct)
+			std::cout << "     |";
+		//else
+		//	std::cout << " " << DoubleDigitSignedInt(eval - correct) << " |";
+		std::cout << std::setw(16) << std::chrono::duration_cast<std::chrono::milliseconds>(puzzle.Duration()) << "|";
+		std::cout << std::setw(16) << puzzle.Nodes() << "|";
+
+		if (puzzle.Duration().count() > 0)
+			std::cout << std::setw(12) << static_cast<std::size_t>(static_cast<long double>(puzzle.Nodes()) / puzzle.Duration().count());
+		std::cout << std::endl;
+	}
 }
 
 int main(int argc, char* argv[])
 {
 	PatternEval pattern_eval = DefaultPatternEval();
-	HashTablePVS tt{ 100'000'000 };
-	uint64 node_count = 0;
-	std::chrono::nanoseconds duration{ 0 };
-	std::vector<int> score_diff;
+	HashTablePVS tt{ 10'000'000 };
+	IDAB algorithm{ tt, pattern_eval };
+
+	//uint64 node_count = 0;
+	//std::chrono::nanoseconds duration{ 0 };
+	//std::vector<int> score_diff;
 
 	std::cout << " # | depth| eval|score| diff|       time (s) |      nodes (N) |    N/s     \n";
 	std::cout << "---+------+-----+-----+-----+----------------+----------------+------------\n";
 
-	//Search::AlphaBetaFailSoft algorithm;
-	auto start = std::chrono::high_resolution_clock::now();
-	//#pragma omp parallel for reduction(+:node_count)
-	for (int i = 20; i < 40; i++)
-	{
-		IDAB algorithm{ tt, pattern_eval };
-		//tt.Clear();
-		auto start = std::chrono::high_resolution_clock::now();
-		Search::Result result = algorithm.Eval(FForum[i].pos, Search::Request::Exact(FForum[i].pos));
-		//std::cout << to_string(algorithm.log) << std::endl;
-		auto stop = std::chrono::high_resolution_clock::now();
+	Project project = FForum_2;
+	//std::vector<Puzzle> puzzles;
+	//for (int i = 0; i <= 50; i+=2)
+	//	puzzles.emplace_back(Position::Start(), Search::Request(i, 1.0_sigmas, OpenInterval::Whole()));
+	//puzzles.emplace_back(Position::Start(), Search::Request(60, 1.0_sigmas, OpenInterval::Whole()));
+	//Project project(puzzles);
+	project.SetPuzzleCompletionTask(PrintPuzzle);
 
-		node_count += algorithm.node_count;
-		duration += stop - start;
-		score_diff.push_back(result.window.lower() - FForum[i].score);
-
-		print(i, result, FForum[i].score, stop - start, algorithm.node_count);
-	}
-	auto stop = std::chrono::high_resolution_clock::now();
+	project.SolveAll(std::execution::seq, algorithm, true);
 
 	std::cout << "---+------+-----+-----+-----+----------------+----------------+------------\n";
 
-	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-	std::cout << node_count << " nodes in " << ms;
-	if (ms.count() > 0)
-		std::cout << " (" << static_cast<std::size_t>(node_count * std::milli::den / ms.count()) << " N/s)";
+	std::cout << project.Nodes() << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(project.Duration());
+	if (project.Duration().count())
+		std::cout << " (" << static_cast<std::size_t>(project.Nodes() / project.Duration().count()) << " N/s)";
 	std::cout << '\n';
 
-	const auto correct = std::count_if(score_diff.begin(), score_diff.end(), [](int i) { return i == 0; });;
-	std::cout << "Tests correct: " << correct << "\n";
-	std::cout << "Tests wrong: " << score_diff.size() - correct << "\n";
-	std::cout << "stddev(score_diff) = " << StandardDeviation(score_diff) << std::endl;
+	//const auto correct = std::count_if(score_diff.begin(), score_diff.end(), [](int i) { return i == 0; });
+	//std::cout << "Tests correct: " << correct << "\n";
+	//std::cout << "Tests wrong: " << score_diff.size() - correct << "\n";
+	//std::cout << "stddev(score_diff) = " << StandardDeviation(score_diff) << std::endl;
 
 	std::cout << "TT LookUps: " << tt.LookUpCounter() << " Hits: " << tt.HitCounter() << " Updates: " << tt.UpdateCounter() << std::endl;
 

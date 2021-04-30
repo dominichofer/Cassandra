@@ -1,8 +1,10 @@
 #pragma once
-#include "Core/Position.h"
+#include "Core/BitBoard.h"
 #include <array>
 #include <memory>
 #include <vector>
+
+class Position;
 
 namespace Pattern
 {
@@ -38,5 +40,3 @@ public:
 	float Eval(const Position&) const override;
 	std::vector<MaskAndValue> DetailedEval(const Position&) const override;
 };
-
-PatternEval DefaultPatternEval();
