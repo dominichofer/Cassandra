@@ -247,6 +247,7 @@ private:
 
 class IDAB final : public PVS
 {
+	int MTD_f(const Position&, const Search::Intensity&, int guess);
 public:
 	IDAB(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : PVS(tt, evaluator) {}
 	virtual std::unique_ptr<Algorithm> Clone() const { return std::make_unique<IDAB>(tt, evaluator); }
