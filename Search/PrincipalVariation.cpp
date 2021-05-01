@@ -29,53 +29,51 @@ std::optional<Result> PVS::MPC(const Position& pos, const Request& request)
 		return std::nullopt;
 
 	// log.AddSearch("MPC", pos, request);
+	float t = request.certainty().sigmas();
 	float sigma_0 = Sigma(request.depth(), 0, pos.EmptyCount());
-	//int upper_0 = static_cast<int>(std::ceil(request.window.upper() + sigma_0 * request.certainty().sigmas()));
-	//int lower_0 = static_cast<int>(std::floor(request.window.lower() - sigma_0 * request.certainty().sigmas()));
-	//float upper_0 = request.window.upper() + sigma_0 * request.certainty().sigmas();
-	//float lower_0 = request.window.lower() - sigma_0 * request.certainty().sigmas();
 	float eval_0 = evaluator.Eval(pos);
-	//if (eval_0 >= upper_0) {
-	//	float sigmas = (eval_0 - request.window.upper()) / sigma_0;
-	//	auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {request.window.upper(), max_score} };
-	//	// log.Add("Upper cut", result);
-	//	return result;
-	//}
-	//if (eval_0 <= lower_0) {
-	//	float sigmas = (request.window.lower() - eval_0) / sigma_0;
-	//	auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {min_score, request.window.lower()} };
-	//	// log.Add("Lower cut", result);
-	//	return result;
-	//}
+	int upper_0 = static_cast<int>(std::ceil(request.window.upper() + 2 * sigma_0 * t));
+	int lower_0 = static_cast<int>(std::floor(request.window.lower() - 2 * sigma_0 * t));
+	if (eval_0 >= upper_0) {
+		auto result = Result{ request.intensity, {request.window.upper(), max_score} };
+		// log.Add("Upper cut", result);
+		return result;
+	}
+	if (eval_0 <= lower_0) {
+		auto result = Result{ request.intensity, {min_score, request.window.lower()} };
+		// log.Add("Lower cut", result);
+		return result;
+	}
 
-	for (int reduced_depth : {1})
 	{
-	float sigma = Sigma(request.depth(), reduced_depth, pos.EmptyCount());
-	int upper = static_cast<int>(std::ceil(request.window.upper() + sigma * request.certainty().sigmas()));
-	int lower = static_cast<int>(std::floor(request.window.lower() - sigma * request.certainty().sigmas()));
+		int reduced_depth = 1;
+		float sigma = Sigma(request.depth(), reduced_depth, pos.EmptyCount());
+		int upper = static_cast<int>(std::ceil(request.window.upper() + sigma * t));
+		int lower = static_cast<int>(std::floor(request.window.lower() - sigma * t));
 
-	if (upper < max_score && eval_0 >= upper) {
-		Request upper_zws = Request(reduced_depth, request.certainty(), {upper-1, upper});
-		Result shallow_result = ZWS_N(pos, upper_zws);
-		if (shallow_result.window > upper_zws.window) { // Fail high
-			float sigmas = (shallow_result.window.lower() - request.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
-			assert(sigmas > request.certainty().sigmas());
-			auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {request.window.upper(), max_score} };
-			// log.Add("Upper cut", result);
-			return result;
+		if (upper < max_score && eval_0 >= upper) {
+			Request upper_zws = Request(reduced_depth, request.certainty(), {upper-1, upper});
+			Result shallow_result = ZWS_N(pos, upper_zws, true);
+			if (shallow_result.window > upper_zws.window) { // Fail high
+				float sigmas = (shallow_result.window.lower() - request.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
+				assert(sigmas > t);
+				auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {request.window.upper(), max_score} };
+				// log.Add("Upper cut", result);
+				return result;
+			}
 		}
-	}
 
-	if (lower > min_score && eval_0 <= lower) {
-		Request lower_zws = Request(reduced_depth, request.certainty(), {lower, lower+1});
-		Result shallow_result = ZWS_N(pos, lower_zws);
-		if (shallow_result.window < lower_zws.window) { // Fail low
-			float sigmas = (request.window.lower() - shallow_result.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
-			auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {min_score, request.window.lower()} };
-			// log.Add("Lower cut", result);
-			return result;
+		if (lower > min_score && eval_0 <= lower) {
+			Request lower_zws = Request(reduced_depth, request.certainty(), {lower, lower+1});
+			Result shallow_result = ZWS_N(pos, lower_zws, true);
+			if (shallow_result.window < lower_zws.window) { // Fail low
+				float sigmas = (request.window.lower() - shallow_result.window.upper()) / Sigma(request.depth(), shallow_result.depth(), pos.EmptyCount());
+				assert(sigmas > t);
+				auto result = Result{ {request.depth(), ConfidenceLevel{sigmas}}, {min_score, request.window.lower()} };
+				// log.Add("Lower cut", result);
+				return result;
+			}
 		}
-	}
 	}
 	// log.FinalizeSearch();
 	return std::nullopt;
