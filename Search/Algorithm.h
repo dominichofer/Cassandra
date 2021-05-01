@@ -173,7 +173,7 @@ namespace Search
 		// showed that there's a "90%" chance that the original search will result in a cut anyway.
 		virtual Result Eval(const Position&, const Request&) = 0;
 
-		int Score(const Position& pos, int depth) { return Eval(pos, Request::Certain(depth)).window.lower(); }
+		int Score(const Position& pos, int depth) { return Eval(pos, Request::Certain(depth)).Score(); }
 		int Score(const Position& pos) { return Score(pos, pos.EmptyCount()); }
 	};
 };

@@ -14,7 +14,7 @@ int Puzzle::Score() const
 		throw std::runtime_error("Puzzle is not solved.");
 	if (result.empty())
 		throw std::runtime_error("Puzzle has no result.");
-	return result.back().window.lower();
+	return result.back().Score();
 }
 
 void Puzzle::Solve(const Search::Algorithm& algorithm, const std::function<void(const Puzzle&)>& request_completion_task)

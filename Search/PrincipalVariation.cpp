@@ -122,7 +122,7 @@ Result PVS::PVS_N(const Position& pos, const Request& request)
 				// log.Add("TT", result);
 				return result;
 			}
-			findings.best_score = result.window.lower();
+			findings.best_score = result.Score();
 			findings.lowest_intensity = result.intensity;
 		}
 		findings.best_move = look_up.value().best_move;
@@ -223,7 +223,7 @@ Result PVS::ZWS_N(const Position& pos, const Request& request)
 				// log.Add("TT", result);
 				return result;
 			}
-			findings.best_score = result.window.lower();
+			findings.best_score = result.Score();
 			findings.lowest_intensity = result.intensity;
 		}
 		findings.best_move = look_up.value().best_move;
@@ -240,7 +240,7 @@ Result PVS::ZWS_N(const Position& pos, const Request& request)
 				// log.Add("TT", result);
 				return result;
 			}
-			findings.best_score = result.window.lower();
+			findings.best_score = result.Score();
 			findings.lowest_intensity = result.intensity;
 		}
 		findings.best_move = look_up.value().best_move;

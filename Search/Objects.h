@@ -77,6 +77,7 @@ namespace Search
 		[[nodiscard]] bool operator>(const Request& request) const noexcept;
 
 		[[nodiscard]] int depth() const noexcept { return intensity.depth; }
+		[[nodiscard]] int Score() const noexcept { assert(window.IsSingleton());  return window.lower(); }
 
 		[[nodiscard]] bool IsExact(const Position& pos) const noexcept { return intensity.IsExact(pos) && window.IsSingleton(); }
 		[[nodiscard]] bool IsFailHigh() const noexcept { return window.upper() == max_score; }
