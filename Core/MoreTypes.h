@@ -24,15 +24,15 @@
 
 using uint = unsigned int;
 
-using int8 = signed char;
-using int16 = short;
-using int32 = int;
-using int64 = long long;
+using int8 = int8_t;
+using int16 = int16_t;
+using int32 = int32_t;
+using int64 = int64_t;
 
-using uint8 = unsigned char;
-using uint16 = unsigned short;
-using uint32 = unsigned int;
-using uint64 = unsigned long long;
+using uint8 = uint8_t;
+using uint16 = uint16_t;
+using uint32 = uint32_t;
+using uint64 = uint64_t;
 
 constexpr int8 operator""_i8(uint64 v) { return int8(v); }
 constexpr int16 operator""_i16(uint64 v) { return int16(v); }
@@ -213,95 +213,95 @@ template <> inline intNxM<int32, 8>::intNxM(int32 v) noexcept : reg(_mm256_set1_
 template <> inline intNxM<int16,16>::intNxM(int16 v) noexcept : reg(_mm256_set1_epi16 (v)) {}
 template <> inline intNxM<int8 ,32>::intNxM(int8  v) noexcept : reg(_mm256_set1_epi8  (v)) {}
 
-template <> template <uint index> inline int64 intNxM<int64, 2>::get() const noexcept { static_assert(index <  2); return _mm_extract_epi64(reg, index); }
-template <> template <uint index> inline int32 intNxM<int32, 4>::get() const noexcept { static_assert(index <  4); return _mm_extract_epi32(reg, index); }
-template <> template <uint index> inline int16 intNxM<int16, 8>::get() const noexcept { static_assert(index <  8); return _mm_extract_epi16(reg, index); }
-template <> template <uint index> inline int8  intNxM<int8 ,16>::get() const noexcept { static_assert(index < 16); return _mm_extract_epi8 (reg, index); }
-template <> template <uint index> inline int64 intNxM<int64, 4>::get() const noexcept { static_assert(index <  4); return _mm256_extract_epi64(reg, index); }
-template <> template <uint index> inline int32 intNxM<int32, 8>::get() const noexcept { static_assert(index <  8); return _mm256_extract_epi32(reg, index); }
-template <> template <uint index> inline int16 intNxM<int16,16>::get() const noexcept { static_assert(index < 16); return _mm256_extract_epi16(reg, index); }
-template <> template <uint index> inline int8  intNxM<int8 ,32>::get() const noexcept { static_assert(index < 32); return _mm256_extract_epi8 (reg, index); }
+template <> template <uint index> int64 intNxM<int64, 2>::get() const noexcept { static_assert(index <  2); return _mm_extract_epi64(reg, index); }
+template <> template <uint index> int32 intNxM<int32, 4>::get() const noexcept { static_assert(index <  4); return _mm_extract_epi32(reg, index); }
+template <> template <uint index> int16 intNxM<int16, 8>::get() const noexcept { static_assert(index <  8); return _mm_extract_epi16(reg, index); }
+template <> template <uint index> int8  intNxM<int8 ,16>::get() const noexcept { static_assert(index < 16); return _mm_extract_epi8 (reg, index); }
+template <> template <uint index> int64 intNxM<int64, 4>::get() const noexcept { static_assert(index <  4); return _mm256_extract_epi64(reg, index); }
+template <> template <uint index> int32 intNxM<int32, 8>::get() const noexcept { static_assert(index <  8); return _mm256_extract_epi32(reg, index); }
+template <> template <uint index> int16 intNxM<int16,16>::get() const noexcept { static_assert(index < 16); return _mm256_extract_epi16(reg, index); }
+template <> template <uint index> int8  intNxM<int8 ,32>::get() const noexcept { static_assert(index < 32); return _mm256_extract_epi8 (reg, index); }
 
-template <> template <uint index> inline void intNxM<int64, 2>::set(int64 v) noexcept { static_assert(index <  2); return _mm_insert_epi64(reg, v, index); }
-template <> template <uint index> inline void intNxM<int32, 4>::set(int32 v) noexcept { static_assert(index <  4); return _mm_insert_epi32(reg, v, index); }
-template <> template <uint index> inline void intNxM<int16, 8>::set(int16 v) noexcept { static_assert(index <  8); return _mm_insert_epi16(reg, v, index); }
-template <> template <uint index> inline void intNxM<int8 ,16>::set(int8  v) noexcept { static_assert(index < 16); return _mm_insert_epi8 (reg, v, index); }
-template <> template <uint index> inline void intNxM<int64, 4>::set(int64 v) noexcept { static_assert(index <  4); return _mm256_insert_epi64(reg, v, index); }
-template <> template <uint index> inline void intNxM<int32, 8>::set(int32 v) noexcept { static_assert(index <  8); return _mm256_insert_epi32(reg, v, index); }
-template <> template <uint index> inline void intNxM<int16,16>::set(int16 v) noexcept { static_assert(index < 16); return _mm256_insert_epi16(reg, v, index); }
-template <> template <uint index> inline void intNxM<int8 ,32>::set(int8  v) noexcept { static_assert(index < 32); return _mm256_insert_epi8 (reg, v, index); }
+template <> template <uint index> void intNxM<int64, 2>::set(int64 v) noexcept { static_assert(index <  2); return _mm_insert_epi64(reg, v, index); }
+template <> template <uint index> void intNxM<int32, 4>::set(int32 v) noexcept { static_assert(index <  4); return _mm_insert_epi32(reg, v, index); }
+template <> template <uint index> void intNxM<int16, 8>::set(int16 v) noexcept { static_assert(index <  8); return _mm_insert_epi16(reg, v, index); }
+template <> template <uint index> void intNxM<int8 ,16>::set(int8  v) noexcept { static_assert(index < 16); return _mm_insert_epi8 (reg, v, index); }
+template <> template <uint index> void intNxM<int64, 4>::set(int64 v) noexcept { static_assert(index <  4); return _mm256_insert_epi64(reg, v, index); }
+template <> template <uint index> void intNxM<int32, 8>::set(int32 v) noexcept { static_assert(index <  8); return _mm256_insert_epi32(reg, v, index); }
+template <> template <uint index> void intNxM<int16,16>::set(int16 v) noexcept { static_assert(index < 16); return _mm256_insert_epi16(reg, v, index); }
+template <> template <uint index> void intNxM<int8 ,32>::set(int8  v) noexcept { static_assert(index < 32); return _mm256_insert_epi8 (reg, v, index); }
 
-inline intNxM<int64,2> intNxM<int64,2>::operator+(intNxM<int64,2> v) const noexcept { return _mm_add_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator-(intNxM<int64,2> v) const noexcept { return _mm_sub_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator/(intNxM<int64,2> v) const noexcept { return _mm_div_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator%(intNxM<int64,2> v) const noexcept { return _mm_rem_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator<<(intNxM<int64,2> v) const noexcept { return _mm_sllv_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator>>(intNxM<int64,2> v) const noexcept { return _mm_srlv_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator<<(int v) const noexcept { return _mm_slli_epi64(reg, v); }
-inline intNxM<int64,2> intNxM<int64,2>::operator>>(int v) const noexcept { return _mm_srli_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator+(intNxM<int64,2> v) const noexcept { return _mm_add_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator-(intNxM<int64,2> v) const noexcept { return _mm_sub_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator/(intNxM<int64,2> v) const noexcept { return _mm_div_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator%(intNxM<int64,2> v) const noexcept { return _mm_rem_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator<<(intNxM<int64,2> v) const noexcept { return _mm_sllv_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator>>(intNxM<int64,2> v) const noexcept { return _mm_srlv_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator<<(int v) const noexcept { return _mm_slli_epi64(reg, v); }
+template <> inline intNxM<int64,2> intNxM<int64,2>::operator>>(int v) const noexcept { return _mm_srli_epi64(reg, v); }
 
-inline intNxM<int32,4> intNxM<int32,4>::operator+(intNxM<int32,4> v) const noexcept { return _mm_add_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator-(intNxM<int32,4> v) const noexcept { return _mm_sub_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator/(intNxM<int32,4> v) const noexcept { return _mm_div_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator%(intNxM<int32,4> v) const noexcept { return _mm_rem_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator<<(intNxM<int32,4> v) const noexcept { return _mm_sllv_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator>>(intNxM<int32,4> v) const noexcept { return _mm_srlv_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator<<(int v) const noexcept { return _mm_slli_epi32(reg, v); }
-inline intNxM<int32,4> intNxM<int32,4>::operator>>(int v) const noexcept { return _mm_srli_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator+(intNxM<int32,4> v) const noexcept { return _mm_add_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator-(intNxM<int32,4> v) const noexcept { return _mm_sub_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator/(intNxM<int32,4> v) const noexcept { return _mm_div_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator%(intNxM<int32,4> v) const noexcept { return _mm_rem_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator<<(intNxM<int32,4> v) const noexcept { return _mm_sllv_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator>>(intNxM<int32,4> v) const noexcept { return _mm_srlv_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator<<(int v) const noexcept { return _mm_slli_epi32(reg, v); }
+template <> inline intNxM<int32,4> intNxM<int32,4>::operator>>(int v) const noexcept { return _mm_srli_epi32(reg, v); }
 
-inline intNxM<int16,8> intNxM<int16,8>::operator+(intNxM<int16,8> v) const noexcept { return _mm_add_epi16(reg, v); }
-inline intNxM<int16,8> intNxM<int16,8>::operator-(intNxM<int16,8> v) const noexcept { return _mm_sub_epi16(reg, v); }
-inline intNxM<int16,8> intNxM<int16,8>::operator/(intNxM<int16,8> v) const noexcept { return _mm_div_epi16(reg, v); }
-inline intNxM<int16,8> intNxM<int16,8>::operator%(intNxM<int16,8> v) const noexcept { return _mm_rem_epi16(reg, v); }
-inline intNxM<int16,8> intNxM<int16,8>::operator<<(int v) const noexcept { return _mm_slli_epi16(reg, v); }
-inline intNxM<int16,8> intNxM<int16,8>::operator>>(int v) const noexcept { return _mm_srli_epi16(reg, v); }
-//inline intNxM<int16,8> intNxM<int16,8>::operator<<(intNxM<int16,8> v) const noexcept { return _mm_sllv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
-//inline intNxM<int16,8> intNxM<int16,8>::operator>>(intNxM<int16,8> v) const noexcept { return _mm_srlv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
+template <> inline intNxM<int16,8> intNxM<int16,8>::operator+(intNxM<int16,8> v) const noexcept { return _mm_add_epi16(reg, v); }
+template <> inline intNxM<int16,8> intNxM<int16,8>::operator-(intNxM<int16,8> v) const noexcept { return _mm_sub_epi16(reg, v); }
+template <> inline intNxM<int16,8> intNxM<int16,8>::operator/(intNxM<int16,8> v) const noexcept { return _mm_div_epi16(reg, v); }
+template <> inline intNxM<int16,8> intNxM<int16,8>::operator%(intNxM<int16,8> v) const noexcept { return _mm_rem_epi16(reg, v); }
+template <> inline intNxM<int16,8> intNxM<int16,8>::operator<<(int v) const noexcept { return _mm_slli_epi16(reg, v); }
+template <> inline intNxM<int16,8> intNxM<int16,8>::operator>>(int v) const noexcept { return _mm_srli_epi16(reg, v); }
+//template <> inline intNxM<int16,8> intNxM<int16,8>::operator<<(intNxM<int16,8> v) const noexcept { return _mm_sllv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
+//template <> inline intNxM<int16,8> intNxM<int16,8>::operator>>(intNxM<int16,8> v) const noexcept { return _mm_srlv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
 
-inline intNxM<int8,16> intNxM<int8,16>::operator+(intNxM<int8,16> v) const noexcept { return _mm_add_epi8(reg, v); }
-inline intNxM<int8,16> intNxM<int8,16>::operator-(intNxM<int8,16> v) const noexcept { return _mm_sub_epi8(reg, v); }
-inline intNxM<int8,16> intNxM<int8,16>::operator/(intNxM<int8,16> v) const noexcept { return _mm_div_epi8(reg, v); }
-inline intNxM<int8,16> intNxM<int8,16>::operator%(intNxM<int8,16> v) const noexcept { return _mm_rem_epi8(reg, v); }
-//inline intNxM<int8,16> intNxM<int8,16>::operator<<(intNxM<int8,16> v) const noexcept { return _mm_sllv_epi8(reg, v); } // Instruction does not exist!
-//inline intNxM<int8,16> intNxM<int8,16>::operator>>(intNxM<int8,16> v) const noexcept { return _mm_srlv_epi8(reg, v); } // Instruction does not exist!
-//inline intNxM<int8,16> intNxM<int8,16>::operator<<(int v) const noexcept { return _mm_slli_epi8(reg, v); } // Instruction does not exist!
-//inline intNxM<int8,16> intNxM<int8,16>::operator>>(int v) const noexcept { return _mm_srli_epi8(reg, v); } // Instruction does not exist!
+template <> inline intNxM<int8,16> intNxM<int8,16>::operator+(intNxM<int8,16> v) const noexcept { return _mm_add_epi8(reg, v); }
+template <> inline intNxM<int8,16> intNxM<int8,16>::operator-(intNxM<int8,16> v) const noexcept { return _mm_sub_epi8(reg, v); }
+template <> inline intNxM<int8,16> intNxM<int8,16>::operator/(intNxM<int8,16> v) const noexcept { return _mm_div_epi8(reg, v); }
+template <> inline intNxM<int8,16> intNxM<int8,16>::operator%(intNxM<int8,16> v) const noexcept { return _mm_rem_epi8(reg, v); }
+//template <> inline intNxM<int8,16> intNxM<int8,16>::operator<<(intNxM<int8,16> v) const noexcept { return _mm_sllv_epi8(reg, v); } // Instruction does not exist!
+//template <> inline intNxM<int8,16> intNxM<int8,16>::operator>>(intNxM<int8,16> v) const noexcept { return _mm_srlv_epi8(reg, v); } // Instruction does not exist!
+//template <> inline intNxM<int8,16> intNxM<int8,16>::operator<<(int v) const noexcept { return _mm_slli_epi8(reg, v); } // Instruction does not exist!
+//template <> inline intNxM<int8,16> intNxM<int8,16>::operator>>(int v) const noexcept { return _mm_srli_epi8(reg, v); } // Instruction does not exist!
 
-inline intNxM<int64,4> intNxM<int64,4>::operator+(intNxM<int64,4> v) const noexcept { return _mm256_add_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator-(intNxM<int64,4> v) const noexcept { return _mm256_sub_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator/(intNxM<int64,4> v) const noexcept { return _mm256_div_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator%(intNxM<int64,4> v) const noexcept { return _mm256_rem_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator<<(intNxM<int64,4> v) const noexcept { return _mm256_sllv_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator>>(intNxM<int64,4> v) const noexcept { return _mm256_srlv_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator<<(int v) const noexcept { return _mm256_slli_epi64(reg, v); }
-inline intNxM<int64,4> intNxM<int64,4>::operator>>(int v) const noexcept { return _mm256_srli_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator+(intNxM<int64,4> v) const noexcept { return _mm256_add_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator-(intNxM<int64,4> v) const noexcept { return _mm256_sub_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator/(intNxM<int64,4> v) const noexcept { return _mm256_div_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator%(intNxM<int64,4> v) const noexcept { return _mm256_rem_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator<<(intNxM<int64,4> v) const noexcept { return _mm256_sllv_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator>>(intNxM<int64,4> v) const noexcept { return _mm256_srlv_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator<<(int v) const noexcept { return _mm256_slli_epi64(reg, v); }
+template <> inline intNxM<int64,4> intNxM<int64,4>::operator>>(int v) const noexcept { return _mm256_srli_epi64(reg, v); }
 
-inline intNxM<int32,8> intNxM<int32,8>::operator+(intNxM<int32,8> v) const noexcept { return _mm256_add_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator-(intNxM<int32,8> v) const noexcept { return _mm256_sub_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator/(intNxM<int32,8> v) const noexcept { return _mm256_div_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator%(intNxM<int32,8> v) const noexcept { return _mm256_rem_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator<<(intNxM<int32,8> v) const noexcept { return _mm256_sllv_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator>>(intNxM<int32,8> v) const noexcept { return _mm256_srlv_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator<<(int v) const noexcept { return _mm256_slli_epi32(reg, v); }
-inline intNxM<int32,8> intNxM<int32,8>::operator>>(int v) const noexcept { return _mm256_srli_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator+(intNxM<int32,8> v) const noexcept { return _mm256_add_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator-(intNxM<int32,8> v) const noexcept { return _mm256_sub_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator/(intNxM<int32,8> v) const noexcept { return _mm256_div_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator%(intNxM<int32,8> v) const noexcept { return _mm256_rem_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator<<(intNxM<int32,8> v) const noexcept { return _mm256_sllv_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator>>(intNxM<int32,8> v) const noexcept { return _mm256_srlv_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator<<(int v) const noexcept { return _mm256_slli_epi32(reg, v); }
+template <> inline intNxM<int32,8> intNxM<int32,8>::operator>>(int v) const noexcept { return _mm256_srli_epi32(reg, v); }
 
-inline intNxM<int16,16> intNxM<int16,16>::operator+(intNxM<int16,16> v) const noexcept { return _mm256_add_epi16(reg, v); }
-inline intNxM<int16,16> intNxM<int16,16>::operator-(intNxM<int16,16> v) const noexcept { return _mm256_sub_epi16(reg, v); }
-inline intNxM<int16,16> intNxM<int16,16>::operator/(intNxM<int16,16> v) const noexcept { return _mm256_div_epi16(reg, v); }
-inline intNxM<int16,16> intNxM<int16,16>::operator%(intNxM<int16,16> v) const noexcept { return _mm256_rem_epi16(reg, v); }
-inline intNxM<int16,16> intNxM<int16,16>::operator<<(int v) const noexcept { return _mm256_slli_epi16(reg, v); }
-inline intNxM<int16,16> intNxM<int16,16>::operator>>(int v) const noexcept { return _mm256_srli_epi16(reg, v); }
-//inline intNxM<int16,16> intNxM<int16,16>::operator<<(intNxM<int16,16> v) const noexcept { return _mm256_sllv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
-//inline intNxM<int16,16> intNxM<int16,16>::operator>>(intNxM<int16,16> v) const noexcept { return _mm256_srlv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
+template <> inline intNxM<int16,16> intNxM<int16,16>::operator+(intNxM<int16,16> v) const noexcept { return _mm256_add_epi16(reg, v); }
+template <> inline intNxM<int16,16> intNxM<int16,16>::operator-(intNxM<int16,16> v) const noexcept { return _mm256_sub_epi16(reg, v); }
+template <> inline intNxM<int16,16> intNxM<int16,16>::operator/(intNxM<int16,16> v) const noexcept { return _mm256_div_epi16(reg, v); }
+template <> inline intNxM<int16,16> intNxM<int16,16>::operator%(intNxM<int16,16> v) const noexcept { return _mm256_rem_epi16(reg, v); }
+template <> inline intNxM<int16,16> intNxM<int16,16>::operator<<(int v) const noexcept { return _mm256_slli_epi16(reg, v); }
+template <> inline intNxM<int16,16> intNxM<int16,16>::operator>>(int v) const noexcept { return _mm256_srli_epi16(reg, v); }
+//template <> inline intNxM<int16,16> intNxM<int16,16>::operator<<(intNxM<int16,16> v) const noexcept { return _mm256_sllv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
+//template <> inline intNxM<int16,16> intNxM<int16,16>::operator>>(intNxM<int16,16> v) const noexcept { return _mm256_srlv_epi16(reg, v); } // Instruction requires AVX512VL and AVX512BW!
 
-inline intNxM<int8,32> intNxM<int8,32>::operator+(intNxM<int8,32> v) const noexcept { return _mm256_add_epi8(reg, v); }
-inline intNxM<int8,32> intNxM<int8,32>::operator-(intNxM<int8,32> v) const noexcept { return _mm256_sub_epi8(reg, v); }
-inline intNxM<int8,32> intNxM<int8,32>::operator/(intNxM<int8,32> v) const noexcept { return _mm256_div_epi8(reg, v); }
-inline intNxM<int8,32> intNxM<int8,32>::operator%(intNxM<int8,32> v) const noexcept { return _mm256_rem_epi8(reg, v); }
-//inline intNxM<int8,32> intNxM<int8,32>::operator<<(intNxM<int8,32> v) const noexcept { return _mm256_sllv_epi8(reg, v); } // Instruction does not exist!
-//inline intNxM<int8,32> intNxM<int8,32>::operator>>(intNxM<int8,32> v) const noexcept { return _mm256_srlv_epi8(reg, v); } // Instruction does not exist!
-//inline intNxM<int8,32> intNxM<int8,32>::operator<<(int v) const noexcept { return _mm256_slli_epi8(reg, v); } // Instruction does not exist!
-//inline intNxM<int8,32> intNxM<int8,32>::operator>>(int v) const noexcept { return _mm256_srli_epi8(reg, v); } // Instruction does not exist!
+template <> inline intNxM<int8,32> intNxM<int8,32>::operator+(intNxM<int8,32> v) const noexcept { return _mm256_add_epi8(reg, v); }
+template <> inline intNxM<int8,32> intNxM<int8,32>::operator-(intNxM<int8,32> v) const noexcept { return _mm256_sub_epi8(reg, v); }
+template <> inline intNxM<int8,32> intNxM<int8,32>::operator/(intNxM<int8,32> v) const noexcept { return _mm256_div_epi8(reg, v); }
+template <> inline intNxM<int8,32> intNxM<int8,32>::operator%(intNxM<int8,32> v) const noexcept { return _mm256_rem_epi8(reg, v); }
+//template <> inline intNxM<int8,32> intNxM<int8,32>::operator<<(intNxM<int8,32> v) const noexcept { return _mm256_sllv_epi8(reg, v); } // Instruction does not exist!
+//template <> inline intNxM<int8,32> intNxM<int8,32>::operator>>(intNxM<int8,32> v) const noexcept { return _mm256_srlv_epi8(reg, v); } // Instruction does not exist!
+//template <> inline intNxM<int8,32> intNxM<int8,32>::operator<<(int v) const noexcept { return _mm256_slli_epi8(reg, v); } // Instruction does not exist!
+//template <> inline intNxM<int8,32> intNxM<int8,32>::operator>>(int v) const noexcept { return _mm256_srli_epi8(reg, v); } // Instruction does not exist!
 
 // returns a==b ? -1 : 0
 [[nodiscard]] inline intNxM<int64, 2> cmpeq(intNxM<int64, 2> a, intNxM<int64, 2> b) noexcept { return _mm_cmpeq_epi64(a, b); }
