@@ -1,130 +1,166 @@
 #pragma once
 #include "Core/Core.h"
-#include "Search.h"
+#include "Project.h"
+#include "Objects.h"
+#include "Algorithm.h"
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <execution>
 #include <functional>
 
+struct Request
+{
+	Field move = Field::none;
+	Search::Intensity intensity;
+
+	Request(Field move, Search::Intensity intensity) noexcept : move(move), intensity(intensity) {}
+	Request(Field move, int depth, Confidence selectivity = Confidence::Certain()) noexcept : move(move), intensity(depth, selectivity) {}
+	Request(int depth, Confidence selectivity = Confidence::Certain()) noexcept : intensity(depth, selectivity) {}
+
+	static Request ExactScore(Position pos) { return Request(pos.EmptyCount()); }
+	static std::vector<Request> AllDepths(Position);
+	static std::vector<Request> AllMoves(Position);
+
+	[[nodiscard]] bool operator==(const Request&) const noexcept = default;
+	[[nodiscard]] bool operator!=(const Request&) const noexcept = default;
+
+	[[nodiscard]] bool HasMove() const { return move != Field::none; }
+	//[[nodiscard]] Search::Intensity Intensity() const { return { depth, selectivity }; }
+
+	// TODO: Move this to Search?
+	//operator Search::Request() const { return Search::Request(intensity); }
+};
+
+struct Result
+{
+	int score = undefined_score;
+	uint64 nodes = 0;
+	std::chrono::duration<double> duration{ 0 };
+
+	Result() noexcept = default;
+	Result(int score) noexcept : score(score) {}
+	Result(int score, uint64 nodes, std::chrono::duration<double> duration) noexcept : score(score), nodes(nodes), duration(duration) {}
+
+	[[nodiscard]] bool operator==(const Result&) const noexcept = default;
+	[[nodiscard]] bool operator!=(const Result&) const noexcept = default;
+
+	[[nodiscard]] bool HasValue() const { return score != undefined_score; }
+};
+
 class Puzzle
 {
+public:
+	struct Task
+	{
+		Request request;
+		Result result;
+
+		Task(Request request, Result result = {}) noexcept : request(request), result(result) {}
+
+		[[nodiscard]] bool operator==(const Task&) const noexcept = default;
+		[[nodiscard]] bool operator!=(const Task&) const noexcept = default;
+
+		[[nodiscard]] bool IsDone() const { return result.HasValue(); }
+		[[nodiscard]] bool HasMove() const { return request.HasMove(); }
+		[[nodiscard]] Field Move() const { return request.move; }
+		[[nodiscard]] Search::Intensity Intensity() const { return request.intensity; }
+		[[nodiscard]] int Score() const { return result.score; }
+		[[nodiscard]] uint64 Nodes() const { return result.nodes; }
+		[[nodiscard]] std::chrono::duration<double> Duration() const { return result.duration; }
+
+		void ResolveWith(const Result& r) { result = r; }
+		void RemoveResult() { result = Result{}; }
+	};
+
 	Position pos;
-	uint64 node_count = 0;
-	std::chrono::duration<double> duration{0};
-	std::vector<Search::Request> request;
-	std::vector<Search::Result> result;
-public:
+	std::vector<Task> tasks;
+
 	Puzzle(Position pos) noexcept : pos(pos) {}
-	Puzzle(Position pos, Search::Request request) noexcept : pos(pos), request({request}) {}
-	Puzzle(Position pos, Search::Request request, Search::Result result) noexcept : pos(pos), request({request}), result({result}) {}
-	Puzzle(Position pos, std::vector<Search::Request> request) noexcept : pos(pos), request(std::move(request)) {}
-	Puzzle(Position pos, std::vector<Search::Request> request, std::vector<Search::Result> result) noexcept
-		: pos(pos), request(std::move(request)), result(std::move(result)) {}
-	Puzzle(Position pos, uint64 node_count, std::chrono::duration<double> duration, std::vector<Search::Request> request, std::vector<Search::Result> result) noexcept
-		: pos(pos), node_count(node_count), duration(duration), request(std::move(request)), result(std::move(result)) {}
+	Puzzle(Position pos, std::vector<Task> tasks) noexcept : pos(pos), tasks(std::move(tasks)) {}
 
-	static Puzzle Exact(Position pos) { return Puzzle(pos, Search::Request::Exact(pos)); }
-	static Puzzle Exact(Position pos, Search::Result r) { return Puzzle(pos, Search::Request::Exact(pos), r); }
-	static Puzzle Exact(Position pos, int score) { return Puzzle(pos, Search::Request::Exact(pos), Search::Result::Exact(pos, score)); }
-	static Puzzle Certain(Position, int min_depth, int max_depth);
-	static Puzzle CertainAllDepths(Position pos) { return Certain(pos, 0, pos.EmptyCount()); }
+	static Puzzle WithExactScore(Position pos, int score) { return Puzzle(pos, { Task(Request(pos.EmptyCount()), score) }); }
+	static Puzzle WithExactScoreForTesting(Position pos, int score) { return Puzzle(pos, { Task(Request(pos.EmptyCount()), score), Task(Request(pos.EmptyCount())) }); }
+	static Puzzle WithAllDepths(Position);
+	static Puzzle WithAllMoves(Position);
 
-	void Add(const Search::Request& r) { request.push_back(r); }
-	void Add(const Search::Result& r) { result.push_back(r); }
-	void Add(const Search::Request& req, const Search::Result& res) { Add(req); Add(res); }
+	[[nodiscard]] bool operator==(const Puzzle&) const noexcept = default;
+	[[nodiscard]] bool operator!=(const Puzzle&) const noexcept = default;
 
-	[[nodiscard]] const Position& Position() const { return pos; }
-	[[nodiscard]] const Search::Request& Request(int i = 0) const { return request[i]; }
-	[[nodiscard]] const Search::Result& Result(int i = 0) const { return result[i]; }
-	[[nodiscard]] uint64 Nodes() const { return node_count; }
-	[[nodiscard]] const std::chrono::duration<double>& Duration() const { return duration; }
+	void push_back(const Request& r) { tasks.emplace_back(r); }
+	void push_back(const std::vector<Request>&);
+	void clear() { tasks.clear(); }
+	[[nodiscard]] std::size_t size() const noexcept { tasks.size(); }
+	[[nodiscard]] bool empty() const noexcept { return tasks.empty(); }
 
-	[[nodiscard]] int Score() const;
-
-	[[nodiscard]] bool IsSolved() const { return result.size() >= request.size(); }
-	void Solve(const Search::Algorithm&, const std::function<void(const Puzzle&)>& request_completion_task = [](const Puzzle&){});
-};
-
-class Project
-{
-	std::atomic<std::size_t> next = 0;
-	std::atomic<std::size_t> solved = 0;
-	std::function<void(const Puzzle&)> request_completion_task = [](const Puzzle&){};
-	std::function<void(const Puzzle&)> puzzle_completion_task = [](const Puzzle&){};
-	std::function<void(const Project&)> project_completion_task = [](const Project&){};
-	std::vector<Puzzle> puzzle;
-public:
-	Project() noexcept = default;
-	template <typename Iterator>
-	Project(const Iterator& begin, const Iterator& end) noexcept : puzzle(begin, end) {}
-	Project(std::vector<Puzzle> puzzle) noexcept : puzzle(std::move(puzzle)) {}
-	Project(const Project&) noexcept;
-	Project(Project&&) noexcept;
-	Project& operator=(const Project&) noexcept;
-	Project& operator=(Project&&) noexcept;
-	~Project() = default;
-
-	using value_type = Puzzle;
-	void push_back(const Puzzle& p) { puzzle.push_back(p); }
-	void push_back(Puzzle&& p) { puzzle.push_back(std::move(p)); }
-	[[nodiscard]] std::size_t size() const noexcept { return puzzle.size(); }
+	// inserts element if it is not contained yet.
+	void insert(const Request& r) { if (not Contains(r)) tasks.emplace_back(r); }
+	void erase(const Request&);
 
 	[[nodiscard]] uint64 Nodes() const;
 	[[nodiscard]] std::chrono::duration<double> Duration() const;
+	[[nodiscard]] bool Contains(const Request&) const;
+	[[nodiscard]] Result ResultOf(const Request&) const noexcept(false); // TODO: Add std::optional
+	[[nodiscard]] Result ResultOfSecond(const Request&) const noexcept(false);
 
-	void SetRequestCompletionTask(std::function<void(const Puzzle&)> task) { request_completion_task = std::move(task); }
-	void SetPuzzleCompletionTask(std::function<void(const Puzzle&)> task) { puzzle_completion_task = std::move(task); }
-	void SetProjectCompletionTask(std::function<void(const Project&)> task) { project_completion_task = std::move(task); }
+	[[nodiscard]] bool HasTaskWithoutMove() const;
 
-	const std::vector<Puzzle>& Puzzles() const { return puzzle; }
+	// Returns the task with the biggest 'Search::Intensity' that has no move.
+	[[nodiscard]] Task MaxIntensity() const noexcept(false);
+	[[nodiscard]] Task MaxIntensity(const std::function<bool(const Search::Intensity&, const Search::Intensity&)>& less) const noexcept(false);
 
-	[[nodiscard]] bool IsSolved() const { return solved.load(std::memory_order_acquire) == puzzle.size(); }
-	bool SolveNext(const Search::Algorithm&, bool force = false);
+	void RemoveAllUndone();
+	void RemoveResult(const Request&);
 
-	template <typename ExecutionPolicy>
-	void SolveAll(ExecutionPolicy policy, const Search::Algorithm& alg, bool force = false)
-	{
-		unsigned int threads = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy> ? std::thread::hardware_concurrency() : 1;
-		#pragma omp parallel num_threads(threads)
-		{
-			while (SolveNext(alg, force))
-				continue;
-		}
-	}
-	void SolveAll(const Search::Algorithm& alg, bool force = false) { SolveAll(std::execution::seq, alg, force); }
+	void DuplicateRequests();
+	bool Solve(const Search::Algorithm&);
+
+	// "--XO-- (+01) (A1 : +00) (B5 d7 87% : +01)"
+	[[nodiscard]] std::string to_string() const;
 };
 
-class ProjectDB
-{
-	std::vector<Project> projects;
-public:
-	ProjectDB() noexcept = default;
-	ProjectDB(std::vector<Project>&& projects) noexcept : projects(std::move(projects)) {}
+inline std::size_t erase(Puzzle& puzzle, const Request& r) { puzzle.erase(r); }
 
-	void push_back(Project&& p) { projects.push_back(std::move(p)); }
-	[[nodiscard]] std::size_t size() const noexcept { return projects.size(); }
+inline [[nodiscard]] std::string to_string(const Puzzle& puzzle) { return puzzle.to_string(); }
+inline std::ostream& operator<<(std::ostream& os, const Puzzle& puzzle) { return os << to_string(puzzle); }
 
-	[[nodiscard]] uint64 Nodes() const;
-	[[nodiscard]] std::chrono::duration<double> Duration() const;
+inline uint64 Nodes(const Puzzle& p) { return p.Nodes(); }
+inline std::chrono::duration<double> Duration(const Puzzle& p) { return p.Duration(); }
 
-	void SetRequestCompletionTask(std::function<void(const Puzzle&)> task) { for (auto& p : projects) p.SetRequestCompletionTask(task); }
-	void SetPuzzleCompletionTask(std::function<void(const Puzzle&)> task) { for (auto& p : projects) p.SetPuzzleCompletionTask(task); }
-	void SetProjectCompletionTask(std::function<void(const Project&)> task) { for (auto& p : projects) p.SetProjectCompletionTask(task); }
+uint64 Nodes(const std::vector<Puzzle>&);
+std::chrono::duration<double> Duration(const std::vector<Puzzle>&);
 
-	const std::vector<Project>& Projects() const { return projects; }
 
-	[[nodiscard]] bool IsSolved() const;
-	void SolveNext(const Search::Algorithm&);
-
-	template <typename ExecutionPolicy>
-	void SolveAll(ExecutionPolicy policy, const Search::Algorithm& alg, bool force = false)
-	{
-		unsigned int threads = std::is_same_v<ExecutionPolicy, std::execution::parallel_policy> ? std::thread::hardware_concurrency() : 1;
-		#pragma omp parallel num_threads(threads)
-		{
-			for (auto& p : projects)
-				p.SolveAll(alg, force);
-		}
-	}
-	void SolveAll(const Search::Algorithm& alg, bool force = false) { SolveAll(std::execution::seq, alg, force); }
-};
+//class PuzzleProject final : public Project<Puzzle>
+//{
+//public:
+//	PuzzleProject() noexcept = default;
+//	template <typename Iterator>
+//	PuzzleProject(const Iterator& begin, const Iterator& end) noexcept : Project<Puzzle>(begin, end) {}
+//	PuzzleProject(std::vector<Puzzle> wu) noexcept : Project<Puzzle>(std::move(wu)) {}
+//	PuzzleProject(const Project<Puzzle>& o) noexcept : Project<Puzzle>(o) {}
+//
+//	[[nodiscard]] uint64 Nodes() const;
+//	[[nodiscard]] std::chrono::duration<double> Duration() const;
+//
+//	void MakeAllHave(const ::Request&);
+//	void erase(const ::Request& r) { for (auto& x : wu) ::erase(x, r); }
+//	void PrepareForTests();
+//
+//	// thread-safe
+//	//[[nodiscard]] std::size_t Scheduled(const Request&) const { return next.load(std::memory_order_acquire); }
+//	//[[nodiscard]] std::size_t Processed(const Request&) const { return processed.load(std::memory_order_acquire); }
+//	//[[nodiscard]] bool HasWork() const { return Scheduled() < wu.size(); }
+//	//[[nodiscard]] bool IsDone() const { return Processed() == wu.size(); }
+//};
+//
+//
+//
+//uint64 Nodes(const PuzzleProject&);
+//uint64 Nodes(const std::vector<PuzzleProject>&);
+//
+//std::chrono::duration<double> Duration(const PuzzleProject&);
+//std::chrono::duration<double> Duration(const std::vector<PuzzleProject>&);
+//
+//void MakeAllHave(PuzzleProject&, const ::Request&);
+//void MakeAllHave(std::vector<PuzzleProject>&, const ::Request&);

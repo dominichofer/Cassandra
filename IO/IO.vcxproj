@@ -67,6 +67,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Database.h" />
     <ClInclude Include="FForum.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Integers.h" />

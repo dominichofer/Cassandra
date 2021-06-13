@@ -15,7 +15,7 @@ enum class Field : uint8_t
 	A6, B6, C6, D6, E6, F6, G6, H6,
 	A7, B7, C7, D7, E7, F7, G7, H7,
 	A8, B8, C8, D8, E8, F8, G8, H8,
-	pass, invalid = pass
+	invalid, none
 };
 
 // Maps
@@ -110,6 +110,11 @@ public:
 [[nodiscard]] BitBoard FlipDiagonal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipHorizontal(BitBoard) noexcept;
 [[nodiscard]] BitBoard FlipVertical(BitBoard) noexcept;
+
+[[nodiscard]] BitBoard FourNeighbours(BitBoard) noexcept;
+[[nodiscard]] BitBoard FourNeighboursAndSelf(BitBoard) noexcept;
+[[nodiscard]] BitBoard EightNeighbours(BitBoard) noexcept;
+[[nodiscard]] BitBoard EightNeighboursAndSelf(BitBoard) noexcept;
 
 [[nodiscard]] CUDA_CALLABLE inline int countl_zero(const BitBoard& b) noexcept { return std::countl_zero(static_cast<uint64_t>(b)); }
 [[nodiscard]] CUDA_CALLABLE inline int countl_one(const BitBoard& b) noexcept { return std::countl_one(static_cast<uint64_t>(b)); }

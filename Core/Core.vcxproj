@@ -79,7 +79,8 @@
     <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConfidenceLevel.h" />
+    <ClInclude Include="Algorithms.h" />
+    <ClInclude Include="Confidence.h" />
     <ClInclude Include="Interval.h" />
     <ClInclude Include="Ranges.h" />
     <ClInclude Include="BitBoard.h" />

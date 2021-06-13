@@ -16,8 +16,9 @@ public:
 
 struct TT_Info
 {
-	Search::Result result{ {0, ConfidenceLevel{0}}, ClosedInterval::Whole() };
+	Search::Result result{ {0, Confidence{0}}, ClosedInterval::Whole() };
 	Field best_move = Field::invalid;
+	Field best_move_2 = Field::invalid;
 
 	TT_Info() noexcept = default;
 	TT_Info(const Search::Result& result, Field best_move) noexcept

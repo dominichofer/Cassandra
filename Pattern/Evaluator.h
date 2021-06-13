@@ -31,12 +31,20 @@ namespace Pattern
 
 class PatternEval final : public Pattern::Evaluator
 {
-	const int block_size = 3;
+	float alpha, beta, gamma, delta, epsilon;
 	std::array<std::shared_ptr<Evaluator>, 65> evals;
 public:
+	static const int block_size = 10;
+
 	PatternEval();
-	PatternEval(const std::vector<BitBoard>& pattern, const std::vector<Pattern::Weights>& compressed);
+	PatternEval(
+		const std::vector<BitBoard>& pattern,
+		const std::vector<Pattern::Weights>& compressed,
+		const std::vector<float>& accuracy_parameters
+	);
 
 	float Eval(const Position&) const override;
 	std::vector<MaskAndValue> DetailedEval(const Position&) const override;
+
+	float EvalAccuracy(int d, int D, int E) const;
 };

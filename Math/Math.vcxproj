@@ -81,6 +81,7 @@
   <ItemGroup>
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="DenseMatrix.h" />
+    <ClInclude Include="Math.h" />
     <ClInclude Include="MatrixCSR.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Solver.h" />
@@ -89,6 +90,7 @@
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="SymExp.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

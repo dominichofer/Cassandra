@@ -34,22 +34,22 @@ int AlphaBetaFailSoft::Eval_2(const Position& pos, OpenInterval w, const Field m
 {
 	assert(pos.EmptyCount() == 2);
 	node_count++;
-	int bestscore = -inf_score;
+	int best_score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
 	{
-		bestscore = -Eval_1(Play(pos, move1, flips), move2);
-		if (bestscore > w)
-			return bestscore;
+		best_score = -Eval_1(Play(pos, move1, flips), move2);
+		if (best_score > w)
+			return best_score;
 	}
 	if (const auto flips = Flips(pos, move2))
 	{
 		const auto score = -Eval_1(Play(pos, move2, flips), move1);
-		return std::max(bestscore, score);
+		return std::max(best_score, score);
 	}
 
-	if (bestscore != -inf_score)
-		return bestscore;
+	if (best_score != -inf_score)
+		return best_score;
 
 	const auto passed = PlayPass(pos);
 	if (HasMoves(passed))
@@ -61,14 +61,14 @@ int AlphaBetaFailSoft::Eval_3(const Position& pos, OpenInterval w, const Field m
 {
 	assert(pos.EmptyCount() == 3);
 	node_count++;
-	int bestscore = -inf_score;
+	int best_score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
 	{
-		bestscore = -Eval_2(Play(pos, move1, flips), -w, move2, move3);
-		if (bestscore > w)
-			return bestscore;
-		w.TryIncreaseLower(bestscore);
+		best_score = -Eval_2(Play(pos, move1, flips), -w, move2, move3);
+		if (best_score > w)
+			return best_score;
+		w.TryIncreaseLower(best_score);
 	}
 	if (const auto flips = Flips(pos, move2))
 	{
@@ -76,15 +76,15 @@ int AlphaBetaFailSoft::Eval_3(const Position& pos, OpenInterval w, const Field m
 		if (score > w)
 			return score;
 		w.TryIncreaseLower(score);
-		if (score > bestscore)
-			bestscore = score;
+		if (score > best_score)
+			best_score = score;
 	}
 
 	if (const auto flips = Flips(pos, move3))
-		return std::max(bestscore, -Eval_2(Play(pos, move3, flips), -w, move1, move2));
+		return std::max(best_score, -Eval_2(Play(pos, move3, flips), -w, move1, move2));
 
-	if (bestscore != -inf_score)
-		return bestscore;
+	if (best_score != -inf_score)
+		return best_score;
 
 	const auto passed = PlayPass(pos);
 	if (HasMoves(passed))
@@ -114,7 +114,7 @@ int AlphaBetaFailSoft::Eval_P(const Position& pos, OpenInterval w)
 		return EvalGameOver(pos);
 	}
 
-	int bestscore = -inf_score;
+	int best_score = -inf_score;
 	Moves parity_moves = moves;
 	const auto pq = pos.ParityQuadrants();
 	for (auto filter : {pq, ~pq})
@@ -124,10 +124,10 @@ int AlphaBetaFailSoft::Eval_P(const Position& pos, OpenInterval w)
 			if (score > w)
 				return score;
 			w.TryIncreaseLower(score);
-			if (score > bestscore)
-				bestscore = score;
+			if (score > best_score)
+				best_score = score;
 		}
-	return bestscore;
+	return best_score;
 }
 
 int AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval w)
@@ -149,6 +149,7 @@ int AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval w)
 	//if (auto max = StabilityBasedMaxScore(pos); max < w)
 	//	return max;
 
+	int best_score = -inf_score;
 	SortedMoves sorted_moves(moves, [&](Field move) { return MoveOrderingScorer(pos, move); });
 	for (const auto& move : sorted_moves)
 	{
@@ -156,6 +157,8 @@ int AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval w)
 		if (score > w)
 			return score;
 		w.TryIncreaseLower(score);
+		if (score > best_score)
+			best_score = score;
 	}
-	return w.lower();
+	return best_score;
 }

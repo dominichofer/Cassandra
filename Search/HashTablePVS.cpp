@@ -12,14 +12,22 @@ void OneNode::Update(const key_type& new_key, const value_type& new_value)
 	//	return;
 	//if ((new_key == key) and (new_value.result.intensity < value.result.intensity))
 	//	return;
-	//if (new_key == key)
-	//{
-	//	value.result = new_value.result;
-	//	if (not (new_value.result.intensity < value.result.intensity))
-	//		value.best_move = new_value.best_move;
-	//	//value.result.window = Overlap(value.result.window, new_value.result.window);
-	//}
-	//else
+	if (new_key == key)
+	{
+		if (new_value.result.intensity < value.result.intensity)
+			return;
+		value.result = new_value.result;
+		//if (new_value.best_move == value.best_move_2)
+		//	std::swap(value.best_move, value.best_move_2);
+		//else if (new_value.best_move != value.best_move)
+		//{
+			//value.best_move_2 = value.best_move;
+			value.best_move = new_value.best_move;
+		//}
+		//if (new_value.result.intensity == value.result.intensity)
+		//	value.result.window = Overlap(value.result.window, new_value.result.window);
+	}
+	else
 	{
 	//if (!(new_value.result.intensity < value.result.intensity))
 	//{

@@ -7,19 +7,16 @@ namespace Search
 	{
 	public:
 		int depth;
-		ConfidenceLevel certainty;
+		Confidence certainty;
 
-		Intensity(int depth, ConfidenceLevel certainty) noexcept : depth(depth), certainty(certainty) {}
+		Intensity(int depth, Confidence certainty) noexcept : depth(depth), certainty(certainty) {}
 
-		[[nodiscard]] static Intensity Certain(int depth) noexcept { return { depth, ConfidenceLevel::Certain() }; }
+		[[nodiscard]] static Intensity Certain(int depth) noexcept { return { depth, Confidence::Certain() }; }
 		[[nodiscard]] static Intensity Exact(const Position& pos) noexcept { return Certain(pos.EmptyCount()); }
 
 		[[nodiscard]] bool operator==(const Intensity&) const noexcept = default;
 		[[nodiscard]] bool operator!=(const Intensity&) const noexcept = default;
-		[[nodiscard]] auto operator<=(const Intensity& o) const noexcept { return (depth <= o.depth) && (certainty <= o.certainty); }
-		[[nodiscard]] auto operator>=(const Intensity& o) const noexcept { return o <= *this; }
-		[[nodiscard]] auto operator<(const Intensity& o) const noexcept { return (*this <= o) && (*this != o); }
-		[[nodiscard]] auto operator>(const Intensity& o) const noexcept { return o < *this; }
+		[[nodiscard]] auto operator<=>(const Intensity&) const noexcept = default;
 
 		[[nodiscard]] bool IsCertain() const noexcept { return certainty.IsCertain(); }
 		[[nodiscard]] bool IsExact(const Position& pos) const noexcept { return *this == Exact(pos); }
@@ -29,24 +26,29 @@ namespace Search
 	{
 	public:
 		Intensity intensity;
-		OpenInterval window;
+		OpenInterval window = OpenInterval::Whole();
 
 		Request(Intensity intensity, OpenInterval window) noexcept : intensity(intensity), window(window) {}
-		Request(int depth, ConfidenceLevel certainty, OpenInterval window) noexcept : intensity(depth, certainty), window(window) {}
+		Request(Intensity intensity) noexcept : intensity(intensity) {}
+		Request(int depth, Confidence certainty, OpenInterval window) noexcept : intensity(depth, certainty), window(window) {}
+		Request(int depth, Confidence certainty) noexcept : intensity(depth, certainty) {}
 
 		[[nodiscard]] static Request Certain(int depth, OpenInterval window = OpenInterval::Whole()) noexcept { return { Intensity::Certain(depth), window }; }
 		[[nodiscard]] static Request Exact(const Position& pos) noexcept { return Certain(pos.EmptyCount()); }
 
 		[[nodiscard]] int depth() const noexcept { return intensity.depth; }
-		[[nodiscard]] ConfidenceLevel certainty() const noexcept { return intensity.certainty; }
+		[[nodiscard]] Confidence certainty() const noexcept { return intensity.certainty; }
 
 		[[nodiscard]] Request operator-() const noexcept { return { intensity.depth, intensity.certainty, -window }; }
 		[[nodiscard]] operator OpenInterval() const noexcept { return window; }
+
+		[[nodiscard]] bool IsCertain() const noexcept { return intensity.IsCertain(); }
+		[[nodiscard]] bool IsExact(const Position& pos) const noexcept { return intensity.IsExact(pos); }
 	};
 
 	struct Result
 	{
-		Intensity intensity{ -1, ConfidenceLevel(0) };
+		Intensity intensity{ -1, Confidence(0) };
 		ClosedInterval window = ClosedInterval::Whole();
 
 		[[nodiscard]] static Result FoundScore(const Intensity&, int score) noexcept;
@@ -88,24 +90,24 @@ namespace Search
 	{
 		int best_score = -inf_score;
 		Field best_move = Field::invalid;
-		Intensity lowest_intensity{ 99, ConfidenceLevel::Certain() };
+		Field best_move_2 = Field::invalid;
+		Intensity lowest_intensity{ 99, Confidence::Certain() };
 
 		void Add(const Result& result, Field move) noexcept;
 	};
 }
 
-template<>
-inline const Search::Intensity& std::min(const Search::Intensity& l, const Search::Intensity& r)
+inline Search::Intensity min(const Search::Intensity& l, const Search::Intensity& r)
 {
 	return { std::min(l.depth, r.depth), std::min(l.certainty, r.certainty) };
 }
 
 inline std::string to_string(const Search::Intensity& intensity)
 {
-	std::string s = std::to_string(intensity.depth);
-	if (intensity.certainty != ConfidenceLevel::Certain())
-		s += " " + to_string(intensity.certainty);
-	return s;
+	std::string ret = std::to_string(intensity.depth);
+	if (intensity.certainty != Confidence::Certain())
+		ret += " " + to_string(intensity.certainty);
+	return ret;
 }
 inline std::ostream& operator<<(std::ostream& os, const Search::Intensity& intensity) { return os << to_string(intensity); }
 

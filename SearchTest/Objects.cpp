@@ -5,9 +5,9 @@ namespace Search
 	const int depth_low = 4;
 	const int depth_mid = 5;
 	const int depth_high = 6;
-	const ConfidenceLevel cl_low(2 /*sigmas*/);
-	const ConfidenceLevel cl_mid(3 /*sigmas*/);
-	const ConfidenceLevel cl_high(4 /*sigmas*/);
+	const Confidence cl_low(2 /*sigmas*/);
+	const Confidence cl_mid(3 /*sigmas*/);
+	const Confidence cl_high(4 /*sigmas*/);
 	const Intensity ll{depth_low, cl_low};
 	const Intensity lm{depth_low, cl_mid};
 	const Intensity lh{depth_low, cl_high};

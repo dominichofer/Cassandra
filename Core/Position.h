@@ -3,6 +3,7 @@
 #include "BitBoard.h"
 #include "Moves.h"
 #include <cstdint>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -10,6 +11,13 @@ constexpr int min_score = -32;
 constexpr int max_score = +32;
 constexpr int inf_score = +33;
 constexpr int undefined_score = +35;
+
+// Maps input to (.., "-1", "+0", "+1", ..)
+std::string SignedInt(int);
+
+// Maps input to (.., "-01", "+00", "+01", ..)
+std::string DoubleDigitSignedInt(int);
+
 
 // A board where every field is either taken by exactly one player or is empty.
 class Position
@@ -55,6 +63,17 @@ public:
 [[nodiscard]] CUDA_CALLABLE Position FlipHorizontal(Position) noexcept;
 [[nodiscard]] CUDA_CALLABLE Position FlipVertical(Position) noexcept;
 [[nodiscard]] CUDA_CALLABLE Position FlipToUnique(Position) noexcept;
+
+
+// TODO: Add tests for these 6 and the Neighbours!
+//[[nodiscard]] CUDA_CALLABLE inline BitBoard PotentialMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Opponent()); }
+//[[nodiscard]] CUDA_CALLABLE inline BitBoard PotentialCounterMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Player()); }
+//
+//[[nodiscard]] CUDA_CALLABLE inline BitBoard ExposedPlayers(const Position& pos) noexcept { return pos.Player() & EightNeighboursAndSelf(pos.Empties()); }
+//[[nodiscard]] CUDA_CALLABLE inline BitBoard ExposedOpponents(const Position& pos) noexcept { return pos.Opponent() & EightNeighboursAndSelf(pos.Empties()); }
+//
+//[[nodiscard]] CUDA_CALLABLE inline BitBoard IsolatedPlayers(const Position& pos) noexcept { return pos.Player() & ~EightNeighboursAndSelf(pos.Empties()); }
+//[[nodiscard]] CUDA_CALLABLE inline BitBoard IsolatedOpponents(const Position& pos) noexcept { return pos.Opponent() & ~EightNeighboursAndSelf(pos.Empties()); }
 
 [[nodiscard]] std::string SingleLine(const Position&);
 [[nodiscard]] std::string MultiLine(const Position&);
@@ -103,7 +122,11 @@ BitBoard StableEdges(const Position&);
 
 // Stable stones of the opponent.
 [[nodiscard]]
-BitBoard StableStones(const Position&);
+BitBoard StableStonesOpponent(const Position&);
+
+// Stable corners + 1 of the opponent.
+[[nodiscard]]
+BitBoard StableCornersOpponent(const Position&);
 
 [[nodiscard]]
 int StabilityBasedMaxScore(const Position&);

@@ -1,13 +1,13 @@
 #include "pch.h"
 
-TEST(StableStones, start_position_has_none)
+TEST(StableStonesOpponent, start_position_has_none)
 {
-	const auto stables = StableStones(Position::Start());
+	const auto stables = StableStonesOpponent(Position::Start());
 
 	ASSERT_EQ(stables, BitBoard{0});
 }
 
-TEST(StableStones, corners_are_stable)
+TEST(StableStonesOpponent, corners_are_stable)
 {
 	const auto pos =
 		"O - - - - - - O"
@@ -29,10 +29,10 @@ TEST(StableStones, corners_are_stable)
 		"- - - - - - - -"
 		"# - - - - - - #"_BitBoard;
 
-	ASSERT_EQ(StableStones(pos), stables);
+	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStones, filled_edges_are_stable)
+TEST(StableStonesOpponent, filled_edges_are_stable)
 {
 	const auto pos =
 		"O X O X O X O X"
@@ -54,10 +54,10 @@ TEST(StableStones, filled_edges_are_stable)
 		"- - - - - - - #"
 		"# # # # - - - -"_BitBoard;
 
-	ASSERT_EQ(StableStones(pos), stables);
+	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStones, unatackables_are_stable)
+TEST(StableStonesOpponent, unatackables_are_stable)
 {
 	const auto pos =
 		"X - - X - - X -"
@@ -79,10 +79,10 @@ TEST(StableStones, unatackables_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"_BitBoard;
 
-	ASSERT_EQ(StableStones(pos), stables);
+	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStones, undisturbed_skylines_are_stable)
+TEST(StableStonesOpponent, undisturbed_skylines_are_stable)
 {
 	const auto pos =
 		"O O O - - - - -"
@@ -104,10 +104,10 @@ TEST(StableStones, undisturbed_skylines_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"_BitBoard;
 
-	ASSERT_EQ(StableStones(pos), stables);
+	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStones, disturbed_skylines_are_stable)
+TEST(StableStonesOpponent, disturbed_skylines_are_stable)
 {
 	const auto pos =
 		"O O O - - - - -"
@@ -129,10 +129,10 @@ TEST(StableStones, disturbed_skylines_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"_BitBoard;
 
-	ASSERT_EQ(StableStones(pos), stables);
+	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStones, undisturbed_corner_triangles_are_stable)
+TEST(StableStonesOpponent, undisturbed_corner_triangles_are_stable)
 {
 	const auto pos =
 		"- - - - - - - -"
@@ -154,10 +154,10 @@ TEST(StableStones, undisturbed_corner_triangles_are_stable)
 		"- - - - - # # #"
 		"- - - - # # # #"_BitBoard;
 
-	ASSERT_EQ(StableStones(pos), stables);
+	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStones, disturbed_corner_triangles_are_stable)
+TEST(StableStonesOpponent, disturbed_corner_triangles_are_stable)
 {
 	const auto pos =
 		"- - - - - - - -"
@@ -179,5 +179,5 @@ TEST(StableStones, disturbed_corner_triangles_are_stable)
 		"- - - - - - - #"
 		"- - - - - - # #"_BitBoard;
 
-	ASSERT_TRUE((StableStones(pos) & stables) == stables);
+	ASSERT_TRUE((StableStonesOpponent(pos) & stables) == stables);
 }

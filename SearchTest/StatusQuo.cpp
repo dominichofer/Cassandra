@@ -45,7 +45,7 @@
 //constexpr int alpha = 5;
 //constexpr int beta = 10;
 //constexpr int depth = 16;
-//constexpr ConfidenceLevel certainty(1.0);
+//constexpr Confidence certainty(1.0);
 //Search::Request intensity{ {alpha, beta}, depth, certainty };
 //
 //namespace Update
@@ -237,7 +237,7 @@
 //	for (int score : range(min_score, max_score + 1))
 //	{
 //		Requests limits(intensity);
-//		Result novum = Result::ExactScore(score, 28, ConfidenceLevel(2.4), Field::A1, 10 /*nodes*/);
+//		Result novum = Result::ExactScore(score, 28, Confidence(2.4), Field::A1, 10 /*nodes*/);
 //
 //		limits.Improve(novum);
 //
@@ -257,7 +257,7 @@
 //		for (int upper : range(lower, alpha + 1))
 //		{
 //			Requests limits(intensity);
-//			Result novum({ lower, upper }, 28, ConfidenceLevel(2.4), Field::A1, 10 /*nodes*/);
+//			Result novum({ lower, upper }, 28, Confidence(2.4), Field::A1, 10 /*nodes*/);
 //			
 //			limits.Improve(novum);
 //
@@ -277,7 +277,7 @@
 ////		for (int upper : range(alpha + 1, beta))
 ////		{
 ////			StatusQuo status_quo(intensity);
-////			Result result({ lower, upper }, 28, ConfidenceLevel(2.4), Field::A1, 1 /*nodes*/);
+////			Result result({ lower, upper }, 28, Confidence(2.4), Field::A1, 1 /*nodes*/);
 ////
 ////			status_quo.ImproveWithRestriction(result);
 ////
@@ -299,7 +299,7 @@
 ////		for (int upper : range(beta, max_score + 1))
 ////		{
 ////			Requests limits(intensity);
-////			Result result({ lower, upper }, 28, ConfidenceLevel(2.4), Field::A1, 1 /*nodes*/);
+////			Result result({ lower, upper }, 28, Confidence(2.4), Field::A1, 1 /*nodes*/);
 ////
 ////			limits.Improve(result);
 ////
@@ -321,7 +321,7 @@
 ////		for (int upper : range(beta, max_score + 1))
 ////		{
 ////			Requests limits(intensity);
-////			Result result({ lower, upper }, 28, ConfidenceLevel(2.4), Field::A1, 1 /*nodes*/);
+////			Result result({ lower, upper }, 28, Confidence(2.4), Field::A1, 1 /*nodes*/);
 ////
 ////			limits.Improve(result);
 ////
@@ -343,7 +343,7 @@
 //		for (int upper : range(lower, max_score + 1))
 //		{
 //			Requests limits(intensity);
-//			Result novum({ lower, upper }, 28, ConfidenceLevel(2.4), Field::A1, 10 /*nodes*/);
+//			Result novum({ lower, upper }, 28, Confidence(2.4), Field::A1, 10 /*nodes*/);
 //
 //			limits.Improve(novum);
 //

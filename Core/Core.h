@@ -1,4 +1,5 @@
 #pragma once
+#include "Algorithms.h"
 #include "Ranges.h"
 #include "Bit.h"
 #include "BitBoard.h"
@@ -7,5 +8,5 @@
 #include "Player.h"
 #include "Position.h"
 #include "PositionGenerator.h"
-#include "ConfidenceLevel.h"
+#include "Confidence.h"
 #include "Interval.h"

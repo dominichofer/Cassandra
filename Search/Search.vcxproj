@@ -101,6 +101,7 @@
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="HashTablePVS.h" />
     <ClInclude Include="Objects.h" />
+    <ClInclude Include="Project.h" />
     <ClInclude Include="Puzzle.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="SortedMoves.h" />

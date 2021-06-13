@@ -9,8 +9,10 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="SymExp.h" />
+    <ClInclude Include="Math.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SymExp.cpp" />
+    <ClCompile Include="Algorithm.cpp" />
   </ItemGroup>
 </Project>

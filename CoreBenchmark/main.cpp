@@ -167,14 +167,14 @@ void StableEdges(benchmark::State& state)
 }
 BENCHMARK(StableEdges);
 
-void StableStones(benchmark::State& state)
+void StableStonesOpponent(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(StableStones(pos));
+		benchmark::DoNotOptimize(StableStonesOpponent(pos));
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(StableStones);
+BENCHMARK(StableStonesOpponent);
 
 using namespace Pattern;
 

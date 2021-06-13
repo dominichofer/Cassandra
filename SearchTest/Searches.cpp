@@ -255,7 +255,7 @@ public:
 
 	void Test(const Puzzle& puzzle)
 	{
-		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
+		Test(puzzle.pos, puzzle.tasks.back().Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos,  int correct)
@@ -320,7 +320,7 @@ public:
 
 	void Test(const Puzzle& puzzle)
 	{
-		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
+		Test(puzzle.pos, puzzle.tasks.back().Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos, const int& correct)
@@ -398,7 +398,7 @@ public:
 
 	void Test(const Puzzle& puzzle)
 	{
-		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
+		Test(puzzle.pos, puzzle.tasks.back().Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos, const int& correct)
@@ -490,7 +490,7 @@ public:
 
 	void Test(const Puzzle& puzzle)
 	{
-		Test(puzzle.Position(), puzzle.Score(), OpenInterval::Whole());
+		Test(puzzle.pos, puzzle.tasks.back().Score(), OpenInterval::Whole());
 	}
 
 	void Test_all_windows(const Position& pos, const int& correct)

@@ -97,9 +97,6 @@
     <ProjectReference Include="..\Search\Search.vcxproj">
       <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Solver\Solver.vcxproj">
-      <Project>{a12ec4f8-a856-42ab-a161-748b365e783e}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

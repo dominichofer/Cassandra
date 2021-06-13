@@ -18,6 +18,7 @@
     <ClInclude Include="SortedMoves.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Objects.h" />
+    <ClInclude Include="Project.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Search.natvis" />

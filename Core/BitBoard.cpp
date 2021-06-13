@@ -120,6 +120,27 @@ BitBoard FlipVertical(BitBoard b) noexcept
 	return b;
 }
 
+BitBoard FourNeighbours(BitBoard b) noexcept
+{
+	return (b >> 8) | (b << 8) | ((b << 1) & ~BitBoard::VerticalLine(0)) | ((b >> 1) & ~BitBoard::VerticalLine(7));
+}
+
+BitBoard FourNeighboursAndSelf(BitBoard b) noexcept
+{
+	return FourNeighbours(b) | b;
+}
+
+BitBoard EightNeighbours(BitBoard b) noexcept
+{
+	return EightNeighboursAndSelf(b) - b;
+}
+
+BitBoard EightNeighboursAndSelf(BitBoard b) noexcept
+{
+	b |= (b >> 8) | (b << 8);
+	return b | ((b << 1) & ~BitBoard::VerticalLine(0)) | ((b >> 1) & ~BitBoard::VerticalLine(7));
+}
+
 std::string SingleLine(const BitBoard& bb)
 {
 	std::string str(64, '-');

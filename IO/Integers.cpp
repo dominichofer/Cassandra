@@ -1,21 +1,6 @@
 #include "Integers.h"
 #include <exception>
 
-std::string SignedInt(const int score)
-{
-	const std::string sign = (score >= 0) ? "+" : "-";
-	const std::string number = std::to_string(std::abs(score));
-	return sign + number;
-}
-
-std::string DoubleDigitSignedInt(const int score)
-{
-	const std::string sign = (score >= 0) ? "+" : "-";
-	const std::string filling_zero = (std::abs(score) < 10) ? "0" : "";
-	const std::string number = std::to_string(std::abs(score));
-	return sign + filling_zero + number;
-}
-
 char MetricPrefix(int magnitude_base_1000) noexcept(false)
 {
 	switch (magnitude_base_1000)

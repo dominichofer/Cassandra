@@ -19,6 +19,8 @@
 #include <chrono>
 #include <random>
 #include <map>
+#include <set>
+#include <ranges>
 
 constexpr BitBoard L02X = 0x00000000000042FFULL;
 constexpr BitBoard L0 = 0x00000000000000FFULL;
@@ -56,14 +58,97 @@ constexpr BitBoard C3ppp = 0x81410000000103C7ULL;
 constexpr BitBoard C4pp = C4 | C3pp;
 constexpr BitBoard AA = 0x000000010105031FULL;
 
-auto CreateMatrix(const DenseIndexer& indexer, const std::vector<Position>& pos)
+// Use cases:
+// Training set size vs accuracy for e20
+// Fitting weights
+// Eval weights of test set
+
+//auto FittedEvaluator(const std::vector<BitBoard>& pattern, const std::vector<Position>& pos, const Vector& score)
+//{
+//    Vector weights = FittedWeights(pattern, pos, score);
+//    return Pattern::CreateEvaluator(pattern, Pattern::Weights{weights.begin(), weights.end()});
+//}
+
+class Data
 {
+    std::vector<Position> pos;
+    std::vector<float> score;
+public:
+    Data() noexcept = default;
+
+    //template <typename Iterator1, typename Iterator2>
+    //Data(Iterator1 pos_begin, Iterator1 pos_end, Iterator2 score_begin, Iterator2 score_end) noexcept(false)
+    //    : pos(pos_begin, pos_end), score(score_begin, score_end)
+    //{
+    //    if (pos.size() != score.size())
+    //        throw std::runtime_error("pos.size() != score.size()");
+    //}
+
+    //Data(std::vector<Position> pos, std::vector<float> score) noexcept(false)
+    //    : pos(std::move(pos)), score(std::move(score))
+    //{
+    //    if (pos.size() != score.size())
+    //        throw std::runtime_error("pos.size() != score.size()");
+    //}
+
+    const std::vector<Position>& Pos() const noexcept { return pos; }
+    const std::vector<float>& Score() const noexcept { return score; }
+
+    void reserve(std::size_t new_capacity) noexcept { pos.reserve(new_capacity); score.reserve(new_capacity); }
+    void push_back(const Position& pos, float score) { this->pos.push_back(pos); this->score.push_back(score); }
+    std::size_t size() const noexcept { return pos.size(); }
+};
+
+struct DataPair
+{
+    Data train;
+    Data test;
+
+    template <typename Iter>
+    void Add(Iter begin, const Iter& end, std::size_t train_size, std::size_t test_size) noexcept(false)
+    {
+        const std::size_t size = std::distance(begin, end);
+
+        if (train_size + test_size > size)
+            throw std::runtime_error("train_size + test_size > size");
+
+        train.reserve(train.size() + train_size);
+        test.reserve(test.size() + test_size);
+
+        Iter it = begin;
+        for (; it != begin + train_size; ++it)
+            train.push_back(it->pos, it->HasTaskWithoutMove() ? it->MaxIntensity().result.score : 0);
+        for (; it != begin + train_size + test_size; ++it)
+            test.push_back(it->pos, it->HasTaskWithoutMove() ? it->MaxIntensity().result.score : 0);
+    }
+    template <typename Iter>
+    void Add(Iter begin, Iter end, double test_fraction) noexcept(false)
+    {
+        std::size_t size = std::distance(begin, end);
+        std::size_t test_size = test_fraction * size;
+        std::size_t train_size = size - test_size;
+        Add(begin, end, train_size, test_size);
+    }
+    template <typename Container>
+    void Add(const Container& c, std::size_t train_size, std::size_t test_size) noexcept(false)
+    {
+        Add(c.begin(), c.end(), train_size, test_size);
+    }
+    template <typename Container>
+    void Add(const Container& c, double test_fraction) noexcept(false)
+    {
+        Add(c.begin(), c.end(), test_fraction);
+    }
+};
+
+MatrixCSR<uint32_t> CreateMatrix(const DenseIndexer& indexer, const std::vector<Position>& pos)
+{
+    const int64_t size = static_cast<int64_t>(pos.size());
     const auto row_size = indexer.variations;
     const auto cols = indexer.reduced_size;
-    const auto rows = pos.size();
+    const auto rows = size;
     MatrixCSR<uint32_t> mat(row_size, cols, rows);
 
-    const int64_t size = static_cast<int64_t>(pos.size());
     #pragma omp parallel for schedule(static)
     for (int64_t i = 0; i < size; i++)
         for (int j = 0; j < indexer.variations; j++)
@@ -71,55 +156,46 @@ auto CreateMatrix(const DenseIndexer& indexer, const std::vector<Position>& pos)
     return mat;
 }
 
-Vector FittedWeights(const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
+std::vector<float> FittedWeights(const std::vector<BitBoard>& pattern, const Data& data)
 {
-    auto indexer = CreateDenseIndexer(patterns);
-    auto matrix = CreateMatrix(*indexer, pos);
+    auto indexer = CreateDenseIndexer(pattern);
+    auto matrix = CreateMatrix(*indexer, data.Pos());
     Vector weights(indexer->reduced_size, 0);
     DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(1000));
-    PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
+    PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * data.Score());
     solver.Iterate(10);
     return solver.X();
 }
 
-Vector EvalWeights(const Vector& weights, 
-                          const std::vector<BitBoard>& patterns, 
-                          const std::vector<Position>& pos, 
-                          const Vector& score)
+std::vector<float> EvalWeights(const std::vector<float>& weights, const std::vector<BitBoard>& pattern, const Data& data)
 {
-    auto indexer = CreateDenseIndexer(patterns);
-    auto matrix = CreateMatrix(*indexer, pos);
-    return score - matrix * weights;
+    auto indexer = CreateDenseIndexer(pattern);
+    auto matrix = CreateMatrix(*indexer, data.Pos());
+    return data.Score() - matrix * weights;
 }
 
-//auto FittedEvaluator(const std::vector<BitBoard>& patterns, const std::vector<Position>& pos, const Vector& score)
-//{
-//    Vector weights = FittedWeights(patterns, pos, score);
-//    return Pattern::CreateEvaluator(patterns, Pattern::Weights{weights.begin(), weights.end()});
-//}
-
-
-auto Split(const std::vector<PosScore>& pos_score, int test_size, 
-           std::vector<Position>& test_pos, Vector& test_score,
-           std::vector<Position>& train_pos, Vector& train_score)
+auto EvalWeights(const std::vector<float>& weights, const std::vector<BitBoard>& pattern, const DataPair& data)
 {
-    for (int i = 0; i < test_size; i++)
-    {
-        test_pos.push_back(pos_score[i].pos);
-        test_score.push_back(pos_score[i].score);
-    }
-    for (int i = test_size; i < pos_score.size(); i++)
-    {
-        train_pos.push_back(pos_score[i].pos);
-        train_score.push_back(pos_score[i].score);
-    }
+    auto train_eval = EvalWeights(weights, pattern, data.train);
+    auto test_eval = EvalWeights(weights, pattern, data.test);
+    return std::make_tuple(StandardDeviation(train_eval), StandardDeviation(test_eval));
 }
+
+void SavePattern(const std::vector<BitBoard>& pattern)
+{
+    Save(R"(G:\Reversi\weights\pattern.w)", pattern);
+}
+std::vector<BitBoard> LoadPattern()
+{
+    return Load<std::vector<BitBoard>>(R"(G:\Reversi\weights\pattern.w)");
+}
+
 
 std::pair<std::vector<Vector>, Vector> LoadData(int max_empty_count, int size)
 {
     std::map<std::vector<Vector::value_type>, Vector::value_type> SD;
 
-    std::vector<int> score = Load<int>(R"(G:\Reversi\weights\dDE.w)");
+    std::vector<int> score = Load<std::vector<int>>(R"(G:\Reversi\weights\dDE.w)");
     for (int E = 1; E <= max_empty_count; E++)
         for (int D = 0; D <= E; D++)
             for (int d = 0; d < D; d++)
@@ -192,19 +268,82 @@ void FitModels()
     //-0.10026799, 0.31027733, -0.57772603, 0.07585621, 1.16492647, 5.4171698;
 }
 
+DataPair LoadData(int lower, int upper, std::size_t train_size, std::size_t test_size) noexcept(false)
+{
+    DataPair data;
+    for (int e = lower; e <= upper; e++)
+    {
+        std::vector<Puzzle> puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e)" + std::to_string(e) + ".puz");
+        for (std::size_t i = 0; i < train_size; i++)
+            data.train.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().result.score : 0);
+        for (std::size_t i = 0; i < test_size; i++)
+            data.test.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().result.score : 0);
+    }
+    return data;
+}
+
+void Train_size_vs_accuracy()
+{
+    std::size_t test_size = 50'000;
+
+    auto pattern = LoadPattern();
+
+    for (std::size_t train_size = 10'000; train_size <= 5'000'000 - test_size; train_size += 10'000)
+    {
+        DataPair data;
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e18.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e19.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e20.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e21.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e22.puz)"), train_size, test_size);
+
+        auto weights = FittedWeights(pattern, data.train);
+        auto [train_sd, test_sd] = EvalWeights(weights, pattern, data);
+
+        std::cout << "train size " << train_size << ": test error " << test_sd << "\n";
+    }
+}
+
 int main()
 {
-    FitModels();
+    //Train_size_vs_accuracy();
+    //return 0;
+
+    //const std::size_t train_size = 950'000;
+    //const std::size_t test_size = 50'000;
+    const double test_fraction = 0.01;
+
+    auto pattern = LoadPattern();
+
+    for (std::size_t block = 0; block < 5; block++)
+    {
+        DataPair data;
+        for (std::size_t e = 1 + PatternEval::block_size * block; e <= PatternEval::block_size * (block + 1); e++)
+        {
+            auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_100k\e)" + std::to_string(e) + ".puz");
+            data.Add(puzzles, test_fraction);
+        }
+
+        std::vector<float> weights;
+        if (std::ranges::all_of(data.train.Score(), [](int score) { return score == 0; }))
+            weights = Load<std::vector<float>>(R"(G:\Reversi\weights\block)" + std::to_string(block - 1) + ".w");
+        else
+            weights = FittedWeights(pattern, data.train);
+        Save(R"(G:\Reversi\weights\block)" + std::to_string(block) + ".w", weights);
+
+        auto [train_sd, test_sd] = EvalWeights(weights, pattern, data);
+        std::cout << "Block " << block << ": train error " << train_sd << ", test error " << test_sd << "\n";
+    }
     return 0;
      
     // Tested on e22 - e24
-    std::vector<BitBoard> patterns{Q0, C3p2, L02X, Ep, L1, L2, L3, D8, D7, D6, D5, D4}; // 12 Pattern => edax 3.85
-    //std::vector<BitBoard> patterns{Q0, B5, L02X, L1, L2, L3, D8, D7, D6, D5, D4}; // 11 Pattern => Logistello 7.55 from https://skatgame.net/mburo/ps/improve.pdf
-    //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}; // 12 Pattern => 3.92
-    //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2}; // 12 Pattern => 3.93
-    //std::vector<BitBoard> patterns{L02X, L1, L2, L3, D5, D6, D7, Comet, B5, C3p2, Q0}; // 11 Pattern => 3.73
-    //std::vector<BitBoard> patterns{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}; // 10 Pattern => 3.96
-    //std::vector<BitBoard> patterns{B5, C4, L02X, // 7 Pattern => 3.73, 4 Pattern => 3.88
+    //std::vector<BitBoard> pattern{Q0, C3p2, L02X, Ep, L1, L2, L3, D8, D7, D6, D5, D4}; // 12 Pattern => edax 3.85
+    //std::vector<BitBoard> pattern{Q0, B5, L02X, L1, L2, L3, D8, D7, D6, D5, D4}; // 11 Pattern => Logistello 7.55 from https://skatgame.net/mburo/ps/improve.pdf
+    //std::vector<BitBoard> pattern{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4, Q1, Q2}; // 12 Pattern => 3.92
+    //std::vector<BitBoard> pattern{L0, L1, L2, L3, D5, D6, D7, Comet, B5, Q0, Q1, Q2}; // 12 Pattern => 3.93
+    //std::vector<BitBoard> pattern{L02X, L1, L2, L3, D5, D6, D7, Comet, B5, C3p2, Q0}; // 11 Pattern => 3.73
+    //std::vector<BitBoard> pattern{L0, L1, L2, L3, D5, D6, D7, Comet, B5, C4}; // 10 Pattern => 3.96
+    //std::vector<BitBoard> pattern{B5, C4, L02X, // 7 Pattern => 3.73, 4 Pattern => 3.88
     //    "# - - - - - - #"
     //    "# # - - - - # #"
     //    "- - - - - - - -"
@@ -241,11 +380,10 @@ int main()
     //    "- - - - - - - -"
     //    "- - - - - - - -"_BitBoard
     //};
-    Save(R"(G:\Reversi\weights\pattern.w)", patterns);
+    /*Save(R"(G:\Reversi\weights\pattern.w)", pattern);
 
-    const int test_size = 50'000;
 
-    auto indexer = CreateDenseIndexer(patterns);
+    auto indexer = CreateDenseIndexer(pattern);
     std::cout << "Weights to fit: " << indexer->reduced_size << std::endl;
 
     for (int block = 0; block < 8; block++)
@@ -256,7 +394,7 @@ int main()
         {
             if (e >= 0 && e < 25)
             {
-                auto data = Load<PosScore>(R"(G:\Reversi\rnd\e)" + std::to_string(e) + ".psc");
+                auto data = LoadVec_old<PosScore>(R"(G:\Reversi\rnd\e)" + std::to_string(e) + ".psc");
                 Split(data, test_size, test_pos, test_score, train_pos, train_score);
             }
         }
@@ -321,5 +459,5 @@ int main()
     Save(R"(G:\Reversi\weights\dDE.w)", score);
 
     FitModels();
-    return 0;
+    return 0;*/
 }

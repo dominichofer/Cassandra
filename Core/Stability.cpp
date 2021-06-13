@@ -8,8 +8,8 @@ class StabilityAnalyzer
 public:
 	StabilityAnalyzer();
 
-	[[nodiscard]] BitBoard StableEdges(const Position&) const;
-	[[nodiscard]] BitBoard StableStones(const Position&) const; // Stable stones of the opponent
+	[[nodiscard]] BitBoard StableEdges(const Position&) const; // Stable edges of player and opponent
+	[[nodiscard]] BitBoard StableStonesOpponent(const Position&) const; // Stable stones of the opponent
 
 private:
 	[[nodiscard]] static uint64_t FullLineHorizontal(uint64_t discs);
@@ -17,6 +17,7 @@ private:
 	[[nodiscard]] static uint64_t FullLineDiagonal(uint64_t discs);
 	[[nodiscard]] static uint64_t FullLineCodiagonal(uint64_t discs);
 
+	// edge_stables[Player][Opponent] holds the stable discs of player and opponent
 	std::array<std::array<uint8_t, 256>, 256> edge_stables{};
 };
 
@@ -55,10 +56,7 @@ StabilityAnalyzer::StabilityAnalyzer()
 }
 
 BitBoard StabilityAnalyzer::StableEdges(const Position& pos) const
-{
-	// 2 x AND, 2 X SHIFT, 3 x OR, 4 x PEXT, 2 X PDEP
-	// 13 OPs
-	
+{	
 	constexpr uint64_t L0_Left = BitBoard::VerticalLine(7);
 	constexpr uint64_t L0_Right = BitBoard::VerticalLine(0);
 
@@ -70,25 +68,25 @@ BitBoard StabilityAnalyzer::StableEdges(const Position& pos) const
 	return stable_L0_Bottom | stable_L0_Top | stable_L0_Left | stable_L0_Right;
 }
 
-BitBoard StabilityAnalyzer::StableStones(const Position& pos) const
+BitBoard StabilityAnalyzer::StableStonesOpponent(const Position& pos) const
 {
-	const uint64_t discs = pos.Discs();
+	const BitBoard discs = pos.Discs();
 
-	const uint64_t full_h = FullLineHorizontal(discs);
-	const uint64_t full_v = FullLineVertival(discs);
-	const uint64_t full_d = FullLineDiagonal(discs);
-	const uint64_t full_c = FullLineCodiagonal(discs);
-	uint64_t new_stables = StableEdges(pos) & pos.Opponent();
+	const BitBoard full_h = FullLineHorizontal(discs);
+	const BitBoard full_v = FullLineVertival(discs);
+	const BitBoard full_d = FullLineDiagonal(discs);
+	const BitBoard full_c = FullLineCodiagonal(discs);
+	BitBoard new_stables = StableEdges(pos) & pos.Opponent();
 	new_stables |= full_h & full_v & full_d & full_c & pos.Opponent() & ~BitBoard::Edges();
 
-	uint64_t stables = 0;
-	while (new_stables & ~stables)
+	BitBoard stables = 0;
+	while (new_stables & ~stables) // discovered new stables
 	{
 		stables |= new_stables;
-		const uint64_t stables_h = (stables >> 1) | (stables << 1) | full_h;
-		const uint64_t stables_v = (stables >> 8) | (stables << 8) | full_v;
-		const uint64_t stables_d = (stables >> 9) | (stables << 9) | full_d;
-		const uint64_t stables_c = (stables >> 7) | (stables << 7) | full_c;
+		BitBoard stables_h = (stables >> 1) | (stables << 1) | full_h;
+		BitBoard stables_v = (stables >> 8) | (stables << 8) | full_v;
+		BitBoard stables_d = (stables >> 9) | (stables << 9) | full_d;
+		BitBoard stables_c = (stables >> 7) | (stables << 7) | full_c;
 		new_stables = stables_h & stables_v & stables_d & stables_c & pos.Opponent() & ~BitBoard::Edges();
 	}
 	return stables;
@@ -163,12 +161,21 @@ BitBoard StableEdges(const Position& pos)
 	return sa.StableEdges(pos);
 }
 
-BitBoard StableStones(const Position& pos)
+BitBoard StableStonesOpponent(const Position& pos)
 {
-	return sa.StableStones(pos);
+	return sa.StableStonesOpponent(pos);
+}
+
+BitBoard StableCornersOpponent(const Position& pos)
+{
+	BitBoard right_corners = (pos.Opponent() & 0x0100000000000001ULL) << 1;
+	BitBoard left_corners = (pos.Opponent() & 0x8000000000000080ULL) >> 1;
+	BitBoard upper_corners = (pos.Opponent() & BitBoard::Corners()) << 8;
+	BitBoard lower_corners = (pos.Opponent() & BitBoard::Corners()) >> 8;
+	return (right_corners | left_corners | upper_corners | lower_corners | BitBoard::Corners()) & pos.Opponent();
 }
 
 int StabilityBasedMaxScore(const Position& pos)
 {
-	return max_score - popcount(StableStones(pos));
+	return max_score - popcount(StableStonesOpponent(pos));
 }

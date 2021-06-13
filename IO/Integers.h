@@ -2,12 +2,6 @@
 #include "Core/Core.h"
 #include <string>
 
-// Maps input to (.., "-1", "+0", "+1", ..)
-std::string SignedInt(int);
-
-// Maps input to (.., "-01", "+00", "+01", ..)
-std::string DoubleDigitSignedInt(int);
-
 // Maps input to (..,'n', 'u', 'm', '', 'k', 'M', 'G',..)
 char MetricPrefix(int magnitude_base_1000) noexcept(false);
 

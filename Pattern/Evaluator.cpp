@@ -131,9 +131,18 @@ PatternEval::PatternEval()
 	evals[0] = std::make_unique<GameOver>();
 }
 
-PatternEval::PatternEval(const std::vector<BitBoard>& pattern, const std::vector<Pattern::Weights>& compressed)
+PatternEval::PatternEval(
+	const std::vector<BitBoard>& pattern,
+	const std::vector<Pattern::Weights>& compressed,
+	const std::vector<float>& accuracy_parameters)
 	: PatternEval()
 {
+	alpha = accuracy_parameters[0];
+	beta = accuracy_parameters[1];
+	gamma = accuracy_parameters[2];
+	delta = accuracy_parameters[3];
+	epsilon = accuracy_parameters[4];
+
 	int empty_count = 1;
 	for (const auto& w : compressed)
 	{
@@ -151,6 +160,11 @@ float PatternEval::Eval(const Position& pos) const
 std::vector<PatternEval::MaskAndValue> PatternEval::DetailedEval(const Position& pos) const
 {
 	return evals[pos.EmptyCount()]->DetailedEval(pos);
+}
+
+float PatternEval::EvalAccuracy(int d, int D, int E) const
+{
+	return (std::exp(alpha * d) + beta) * std::pow(D - d, gamma) * (delta * E + epsilon);
 }
 
 std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, const Weights& compressed)

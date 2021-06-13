@@ -1,5 +1,20 @@
 #include "Position.h"
 
+std::string SignedInt(int score)
+{
+	std::string sign = (score >= 0) ? "+" : "-";
+	std::string number = std::to_string(std::abs(score));
+	return sign + number;
+}
+
+std::string DoubleDigitSignedInt(int score)
+{
+	std::string sign = (score >= 0) ? "+" : "-";
+	std::string filling_zero = (std::abs(score) < 10) ? "0" : "";
+	std::string number = std::to_string(std::abs(score));
+	return sign + filling_zero + number;
+}
+
 void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
 void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
 void Position::FlipHorizontal() noexcept { P.FlipHorizontal(); O.FlipHorizontal(); }

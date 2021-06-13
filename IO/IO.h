@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Core.h"
+#include "Database.h"
 #include "FForum.h"
 #include "Integers.h"
 #include "PosScore.h"

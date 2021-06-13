@@ -23,7 +23,8 @@
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="MoreTypes.h" />
     <ClInclude Include="Ranges.h" />
-    <ClInclude Include="ConfidenceLevel.h" />
+    <ClInclude Include="Confidence.h" />
     <ClInclude Include="Interval.h" />
+    <ClInclude Include="Algorithms.h" />
   </ItemGroup>
 </Project>

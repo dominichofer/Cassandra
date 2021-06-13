@@ -451,7 +451,7 @@ int main(int argc, char *argv[])
     for (int i = 18; i <= 22; i++)
     {
         const auto input = R"(G:\Reversi\rnd\e)" + std::to_string(i) + ".psc";
-        std::vector<PosScore> data = Load<PosScore>(input);
+        std::vector<PosScore> data = LoadVec_old<PosScore>(input);
         for (int i = 0; i < data.size(); i++)
         {
         	if (i < 800'000)
