@@ -41,7 +41,7 @@ int AlphaBetaFailHard::Eval_1(const Position& pos, OpenInterval window, Field mo
 int AlphaBetaFailHard::Eval_2(const Position& pos, OpenInterval window, Field move1, Field move2)
 {
 	assert(pos.EmptyCount() == 2);
-	node_count++;
+	nodes++;
 	int score = inf_score;
 
 	if (const auto flips = Flips(pos, move1)) {
@@ -66,7 +66,7 @@ int AlphaBetaFailHard::Eval_2(const Position& pos, OpenInterval window, Field mo
 int AlphaBetaFailHard::Eval_3(const Position& pos, OpenInterval window, Field move1, Field move2, Field move3)
 {
 	assert(pos.EmptyCount() == 3);
-	node_count++;
+	nodes++;
 	int score = inf_score;
 
 	if (const auto flips = Flips(pos, move1)) {
@@ -101,7 +101,7 @@ int AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval window)
 	if (pos.EmptyCount() == 3)
 		return Eval(pos, window);
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves) {
 		const auto passed = PlayPass(pos);

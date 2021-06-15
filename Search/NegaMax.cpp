@@ -20,7 +20,7 @@ int NegaMax::Eval(const Position& pos)
 int NegaMax::Eval_0(const Position& pos)
 {
 	assert(pos.EmptyCount() == 0);
-	node_count++;
+	nodes++;
 	return EvalGameOver(pos);
 }
 
@@ -31,23 +31,23 @@ int NegaMax::Eval_1(const Position& pos, Field move1)
 
 	if (const auto diff = CountLastFlip(pos, move1))
 	{
-		node_count += 2;
+		nodes += 2;
 		return score + diff;
 	}
 	if (const auto diff = CountLastFlip(PlayPass(pos), move1))
 	{
-		node_count += 3;
+		nodes += 3;
 		return score - diff - 1;
 	}
 
-	node_count++;
+	nodes++;
 	return (score > 0) ? score : score - 1;
 }
 
 int NegaMax::Eval_2(const Position& pos, Field move1, Field move2)
 {
 	assert(pos.EmptyCount() == 2);
-	node_count++;
+	nodes++;
 	int score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
@@ -68,7 +68,7 @@ int NegaMax::Eval_2(const Position& pos, Field move1, Field move2)
 int NegaMax::Eval_3(const Position& pos, Field move1, Field move2, Field move3)
 {
 	assert(pos.EmptyCount() == 3);
-	node_count++;
+	nodes++;
 	int score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
@@ -95,7 +95,7 @@ int NegaMax::Eval_N(const Position& pos)
 	if (pos.EmptyCount() == 3)
 		return Eval(pos);
 
-	node_count++;
+	nodes++;
 	const Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{

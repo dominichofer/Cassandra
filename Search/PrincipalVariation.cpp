@@ -199,7 +199,7 @@ Result PVS::PVS_N(const Position& pos, const Request& request)
 		return result;
 	}
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves) {
 		const auto passed = PlayPass(pos);
@@ -307,7 +307,7 @@ Result PVS::ZWS_N(const Position& pos, const Request& request, bool cut_node)
 		return result;
 	}
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves) {
 		const auto passed = PlayPass(pos);
@@ -400,7 +400,7 @@ Result PVS::PVS_shallow(const Position& pos, Request request)
 		return result;
 	}
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves) {
 		const auto passed = PlayPass(pos);
@@ -489,7 +489,7 @@ Result PVS::ZWS_shallow(const Position& pos, const Request& request)
 		return result;
 	}
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves) {
 		const auto passed = PlayPass(pos);
@@ -554,7 +554,7 @@ Search::Result PVS::ZWS_endgame(const Position& pos, const Search::Request& requ
 		return result;
 	}
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves) {
 		const auto passed = PlayPass(pos);
@@ -612,7 +612,7 @@ Search::Result PVS::ZWS_endgame(const Position& pos, const Search::Request& requ
 
 int PVS::Eval_d0(const Position& pos)
 {
-	node_count++;
+	nodes++;
 	int unbound_score = static_cast<int>(std::round(evaluator.Eval(pos)));
 	return std::clamp(unbound_score, min_score, max_score);
 }
@@ -622,7 +622,7 @@ int PVS::Eval_dN(const Position& pos, OpenInterval w, int depth)
 	if (depth == 0)
 		return Eval_d0(pos);
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{

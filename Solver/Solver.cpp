@@ -23,7 +23,7 @@
 //		puzzle.Result();
 //}
 
-//void print(std::size_t index, int depth, int eval, int correct, std::chrono::nanoseconds duration, uint64 node_count)
+//void print(std::size_t index, int depth, int eval, int correct, std::chrono::nanoseconds duration, uint64 nodes)
 
 void PrintFooter()
 {
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 	PatternEval pattern_eval = DefaultPatternEval();
 	HashTablePVS tt{ 1'000'000'000 };
 
-	//uint64 node_count = 0;
+	//uint64 nodes = 0;
 	//std::chrono::nanoseconds duration{ 0 };
 
 	std::locale locale("");

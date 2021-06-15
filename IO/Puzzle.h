@@ -21,14 +21,14 @@
 //struct CompactPuzzle
 //{
 //	Position pos{};
-//	uint64 node_count = 0;
+//	uint64 nodes = 0;
 //	std::chrono::duration<double> duration{0};
 //	std::vector<Search::Request> request;
 //	std::vector<Search::Result> result;
 //
 //	CompactPuzzle() noexcept = default;
-//	CompactPuzzle(const Puzzle& p) noexcept : pos(p.Position()), node_count(p.Nodes()), duration(p.Duration()), request(p.Request()), result(p.Result()) {}
-//	operator Puzzle() const { return { pos, node_count, duration, request, result }; }
+//	CompactPuzzle(const Puzzle& p) noexcept : pos(p.Position()), nodes(p.Nodes()), duration(p.Duration()), request(p.Request()), result(p.Result()) {}
+//	operator Puzzle() const { return { pos, nodes, duration, request, result }; }
 //};
 //#pragma pack()
 //

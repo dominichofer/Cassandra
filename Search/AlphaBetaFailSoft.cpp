@@ -33,7 +33,7 @@ int AlphaBetaFailSoft::Eval(const Position& pos, OpenInterval w)
 int AlphaBetaFailSoft::Eval_2(const Position& pos, OpenInterval w, const Field move1, const Field move2)
 {
 	assert(pos.EmptyCount() == 2);
-	node_count++;
+	nodes++;
 	int best_score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
@@ -60,7 +60,7 @@ int AlphaBetaFailSoft::Eval_2(const Position& pos, OpenInterval w, const Field m
 int AlphaBetaFailSoft::Eval_3(const Position& pos, OpenInterval w, const Field move1, const Field move2, const Field move3)
 {
 	assert(pos.EmptyCount() == 3);
-	node_count++;
+	nodes++;
 	int best_score = -inf_score;
 
 	if (const auto flips = Flips(pos, move1))
@@ -104,7 +104,7 @@ int AlphaBetaFailSoft::Eval_P(const Position& pos, OpenInterval w)
 		return Eval_3(pos, w, move1, move2, move3);
 	}
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{ 
@@ -136,7 +136,7 @@ int AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval w)
 	if (pos.EmptyCount() == Eval_to_ParitySort)
 		return Eval_P(pos, w);
 
-	node_count++;
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{

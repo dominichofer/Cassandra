@@ -69,7 +69,7 @@
 //				EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
 //				EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //				EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
-//				EXPECT_EQ(status_quo.GetResult().node_count, novum.node_count + 1);
+//				EXPECT_EQ(status_quo.GetResult().nodes, novum.nodes + 1);
 //			}
 //	}
 //
@@ -90,7 +90,7 @@
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
-//			EXPECT_EQ(status_quo.GetResult().node_count, novum.node_count + 1);
+//			EXPECT_EQ(status_quo.GetResult().nodes, novum.nodes + 1);
 //		}
 //	}
 //
@@ -112,7 +112,7 @@
 //				EXPECT_EQ(result.depth, intensity.depth);
 //				EXPECT_EQ(result.certainty, intensity.certainty);
 //				EXPECT_EQ(result.best_move, Field::A2);
-//				EXPECT_EQ(result.node_count, novum.node_count + 1);
+//				EXPECT_EQ(result.nodes, novum.nodes + 1);
 //			}
 //	}
 //
@@ -123,7 +123,7 @@
 //			Request intensity = Request::ExactScore({});
 //			StatusQuo status_quo(intensity);
 //
-//			status_quo.Improve(Result::ExactScore(score, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*node_count*/), Field::A1);
+//			status_quo.Improve(Result::ExactScore(score, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A1);
 //
 //			EXPECT_FALSE(status_quo.IsUpperCut());
 //		}
@@ -148,7 +148,7 @@
 //				EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //				EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //				EXPECT_EQ(status_quo.GetResult().best_move, Field::A1);
-//				EXPECT_EQ(status_quo.GetResult().node_count, 2);
+//				EXPECT_EQ(status_quo.GetResult().nodes, 2);
 //			}
 //	}
 //
@@ -166,7 +166,7 @@
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A1);
-//			EXPECT_EQ(status_quo.GetResult().node_count, 2);
+//			EXPECT_EQ(status_quo.GetResult().nodes, 2);
 //		}
 //	}
 //
@@ -179,7 +179,7 @@
 //			Request intensity = Request::ExactScore({});
 //			StatusQuo status_quo(intensity);
 //
-//			status_quo.Improve(Result::ExactScore(score, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*node_count*/), Field::A1);
+//			status_quo.Improve(Result::ExactScore(score, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A1);
 //			
 //			EXPECT_FALSE(status_quo.IsUpperCut());
 //			EXPECT_EQ(status_quo.GetResult().window.lower(), score);
@@ -187,7 +187,7 @@
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A1);
-//			EXPECT_EQ(status_quo.GetResult().node_count, 2);
+//			EXPECT_EQ(status_quo.GetResult().nodes, 2);
 //		}
 //	}
 //}
@@ -208,7 +208,7 @@
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
-//			EXPECT_EQ(status_quo.GetResult().node_count, 3);
+//			EXPECT_EQ(status_quo.GetResult().nodes, 3);
 //		}
 //}
 //
@@ -228,7 +228,7 @@
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
-//			EXPECT_EQ(status_quo.GetResult().node_count, 3);
+//			EXPECT_EQ(status_quo.GetResult().nodes, 3);
 //		}
 //}
 //
@@ -247,7 +247,7 @@
 //		EXPECT_EQ(limits.GetResult().depth, novum.depth);
 //		EXPECT_EQ(limits.GetResult().certainty, novum.certainty);
 //		EXPECT_EQ(limits.GetResult().best_move, novum.best_move);
-//		EXPECT_EQ(limits.GetResult().node_count, novum.node_count + 1);
+//		EXPECT_EQ(limits.GetResult().nodes, novum.nodes + 1);
 //	}
 //}
 //
@@ -267,7 +267,7 @@
 //			EXPECT_EQ(limits.GetResult().depth, novum.depth);
 //			EXPECT_EQ(limits.GetResult().certainty, novum.certainty);
 //			EXPECT_EQ(limits.GetResult().best_move, novum.best_move);
-//			EXPECT_EQ(limits.GetResult().node_count, novum.node_count + 1);
+//			EXPECT_EQ(limits.GetResult().nodes, novum.nodes + 1);
 //		}
 //}
 //
@@ -289,7 +289,7 @@
 ////			EXPECT_EQ(status_quo.GetResult().best_move, Field::invalid);
 ////			EXPECT_EQ(status_quo.GetResult().depth, result.depth);
 ////			EXPECT_EQ(status_quo.GetResult().certainty, result.certainty);
-////			EXPECT_EQ(status_quo.GetResult().node_count, 1);
+////			EXPECT_EQ(status_quo.GetResult().nodes, 1);
 ////		}
 ////}
 ////
@@ -311,7 +311,7 @@
 ////			EXPECT_EQ(limits.best_move, Field::invalid);
 ////			EXPECT_EQ(limits.worst_depth, result.depth);
 ////			EXPECT_EQ(limits.worst_certainty, result.certainty);
-////			EXPECT_EQ(limits.node_count, 1);
+////			EXPECT_EQ(limits.nodes, 1);
 ////		}
 ////}
 ////
@@ -333,7 +333,7 @@
 ////			EXPECT_EQ(limits.best_move, Field::invalid);
 ////			EXPECT_EQ(limits.worst_depth, result.depth);
 ////			EXPECT_EQ(limits.worst_certainty, result.certainty);
-////			EXPECT_EQ(limits.node_count, 1);
+////			EXPECT_EQ(limits.nodes, 1);
 ////		}
 ////}
 //
@@ -353,7 +353,7 @@
 //			EXPECT_EQ(limits.GetResult().depth, novum.depth);
 //			EXPECT_EQ(limits.GetResult().certainty, novum.certainty);
 //			EXPECT_EQ(limits.GetResult().best_move, novum.best_move);
-//			EXPECT_EQ(limits.GetResult().node_count, novum.node_count + 1);
+//			EXPECT_EQ(limits.GetResult().nodes, novum.nodes + 1);
 //		}
 //}
 //

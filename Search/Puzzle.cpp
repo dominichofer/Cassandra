@@ -147,7 +147,7 @@ bool Puzzle::Solve(const Search::Algorithm& algorithm)
 		int score = alg->Eval(position, task.Intensity()).Score();
 		const auto stop = std::chrono::high_resolution_clock::now();
 
-		task.result = Result(score, alg->node_count, stop - start);
+		task.result = Result(score, alg->nodes, stop - start);
 		had_work = true;
 	}
 	return had_work;

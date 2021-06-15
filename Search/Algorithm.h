@@ -159,7 +159,7 @@ namespace Search
 	class Algorithm
 	{
 	public:
-		uint64 node_count = 0;
+		uint64 nodes = 0;
 		//Logger log;
 		
 		virtual std::unique_ptr<Algorithm> Clone() const = 0;
