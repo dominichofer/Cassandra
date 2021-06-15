@@ -15,7 +15,6 @@ std::vector<Request> Request::AllMoves(Position pos)
 	const auto possible_moves = PossibleMoves(pos);
 	std::vector<Request> requests;
 	requests.reserve(possible_moves.size());
-	Puzzle p(pos);
 	for (Field move : possible_moves)
 		requests.emplace_back(move, pos.EmptyCount() - 1);
 	return requests;
@@ -140,11 +139,12 @@ bool Puzzle::Solve(const Search::Algorithm& algorithm)
 			continue;
 
 		auto alg = algorithm.Clone();
+		auto position = pos;
 		if (task.HasMove())
-			pos = Play(pos, task.Move());
+			position = Play(position, task.Move());
 
 		const auto start = std::chrono::high_resolution_clock::now();
-		int score = alg->Eval(pos, task.Intensity()).Score();
+		int score = alg->Eval(position, task.Intensity()).Score();
 		const auto stop = std::chrono::high_resolution_clock::now();
 
 		task.result = Result(score, alg->node_count, stop - start);
