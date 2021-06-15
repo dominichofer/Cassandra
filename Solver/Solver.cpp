@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include <set>
 #include <omp.h>
 
 //void Test(std::vector<Puzzle>& puzzles)
@@ -91,8 +92,8 @@ void PrintPuzzleTest(const Puzzle& puzzle, int index)
 
 int main(int argc, char* argv[])
 {
-	FitAccuracyModel();
-	return 0;
+	//FitAccuracyModel();
+	//return 0;
 	//for (int e = 0; e <= 50; e++)
 	//{
 	//	auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e)" + std::to_string(e) + ".puz");
@@ -177,28 +178,38 @@ int main(int argc, char* argv[])
 	//}
 
 	//std::vector<Puzzle> puzzles;
-	//for (int e = 0; e <= 50; e++)
+	//for (int e = 10; e <= 30; e++)
 	//{
-	//	for (const auto& pos : PosGen::RandomPlayed{ e }(200))
-	//		puzzles.push_back(pos);
+	//	PosGen::RandomPlayed posgen{ e };
+	//	std::set<Position> set;
+	//	while (set.size() < 1'000)
+	//	{
+	//		auto pos = posgen();
+	//		if (PossibleMoves(pos).size() > 1)
+	//			set.insert(pos);
+	//	}
+	//	for (const auto& pos : set)
+	//		puzzles.push_back(Puzzle::WithAllMoves(pos));
 	//}
-	//Save(R"(G:\Reversi\model_eval.puz)", puzzles);
+	//Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
 	//return 0;
-	auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\model_eval.puz)");
-	PrintHeader();
+	auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\move_sort_test.puz)");
+	//PrintHeader();
 	Process(std::execution::par, puzzles,
 		[&](Puzzle& p, std::size_t index) {
-			p.insert(Request::ExactScore(p.pos));
+			//p.insert(Request::ExactScore(p.pos));
 			bool had_work = p.Solve(IDAB{ tt, pattern_eval });
-			PrintPuzzle(p, index);
-			if (had_work) {
+			//PrintPuzzle(p, index);
+			if (had_work and p.pos.EmptyCount() > 18) {
+				auto str = to_string(p);
 				#pragma omp critical
 				{
-					Save(R"(G:\Reversi\model_eval.puz)", puzzles);
+					std::cout << str << '\n';
+					Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
 				}
 			}
 		});
-	Save(R"(G:\Reversi\model_eval.puz)", puzzles);
+	Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
 	return 0;
 
 	for (int e = 20; e <= 50; e++)
