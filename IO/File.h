@@ -195,21 +195,21 @@ Confidence Read(std::istream& stream)
 	return Confidence(Read<decltype(std::declval<Confidence>().sigmas())>(stream));
 }
 
-// Search::Intensity
-inline void Write(std::ostream& stream, const Search::Intensity& intensity)
+// Intensity
+inline void Write(std::ostream& stream, const Intensity& intensity)
 {
 	Write(stream, intensity.depth);
 	Write(stream, intensity.certainty);
 }
 
-// Search::Intensity
-template <typename T, std::enable_if_t<std::is_same_v<T, Search::Intensity>, bool> = true>
+// Intensity
+template <typename T, std::enable_if_t<std::is_same_v<T, Intensity>, bool> = true>
 [[nodiscard]]
-Search::Intensity Read(std::istream& stream)
+Intensity Read(std::istream& stream)
 {
-	auto depth = Read<decltype(Search::Intensity::depth)>(stream);
-	auto certainty = Read<decltype(Search::Intensity::certainty)>(stream);
-	return Search::Intensity(depth, certainty);
+	auto depth = Read<decltype(Intensity::depth)>(stream);
+	auto certainty = Read<decltype(Intensity::certainty)>(stream);
+	return Intensity(depth, certainty);
 }
 
 // std::chrono::duration<double>

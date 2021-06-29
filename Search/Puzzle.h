@@ -12,9 +12,9 @@
 struct Request
 {
 	Field move = Field::none;
-	Search::Intensity intensity;
+	Intensity intensity;
 
-	Request(Field move, Search::Intensity intensity) noexcept : move(move), intensity(intensity) {}
+	Request(Field move, Intensity intensity) noexcept : move(move), intensity(intensity) {}
 	Request(Field move, int depth, Confidence selectivity = Confidence::Certain()) noexcept : move(move), intensity(depth, selectivity) {}
 	Request(int depth, Confidence selectivity = Confidence::Certain()) noexcept : intensity(depth, selectivity) {}
 
@@ -26,10 +26,7 @@ struct Request
 	[[nodiscard]] bool operator!=(const Request&) const noexcept = default;
 
 	[[nodiscard]] bool HasMove() const { return move != Field::none; }
-	//[[nodiscard]] Search::Intensity Intensity() const { return { depth, selectivity }; }
-
-	// TODO: Move this to Search?
-	//operator Search::Request() const { return Search::Request(intensity); }
+	//[[nodiscard]] Intensity Intensity() const { return { depth, selectivity }; }
 };
 
 struct Result
@@ -64,7 +61,7 @@ public:
 		[[nodiscard]] bool IsDone() const { return result.HasValue(); }
 		[[nodiscard]] bool HasMove() const { return request.HasMove(); }
 		[[nodiscard]] Field Move() const { return request.move; }
-		[[nodiscard]] Search::Intensity Intensity() const { return request.intensity; }
+		[[nodiscard]] Intensity Intensity() const { return request.intensity; }
 		[[nodiscard]] int Score() const { return result.score; }
 		[[nodiscard]] uint64 Nodes() const { return result.nodes; }
 		[[nodiscard]] std::chrono::duration<double> Duration() const { return result.duration; }
@@ -77,6 +74,7 @@ public:
 	std::vector<Task> tasks;
 
 	Puzzle(Position pos) noexcept : pos(pos) {}
+	Puzzle(Position pos, Task task) noexcept : pos(pos), tasks({ std::move(task) }) {}
 	Puzzle(Position pos, std::vector<Task> tasks) noexcept : pos(pos), tasks(std::move(tasks)) {}
 
 	static Puzzle WithExactScore(Position pos, int score) { return Puzzle(pos, { Task(Request(pos.EmptyCount()), score) }); }
@@ -105,9 +103,9 @@ public:
 
 	[[nodiscard]] bool HasTaskWithoutMove() const;
 
-	// Returns the task with the biggest 'Search::Intensity' that has no move.
+	// Returns the task with the biggest 'Intensity' that has no move.
 	[[nodiscard]] Task MaxIntensity() const noexcept(false);
-	[[nodiscard]] Task MaxIntensity(const std::function<bool(const Search::Intensity&, const Search::Intensity&)>& less) const noexcept(false);
+	[[nodiscard]] Task MaxIntensity(const std::function<bool(const Intensity&, const Intensity&)>& less) const noexcept(false);
 
 	void RemoveAllUndone();
 	void RemoveResult(const Request&);

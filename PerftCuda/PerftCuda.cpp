@@ -24,7 +24,7 @@ int64 CudaHashTablePerft::calculate_n(const Position& pos, const int depth)
 	}
 
 	int64 sum = 0;
-	for (const auto& move : moves)
+	for (Field move : moves)
 		sum += calculate_n(FlipToUnique(Play(pos, move)), depth-1);
 
 	hash_table.Update({ pos, depth }, sum);

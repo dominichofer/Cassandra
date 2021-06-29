@@ -39,25 +39,3 @@ TEST(SaveLoad, std_vector_int)
 
 	EXPECT_EQ(in, out);
 }
-
-TEST(SaveLoad, Project_int)
-{
-	Project<int> in({ 1,2,3 });
-
-	std::stringstream ss;
-	Write(ss, in);
-	auto out = Read<Project<int>>(ss);
-
-	EXPECT_EQ(in.wu, out.wu);
-}
-
-TEST(SaveLoad, PuzzleProject)
-{
-	PuzzleProject in({ Puzzle::WithAllDepths(Position::Start()) });
-
-	std::stringstream ss;
-	Write(ss, in);
-	auto out = Read<PuzzleProject>(ss);
-
-	EXPECT_EQ(in.wu, out.wu);
-}

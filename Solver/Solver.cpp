@@ -177,23 +177,23 @@ int main(int argc, char* argv[])
 	//	std::cout << "Run 1, EmptyCount: " << e << "\n";
 	//}
 
-	//std::vector<Puzzle> puzzles;
-	//for (int e = 10; e <= 30; e++)
-	//{
-	//	PosGen::RandomPlayed posgen{ e };
-	//	std::set<Position> set;
-	//	while (set.size() < 1'000)
-	//	{
-	//		auto pos = posgen();
-	//		if (PossibleMoves(pos).size() > 1)
-	//			set.insert(pos);
-	//	}
-	//	for (const auto& pos : set)
-	//		puzzles.push_back(Puzzle::WithAllMoves(pos));
-	//}
-	//Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
+	std::vector<Puzzle> puzzles;
+	for (int e = 10; e <= 30; e++)
+	{
+		PosGen::RandomPlayed posgen{ e };
+		std::set<Position> set;
+		while (set.size() < 1'000)
+		{
+			auto pos = posgen();
+			if (PossibleMoves(pos).size() > 1)
+				set.insert(pos);
+		}
+		for (const auto& pos : set)
+			puzzles.push_back(Puzzle::WithAllMoves(pos));
+	}
+	Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
 	//return 0;
-	auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\move_sort_test.puz)");
+	//auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\move_sort_test.puz)");
 	//PrintHeader();
 	Process(std::execution::par, puzzles,
 		[&](Puzzle& p, std::size_t index) {

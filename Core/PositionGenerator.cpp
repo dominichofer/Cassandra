@@ -143,7 +143,7 @@ ChildrenGenerator::Iterator& ChildrenGenerator::Iterator::operator++()
 			stack.emplace_back(pos, moves);
 		else
 		{
-			const auto passed = PlayPass(pos);
+			auto passed = PlayPass(pos);
 			const auto passed_moves = PossibleMoves(passed);
 			if (passed_moves)
 			{

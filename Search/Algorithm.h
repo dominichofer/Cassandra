@@ -161,8 +161,8 @@ namespace Search
 	public:
 		uint64 nodes = 0;
 		//Logger log;
-		
-		virtual std::unique_ptr<Algorithm> Clone() const = 0;
+
+		virtual std::unique_ptr<Algorithm> Clone() const = 0; // TODO: Remove Clone() and make nodes thread_local and time it!
 
 		// If the requested intensity is to search exact:
 		// - and the score is in the requested window, the result window is a singleton, the score.
@@ -171,10 +171,10 @@ namespace Search
 		// result.intensity >= requested.intensity.
 		// A requested certainty of "90%" means, that any given node can be cut (fail high, fail low) if a shallow search
 		// showed that there's a "90%" chance that the original search will result in a cut anyway.
-		virtual Result Eval(const Position&, const Request&) = 0;
-
-		int Score(const Position& pos, int depth) { return Eval(pos, Request::Certain(depth)).Score(); }
-		int Score(const Position& pos) { return Score(pos, pos.EmptyCount()); }
+		virtual int Eval(const Position&, const Intensity&, const OpenInterval&) = 0;
+		virtual int Eval(const Position&, const Intensity&) = 0;
+		virtual int Eval(const Position&, const OpenInterval&) = 0;
+		virtual int Eval(const Position&) = 0;
 	};
 };
 
@@ -183,15 +183,17 @@ class NegaMax : public Search::Algorithm
 public:
 	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<NegaMax>(); }
 
-	Search::Result Eval(const Position& pos, const Search::Request& request) override { return Search::Result::ExactFailSoft(request, pos, Eval(pos)); }
-	int Eval(const Position&);
-protected:
-	int Eval_0(const Position&);
-	int Eval_1(const Position&, Field);
+	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
+	int Eval(const Position&, const Intensity&) override;
+	int Eval(const Position&, const OpenInterval&) override;
+	int Eval(const Position&) override;
 private:
-	int Eval_2(const Position&, Field, Field);
-	int Eval_3(const Position&, Field, Field, Field);
 	int Eval_N(const Position&);
+	int Eval_3(const Position&, Field, Field, Field);
+	int Eval_2(const Position&, Field, Field);
+protected:
+	int Eval_1(const Position&, Field);
+	int Eval_0(const Position&);
 };
 
 class AlphaBetaFailHard final : public NegaMax
@@ -199,14 +201,16 @@ class AlphaBetaFailHard final : public NegaMax
 public:
 	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<AlphaBetaFailHard>(); }
 
-	Search::Result Eval(const Position&, const Search::Request&) override;
-	int Eval(const Position&, OpenInterval);
+	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
+	int Eval(const Position&, const Intensity&) override;
+	int Eval(const Position&, const OpenInterval&) override;
+	int Eval(const Position&) override;
 private:
-	int Eval_0(const Position&, OpenInterval);
-	int Eval_1(const Position&, OpenInterval, Field);
-	int Eval_2(const Position&, OpenInterval, Field, Field);
-	int Eval_3(const Position&, OpenInterval, Field, Field, Field);
 	int Eval_N(const Position&, OpenInterval);
+	int Eval_3(const Position&, OpenInterval, Field, Field, Field);
+	int Eval_2(const Position&, OpenInterval, Field, Field);
+	int Eval_1(const Position&, OpenInterval, Field);
+	int Eval_0(const Position&, OpenInterval);
 };
 
 class AlphaBetaFailSoft : public NegaMax
@@ -215,12 +219,14 @@ class AlphaBetaFailSoft : public NegaMax
 public:
 	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<AlphaBetaFailSoft>(); }
 
-	Search::Result Eval(const Position&, const Search::Request&) override;
-	int Eval(const Position&, OpenInterval);
+	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
+	int Eval(const Position&, const Intensity&) override;
+	int Eval(const Position&, const OpenInterval&) override;
+	int Eval(const Position&) override;
 private:
 	int Eval_2(const Position&, OpenInterval, Field, Field);
 	int Eval_3(const Position&, OpenInterval, Field, Field, Field);
-	int Eval_P(const Position&, OpenInterval); // Parity based move ordering.
+	int Eval_P(const Position&, OpenInterval); // Parity based move sorting.
 	int Eval_N(const Position&, OpenInterval);
 };
 
@@ -235,37 +241,45 @@ public:
 	PVS(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
 	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<PVS>(tt, evaluator); }
 
-	Search::Result Eval(const Position&, const Search::Request&) override;
+	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
+	int Eval(const Position&, const Intensity&) override;
+	int Eval(const Position&, const OpenInterval&) override;
+	int Eval(const Position&) override;
 private:
 	int32_t MoveOrderingScorer(const Position&, Field move, Field best_move, Field best_move_2, int sort_alpha, int sort_depth) noexcept;
-	std::optional<Search::Result> MPC(const Position&, const Search::Request&);
+	std::optional<Search::Result> MPC(const Position&, const Intensity&, const OpenInterval&);
 
-	Search::Result PVS_N(const Position&, const Search::Request&);
-	Search::Result ZWS_N(const Position&, const Search::Request&, bool cut_node);
-	Search::Result PVS_shallow(const Position&, Search::Request);
-	Search::Result ZWS_shallow(const Position&, const Search::Request&);
+	Search::Result PVS_N(const Position&, const Intensity&, const OpenInterval&);
+	Search::Result ZWS_N(const Position&, const Intensity&, const OpenInterval&, bool cut_node);
+	Search::Result PVS_shallow(const Position&, const Intensity&, const OpenInterval& = OpenInterval::Whole());
+	Search::Result ZWS_shallow(const Position&, const Intensity&, const OpenInterval& = OpenInterval::Whole());
 
+	Search::Result Eval_dN(const Position&, const Intensity&, const OpenInterval&);
+	int Eval_dN(const Position&, int depth, OpenInterval);
 	int Eval_d0(const Position&);
-	int Eval_dN(const Position&, OpenInterval, int depth);
-	Search::Result Eval_dN(const Position&, const Search::Request&);
 
-	Search::Result ZWS_endgame(const Position&, const Search::Request&);
+	Search::Result ZWS_endgame(const Position&, const Intensity&, const OpenInterval&);
 };
 
 class IDAB final : public PVS
 {
-	int MTD_f(const Position&, const Search::Intensity&, int guess);
 public:
 	IDAB(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : PVS(tt, evaluator) {}
-	virtual std::unique_ptr<Algorithm> Clone() const { return std::make_unique<IDAB>(tt, evaluator); }
+	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<IDAB>(tt, evaluator); }
 
-	Search::Result Eval(const Position&, const Search::Request&) override;
+	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
+	int Eval(const Position&, const Intensity&) override;
+	int Eval(const Position&, const OpenInterval&) override;
+	int Eval(const Position&) override;
+private:
+	int Eval_N(const Position&, const Intensity&);
+	int MTD_f(const Position&, const Intensity&, int guess);
 };
 
-[[nodiscard]] Search::Request NextZWS(const Search::Request&, const Search::Findings&) noexcept;
-[[nodiscard]] Search::Request NextFWS(const Search::Request&, const Search::Findings&) noexcept;
+[[nodiscard]] OpenInterval NextZeroWindow(const OpenInterval&, int best_score) noexcept;
+[[nodiscard]] OpenInterval NextFullWindow(const OpenInterval&, int best_score) noexcept;
 
-[[nodiscard]] Search::Result AllMovesSearched(const Search::Request&, const Search::Findings&) noexcept;
+[[nodiscard]] Search::Result AllMovesSearched(const OpenInterval&, const Search::Findings&) noexcept;
 
 
 uint64_t PotentialMoves(const Position&) noexcept;

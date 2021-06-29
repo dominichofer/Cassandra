@@ -3,25 +3,24 @@
 
 using namespace Search;
 
-Request NextZWS(const Request& request, const Findings& findings) noexcept
+OpenInterval NextZeroWindow(const OpenInterval& window, int best_score) noexcept
 {
-	auto lower = std::max(request.window.lower(), findings.best_score);
-	return { {request.depth() - 1, request.certainty()}, -OpenInterval{lower, lower + 1} };
+	int lower = std::max(window.lower(), best_score);
+	return OpenInterval{-lower - 1, -lower};
 }
 
-Request NextFWS(const Request& request, const Findings& findings) noexcept
+OpenInterval NextFullWindow(const OpenInterval& window, int best_score) noexcept
 {
-	auto lower = std::max(request.window.lower(), findings.best_score);
-	return { {request.depth() - 1, request.certainty()}, -OpenInterval{lower, request.window.upper()} };
+	int lower = std::max(window.lower(), best_score);
+	return OpenInterval{ -window.upper(), -lower };
 }
 
-Result AllMovesSearched(const Request& request, const Findings& findings) noexcept
+Result AllMovesSearched(const OpenInterval& window, const Findings& findings) noexcept
 {
-	assert(findings.lowest_intensity >= request.intensity);
 	int score = findings.best_score;
-	if (score < request.window) // Failed low
+	if (score < window) // Failed low
 		return Result::FailLow(findings.lowest_intensity, score);
-	return Result::FoundScore(findings.lowest_intensity, score);
+	return Result(findings.lowest_intensity, score);
 }
 
 void Findings::Add(const Result& result, Field move) noexcept

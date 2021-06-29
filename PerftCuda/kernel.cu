@@ -35,7 +35,7 @@ __host__ __device__ int64 perft_2(const Position& pos)
         return PossibleMoves(PlayPass(pos)).size();
 
     int64 sum = 0;
-    for (const auto& move : moves)
+    for (Field move : moves)
         sum += perft_1(Play(pos, move));
     return sum;
 }
@@ -52,7 +52,7 @@ __host__ __device__ int64 perft_3(const Position& pos)
     }
 
     int64 sum = 0;
-    for (const auto& move : moves)
+    for (Field move : moves)
         sum += perft_2(Play(pos, move));
     return sum;
 }

@@ -94,10 +94,10 @@ bool Puzzle::HasTaskWithoutMove() const
 
 Puzzle::Task Puzzle::MaxIntensity() const noexcept(false)
 {
-	return MaxIntensity([](const Search::Intensity& l, const Search::Intensity& r) { return l < r; });
+	return MaxIntensity([](const Intensity& l, const Intensity& r) { return l < r; });
 }
 
-Puzzle::Task Puzzle::MaxIntensity(const std::function<bool(const Search::Intensity&, const Search::Intensity&)>& less) const noexcept(false)
+Puzzle::Task Puzzle::MaxIntensity(const std::function<bool(const Intensity&, const Intensity&)>& less) const noexcept(false)
 {
 	std::size_t max_element = tasks.size();
 	for (std::size_t i = 0; i < tasks.size(); i++)
@@ -144,7 +144,7 @@ bool Puzzle::Solve(const Search::Algorithm& algorithm)
 			position = Play(position, task.Move());
 
 		const auto start = std::chrono::high_resolution_clock::now();
-		int score = alg->Eval(position, task.Intensity()).Score();
+		int score = alg->Eval(position, task.Intensity());
 		const auto stop = std::chrono::high_resolution_clock::now();
 
 		task.result = Result(score, alg->nodes, stop - start);

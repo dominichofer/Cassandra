@@ -72,6 +72,7 @@
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="HasMoves.cpp" />
     <ClCompile Include="Interval.cpp" />
+    <ClCompile Include="Metronome.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="Algorithms.h" />
     <ClInclude Include="Confidence.h" />
     <ClInclude Include="Interval.h" />
+    <ClInclude Include="Metronome.h" />
     <ClInclude Include="Ranges.h" />
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Bit.h" />

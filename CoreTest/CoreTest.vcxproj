@@ -36,6 +36,7 @@
     <ClCompile Include="BitBoard.cpp" />
     <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Flips.cpp" />
+    <ClCompile Include="Metronome.cpp" />
     <ClCompile Include="Moves.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

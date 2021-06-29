@@ -52,7 +52,7 @@ int64 BasicPerft::calculate(const Position& pos, const int depth)
 	}
 
 	int64 sum = 0;
-	for (const auto& move : moves)
+	for (Field move : moves)
 		sum += calculate(Play(pos, move), depth-1);
 	return sum;
 }
@@ -91,7 +91,7 @@ int64 UnrolledPerft::calculate_2(const Position& pos)
 		return PossibleMoves(PlayPass(pos)).size();
 
 	int64 sum = 0;
-	for (const auto& move : moves)
+	for (Field move : moves)
 		sum += calculate_1(Play(pos, move));
 	return sum;
 }
@@ -116,7 +116,7 @@ int64 UnrolledPerft::calculate_n(const Position& pos, const int depth)
 	}
 
 	int64 sum = 0;
-	for (const auto& move : moves)
+	for (Field move : moves)
 		sum += calculate_n(Play(pos, move), depth-1);
 	return sum;
 }
@@ -173,7 +173,7 @@ int64 HashTablePerft::calculate_n(const Position& pos, const int depth)
 	}
 
 	int64 sum = 0;
-	for (const auto& move : moves)
+	for (Field move : moves)
 		sum += calculate_n(Play(pos, move), depth-1);
 
 	hash_table.Update({ pos, depth }, sum);

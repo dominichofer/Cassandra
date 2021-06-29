@@ -10,3 +10,4 @@
 #include "PositionGenerator.h"
 #include "Confidence.h"
 #include "Interval.h"
+#include "Metronome.h"

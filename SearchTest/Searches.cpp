@@ -375,25 +375,14 @@ public:
 
 	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
-		const auto result = PVS{ tt, pe }.Eval(pos, Search::Request(Search::Intensity::Exact(pos), w));
-
-		ASSERT_TRUE(result.window.Contains(correct));
+		int result = PVS{ tt, pe }.Eval(pos, w);
 
 		if (correct < w) // fail low
-		{
-			ASSERT_EQ(result.window.lower(), min_score);
-			ASSERT_LE(result.window.upper(), w.lower());
-		}
+			ASSERT_LE(result, w.lower());
 		else if (correct > w) // fail high
-		{
-			ASSERT_EQ(result.window.upper(), max_score);
-			ASSERT_GE(result.window.lower(), w.upper());
-		}
+			ASSERT_GE(result, w.upper());
 		else // score found
-		{
-			ASSERT_EQ(result.window.lower(), correct);
-			ASSERT_EQ(result.window.upper(), correct);
-		}
+			ASSERT_EQ(result, correct);
 	}
 
 	void Test(const Puzzle& puzzle)
@@ -453,39 +442,14 @@ public:
 	
 	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
-		const auto result = PVS{ tt, pe }.Eval(pos, Search::Request({Search::Intensity::Exact(pos)}, w));
-
-		ASSERT_TRUE(result.window.Contains(correct));
+		int result = PVS{ tt, pe }.Eval(pos, w);
 
 		if (correct < w) // fail low
-		{
-			// [-----------------------] possible
-			// ---------(-----)--------- w
-			// ----[]------------------- correct
-			// [[[[[]]]]]--------------- result
-			ASSERT_LE(min_score, result.window.lower());
-			ASSERT_LE(result.window.lower(), correct);
-
-			ASSERT_LE(correct, result.window.upper());
-			ASSERT_LE(result.window.upper(), w.lower());
-		}
-		else if (w < correct) // fail high
-		{
-			// [-----------------------] possible
-			// ---------(-----)--------- w
-			// -------------------[]---- correct
-			// ---------------[[[[[]]]]] result
-			ASSERT_LE(w.upper(), result.window.lower());
-			ASSERT_LE(result.window.lower(), correct);
-
-			ASSERT_LE(correct, result.window.upper());
-			ASSERT_LE(result.window.upper(), max_score);
-		}
+			ASSERT_LE(result, w.lower());
+		else if (correct > w) // fail high
+			ASSERT_GE(result, w.upper());
 		else // score found
-		{
-			ASSERT_EQ(result.window.lower(), correct);
-			ASSERT_EQ(result.window.upper(), correct);
-		}
+			ASSERT_EQ(result, correct);
 	}
 
 	void Test(const Puzzle& puzzle)

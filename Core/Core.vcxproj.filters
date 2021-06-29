@@ -11,6 +11,7 @@
     <ClCompile Include="PositionGenerator.cpp" />
     <ClCompile Include="HasMoves.cpp" />
     <ClCompile Include="Interval.cpp" />
+    <ClCompile Include="Metronome.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Moves.h" />
@@ -26,5 +27,6 @@
     <ClInclude Include="Confidence.h" />
     <ClInclude Include="Interval.h" />
     <ClInclude Include="Algorithms.h" />
+    <ClInclude Include="Metronome.h" />
   </ItemGroup>
 </Project>

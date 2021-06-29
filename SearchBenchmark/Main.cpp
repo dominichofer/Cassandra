@@ -30,42 +30,47 @@ int main(int argc, char* argv[])
 	int random_seed_1 = 4182;
 	int random_seed_2 = 5899;
 	int size = 100;
-
-	std::vector<PuzzleProject> projects;
-	for (int e = 1; e < 60; e++)
-	{
-		PuzzleProject proj;
-
-		PosGen::RandomPlayed rnd(random_seed_1 + e, random_seed_2 + e, e);
-		std::generate_n(
-			std::back_inserter(proj),
-			size,
-			[&rnd]() { return Puzzle(rnd()); }
-		);
-
-		projects.push_back(std::move(proj));
-	}
-
-	std::cout.imbue(std::locale(""));
-
 	PatternEval pattern_eval = DefaultPatternEval();
 	HashTablePVS tt{ 1'000'000 };
 
-	Process<PuzzleProject>(std::execution::par, projects,
-		[&](Puzzle& p) { p.Solve(IDAB{ tt, pattern_eval }); },
-		[](const PuzzleProject& proj) {
-			std::chrono::duration<double> duration = Duration(proj);
-			uint64 nodes = Nodes(proj);
-			#pragma omp critical
-			std::cout
-				<< std::setw(8) << proj.front().pos.EmptyCount() << " | "
-				<< short_time_format(duration / proj.size()) << "/pos | "
-				<< std::setw(11) << std::size_t(nodes / duration.count()) << " N/s | "
-				<< duration.count() << "\n";
-		});
-
+	std::cout.imbue(std::locale(""));
 	std::cout
 		<< " Empties |     TTS     |      Speed      | Duration \n"
 		<< "---------+-------------+-----------------+----------\n";
+
+	std::vector<std::vector<Puzzle>> groups;
+	for (int e = 0; e < 60; e++)
+	{
+		std::vector<Puzzle> group;
+		group.reserve(size);
+		PosGen::RandomPlayed posgen(random_seed_1 + e, random_seed_2 + e, e);
+		for (const Position& pos : posgen(size))
+			group.push_back(Puzzle{ pos, Puzzle::Task{ Request::ExactScore(pos) } });
+		groups.push_back(std::move(group));
+	}
+
+	CreateExecutor(std::execution::par, groups)
+
+	Metronome auto_saver(60s, [](const auto& ex) { ex.lock(); });
+
+	for (int e = 0; e < 60; e++)
+	{
+		std::vector<Puzzle> puzzles;
+		puzzles.reserve(size);
+		PosGen::RandomPlayed posgen(random_seed_1 + e, random_seed_2 + e, e);
+		for (const Position& pos : posgen(size))
+			puzzles.push_back(Puzzle{ pos, Puzzle::Task{ Request::ExactScore(pos) } });
+
+		Process(std::execution::par, puzzles,
+			[&](Puzzle& p) { p.Solve(IDAB{ tt, pattern_eval }); });
+
+		auto duration = Duration(puzzles);
+		auto nodes = Nodes(puzzles);
+		std::cout
+			<< std::setw(8) << e << " | "
+			<< short_time_format(duration / size) << "/pos | "
+			<< std::setw(11) << std::size_t(nodes / duration.count()) << " N/s | "
+			<< duration.count() << "\n";
+	}
 	return 0;
 }
