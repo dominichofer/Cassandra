@@ -6,6 +6,7 @@
 
 class Metronome
 {
+	std::mutex mutex;
 	std::condition_variable cv;
 	std::chrono::duration<double> period;
 	std::function<void()> callback;
@@ -14,10 +15,13 @@ class Metronome
 	void CallbackLoop(std::stop_token);
 
 public:
-	Metronome(std::chrono::duration<double> period, std::function<void()> callback) noexcept : period(period), callback(std::move(callback)) {}
+	Metronome(std::chrono::duration<double> period, std::function<void()> callback) noexcept
+		: period(period), callback(std::move(callback))
+	{}
 	~Metronome() { Stop(); }
 
 	void Start();
 	void Stop();
+	void Force();
 	bool Runs() const { return thread.joinable(); }
 };

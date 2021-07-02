@@ -15,6 +15,8 @@
 #include <set>
 #include <omp.h>
 
+using namespace std::chrono_literals;
+
 //void Test(std::vector<Puzzle>& puzzles)
 //{
 //	HashTablePVS tt{ 1'000'000 };
@@ -177,39 +179,46 @@ int main(int argc, char* argv[])
 	//	std::cout << "Run 1, EmptyCount: " << e << "\n";
 	//}
 
-	std::vector<Puzzle> puzzles;
-	for (int e = 10; e <= 30; e++)
-	{
-		PosGen::RandomPlayed posgen{ e };
-		std::set<Position> set;
-		while (set.size() < 1'000)
-		{
-			auto pos = posgen();
-			if (PossibleMoves(pos).size() > 1)
-				set.insert(pos);
-		}
-		for (const auto& pos : set)
-			puzzles.push_back(Puzzle::WithAllMoves(pos));
-	}
-	Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
+	//std::vector<Puzzle> puzzles;
+	//for (int e = 10; e <= 30; e++)
+	//{
+	//	PosGen::RandomPlayed posgen{ e };
+	//	std::set<Position> set;
+	//	while (set.size() < 1'000)
+	//	{
+	//		auto pos = posgen();
+	//		if (PossibleMoves(pos).size() > 1)
+	//			set.insert(pos);
+	//	}
+	//	for (const auto& pos : set)
+	//		puzzles.push_back(Puzzle::WithAllMoves(pos));
+	//}
+	//Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
 	//return 0;
-	//auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\move_sort_test.puz)");
-	//PrintHeader();
-	Process(std::execution::par, puzzles,
+	auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\move_sort_test.puz)");
+
+	auto ex = CreateExecutor<Puzzle>(std::execution::par, puzzles,
 		[&](Puzzle& p, std::size_t index) {
-			//p.insert(Request::ExactScore(p.pos));
 			bool had_work = p.Solve(IDAB{ tt, pattern_eval });
-			//PrintPuzzle(p, index);
-			if (had_work and p.pos.EmptyCount() > 18) {
+			if (p.pos.EmptyCount() > 18) {
 				auto str = to_string(p);
 				#pragma omp critical
-				{
-					std::cout << str << '\n';
-					Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
-				}
+				std::cout << index << ", e" << p.pos.EmptyCount() << ": " << str << '\n';
 			}
 		});
-	Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
+
+	Metronome auto_saver(60s, [&] {
+		std::cout << "Saving...";
+		ex->LockData();
+		Save(R"(G:\Reversi\move_sort_test.puz)", puzzles);
+		ex->UnlockData();
+		std::cout << "done!\n";
+	});
+
+	auto_saver.Start();
+	ex->Execute();
+	auto_saver.Force();
+
 	return 0;
 
 	for (int e = 20; e <= 50; e++)
