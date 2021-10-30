@@ -12,6 +12,9 @@ constexpr int max_score = +32;
 constexpr int inf_score = +33;
 constexpr int undefined_score = +35;
 
+template <typename T>
+concept score_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, int>;
+
 // Maps input to (.., "-1", "+0", "+1", ..)
 std::string SignedInt(int);
 
@@ -57,6 +60,9 @@ public:
 
 	[[nodiscard]] BitBoard ParityQuadrants() const;
 };
+
+template <typename T>
+concept pos_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, Position>;
 
 [[nodiscard]] CUDA_CALLABLE Position FlipCodiagonal(Position) noexcept;
 [[nodiscard]] CUDA_CALLABLE Position FlipDiagonal(Position) noexcept;

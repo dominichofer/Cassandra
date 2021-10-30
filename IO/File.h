@@ -265,8 +265,8 @@ inline void Write(std::ostream& stream, const Result& result)
 // Puzzle::Task
 inline void Write(std::ostream& stream, const Puzzle::Task& task)
 {
-	Write(stream, task.request);
-	Write(stream, task.result);
+	Write(stream, task.Request());
+	Write(stream, task.Result());
 }
 
 // Puzzle::Task

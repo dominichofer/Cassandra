@@ -1,8 +1,6 @@
-#include "Core/Position.h"
 #include "Evaluator.h"
 #include "Helpers.h"
 #include "DenseIndexer.h"
-#include <array>
 #include <cassert>
 #include <iterator>
 
@@ -11,7 +9,7 @@ using namespace Pattern;
 template <int variations>
 class Simple final : public Evaluator
 {
-	static_assert(variations == 4 || variations == 8);
+	static_assert(variations == 4 or variations == 8);
 
 	std::vector<BitBoard> masks;
 	std::vector<Weights> weights;
@@ -26,7 +24,7 @@ public:
 		assert(this->weights.size() == variations);
 	}
 
-	float Eval(const Position& pos) const override
+	float Eval(const Position& pos) const noexcept override
 	{
 		float sum = 0;
 		for (int i = 0; i < variations; i++)
@@ -34,7 +32,7 @@ public:
 		return sum;
 	}
 
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept override
 	{
 		std::vector<MaskAndValue> ret;
 		for (int i = 0; i < variations; i++)
@@ -52,7 +50,7 @@ public:
 		: components(std::move(evaluators))
 	{}
 
-	float Eval(const Position& pos) const override
+	float Eval(const Position& pos) const noexcept override
 	{
 		float sum = 0;
 		for (std::size_t i = 0; i < components.size(); i++)
@@ -60,7 +58,7 @@ public:
 		return sum;
 	}
 
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept override
 	{
 		std::vector<MaskAndValue> ret;
 		for (std::size_t i = 0; i < components.size(); i++)
@@ -69,38 +67,6 @@ public:
 			ret.insert(ret.end(), tmp.begin(), tmp.end());
 		}
 		return ret;
-	}
-};
-
-class GameOver final : public Evaluator
-{
-public:
-	GameOver() noexcept = default;
-
-	float Eval(const Position& pos) const override
-	{
-		return static_cast<float>(EvalGameOver(pos));
-	}
-
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
-	{ 
-		return {{~BitBoard{}, static_cast<float>(EvalGameOver(pos))}};
-	}
-};
-
-class Zero final : public Evaluator
-{
-public:
-	Zero() noexcept = default;
-
-	float Eval(const Position& pos) const override
-	{
-		return 0;
-	}
-
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
-	{ 
-		return {{BitBoard{}, 0}};
 	}
 };
 
@@ -117,72 +83,58 @@ public:
 //		return evals[pos.EmptyCount()]->Eval(pos);
 //	}
 //
-//	//std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
-//	//{
-//	//	return evals[pos.EmptyCount()]->DetailedEval(pos);
-//	//}
+//	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
+//	{
+//		return evals[pos.EmptyCount()]->DetailedEval(pos);
+//	}
 //};
 
-PatternEval::PatternEval()
+class GameOver final : public Evaluator
 {
-	std::shared_ptr<Evaluator> zero_eval = std::make_shared<Zero>();
-	for (auto& eval : evals)
-		eval = zero_eval;
-	evals[0] = std::make_unique<GameOver>();
-}
+public:
+	GameOver() noexcept = default;
 
-PatternEval::PatternEval(
-	const std::vector<BitBoard>& pattern,
-	const std::vector<Pattern::Weights>& compressed,
-	const std::vector<float>& accuracy_parameters)
-	: PatternEval()
-{
-	alpha = accuracy_parameters[0];
-	beta = accuracy_parameters[1];
-	gamma = accuracy_parameters[2];
-	delta = accuracy_parameters[3];
-	epsilon = accuracy_parameters[4];
-
-	int empty_count = 1;
-	for (const auto& w : compressed)
+	float Eval(const Position& pos) const noexcept override
 	{
-		std::shared_ptr<Evaluator> eval = CreateEvaluator(pattern, w);
-		for (int i = 0; i < block_size; i++)
-			evals[empty_count++] = eval;
+		return static_cast<float>(EvalGameOver(pos));
 	}
-}
 
-float PatternEval::Eval(const Position& pos) const
+	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept override
+	{ 
+		return { {~BitBoard{}, GameOver::Eval(pos)} };
+	}
+};
+
+class Zero final : public Evaluator
 {
-	return evals[pos.EmptyCount()]->Eval(pos);
-}
+public:
+	Zero() noexcept = default;
 
-std::vector<PatternEval::MaskAndValue> PatternEval::DetailedEval(const Position& pos) const
-{
-	return evals[pos.EmptyCount()]->DetailedEval(pos);
-}
+	float Eval(const Position&) const noexcept override
+	{
+		return 0;
+	}
 
-float PatternEval::EvalAccuracy(int d, int D, int E) const
-{
-	return (std::exp(alpha * d) + beta) * std::pow(D - d, gamma) * (delta * E + epsilon);
-}
+	std::vector<MaskAndValue> DetailedEval(const Position&) const noexcept override
+	{ 
+		return { {BitBoard{}, 0} };
+	}
+};
 
-std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, const Weights& compressed)
+std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, std::span<const float> compressed_weights)
 {
 	const auto indexer = CreateDenseIndexer(pattern);
 	const auto full_size = pown(3, popcount(pattern));
 
 	// Reserve memory for weights
-	std::vector<Weights> weights;
-	for (int i = 0; i < indexer->variations; i++)
-		weights.push_back(Weights(full_size));
+	std::vector<Weights> weights(indexer->variations, Weights(full_size));
 
 	// Decompress weights
 	for (int i = 0; i < indexer->variations; i++)
 	{
 		BitBoard variation = indexer->PatternVariation(i);
 		for (const Position& config : Configurations(variation))
-			weights[i][FastIndex(config, variation)] = compressed[indexer->DenseIndex(config, i)];
+			weights[i][FastIndex(config, variation)] = compressed_weights[indexer->DenseIndex(config, i)];
 	}
 
 	std::vector<BitBoard> variations;
@@ -194,15 +146,43 @@ std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, cons
 	return std::make_unique<Simple<8>>(std::move(variations), std::move(weights));
 }
 
-std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const std::vector<BitBoard>& patterns, const Weights& compressed)
+std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const std::vector<BitBoard>& patterns, std::span<const float> compressed_weights)
 {
-	std::vector<std::unique_ptr<Evaluator>> evals;
-	int offset = 0;
-	for (const auto& p : patterns)
+	std::vector<std::unique_ptr<Evaluator>> evaluators;
+	evaluators.reserve(patterns.size());
+	auto begin = compressed_weights.begin();
+	for (BitBoard p : patterns)
 	{
 		auto size = CreateDenseIndexer(p)->reduced_size;
-		evals.push_back(Pattern::CreateEvaluator(p, {compressed.begin() + offset, compressed.begin() + offset + size}));
-		offset += size;
+		evaluators.push_back(CreateEvaluator(p, { begin, begin + size }));
+		begin += size;
 	}
-	return std::make_unique<SumGroup>(std::move(evals));
+	return std::make_unique<SumGroup>(std::move(evaluators));
+}
+
+AAGLEM::AAGLEM(
+	int block_size,
+	std::vector<BitBoard> pattern,
+	const std::vector<std::vector<float>>& compressed,
+	const std::vector<float>& accuracy_parameters)
+	: block_size(block_size), pattern(std::move(pattern))
+{
+	std::shared_ptr<Evaluator> zero_eval = std::make_shared<Zero>();
+	for (auto& e : evals)
+		e = zero_eval;
+	evals[0] = std::make_unique<GameOver>();
+
+	alpha = accuracy_parameters[0];
+	beta = accuracy_parameters[1];
+	gamma = accuracy_parameters[2];
+	delta = accuracy_parameters[3];
+	epsilon = accuracy_parameters[4];
+
+	int empty_count = 1;
+	for (const auto& w : compressed)
+	{
+		std::shared_ptr<Evaluator> eval = CreateEvaluator(this->pattern, w);
+		for (int i = 0; i < block_size; i++)
+			evals[empty_count++] = eval;
+	}
 }

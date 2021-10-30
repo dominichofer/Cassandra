@@ -27,13 +27,12 @@ int PVS::Eval(const Position& pos)
 	return PVS_N(pos, Intensity::Exact(pos), OpenInterval::Whole()).Score();
 }
 
-uint64_t aaa(const Position& pos) noexcept
+Field PVS::BestMove(const Position& pos, const Intensity& request)
 {
-	auto b = pos.Empties();
-	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
-	b |= (b >> 8) | (b << 8);
-	return b & pos.Opponent();
+	Eval(pos, request);
+	return tt.LookUp(pos).value().best_move;
 }
+
 //static const int8_t FieldValue[64] = {
 //	9, 2, 8, 6, 6, 8, 2, 9,
 //	2, 1, 3, 4, 4, 3, 1, 2,
@@ -45,6 +44,14 @@ uint64_t aaa(const Position& pos) noexcept
 //	9, 2, 8, 6, 6, 8, 2, 9,
 //};
 
+//uint64_t OpponentsExposed(const Position& pos) noexcept
+//{
+//	auto b = pos.Empties();
+//	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
+//	b |= (b >> 8) | (b << 8);
+//	return b & pos.Opponent();
+//}
+
 int32_t PVS::MoveOrderingScorer(const Position& pos, Field move, Field best_move, Field best_move_2, int alpha, int depth) noexcept
 {
 	if (move == best_move)
@@ -53,17 +60,26 @@ int32_t PVS::MoveOrderingScorer(const Position& pos, Field move, Field best_move
 		return 1 << 28;
 
 	Position next = Play(pos, move);
+	auto pm = PossibleMoves(next);
 
 	int score = 0;// FieldValue[static_cast<uint8_t>(move)];
+
+	//score -= popcount(EightNeighboursAndSelf(next.Empties()) & next.Opponent()) * 0.36; // w_potential_mobility
+	//score += popcount(EightNeighboursAndSelf(next.Player()) & next.Empties()) * 0.32;
+	//score -= popcount(EightNeighboursAndSelf(next.Opponent()) & next.Empties()) * 0.29;
+	//score += popcount(StableEdges(next) & next.Opponent()) * 0.55; // w_edge_stability
+	//score -= pm.size() * 0.76; // w_mobility
+	//score -= (pm & BitBoard::Corners()).size() * 0.84; // w_mobility
 	//if (pos.ParityQuadrants() & BitBoard(move)) {
 	//	if (pos.EmptyCount() < 12) score += 1 << 2;
 	//	else if (pos.EmptyCount() < 21) score += 1 << 1;
 	//	else if (pos.EmptyCount() < 30) score += 1;
 	//}
-	score -= DoubleCornerPopcount(PotentialMoves(next)) << 5; // w_potential_mobility
-	score -= popcount(aaa(next)) << 6; // w_potential_mobility
-	score -= DoubleCornerPopcount(PossibleMoves(next)) << 15; // w_mobility
-	score += popcount(StableEdges(next) & next.Opponent()) << 11; // w_edge_stability
+	score -= DoubleCornerPopcount(PotentialMoves(next)) << 5;
+	score -= popcount(EightNeighboursAndSelf(next.Empties()) & next.Opponent()) << 6;
+	score -= DoubleCornerPopcount(PossibleMoves(next)) << 15;
+	score += DoubleCornerPopcount(StableEdges(next) & next.Opponent()) << 11; // w_edge_stability
+	return score;
 
 	//int sort_depth;
 	//int min_depth = 9;
@@ -97,26 +113,26 @@ int32_t PVS::MoveOrderingScorer(const Position& pos, Field move, Field best_move
 	return score;
 }
 
-float Sigma(int D, int d, int E) noexcept
-{
-	const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.177498, 0.938986, 0.261467, -0.0096483, 1.12807); // R^2 = 0.925636
-	return (std::expf(alpha * d) + beta) * std::powf(D - d, gamma) * (delta * E + epsilon);
-
-	//static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.0090121, 0.0348359, -0.0836982, 2.59089, 2.51293); // R^2 = 0.864748
-	//float sigma = alpha * E + beta * D + gamma * d;
-	//sigma = sigma * sigma + delta * sigma + epsilon;
-	//return sigma;
-
-	//const double EVAL_A = -0.10026799;
-	//const double EVAL_B = 0.31027733;
-	//const double EVAL_C = -0.57772603;
-	//const double EVAL_a = 0.07585621;
-	//const double EVAL_b = 1.16492647;
-	//const double EVAL_c = 5.4171698;
-	//double sigma = EVAL_A * E + EVAL_B * D + EVAL_C * d;
-	//sigma = EVAL_a * sigma * sigma + EVAL_b * sigma + EVAL_c;
-	//return sigma / 2.0;
-}
+//float Sigma(int D, int d, int E) noexcept
+//{
+//	const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.177498, 0.938986, 0.261467, -0.0096483, 1.12807); // R^2 = 0.925636
+//	return (std::expf(alpha * d) + beta) * std::powf(D - d, gamma) * (delta * E + epsilon);
+//
+//	//static const auto [alpha, beta, gamma, delta, epsilon] = std::make_tuple(-0.0090121, 0.0348359, -0.0836982, 2.59089, 2.51293); // R^2 = 0.864748
+//	//float sigma = alpha * E + beta * D + gamma * d;
+//	//sigma = sigma * sigma + delta * sigma + epsilon;
+//	//return sigma;
+//
+//	//const double EVAL_A = -0.10026799;
+//	//const double EVAL_B = 0.31027733;
+//	//const double EVAL_C = -0.57772603;
+//	//const double EVAL_a = 0.07585621;
+//	//const double EVAL_b = 1.16492647;
+//	//const double EVAL_c = 5.4171698;
+//	//double sigma = EVAL_A * E + EVAL_B * D + EVAL_C * d;
+//	//sigma = EVAL_a * sigma * sigma + EVAL_b * sigma + EVAL_c;
+//	//return sigma / 2.0;
+//}
 
 std::optional<Result> PVS::MPC(const Position& pos, const Intensity& intensity, const OpenInterval& window)
 {
@@ -126,7 +142,7 @@ std::optional<Result> PVS::MPC(const Position& pos, const Intensity& intensity, 
 
 	// log.AddSearch("MPC", pos, request);
 	float t = intensity.certainty.sigmas();
-	float sigma_0 = Sigma(intensity.depth, 0, pos.EmptyCount());
+	float sigma_0 = evaluator.Accuracy(intensity.depth, 0, pos.EmptyCount());
 	float eval_0 = evaluator.Eval(pos);
 	//int upper_0 = static_cast<int>(std::ceil(request.window.upper() + 2 * sigma_0 * t));
 	//int lower_0 = static_cast<int>(std::floor(request.window.lower() - 2 * sigma_0 * t));
@@ -143,11 +159,11 @@ std::optional<Result> PVS::MPC(const Position& pos, const Intensity& intensity, 
 
 	//probcut_level++;
 	{
-		int reduced_depth = intensity.depth / 4 * 2 /*+ (intensity.depth & 1)*/;
+		int reduced_depth = intensity.depth / 2 /*+ (intensity.depth & 1)*/;
 		//if (reduced_depth == 0)
 		//	reduced_depth = intensity.depth - 2;
 
-		float sigma = Sigma(intensity.depth, reduced_depth, pos.EmptyCount());
+		float sigma = evaluator.Accuracy(intensity.depth, reduced_depth, pos.EmptyCount());
 		int probcut_error = t * sigma + 0.5;
 		int eval_error = sigma_0;// t * 0.5 * (sigma_0 + sigma) + 0.5;
 		//int upper = static_cast<int>(std::ceil(request.window.upper() + sigma * t));
@@ -203,15 +219,15 @@ Result PVS::PVS_N(const Position& pos, const Intensity& intensity, const OpenInt
 	//if (pos.EmptyCount() <= pv_ext && intensity.depth < pos.EmptyCount())
 	//	return PVS_N(pos, Request(pos.EmptyCount(), request.certainty(), request.window));
 	// log.AddSearch("PVS", pos, request);
-	if (intensity.depth <= 2) {
-		auto result = Eval_dN(pos, intensity, window);
-		// log.Add("depth == 0", result);
-		return result;
-	}
 	if (pos.EmptyCount() <= 7 && intensity.depth == pos.EmptyCount()) {
 		int score = AlphaBetaFailSoft::Eval(pos, intensity, window);
 		// log.Add("low empty count", score);
 		return Result(intensity, score);
+	}
+	if (intensity.depth <= 2) {
+		auto result = Eval_dN(pos, intensity, window);
+		// log.Add("depth == 0", result);
+		return result;
 	}
 
 	nodes++;
@@ -630,7 +646,9 @@ Result PVS::Eval_dN(const Position& pos, const Intensity& intensity, const OpenI
 	int score = Eval_dN(pos, intensity.depth, window);
 	if (score > window)
 		return Result::FailHigh({ intensity.depth }, score);
-	return Result::FailLow({ intensity.depth }, score);
+	if (score < window)
+		return Result::FailLow({ intensity.depth }, score);
+	return Result({ intensity.depth }, score);
 }
 
 int PVS::Eval_dN(const Position& pos, int depth, OpenInterval window)

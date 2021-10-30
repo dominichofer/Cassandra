@@ -88,6 +88,9 @@
     <ProjectReference Include="..\IO\IO.vcxproj">
       <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\PatternFit\PatternFit.vcxproj">
+      <Project>{6b3035a6-8142-4efc-b137-b8857a299d59}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
     </ProjectReference>

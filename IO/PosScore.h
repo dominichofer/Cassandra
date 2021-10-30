@@ -3,7 +3,7 @@
 #include "File.h"
 
 #pragma pack(1)
-struct PosScore
+struct PosScore // TODO: Remove!
 {
 	Position pos{};
 	int8_t score = undefined_score;

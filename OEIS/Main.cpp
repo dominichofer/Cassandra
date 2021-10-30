@@ -44,8 +44,7 @@ int main()
 	std::cout << "plies|     A124005 |     A124006 |     A125528 |     A125529 |  time [s] \n";
 	std::cout << "-----+-------------+-------------+-------------+-------------+-----------\n";
 
-	std::locale locale("");
-	std::cout.imbue(locale);
+	std::cout.imbue(std::locale(""));
 	std::cout << std::setfill(' ') << std::boolalpha;
 
 	for (int plies = 1; plies < 20; plies++)

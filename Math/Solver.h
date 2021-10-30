@@ -123,6 +123,8 @@ public:
 			const Vector::value_type r_dot_z_old = dot(r, z);
 			const Vector A_p = A * p;
 			const Vector::value_type alpha = r_dot_z_old / dot(p, A_p);
+			if (not std::isnormal(alpha))
+				break;
 			x += alpha * p;
 			r -= alpha * A_p;
 			z = P.apply(r);

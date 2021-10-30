@@ -10,6 +10,7 @@
     <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="Objects.cpp" />
     <ClCompile Include="IDAB.cpp" />
+    <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HashTablePVS.h" />
@@ -18,7 +19,8 @@
     <ClInclude Include="SortedMoves.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Objects.h" />
-    <ClInclude Include="Project.h" />
+    <ClInclude Include="Executor.h" />
+    <ClInclude Include="Player.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Search.natvis" />

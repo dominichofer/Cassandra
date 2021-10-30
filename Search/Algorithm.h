@@ -236,15 +236,16 @@ class PVS : public AlphaBetaFailSoft
 	//static constexpr int ZWS_to_AlphaBetaFailSoft = 10;
 protected:
 	HashTablePVS& tt;
-	Pattern::Evaluator& evaluator;
+	const AAGLEM& evaluator;
 public:
-	PVS(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
+	PVS(HashTablePVS& tt, const AAGLEM& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
 	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<PVS>(tt, evaluator); }
 
 	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
 	int Eval(const Position&, const Intensity&) override;
 	int Eval(const Position&, const OpenInterval&) override;
 	int Eval(const Position&) override;
+	Field BestMove(const Position&, const Intensity&);
 private:
 	int32_t MoveOrderingScorer(const Position&, Field move, Field best_move, Field best_move_2, int sort_alpha, int sort_depth) noexcept;
 	std::optional<Search::Result> MPC(const Position&, const Intensity&, const OpenInterval&);
@@ -264,7 +265,7 @@ private:
 class IDAB final : public PVS
 {
 public:
-	IDAB(HashTablePVS& tt, Pattern::Evaluator& evaluator) noexcept : PVS(tt, evaluator) {}
+	IDAB(HashTablePVS& tt, const AAGLEM& evaluator) noexcept : PVS(tt, evaluator) {}
 	std::unique_ptr<Algorithm> Clone() const override { return std::make_unique<IDAB>(tt, evaluator); }
 
 	int Eval(const Position&, const Intensity&, const OpenInterval&) override;
@@ -285,7 +286,6 @@ private:
 uint64_t PotentialMoves(const Position&) noexcept;
 
 [[nodiscard]] CUDA_CALLABLE inline int DoubleCornerPopcount(const BitBoard& b) noexcept { return popcount(b) + popcount(b & BitBoard::Corners()); }
-[[nodiscard]] CUDA_CALLABLE inline int DoubleCornerPopcount(const Moves& m) noexcept { return m.size() + m.Filtered(BitBoard::Corners()).size(); }
+[[nodiscard]] CUDA_CALLABLE inline int DoubleCornerPopcount(const Moves& m) noexcept { return m.size() + (m & BitBoard::Corners()).size(); }
 
 int32_t MoveOrderingScorer(const Position&, Field move) noexcept;
-int32_t MoveOrderingScorer(const Position&, Field move, Field best_move, Field best_move_2) noexcept;

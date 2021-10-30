@@ -1,13 +1,5 @@
 #pragma once
-#include <type_traits>
-#include <functional>
-#include <vector>
-#include <numeric>
+#include <ranges>
 
-template <typename T>
-inline std::vector<T> range(T begin, T end)
-{
-	std::vector<T> elements(end - begin);
-	std::iota(elements.begin(), elements.end(), begin);
-	return elements;
-}
+template <typename T, typename ValueType>
+concept range = std::ranges::range<T> and std::same_as<std::ranges::range_value_t<T>, ValueType>;

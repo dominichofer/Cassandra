@@ -30,15 +30,15 @@ int AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval window)
 	if (pos.EmptyCount() <= Eval_to_ParitySort)
 	{
 		Moves moves{ pos.Empties() };
-		const auto move1 = moves.ExtractFirst();
-		const auto move2 = moves.ExtractFirst();
-		const auto move3 = moves.ExtractFirst();
+		Field move1 = moves.front(); moves.pop_front();
+		Field move2 = moves.front(); moves.pop_front();
+		Field move3 = moves.front();
 		switch (pos.EmptyCount())
 		{
-			case 3: return Eval_3(pos, window, move1, move2, move3);
-			case 2: return Eval_2(pos, window, move1, move2);
-			case 1: return NegaMax::Eval_1(pos, move1);
 			case 0: return NegaMax::Eval_0(pos);
+			case 1: return NegaMax::Eval_1(pos, move1);
+			case 2: return Eval_2(pos, window, move1, move2);
+			case 3: return Eval_3(pos, window, move1, move2, move3);
 			default: return Eval_P(pos, window);
 		}
 	}
@@ -76,9 +76,9 @@ int AlphaBetaFailSoft::Eval_P(const Position& pos, OpenInterval window)
 	if (pos.EmptyCount() <= 3)
 	{
 		Moves moves{ pos.Empties() };
-		Field move1 = moves.ExtractFirst();
-		Field move2 = moves.ExtractFirst();
-		Field move3 = moves.ExtractFirst();
+		Field move1 = moves.front(); moves.pop_front();
+		Field move2 = moves.front(); moves.pop_front();
+		Field move3 = moves.front();
 		switch (pos.EmptyCount())
 		{
 			case 0: return NegaMax::Eval_0(pos);
@@ -101,7 +101,7 @@ int AlphaBetaFailSoft::Eval_P(const Position& pos, OpenInterval window)
 	int best_score = -inf_score;
 	auto pq = pos.ParityQuadrants();
 	for (auto filter : { pq, ~pq })
-		for (Field move : moves.Filtered(filter))
+		for (Field move : moves & filter)
 		{
 			int score = -Eval_P(Play(pos, move), -window);
 			if (score > window)

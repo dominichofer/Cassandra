@@ -6,14 +6,12 @@
     <ClInclude Include="IO.h" />
     <ClInclude Include="PosScore.h" />
     <ClInclude Include="File.h" />
-    <ClInclude Include="Puzzle.h" />
     <ClInclude Include="PatternEval.h" />
     <ClInclude Include="Database.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />
     <ClCompile Include="IO.cpp" />
-    <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="PatternEval.cpp" />
   </ItemGroup>
 </Project>

@@ -7,31 +7,31 @@ int64 Correct(int depth)
 {
 	const int64 correct[] =
 	{
-		                     1,
-		                     4,
-		                    12,
-		                    56,
-		                   244,
-		                 1'396,
-		                 8'200,
-		                55'092,
-		               390'216,
-		             3'005'288,
-		            24'571'056,
-		           212'258'216,
-				 1'939'879'668,
-				18'429'618'408,
-			   184'041'761'768,
-			 1'891'831'332'208,
-			20'301'171'282'452,
-		   222'742'563'853'912,
-		 2'534'535'926'617'852,
-		29'335'558'770'589'276,
-		                    20,
-		                    21,
-		                    22,
-		                    23,
-		                    24,
+								1,
+								4,
+							   12,
+							   56,
+							  244,
+							1'396,
+							8'200,
+						   55'092,
+						  390'216,
+						3'005'288,
+					   24'571'056,
+					  212'258'216,
+					1'939'879'668,
+				   18'429'618'408,
+				  184'041'761'768,
+				1'891'831'332'208,
+			   20'301'171'282'452,
+			  222'742'563'853'912,
+			2'534'535'926'617'852,
+		   29'335'558'770'589'276,
+		  349'980'362'625'040'712,
+		4'228'388'321'175'157'140,
+							   22,
+							   23,
+							   24,
 	};
 	return correct[depth];
 }
@@ -64,7 +64,7 @@ int64 BasicPerft::calculate(const int depth)
 
 	// Makes use of 4-fold symmetrie.
 	Position pos = Position::Start();
-	pos = Play(pos, PossibleMoves(pos).First());
+	pos = Play(pos, PossibleMoves(pos).front());
 	return 4 * calculate(pos, depth-1);
 }
 
@@ -75,7 +75,7 @@ int64 UnrolledPerft::calculate_0()
 }
 
 // for 1 ply left
-__forceinline int64 UnrolledPerft::calculate_1(const Position& pos)
+int64 UnrolledPerft::calculate_1(const Position& pos)
 {
 	auto moves = PossibleMoves(pos);
 	if (moves)
@@ -145,7 +145,7 @@ int64 UnrolledPerft::calculate(const int depth)
 
 	// Makes use of 4-fold symmetrie.
 	Position pos = Position::Start();
-	pos = Play(pos, PossibleMoves(pos).First());
+	pos = Play(pos, PossibleMoves(pos).front());
 	return 4 * calculate(pos, depth-1);
 }
 
@@ -204,6 +204,6 @@ int64 HashTablePerft::calculate(const int depth)
 
 	// Makes use of 4-fold symmetrie.
 	Position pos = Position::Start();
-	pos = Play(pos, PossibleMoves(pos).First());
+	pos = Play(pos, PossibleMoves(pos).front());
 	return 4 * calculate(pos, depth-1);
 }

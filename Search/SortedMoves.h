@@ -18,8 +18,8 @@ public:
 	[[nodiscard]] std::size_t size() const noexcept { return m_moves.size(); }
 	[[nodiscard]] bool empty() const noexcept { return m_moves.empty(); }
 
-	[[nodiscard]] auto begin() const noexcept { return m_moves.begin(); }
-	[[nodiscard]] auto cbegin() const noexcept { return m_moves.cbegin(); }
-	[[nodiscard]] auto end() const noexcept { return m_moves.end(); }
-	[[nodiscard]] auto cend() const noexcept { return m_moves.cend(); }
+	[[nodiscard]] decltype(auto) begin() const noexcept { return m_moves.begin(); }
+	[[nodiscard]] decltype(auto) cbegin() const noexcept { return m_moves.cbegin(); }
+	[[nodiscard]] decltype(auto) end() const noexcept { return m_moves.end(); }
+	[[nodiscard]] decltype(auto) cend() const noexcept { return m_moves.cend(); }
 };

@@ -96,14 +96,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ModelFit.h" />
     <ClInclude Include="PatternFit.h" />
-    <ClInclude Include="WeightFit.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ModelFit.cpp" />
     <ClCompile Include="PatternFit.cpp" />
-    <ClCompile Include="WeightFit.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

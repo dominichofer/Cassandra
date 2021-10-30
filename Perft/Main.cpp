@@ -65,8 +65,7 @@ int main(int argc, char* argv[])
 	std::cout << "depth|       Positions       |correct|       Time       |       Pos/s      \n";
 	std::cout << "-----+-----------------------+-------+------------------+------------------\n";
 
-	std::locale locale("");
-	std::cout.imbue(locale);
+	std::cout.imbue(std::locale(""));
 	std::cout << std::setfill(' ') << std::boolalpha;
 
 	for (int d = 1; d <= depth; d++)

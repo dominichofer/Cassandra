@@ -18,16 +18,16 @@ enum class Field : uint8_t
 	invalid, none
 };
 
-// Maps
 // Field::A1 -> "A1"
 // etc
 // Field::invalid -> "--"
+// Field::none -> "--"
 std::string to_string(Field) noexcept;
 
 inline std::ostream& operator<<(std::ostream& os, Field f) { return os << to_string(f); }
 
 
-// An 8x8 board of binary integers.
+// An 8x8 board of bits.
 class BitBoard
 {
 	uint64_t b{};

@@ -74,13 +74,11 @@
     <ClInclude Include="IO.h" />
     <ClInclude Include="PatternEval.h" />
     <ClInclude Include="PosScore.h" />
-    <ClInclude Include="Puzzle.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />
     <ClCompile Include="IO.cpp" />
     <ClCompile Include="PatternEval.cpp" />
-    <ClCompile Include="Puzzle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

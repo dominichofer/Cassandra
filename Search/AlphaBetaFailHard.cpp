@@ -29,15 +29,15 @@ int AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval window)
 	if (pos.EmptyCount() <= 3)
 	{
 		Moves moves{ pos.Empties() };
-		Field move1 = moves.ExtractFirst();
-		Field move2 = moves.ExtractFirst();
-		Field move3 = moves.ExtractFirst();
+		Field move1 = moves.front(); moves.pop_front();
+		Field move2 = moves.front(); moves.pop_front();
+		Field move3 = moves.front();
 		switch (pos.EmptyCount())
 		{
-			case 3: return Eval_3(pos, window, move1, move2, move3);
-			case 2: return Eval_2(pos, window, move1, move2);
-			case 1: return Eval_1(pos, window, move1);
 			case 0: return Eval_0(pos, window);
+			case 1: return Eval_1(pos, window, move1);
+			case 2: return Eval_2(pos, window, move1, move2);
+			case 3: return Eval_3(pos, window, move1, move2, move3);
 		}
 	}
 

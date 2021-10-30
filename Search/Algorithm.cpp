@@ -35,10 +35,7 @@ void Findings::Add(const Result& result, Field move) noexcept
 
 uint64_t PotentialMoves(const Position& pos) noexcept
 {
-	auto b = pos.Opponent();
-	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
-	b |= (b >> 8) | (b << 8);
-	return b & pos.Empties();
+	return EightNeighboursAndSelf(pos.Opponent()) & pos.Empties();
 	//BitBoard O = pos.Opponent();
 	//O |= (O >> 8) | (O << 8);
 	//BitBoard tmp = O & 0x7E7E7E7E7E7E7E7Eui64;
@@ -68,12 +65,15 @@ uint64_t OpponentsExposed(const Position& pos) noexcept
 int32_t MoveOrderingScorer(const Position& pos, Field move) noexcept
 {
 	Position next = Play(pos, move);
+	auto pm = PossibleMoves(next);
 
 	int score = 0; // FieldValue[static_cast<uint8_t>(move)];
-	score -= DoubleCornerPopcount(PotentialMoves(next)) << 5;
-	score -= popcount(OpponentsExposed(next)) << 6;
-	score -= DoubleCornerPopcount(PossibleMoves(next)) << 15;
-	score += DoubleCornerPopcount(StableCornersOpponent(next)) << 11; // w_edge_stability
+	score -= popcount(EightNeighboursAndSelf(next.Empties()) & next.Opponent()) * 0.36; // w_potential_mobility
+	score += popcount(EightNeighboursAndSelf(next.Player()) & next.Empties()) * 0.32;
+	score -= popcount(EightNeighboursAndSelf(next.Opponent()) & next.Empties()) * 0.29;
+	score += popcount(StableEdges(next) & next.Opponent()) * 0.55; // w_edge_stability
+	score -= pm.size() * 0.76; // w_mobility
+	score -= (pm & BitBoard::Corners()).size() * 0.84; // w_mobility
 	return score;
 
 	//auto next_pos = Play(pos, move);

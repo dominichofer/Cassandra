@@ -2,91 +2,90 @@
 #include "Bit.h"
 #include <set>
 
-Position PosGen::Random::operator()()
+using namespace PosGen;
+
+Position Random::operator()() noexcept
 {
 	// Each field has a:
 	//  25% chance to belong to player,
 	//  25% chance to belong to opponent,
 	//  50% chance to be empty.
 
-	auto rnd = [this]() { return std::uniform_int_distribution<uint64_t>(0, 0xFFFFFFFFFFFFFFFFULL)(rnd_engine); };
-	BitBoard a = rnd();
-	BitBoard b = rnd();
+	BitBoard a = dist(rnd_engine);
+	BitBoard b = dist(rnd_engine);
 	return { a & ~b, b & ~a };
 }
 
-std::vector<Position> PosGen::Random::operator()(int num)
+Position RandomWithEmptyCount::operator()() noexcept
 {
-	std::set<Position> pos;
-	while (pos.size() < num)
-		pos.insert((*this)());
-	return { pos.begin(), pos.end() };
-}
-
-Position PosGen::RandomWithEmptyCount::operator()()
-{
-	auto dichotron = [this]() { return std::uniform_int_distribution<int>(0, 1)(rnd_engine) == 0; };
-
-	BitBoard P = 0;
-	BitBoard O = 0;
-	for (int e = 64; e > empty_count; e--)
+	Position pos;
+	while (pos.EmptyCount() > empty_count)
 	{
-		auto rnd = std::uniform_int_distribution<int>(0, e - 1)(rnd_engine);
-		auto bit = BitBoard(PDep(1ULL << rnd, Position(P, O).Empties()));
+		int rnd = std::uniform_int_distribution<int>(0, pos.EmptyCount() - 1)(rnd_engine);
 
-		if (dichotron())
-			P |= bit;
+		// deposit bit on an empty field
+		auto bit = BitBoard(PDep(1ULL << rnd, pos.Empties()));
+
+		if (boolean(rnd_engine))
+			pos = Position{ pos.Player() | bit, pos.Opponent() };
 		else
-			O |= bit;
+			pos = Position{ pos.Player(), pos.Opponent() | bit };
 	}
-	return { P, O };
+	return pos;
 }
 
-std::vector<Position> PosGen::RandomWithEmptyCount::operator()(int num)
+Played::Played(Player& first, Player& second, int empty_count, std::vector<Position> start) noexcept(false)
+	: first(first), second(second), empty_count(empty_count), start(std::move(start))
 {
-	std::set<Position> pos;
-	while (pos.size() < num)
-		pos.insert((*this)());
-	return { pos.begin(), pos.end() };
-}
+	start_pick = std::uniform_int_distribution<int>(0, this->start.size() - 1);
 
-PosGen::Played::Played(Player& first, Player& second, int empty_count, Position start)
-	: first(first), second(second), empty_count(empty_count), start(start)
-{
-	if (start.EmptyCount() < empty_count)
+	bool any_pos_not_enough_empty_count = std::any_of(this->start.begin(), this->start.end(),
+		[empty_count](const Position& pos) { return pos.EmptyCount() < empty_count; });
+	if (any_pos_not_enough_empty_count)
 		throw;
 }
 
-Position PosGen::Played::operator()()
+Position Played::operator()() noexcept
 {
-	Position pos = start;
+start:
+	Position pos = start[start_pick(rnd_engine)];
+	if (pos.EmptyCount() == empty_count)
+		return pos;
+play:
+	Position old = pos;
+
+	pos = first.Play(pos);
 	if (pos.EmptyCount() == empty_count)
 		return pos;
 
-	while (true)
-	{
-		Position old = pos;
+	pos = second.Play(pos);
+	if (pos.EmptyCount() == empty_count)
+		return pos;
 
-		pos = first.Play(pos);
-		if (pos.EmptyCount() == empty_count)
-			return pos;
-
-		pos = second.Play(pos);
-		if (pos.EmptyCount() == empty_count)
-			return pos;
-
-		if (old == pos) // both players passed
-			pos = start; // restart
-	}
+	if (old == pos) // both players passed
+		goto start;
+	goto play;
 }
 
-std::vector<Position> PosGen::Played::operator()(int num)
+std::set<Position> PosGen::generate_n_unique(int count, PositionGenerator& g)
 {
-	std::set<Position> pos;
-	while (pos.size() < num)
-		pos.insert((*this)());
-	return { pos.begin(), pos.end() };
+	std::set<Position> set;
+	while (set.size() < count)
+	{
+		#pragma omp parallel
+		{
+			std::set<Position> local_set;
+			#pragma omp for nowait
+			for (int i = set.size(); i < count; i++)
+				local_set.insert(g());
+			#pragma omp critical
+			set.merge(std::move(local_set));
+		}
+	}
+	return set;
 }
+
+std::set<Position> PosGen::generate_n_unique(int count, PositionGenerator&& g) { return generate_n_unique(count, g); }
 
 ChildrenGenerator::Iterator::Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept
 	: plies(plies), pass_is_a_ply(pass_is_a_ply)
@@ -130,7 +129,8 @@ ChildrenGenerator::Iterator& ChildrenGenerator::Iterator::operator++()
 			continue;
 		}
 
-		const auto move = stack.back().moves.ExtractFirst();
+		const auto move = stack.back().moves.front();
+		stack.back().moves.pop_front();
 		const auto pos = Play(stack.back().pos, move);
 
 		if (stack.size() == plies) {
@@ -172,4 +172,12 @@ ChildrenGenerator Children(Position start, int empty_count)
 {
 	assert(start.EmptyCount() > empty_count);
 	return {start, start.EmptyCount() - empty_count, false};
+}
+
+std::vector<Position> AllUnique(Position start, int empty_count)
+{
+	std::set<Position> set;
+	for (Position pos : Children(start, empty_count))
+		set.insert(FlipToUnique(pos));
+	return { set.begin(), set.end() };
 }

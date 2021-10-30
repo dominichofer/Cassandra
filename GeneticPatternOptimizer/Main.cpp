@@ -448,9 +448,11 @@ int main(int argc, char *argv[])
     //HashTablePVS tt{1'000'000};
     //Search::PV pvs{tt};
 
+    DataBase<Puzzle> puzzles = LoadEvalFit();
+
     for (int i = 18; i <= 22; i++)
     {
-        const auto input = R"(G:\Reversi\rnd\e)" + std::to_string(i) + ".psc";
+        const auto input = std::format(R"(G:\Reversi\rnd\play00_eval_fit.puz)", i);
         std::vector<PosScore> data = LoadVec_old<PosScore>(input);
         for (int i = 0; i < data.size(); i++)
         {

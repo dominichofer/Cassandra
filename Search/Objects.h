@@ -76,7 +76,13 @@ namespace Search
 		[[nodiscard]] int lower() const { return window.lower(); }
 		[[nodiscard]] int upper() const { return window.upper(); }
 		[[nodiscard]] int depth() const noexcept { return intensity.depth; }
-		[[nodiscard]] int Score() const noexcept { assert(window.IsSingleton());  return window.lower(); }
+		[[nodiscard]] int Score() const noexcept { 
+			if (window.IsSingleton())
+				return window.lower();
+			if (window.lower() == min_score)
+				return window.upper();
+			return window.lower();
+		}
 
 		[[nodiscard]] bool operator==(const Result&) const noexcept = default;
 		[[nodiscard]] bool operator!=(const Result&) const noexcept = default;
@@ -107,11 +113,11 @@ inline Intensity min(const Intensity& l, const Intensity& r)
 	return { std::min(l.depth, r.depth), std::min(l.certainty, r.certainty) };
 }
 
-inline std::string to_string(const Intensity& intensity)
+inline std::string to_string(const Intensity& i)
 {
-	std::string ret = std::to_string(intensity.depth);
-	if (intensity.certainty != Confidence::Certain())
-		ret += " " + to_string(intensity.certainty);
+	std::string ret = std::to_string(i.depth);
+	if (not i.IsCertain())
+		ret += " " + to_string(i.certainty);
 	return ret;
 }
 inline std::ostream& operator<<(std::ostream& os, const Intensity& intensity) { return os << to_string(intensity); }

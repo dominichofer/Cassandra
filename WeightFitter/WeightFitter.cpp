@@ -71,6 +71,8 @@ constexpr BitBoard AA = 0x000000010105031FULL;
 
 class Data
 {
+    // Constraint: pos.size() == score.size()
+
     std::vector<Position> pos;
     std::vector<float> score;
 public:
@@ -117,9 +119,9 @@ struct DataPair
 
         Iter it = begin;
         for (; it != begin + train_size; ++it)
-            train.push_back(it->pos, it->HasTaskWithoutMove() ? it->MaxIntensity().result.score : 0);
+            train.push_back(it->pos, it->HasTaskWithoutMove() ? it->MaxIntensity().Score() : 0); // TODO: WTF, why is ther a zero?
         for (; it != begin + train_size + test_size; ++it)
-            test.push_back(it->pos, it->HasTaskWithoutMove() ? it->MaxIntensity().result.score : 0);
+            test.push_back(it->pos, it->HasTaskWithoutMove() ? it->MaxIntensity().Score() : 0); // TODO: WTF, why is ther a zero?
     }
     template <typename Iter>
     void Add(Iter begin, Iter end, double test_fraction) noexcept(false)
@@ -273,11 +275,11 @@ DataPair LoadData(int lower, int upper, std::size_t train_size, std::size_t test
     DataPair data;
     for (int e = lower; e <= upper; e++)
     {
-        std::vector<Puzzle> puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e)" + std::to_string(e) + ".puz");
+        std::vector<Puzzle> puzzles = Load<std::vector<Puzzle>>(std::format(R"(G:\Reversi\rnd\e{}.puz)", e));
         for (std::size_t i = 0; i < train_size; i++)
-            data.train.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().result.score : 0);
+            data.train.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().Score() : 0); // TODO: WTF, why is ther a zero?
         for (std::size_t i = 0; i < test_size; i++)
-            data.test.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().result.score : 0);
+            data.test.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().Score() : 0); // TODO: WTF, why is ther a zero?
     }
     return data;
 }
@@ -291,11 +293,11 @@ void Train_size_vs_accuracy()
     for (std::size_t train_size = 10'000; train_size <= 5'000'000 - test_size; train_size += 10'000)
     {
         DataPair data;
-        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e18.puz)"), train_size, test_size);
-        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e19.puz)"), train_size, test_size);
-        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e20.puz)"), train_size, test_size);
-        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e21.puz)"), train_size, test_size);
-        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd\e22.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_1M\e18.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_1M\e19.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_1M\e20.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_1M\e21.puz)"), train_size, test_size);
+        data.Add(Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_1M\e22.puz)"), train_size, test_size);
 
         auto weights = FittedWeights(pattern, data.train);
         auto [train_sd, test_sd] = EvalWeights(weights, pattern, data);
@@ -318,18 +320,18 @@ int main()
     for (std::size_t block = 0; block < 5; block++)
     {
         DataPair data;
-        for (std::size_t e = 1 + PatternEval::block_size * block; e <= PatternEval::block_size * (block + 1); e++)
+        for (std::size_t e = 1 + PatternEvaluator::block_size * block; e <= PatternEvaluator::block_size * (block + 1); e++)
         {
-            auto puzzles = Load<std::vector<Puzzle>>(R"(G:\Reversi\rnd_100k\e)" + std::to_string(e) + ".puz");
+            auto puzzles = Load<std::vector<Puzzle>>(std::format(R"(G:\Reversi\rnd_100k\e{}.puz)", e));
             data.Add(puzzles, test_fraction);
         }
 
         std::vector<float> weights;
         if (std::ranges::all_of(data.train.Score(), [](int score) { return score == 0; }))
-            weights = Load<std::vector<float>>(R"(G:\Reversi\weights\block)" + std::to_string(block - 1) + ".w");
+            weights = Load<std::vector<float>>(std::format(R"(G:\Reversi\weights\block{}.w)", block - 1));
         else
             weights = FittedWeights(pattern, data.train);
-        Save(R"(G:\Reversi\weights\block)" + std::to_string(block) + ".w", weights);
+        Save(std::format(R"(G:\Reversi\weights\block{}.w)", block), weights);
 
         auto [train_sd, test_sd] = EvalWeights(weights, pattern, data);
         std::cout << "Block " << block << ": train error " << train_sd << ", test error " << test_sd << "\n";
@@ -426,7 +428,7 @@ int main()
             << std::endl;
     }
 
-    PatternEval pattern_eval = DefaultPatternEval();
+    PatternEvaluator pattern_eval = DefaultPatternEval();
     HashTablePVS tt{ 100'000'000 };
     const int size = 200;
     const int max_empty_count = 24;

@@ -32,7 +32,7 @@ Pattern::Weights LoadWeights(int block)
 	return Load<Pattern::Weights>(R"(G:\Reversi\weights\block)" + std::to_string(block) + ".w");
 }
 
-PatternEval DefaultPatternEval()
+AAGLEM DefaultPatternEval()
 {
 	std::vector<BitBoard> pattern = LoadPattern();
 	std::vector<Pattern::Weights> weights;
@@ -40,5 +40,5 @@ PatternEval DefaultPatternEval()
 		weights.push_back(LoadWeights(i));
 	weights.push_back(weights.back());
 	std::vector<float> params = LoadModelParameters();
-	return { pattern, weights, params };
+	return { 10, pattern, weights, params };
 }

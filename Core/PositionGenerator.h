@@ -6,58 +6,70 @@
 #include <random>
 #include <iterator>
 #include <vector>
+#include <set>
 
-// Position Generator
+// Position Generators
 namespace PosGen
 {
-	// Generator of random Position.
-	class Random
+	// Abstract
+	class PositionGenerator
+	{
+	public:
+		virtual Position operator()() noexcept = 0;
+	};
+
+	class Random final : public PositionGenerator
 	{
 		std::mt19937_64 rnd_engine;
+		std::uniform_int_distribution<uint64_t> dist{ 0, -1 };
 	public:
 		Random(unsigned int seed = std::random_device{}()) : rnd_engine(seed) {}
 
-		Position operator()();
-		std::vector<Position> operator()(int num);
+		Position operator()() noexcept override;
 	};
 
 	// Generator of random Position with given empty count.
-	class RandomWithEmptyCount
+	class RandomWithEmptyCount final : public PositionGenerator
 	{
 		const int empty_count;
 		std::mt19937_64 rnd_engine;
+		std::uniform_int_distribution<int> boolean{0, 1};
 	public:
 		RandomWithEmptyCount(int empty_count, unsigned int seed = std::random_device{}()) : empty_count(empty_count), rnd_engine(seed) {}
 		
-		Position operator()();
-		std::vector<Position> operator()(int num);
+		Position operator()() noexcept override;
 	};
 	
 	// Generator of played Position with given empty count.
-	class Played
+	class Played : public PositionGenerator
 	{
 	protected:
 		Player &first, &second;
 		const int empty_count;
-		const Position start;
+		std::vector<Position> start;
+		std::mt19937_64 rnd_engine{ std::random_device{}() };
+		std::uniform_int_distribution<int> start_pick;
 	public:
-		Played(Player& first, Player& second, int empty_count, Position start = Position::Start());
+		Played(Player& first, Player& second, int empty_count, std::vector<Position> start) noexcept(false);
+		Played(Player& first, Player& second, int empty_count, Position start = Position::Start()) noexcept(false) : Played(first, second, empty_count, std::vector{ start }) {}
 
-		Position operator()();
-		std::vector<Position> operator()(int num);
+		Position operator()() noexcept override;
 	};
 
 	// Generator of randomly played Position with given empty count.
-	class RandomPlayed final : public Played
+	class RandomlyPlayed final : public Played
 	{
-		RandomPlayer rp_first, rp_second;
+		RandomPlayer first, second;
 	public:
-		RandomPlayed(unsigned int seed1, unsigned int seed2, int empty_count, Position start = Position::Start()) noexcept
-			: rp_first(seed1), rp_second(seed2), Played(rp_first, rp_second, empty_count, start)
+		RandomlyPlayed(unsigned int seed1, unsigned int seed2, int empty_count, Position start = Position::Start()) noexcept
+			: first(seed1), second(seed2), Played(first, second, empty_count, start)
 		{}
-		RandomPlayed(int empty_count, Position start = Position::Start()) noexcept
-			: Played(rp_first, rp_second, empty_count, start) {}
+		RandomlyPlayed(int empty_count, Position start = Position::Start()) noexcept
+			: Played(first, second, empty_count, start) {}
 	};
+
+	std::set<Position> generate_n_unique(int count, PositionGenerator&);
+	std::set<Position> generate_n_unique(int count, PositionGenerator&&);
 }
 
 class ChildrenGenerator
@@ -70,8 +82,10 @@ class ChildrenGenerator
 			Moves moves;
 
 			PosMov(Position pos, Moves moves) : pos(pos), moves(moves) {}
-			[[nodiscard]] bool operator==(const PosMov& o) const noexcept { return std::tie(pos, moves) == std::tie(o.pos, o.moves); }
-			[[nodiscard]] bool operator!=(const PosMov& o) const noexcept { return !(*this == o); }
+			[[nodiscard]] bool operator==(const PosMov&) const noexcept = default;
+			[[nodiscard]] bool operator!=(const PosMov&) const noexcept = default;
+			//[[nodiscard]] bool operator==(const PosMov& o) const noexcept { return std::tie(pos, moves) == std::tie(o.pos, o.moves); }
+			//[[nodiscard]] bool operator!=(const PosMov& o) const noexcept { return !(*this == o); }
 		};
 		const int plies = 0;
 		const bool pass_is_a_ply = false;
@@ -107,3 +121,5 @@ public:
 
 ChildrenGenerator Children(Position, int plies, bool pass_is_a_ply);
 ChildrenGenerator Children(Position, int empty_count);
+
+std::vector<Position> AllUnique(Position, int empty_count);

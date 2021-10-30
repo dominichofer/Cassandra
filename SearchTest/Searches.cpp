@@ -260,8 +260,8 @@ public:
 
 	void Test_all_windows(const Position& pos,  int correct)
 	{
-		for (int lower : range(min_score, max_score + 1))
-			for (int upper : range(lower + 1, max_score + 1))
+		for (int lower : std::views::iota(min_score, max_score + 1))
+			for (int upper : std::views::iota(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
@@ -325,8 +325,8 @@ public:
 
 	void Test_all_windows(const Position& pos, const int& correct)
 	{
-		for (int lower : range(min_score, max_score + 1))
-			for (int upper : range(lower + 1, max_score + 1))
+		for (int lower : std::views::iota(min_score, max_score + 1))
+			for (int upper : std::views::iota(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
@@ -371,7 +371,7 @@ class PVSTest : public ::testing::Test
 {
 public:
 	HashTablePVS tt{ 1 };
-	PatternEval pe;
+	AAGLEM pe;
 
 	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
@@ -392,8 +392,8 @@ public:
 
 	void Test_all_windows(const Position& pos, const int& correct)
 	{
-		for (int lower : range(min_score, max_score + 1))
-			for (int upper : range(lower + 1, max_score + 1))
+		for (int lower : std::views::iota(min_score, max_score + 1))
+			for (int upper : std::views::iota(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 
@@ -438,7 +438,7 @@ class PVS_TT : public ::testing::Test
 {
 public:
 	HashTablePVS tt{ 1'000 };
-	PatternEval pe;
+	AAGLEM pe;
 	
 	void Test(const Position& pos, const int& correct, const OpenInterval& w)
 	{
@@ -459,8 +459,8 @@ public:
 
 	void Test_all_windows(const Position& pos, const int& correct)
 	{
-		for (int lower : range(min_score, max_score + 1))
-			for (int upper : range(lower + 1, max_score + 1))
+		for (int lower : std::views::iota(min_score, max_score + 1))
+			for (int upper : std::views::iota(lower + 1, max_score + 1))
 				Test(pos, correct, { lower, upper });
 	}
 

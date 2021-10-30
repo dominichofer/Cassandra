@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Core/Core.h"
+#include <numeric>
 
 namespace OEIS_Tests
 {

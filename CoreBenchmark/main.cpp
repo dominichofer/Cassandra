@@ -3,6 +3,7 @@
 #include "Pattern/Evaluator.h"
 #include "Pattern/DenseIndexer.h"
 #include <random>
+#include <numeric>
 
 using namespace detail;
 

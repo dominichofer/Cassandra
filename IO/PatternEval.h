@@ -10,4 +10,4 @@ std::vector<float> LoadModelParameters();
 void SaveWeights(const Pattern::Weights&, int block);
 Pattern::Weights LoadWeights(int block);
 
-PatternEval DefaultPatternEval();
+AAGLEM DefaultPatternEval();

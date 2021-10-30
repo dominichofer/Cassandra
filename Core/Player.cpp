@@ -3,12 +3,12 @@
 Position RandomPlayer::Play(const Position& pos)
 {
 	Moves possible_moves = PossibleMoves(pos);
-	if (!possible_moves)
+	if (possible_moves.empty())
 		return PlayPass(pos);
 
-	auto rnd = std::uniform_int_distribution<int>(0, possible_moves.size() - 1)(rnd_engine);
-	for (int i = 0; i < rnd; i++)
-		possible_moves.RemoveFirst();
+	int rnd = std::uniform_int_distribution<int>(0, possible_moves.size() - 1)(rnd_engine);
+	auto it = possible_moves.begin();
+	std::advance(it, rnd);
 
-	return ::Play(pos, possible_moves.First());
+	return ::Play(pos, *it);
 }
