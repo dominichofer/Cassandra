@@ -22,4 +22,4 @@ public:
 [[nodiscard]] inline std::string to_string(const Confidence& c) { return c.to_string(); }
 inline std::ostream& operator<<(std::ostream& os, const Confidence& c) { return os << to_string(c); }
 
-[[nodiscard]] constexpr Confidence operator""_sigmas(long double z) { return Confidence(z); }
+[[nodiscard]] constexpr Confidence operator""_sigmas(long double z) { return Confidence{ static_cast<float>(z) }; }
