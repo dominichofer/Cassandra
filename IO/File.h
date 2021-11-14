@@ -78,224 +78,199 @@
 //	return Load<value_type>(stream);
 //}
 
-
-
-// Arithmetic or Enum
-template <typename T, std::enable_if_t<std::is_arithmetic_v<T> or std::is_enum_v<T>, bool> = true>
-void Write(std::ostream& stream, const T& t)
+template <typename Stream = std::fstream>
+class BinaryFileStream
 {
-	stream.write(reinterpret_cast<const char*>(std::addressof(t)), sizeof(T));
-}
+	Stream stream;
+public:
+	BinaryFileStream() = default;
+	BinaryFileStream(const std::filesystem::path& file) : stream(file, std::ios::binary)
+	{
+		if (not stream.is_open())
+			throw std::fstream::failure("Can not open '" + file.string() + "' for binary intput/output.");
+	}
 
-// Arithmetic or Enum
-template <typename T, std::enable_if_t<std::is_arithmetic_v<T> or std::is_enum_v<T>, bool> = true>
-[[nodiscard]]
-T Read(std::istream& stream)
-{
-	T t;
-	stream.read(reinterpret_cast<char*>(std::addressof(t)), sizeof(T));
-	return t;
-}
+	void close() { stream.close(); }
 
-template <typename T, typename = void>
-struct is_iterable : std::false_type {};
+	//template <typename T>
+	//void write(const T& t);
 
-template <typename T>
-struct is_iterable<T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>> : std::true_type {};
+	//template <typename T>
+	//T read();
 
-template <typename T>
-constexpr bool is_iterable_v = is_iterable<T>::value;
+	template <typename T>
+	requires std::is_arithmetic_v<T> or std::is_enum_v<T>
+	void write(const T& t)
+	{
+		stream.write(reinterpret_cast<const char*>(std::addressof(t)), sizeof T);
+	}
 
-// Iterable
-template <typename T, std::enable_if_t<is_iterable_v<T>, bool> = true>
-void Write(std::ostream& stream, const T& iterable)
-{
-	auto begin = std::begin(iterable);
-	auto end = std::end(iterable);
-	auto distance = std::distance(begin, end);
-	Write<std::size_t>(stream, distance);
-	for (const auto& t : iterable)
-		Write(stream, t);
-}
+	template <typename T>
+	requires std::is_arithmetic_v<T> or std::is_enum_v<T>
+	T read()
+	{
+		T t;
+		stream.read(reinterpret_cast<char*>(std::addressof(t)), sizeof(T));
+		return t;
+	}
 
-// Iterator
-template <typename Iterator>
-void Write(std::ostream& stream, Iterator first, Iterator last)
-{
-	auto distance = std::distance(first, last);
-	Write<std::size_t>(stream, distance);
-	for (; first != last; ++first)
-		Write(stream, *first);
-}
+	void write(const std::ranges::range auto& range)
+	{
+		write(std::size(range));
+		for (const auto& elem : range)
+			write(elem);
+	}
 
-// std::vector
-template <typename T>
-void Write(std::ostream& stream, const std::vector<T>& vec)
-{
-	Write<std::size_t>(stream, vec.size());
-	for (const T& t : vec)
-		Write(stream, t);
-}
+	void write(auto begin, auto end)
+	{
+		write(std::ranges::subrange(begin, end));
+	}
 
-// std::vector
-template <typename T, std::enable_if_t<std::is_same_v<T, std::vector<typename T::value_type, typename T::allocator_type>>, bool> = true>
-[[nodiscard]]
-T Read(std::istream& stream)
-{
-	std::size_t size = Read<std::size_t>(stream);
-	T vec;
-	vec.reserve(size);
-	for (std::size_t i = 0; i < size; i++)
-		vec.push_back(Read<T::value_type>(stream));
-	return vec;
-}
+	template <typename T>
+	requires std::is_same_v<T, std::vector<typename T::value_type, typename T::allocator_type>>
+	T read()
+	{
+		auto size = read<std::size_t>();
+		T vec;
+		vec.reserve(size);
+		for (std::size_t i = 0; i < size; i++)
+			vec.push_back(read<T::value_type>());
+		return vec;
+	}
 
-// BitBoard
-inline void Write(std::ostream& stream, const BitBoard& b)
-{
-	Write(stream, static_cast<uint64_t>(b));
-}
+	void write(const BitBoard& obj)
+	{
+		write(static_cast<uint64_t>(obj));
+	}
 
-// BitBoard
-template <typename T, std::enable_if_t<std::is_same_v<T, BitBoard>, bool> = true>
-[[nodiscard]]
-BitBoard Read(std::istream& stream)
-{
-	return BitBoard(Read<uint64_t>(stream));
-}
+	template <typename T>
+	requires std::is_same_v<T, BitBoard>
+	T read()
+	{
+		return read<uint64_t>();
+	}
 
-// Position
-inline void Write(std::ostream& stream, const Position& pos)
-{
-	Write(stream, pos.Player());
-	Write(stream, pos.Opponent());
-}
+	void write(const Position& pos)
+	{
+		write(pos.Player());
+		write(pos.Opponent());
+	}
 
-// Position
-template <typename T, std::enable_if_t<std::is_same_v<T, Position>, bool> = true>
-[[nodiscard]]
-Position Read(std::istream& stream)
-{
-	auto P = Read<uint64_t>(stream);
-	auto O = Read<uint64_t>(stream);
-	return Position(P, O);
-}
+	template <typename T>
+	requires std::is_same_v<T, Position>
+	T read()
+	{
+		auto P = read<uint64_t>();
+		auto O = read<uint64_t>();
+		return { P, O };
+	}
 
-// Confidence
-inline void Write(std::ostream& stream, const Confidence& selectivity)
-{
-	Write(stream, selectivity.sigmas());
-}
+	void write(const Confidence& selectivity)
+	{
+		write(selectivity.sigmas());
+	}
 
-// Confidence
-template <typename T, std::enable_if_t<std::is_same_v<T, Confidence>, bool> = true>
-[[nodiscard]]
-Confidence Read(std::istream& stream)
-{
-	return Confidence(Read<decltype(std::declval<Confidence>().sigmas())>(stream));
-}
+	template <typename T>
+	requires std::is_same_v<T, Confidence>
+	T read()
+	{
+		return Confidence{ read<decltype(std::declval<Confidence>().sigmas())>() };
+	}
 
-// Intensity
-inline void Write(std::ostream& stream, const Intensity& intensity)
-{
-	Write(stream, intensity.depth);
-	Write(stream, intensity.certainty);
-}
+	void write(const Intensity& i)
+	{
+		write(i.depth);
+		write(i.certainty);
+	}
 
-// Intensity
-template <typename T, std::enable_if_t<std::is_same_v<T, Intensity>, bool> = true>
-[[nodiscard]]
-Intensity Read(std::istream& stream)
-{
-	auto depth = Read<decltype(Intensity::depth)>(stream);
-	auto certainty = Read<decltype(Intensity::certainty)>(stream);
-	return Intensity(depth, certainty);
-}
+	template <typename T>
+	requires std::is_same_v<T, Intensity>
+	T read()
+	{
+		auto depth = read<decltype(Intensity::depth)>();
+		auto certainty = read<decltype(Intensity::certainty)>();
+		return { depth, certainty };
+	}
 
-// std::chrono::duration<double>
-inline void Write(std::ostream& stream, const std::chrono::duration<double>& duration)
-{
-	Write(stream, duration.count());
-}
+	void write(const std::chrono::duration<double>& duration)
+	{
+		write(duration.count());
+	}
 
-// std::chrono::duration<double>
-template <typename T, std::enable_if_t<std::is_same_v<T, std::chrono::duration<double>>, bool> = true>
-[[nodiscard]]
-std::chrono::duration<double> Read(std::istream& stream)
-{
-	return std::chrono::duration<double>(Read<double>(stream));
-}
+	template <typename T>
+	requires std::is_same_v<T, std::chrono::duration<double>>
+	T read()
+	{
+		return std::chrono::duration<double>(read<double>());
+	}
 
-// Request
-inline void Write(std::ostream& stream, const Request& request)
-{
-	Write(stream, request.move);
-	Write(stream, request.intensity);
-}
+	void write(const Request& r)
+	{
+		write(r.move);
+		write(r.intensity);
+	}
+	
+	template <typename T>
+	requires std::is_same_v<T, Request>
+	T read()
+	{
+		auto move = read<decltype(Request::move)>();
+		auto intensity = read<decltype(Request::intensity)>();
+		return { move, intensity };
+	}
 
-// Request
-template <typename T, std::enable_if_t<std::is_same_v<T, Request>, bool> = true>
-[[nodiscard]]
-Request Read(std::istream& stream)
-{
-	auto move = Read<decltype(Request::move)>(stream);
-	auto intensity = Read<decltype(Request::intensity)>(stream);
-	return Request(move, intensity);
-}
+	void write(const Result& r)
+	{
+		write(r.score);
+		write(r.nodes);
+		write(r.duration);
+	}
+	
+	template <typename T>
+	requires std::is_same_v<T, Result>
+	T read()
+	{
+		auto score = read<decltype(Result::score)>();
+		auto nodes = read<decltype(Result::nodes)>();
+		auto duration = read<decltype(Result::duration)>();
+		return { score, nodes, duration };
+	}
 
-// Result
-template <typename T, std::enable_if_t<std::is_same_v<T, Result>, bool> = true>
-[[nodiscard]]
-Result Read(std::istream& stream)
-{
-	auto score = Read<decltype(Result::score)>(stream);
-	auto nodes = Read<decltype(Result::nodes)>(stream);
-	auto duration = Read<decltype(Result::duration)>(stream);
-	return Result(score, nodes, duration);
-}
+	void write(const Puzzle::Task& task)
+	{
+		write(task.Request());
+		write(task.Result());
+	}
+	
+	template <typename T>
+	requires std::is_same_v<T, Puzzle::Task>
+	T read()
+	{
+		auto request = read<decltype(Puzzle::Task::request)>();
+		auto result = read<decltype(Puzzle::Task::result)>();
+		return { request, result };
+	}
 
-// Result
-inline void Write(std::ostream& stream, const Result& result)
-{
-	Write(stream, result.score);
-	Write(stream, result.nodes);
-	Write(stream, result.duration);
-}
+	void write(const Puzzle& p)
+	{
+		write(p.pos);
+		write(p.tasks);
+	}
+	
+	template <typename T>
+	requires std::is_same_v<T, Puzzle>
+	T read()
+	{
+		auto pos = read<decltype(Puzzle::pos)>();
+		auto tasks = read<decltype(Puzzle::tasks)>();
 
-// Puzzle::Task
-inline void Write(std::ostream& stream, const Puzzle::Task& task)
-{
-	Write(stream, task.Request());
-	Write(stream, task.Result());
-}
+		return { pos, std::move(tasks) };
+	}
+};
 
-// Puzzle::Task
-template <typename T, std::enable_if_t<std::is_same_v<T, Puzzle::Task>, bool> = true>
-[[nodiscard]]
-Puzzle::Task Read(std::istream& stream)
-{
-	auto request = Read<decltype(Puzzle::Task::request)>(stream);
-	auto result = Read<decltype(Puzzle::Task::result)>(stream);
-	return Puzzle::Task(request, result);
-}
+// deduction guide
+BinaryFileStream(const std::filesystem::path& file) -> BinaryFileStream<std::fstream>;
 
-// Puzzle
-inline void Write(std::ostream& stream, const Puzzle& puzzle)
-{
-	Write(stream, puzzle.pos);
-	Write(stream, puzzle.tasks);
-}
-
-// Puzzle
-template <typename T, std::enable_if_t<std::is_same_v<T, Puzzle>, bool> = true>
-[[nodiscard]]
-Puzzle Read(std::istream& stream)
-{
-	auto pos = Read<decltype(Puzzle::pos)>(stream);
-	auto tasks = Read<decltype(Puzzle::tasks)>(stream);
-
-	return Puzzle(pos, std::move(tasks));
-}
 
 //// Project
 //template <typename T>
@@ -336,29 +311,20 @@ Puzzle Read(std::istream& stream)
 template <typename T>
 void Save(const std::filesystem::path& file, const T& t)
 {
-	std::ofstream stream(file, std::ios::binary);
-	if (!stream.is_open())
-		throw std::ostream::failure("Can not open '" + file.string() + "' for binary output.");
-	Write(stream, t);
+	BinaryFileStream{ file }.write(t);
 }
 
 template <typename Iterator>
 void Save(const std::filesystem::path& file, Iterator first, Iterator last)
 {
-	std::ofstream stream(file, std::ios::binary);
-	if (!stream.is_open())
-		throw std::ostream::failure("Can not open '" + file.string() + "' for binary output.");
-	Write(stream, first, last);
+	BinaryFileStream{ file }.write(first, last);
 }
 
 template <typename T>
 [[nodiscard]]
 T Load(const std::filesystem::path& file)
 {
-	std::ifstream stream(file, std::ios::binary);
-	if (!stream.is_open())
-		throw std::istream::failure("Can not open '" + file.string() + "' for binary intput.");
-	return Read<T>(stream);
+	return BinaryFileStream{ file }.read<T>();
 }
 
 template <typename T>

@@ -148,6 +148,8 @@ inline std::ostream& operator<<(std::ostream& os, const Puzzle& puzzle) { return
 inline uint64 Nodes(const Puzzle& p) { return p.Nodes(); }
 inline std::chrono::duration<double> Duration(const Puzzle& p) { return p.Duration(); }
 
+inline int EmptyCount(const Puzzle& p) { return p.pos.EmptyCount(); }
+
 template <typename T>
 concept PuzzleRange = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, Puzzle>; // TODO: Replace by range<Puzzle>?
 

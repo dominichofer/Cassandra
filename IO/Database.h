@@ -3,78 +3,70 @@
 #include "Search/Puzzle.h"
 #include <filesystem>
 #include <vector>
-#include <iterator>
-#include <ranges>
-#include <span>
 #include <string>
 #include <functional>
-#include <map>
-#include <range/v3/action/join.hpp>
-#include <range/v3/view/cartesian_product.hpp>
-#include <range/v3/view/cache1.hpp>
-#include <range/v3/view/transform.hpp>
-#include <range/v3/view/iota.hpp>
-#include <range/v3/view/take.hpp>
-#include <range/v3/view/drop.hpp>
-#include <range/v3/view/subrange.hpp>
+#include <range/v3/all.hpp>
 
+
+template <typename MetaData = std::string, typename Data = Puzzle>
 class DB
 {
-	using MetaData = std::vector<std::string>;
 	struct Entry
 	{
 		int key;
-		Puzzle value;
-		operator Puzzle() const noexcept { return value; }
+		Data value;
+		operator Data() const noexcept { return value; }
 	};
-	std::vector<MetaData> meta;
-	std::vector<Entry> data;
 
-	template <std::ranges::viewable_range View>
+	std::filesystem::path file;
+	std::vector<std::vector<MetaData>> metas;
+	std::vector<Entry> entries;
+
+	template <typename View>
 	class ViewClosure
 	{
-		const std::vector<MetaData>& meta;
+		const std::vector<std::vector<MetaData>>& metas;
 		View view;
 
 		template <typename Pred>
-		auto Filtered(Pred pred) { auto new_view = view | std::views::filter(pred); return ViewClosure<decltype(new_view)>(meta, new_view); }
+		auto Filtered(Pred pred) { auto new_view = view | ranges::views::filter(pred); return ViewClosure<decltype(new_view)>(metas, new_view); }
 	public:
-		ViewClosure(const std::vector<MetaData>& meta, View view) noexcept : meta(meta), view(view) {}
+		ViewClosure(const std::vector<std::vector<MetaData>>& metas, View view) noexcept : metas(metas), view(view) {}
 
 		auto begin() { return view.begin(); }
 		auto end() { return view.end(); }
 
-		auto Where(const std::string& meta_info) {
+		auto Where(const MetaData& fit) {
 			std::vector<bool> preds;
-			preds.reserve(meta.size());
-			for (const MetaData& m : meta)
-				preds.push_back(std::ranges::find(m, meta_info) != m.end());
+			preds.reserve(metas.size());
+			for (const auto& m : metas)
+				preds.push_back(ranges::find(m, fit) != m.end());
 			return Filtered([&preds](const Entry& e) { return preds[e.key]; });
 		}
-		auto Where(const std::function<bool(const Puzzle&)>& pred) {
+		auto Where(const std::function<bool(const Data&)>& pred) {
 			return Filtered(pred);
 		}
-		auto WhereAnyOf(const std::vector<std::string>& meta_infos) {
+		auto WhereAnyOf(const std::vector<MetaData>& fits) {
 			std::vector<bool> preds;
-			preds.reserve(meta.size());
-			for (const MetaData& m : meta)
-				preds.push_back(std::ranges::any_of(meta_infos, [&m](const std::string& meta_info) { return std::ranges::find(m, meta_info) != m.end(); }));
+			preds.reserve(metas.size());
+			for (const auto& m : metas)
+				preds.push_back(ranges::any_of(fits, [&m](const MetaData& fit) { return ranges::find(m, fit) != m.end(); }));
 			return Filtered([&preds](const Entry& e) { return preds[e.key]; });
 		}
-		auto WhereEmptyCount(int min, int max) {
-			return Where([min, max](const Puzzle& p) { int ec = p.pos.EmptyCount(); return min <= ec && ec <= max; });
+		auto WhereEmptyCount(int min, int max) requires requires (Data data) { EmptyCount(data); } {
+			return Where([min, max](const Data& data) { int empty_count = EmptyCount(data); return min <= empty_count && empty_count <= max; });
 		}
-		auto WhereEmptyCount(int empty_count) {
-			return Where([empty_count](const Puzzle& p) { return p.pos.EmptyCount() == empty_count; });
+		auto WhereEmptyCount(int empty_count) requires requires (Data data) { EmptyCount(data); } {
+			return Where([empty_count](const Data& data) { return EmptyCount(data) == empty_count; });
 		}
-		auto SplitEachEmptyCount(int size_1, int size_2) {
-			auto indices = ranges::views::cartesian_product(ranges::views::iota(0, static_cast<int>(meta.size())), ranges::views::iota(0, 65));
+		auto SplitEachEmptyCount(int size_1, int size_2) requires requires (Data data) { EmptyCount(data); } {
+			auto indices = ranges::views::cartesian_product(ranges::views::iota(std::size_t(0), metas.size()), ranges::views::iota(0, 65));
 
 			auto part_1 = indices | ranges::views::transform(
 				[this, size_1, size_2](auto idx) {
 					auto [key, empty_count] = idx;
 					return view
-						| ranges::views::filter([key, empty_count](const Entry& e) { return e.key == key && e.value.pos.EmptyCount() == empty_count; })
+						| ranges::views::filter([key, empty_count](const Entry& e) { return e.key == key && EmptyCount(e.value) == empty_count; })
 						| ranges::views::take(size_1);
 				})
 				| ranges::actions::join;
@@ -83,7 +75,7 @@ class DB
 				[this, size_1, size_2](auto idx) {
 					auto [key, empty_count] = idx;
 					return view
-						| ranges::views::filter([key, empty_count](const Entry& e) { return e.key == key && e.value.pos.EmptyCount() == empty_count; })
+						| ranges::views::filter([key, empty_count](const Entry& e) { return e.key == key && EmptyCount(e.value) == empty_count; })
 						| ranges::views::drop(size_1)
 						| ranges::views::take(size_2);
 				})
@@ -92,25 +84,60 @@ class DB
 			return std::make_pair(part_1, part_2);
 		}
 	};
-
+	auto CreateViewClosure() { return ViewClosure{ metas, std::views::all(entries) }; }
+	auto CreateViewClosure() const { return ViewClosure{ metas, std::views::all(entries) }; }
 public:
 	DB() = default;
-	DB(const std::filesystem::path& file);
-	void WriteBack() const;
-	void Add(std::vector<std::string> meta_info, const PuzzleRange auto& data);
+	DB(std::filesystem::path file) : file(std::move(file))
+	{
+		BinaryFileStream stream{ file };
+		metas = stream.read<decltype(metas)>();
+		auto size = stream.read<std::size_t>();
+		entries.reserve(size);
+		for (std::size_t i = 0; i < size; i++)
+		{
+			auto key = stream.read<decltype(Entry::key)>();
+			auto value = stream.read<decltype(Entry::value)>();
+			entries.emplace_back(key, value);
+		}
+	}
+	void WriteBack() const
+	{
+		BinaryFileStream stream{ file };
+		stream.write(metas);
+		stream.write(entries);
+	}
+	void Add(std::vector<MetaData> metas, Data value)
+	{
+		auto it = ranges::find(this->metas, metas);
+		auto key = std::distance(this->metas.begin(), it);
+		entries.emplace_back(key, std::move(value));
+		if (it == this->metas.end())
+			this->metas.push_back(std::move(metas));
+	}
+	void Add(std::vector<MetaData> metas, const std::ranges::range auto& values)
+	{
+		auto it = ranges::find(this->metas, metas);
+		auto key = std::distance(this->metas.begin(), it);
+		entries.reserve(entries.size() + ranges::size(values));
+		for (const Data& value : values)
+			entries.emplace_back(key, value);
+		if (it == this->metas.end())
+			this->metas.push_back(std::move(metas));
+	}
 
-	auto Where(const std::string& meta_info) { return ViewClosure(meta, std::views::all(data)).Where(meta_info); }
-	auto Where(const std::string& meta_info) const { return ViewClosure(meta, std::views::all(data)).Where(meta_info); }
-	auto Where(const std::function<bool(const Puzzle&)>& pred) { return ViewClosure(meta, std::views::all(data)).Where(pred); }
-	auto Where(const std::function<bool(const Puzzle&)>& pred) const { return ViewClosure(meta, std::views::all(data)).Where(pred); }
-	auto WhereAnyOf(const std::vector<std::string>& meta_infos) { return ViewClosure(meta, std::views::all(data)).WhereAnyOf(meta_infos); }
-	auto WhereAnyOf(const std::vector<std::string>& meta_infos) const  { return ViewClosure(meta, std::views::all(data)).WhereAnyOf(meta_infos); }
-	auto WhereEmptyCount(int min, int max) { return ViewClosure(meta, std::views::all(data)).WhereEmptyCount(min, max); }
-	auto WhereEmptyCount(int min, int max) const  { return ViewClosure(meta, std::views::all(data)).WhereEmptyCount(min, max); }
-	auto WhereEmptyCount(int empty_count) { return ViewClosure(meta, std::views::all(data)).WhereEmptyCount(empty_count); }
-	auto WhereEmptyCount(int empty_count) const { return ViewClosure(meta, std::views::all(data)).WhereEmptyCount(empty_count); }
-	auto SplitEachEmptyCount(int size_1, int size_2) { return ViewClosure(meta, std::views::all(data)).SplitEachEmptyCount(size_1, size_2); }
-	auto SplitEachEmptyCount(int size_1, int size_2) const { return ViewClosure(meta, std::views::all(data)).SplitEachEmptyCount(size_1, size_2); }
+	auto Where(const MetaData& meta_info) { return CreateViewClosure().Where(meta_info); }
+	auto Where(const MetaData& meta_info) const { return CreateViewClosure().Where(meta_info); }
+	auto Where(const std::function<bool(const Puzzle&)>& pred) { return CreateViewClosure().Where(pred); }
+	auto Where(const std::function<bool(const Puzzle&)>& pred) const { return CreateViewClosure().Where(pred); }
+	auto WhereAnyOf(const std::vector<MetaData>& meta_infos) { return CreateViewClosure().WhereAnyOf(meta_infos); }
+	auto WhereAnyOf(const std::vector<MetaData>& meta_infos) const  { return CreateViewClosure().WhereAnyOf(meta_infos); }
+	auto WhereEmptyCount(int min, int max) { return CreateViewClosure().WhereEmptyCount(min, max); }
+	auto WhereEmptyCount(int min, int max) const  { return CreateViewClosure().WhereEmptyCount(min, max); }
+	auto WhereEmptyCount(int empty_count) { return CreateViewClosure().WhereEmptyCount(empty_count); }
+	auto WhereEmptyCount(int empty_count) const { return CreateViewClosure().WhereEmptyCount(empty_count); }
+	auto SplitEachEmptyCount(int size_1, int size_2) { return CreateViewClosure().SplitEachEmptyCount(size_1, size_2); }
+	auto SplitEachEmptyCount(int size_1, int size_2) const { return CreateViewClosure().SplitEachEmptyCount(size_1, size_2); }
 };
 
 inline void foo()
