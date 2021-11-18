@@ -47,7 +47,7 @@ Field PVS::BestMove(const Position& pos, const Intensity& request)
 //uint64_t OpponentsExposed(const Position& pos) noexcept
 //{
 //	auto b = pos.Empties();
-//	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
+//	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7FULL) | ((b << 1) & 0xFEFEFEFEFEFEFEFEULL);
 //	b |= (b >> 8) | (b << 8);
 //	return b & pos.Opponent();
 //}

@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
 			auto duration = Duration(groups[index]);
 			auto nodes = Nodes(groups[index]);
 			auto e = groups[index].front().pos.EmptyCount();
-			auto d = groups[index].front().tasks.front().Intensity().depth;
+			auto d = groups[index].front().tasks.front().GetIntensity().depth;
 			std::cout
 				<< std::format(std::locale(""), "{:8} | {:5} | {}/pos | {:11L} N/s | {:14L} | {:0.2f} s\n",
 					e, d, short_time_format(duration / size), std::size_t(nodes / duration.count()), nodes, duration.count());

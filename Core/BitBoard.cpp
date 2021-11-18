@@ -132,7 +132,7 @@ BitBoard FourNeighboursAndSelf(BitBoard b) noexcept
 
 BitBoard EightNeighbours(BitBoard b) noexcept
 {
-	return EightNeighboursAndSelf(b) - b;
+	return EightNeighboursAndSelf(b) ^ b;
 }
 
 BitBoard EightNeighboursAndSelf(BitBoard b) noexcept
@@ -141,7 +141,7 @@ BitBoard EightNeighboursAndSelf(BitBoard b) noexcept
 	return b | ((b << 1) & ~BitBoard::VerticalLine(0)) | ((b >> 1) & ~BitBoard::VerticalLine(7));
 }
 
-std::string SingleLine(const BitBoard& bb)
+std::string SingleLine(BitBoard bb)
 {
 	std::string str(64, '-');
 	for (int i = 0; i < 64; i++)
@@ -150,7 +150,7 @@ std::string SingleLine(const BitBoard& bb)
 	return str;
 }
 
-std::string MultiLine(const BitBoard& bb)
+std::string MultiLine(BitBoard bb)
 {
 	std::string board =
 		"  H G F E D C B A  \n"

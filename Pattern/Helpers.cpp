@@ -1,3 +1,4 @@
+#include "Core/Core.h"
 #include "Helpers.h"
 #include <array>
 
@@ -5,7 +6,7 @@ class SumPow3Cache
 {
 	std::array<int, (1ULL << 16)> m_cache{};
 
-	static int sum_pow3(uint64_t exp)
+	static int sum_pow3(uint64 exp)
 	{
 		int sum = 0;
 		while (exp != 0U)
@@ -18,10 +19,10 @@ class SumPow3Cache
 public:
 	SumPow3Cache()
 	{
-		for (std::size_t i = 0; i < std::size(m_cache); i++)
+		for (std::size_t i = 0; i < m_cache.size(); i++)
 			m_cache[i] = sum_pow3(i);
 	}
-	[[nodiscard]] int SumPow3(uint64_t exp) const noexcept { return m_cache[exp]; }
+	[[nodiscard]] int SumPow3(uint64 exp) const noexcept { return m_cache[exp]; }
 };
 
 static SumPow3Cache sum_pow_3_cache;

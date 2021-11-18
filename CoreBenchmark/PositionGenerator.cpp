@@ -1,25 +1,26 @@
 #include "benchmark/benchmark.h"
-
 #include "Core/PositionGenerator.h"
 
-void PositionGenerator_Random(benchmark::State& state)
-{
-	PositionGenerator pg;
+// using namespace PosGen;
 
-	for (auto _ : state)
-		benchmark::DoNotOptimize(pg.Random());
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PositionGenerator_Random);
+// void PositionGenerator_Random(benchmark::State& state)
+// {
+// 	PositionGenerator pg;
 
-void PositionGenerator_Random(benchmark::State& state)
-{
-	PositionGenerator pg;
+// 	for (auto _ : state)
+// 		benchmark::DoNotOptimize(pg.Random());
+// 	state.SetItemsProcessed(state.iterations());
+// }
+// BENCHMARK(PositionGenerator_Random);
 
-	for (auto _ : state)
-		benchmark::DoNotOptimize(pg.Random());
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PositionGenerator_Random);
+// void PositionGenerator_Random(benchmark::State& state)
+// {
+// 	PositionGenerator pg;
 
-BENCHMARK_MAIN();
+// 	for (auto _ : state)
+// 		benchmark::DoNotOptimize(pg.Random());
+// 	state.SetItemsProcessed(state.iterations());
+// }
+// BENCHMARK(PositionGenerator_Random);
+
+// BENCHMARK_MAIN();

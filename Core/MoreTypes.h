@@ -1,7 +1,4 @@
 #pragma once
-#include <cstdint>
-#include <type_traits>
-
 // Predefined macros:
 // __GNUC__           Compiler is gcc.
 // __clang__          Compiler is clang.
@@ -121,15 +118,15 @@ public:
 	template <uint index> int128 with(int64 v) noexcept { return with_int64<index>(v); }
 
 	int64x2 operator~() const noexcept { return andnot(reg, int64x2{ -1 }); }
-	int64x2 operator-() const noexcept { return int64x2{} - reg; }
+	int64x2 operator-() const noexcept { return int64x2{} - *this; }
 	int64x2 operator&(int64x2 v) const noexcept { return _mm_and_si128(reg, v); }
 	int64x2 operator|(int64x2 v) const noexcept { return _mm_or_si128(reg, v); }
 	int64x2 operator^(int64x2 v) const noexcept { return _mm_xor_si128(reg, v); }
 	int64x2 operator+(int64x2 v) const noexcept { return _mm_add_epi64(reg, v.reg); }
 	int64x2 operator-(int64x2 v) const noexcept { return _mm_sub_epi64(reg, v.reg); }
 	//int64x2 operator*(int64x2 v) const noexcept { return _mm_mul_epi64(reg, v.reg); } // Instruction does not exist.
-	int64x2 operator/(int64x2 v) const noexcept { return _mm_div_epi64(reg, v.reg); }
-	int64x2 operator%(int64x2 v) const noexcept { return _mm_rem_epi64(reg, v.reg); }
+	// int64x2 operator/(int64x2 v) const noexcept { return _mm_div_epi64(reg, v.reg); }
+	// int64x2 operator%(int64x2 v) const noexcept { return _mm_rem_epi64(reg, v.reg); }
 	int64x2 operator<<(int64x2 v) const noexcept { return _mm_sllv_epi64(reg, v.reg); }
 	int64x2 operator>>(int64x2 v) const noexcept { return _mm_srlv_epi64(reg, v.reg); }
 	int64x2 operator<<(int v) const noexcept { return _mm_slli_epi64(reg, v); }
@@ -142,7 +139,7 @@ public:
 	int64x2& operator+=(int64x2 v) noexcept { reg = *this + v; return *this; }
 	int64x2& operator-=(int64x2 v) noexcept { reg = *this - v; return *this; }
 	//int64x2& operator*=(int64x2 v) noexcept { reg = *this * v; return *this; } // Instruction does not exist.
-	int64x2& operator/=(int64x2 v) noexcept { reg = *this / v; return *this; }
+	// int64x2& operator/=(int64x2 v) noexcept { reg = *this / v; return *this; }
 	int64x2& operator<<=(int64x2 v) noexcept { reg = *this << v; return *this; }
 	int64x2& operator>>=(int64x2 v) noexcept { reg = *this >> v; return *this; }
 	int64x2& operator<<=(int v) noexcept { reg = *this << v; return *this; }
@@ -164,15 +161,15 @@ public:
 	template <uint index> int128 with(int32 v) noexcept { return with_int32<index>(v); }
 
 	int32x4 operator~() const noexcept { return andnot(reg, int32x4{ -1 }); }
-	int32x4 operator-() const noexcept { return int32x4{} - reg; }
+	int32x4 operator-() const noexcept { return int32x4{} - *this; }
 	int32x4 operator&(int32x4 v) const noexcept { return _mm_and_si128(reg, v); }
 	int32x4 operator|(int32x4 v) const noexcept { return _mm_or_si128(reg, v); }
 	int32x4 operator^(int32x4 v) const noexcept { return _mm_xor_si128(reg, v); }
 	int32x4 operator+(int32x4 v) const noexcept { return _mm_add_epi32(reg, v.reg); }
 	int32x4 operator-(int32x4 v) const noexcept { return _mm_sub_epi32(reg, v.reg); }
 	int32x4 operator*(int32x4 v) const noexcept { return _mm_mul_epi32(reg, v.reg); }
-	int32x4 operator/(int32x4 v) const noexcept { return _mm_div_epi32(reg, v.reg); }
-	int32x4 operator%(int32x4 v) const noexcept { return _mm_rem_epi32(reg, v.reg); }
+	// int32x4 operator/(int32x4 v) const noexcept { return _mm_div_epi32(reg, v.reg); }
+	// int32x4 operator%(int32x4 v) const noexcept { return _mm_rem_epi32(reg, v.reg); }
 	int32x4 operator<<(int32x4 v) const noexcept { return _mm_sllv_epi32(reg, v.reg); }
 	int32x4 operator>>(int32x4 v) const noexcept { return _mm_srlv_epi32(reg, v.reg); }
 	int32x4 operator<<(int v) const noexcept { return _mm_slli_epi32(reg, v); }
@@ -185,7 +182,7 @@ public:
 	int32x4& operator+=(int32x4 v) noexcept { reg = *this + v; return *this; }
 	int32x4& operator-=(int32x4 v) noexcept { reg = *this - v; return *this; }
 	int32x4& operator*=(int32x4 v) noexcept { reg = *this * v; return *this; }
-	int32x4& operator/=(int32x4 v) noexcept { reg = *this / v; return *this; }
+	// int32x4& operator/=(int32x4 v) noexcept { reg = *this / v; return *this; }
 	int32x4& operator<<=(int32x4 v) noexcept { reg = *this << v; return *this; }
 	int32x4& operator>>=(int32x4 v) noexcept { reg = *this >> v; return *this; }
 	int32x4& operator<<=(int v) noexcept { reg = *this << v; return *this; }
@@ -207,15 +204,15 @@ public:
 	template <uint index> int128 with(int16 v) noexcept { return with_int16<index>(v); }
 
 	int16x8 operator~() const noexcept { return andnot(reg, int16x8{ -1 }); }
-	int16x8 operator-() const noexcept { return int16x8{} - reg; }
+	int16x8 operator-() const noexcept { return int16x8{} - *this; }
 	int16x8 operator&(int16x8 v) const noexcept { return _mm_and_si128(reg, v); }
 	int16x8 operator|(int16x8 v) const noexcept { return _mm_or_si128(reg, v); }
 	int16x8 operator^(int16x8 v) const noexcept { return _mm_xor_si128(reg, v); }
 	int16x8 operator+(int16x8 v) const noexcept { return _mm_add_epi16(reg, v.reg); }
 	int16x8 operator-(int16x8 v) const noexcept { return _mm_sub_epi16(reg, v.reg); }
 	//int16x8 operator*(int16x8 v) const noexcept { return _mm_mul_epi16(reg, v.reg); } // Instruction does not exist.
-	int16x8 operator/(int16x8 v) const noexcept { return _mm_div_epi16(reg, v.reg); }
-	int16x8 operator%(int16x8 v) const noexcept { return _mm_rem_epi16(reg, v.reg); }
+	// int16x8 operator/(int16x8 v) const noexcept { return _mm_div_epi16(reg, v.reg); }
+	// int16x8 operator%(int16x8 v) const noexcept { return _mm_rem_epi16(reg, v.reg); }
 	//int16x8 operator<<(int16x8 v) const noexcept { return _mm_sllv_epi16(reg, v.reg); } // Instruction requires AVX512VL and AVX512BW.
 	//int16x8 operator>>(int16x8 v) const noexcept { return _mm_srlv_epi16(reg, v.reg); } // Instruction requires AVX512VL and AVX512BW.
 	int16x8 operator<<(int v) const noexcept { return _mm_slli_epi16(reg, v); }
@@ -228,7 +225,7 @@ public:
 	int16x8& operator+=(int16x8 v) noexcept { reg = *this + v; return *this; }
 	int16x8& operator-=(int16x8 v) noexcept { reg = *this - v; return *this; }
 	//int16x8& operator*=(int16x8 v) noexcept { reg = *this * v; return *this; } // Instruction does not exist.
-	int16x8& operator/=(int16x8 v) noexcept { reg = *this / v; return *this; }
+	// int16x8& operator/=(int16x8 v) noexcept { reg = *this / v; return *this; }
 	//int16x8& operator<<=(int16x8 v) noexcept { reg = *this << v; return *this; } // Instruction requires AVX512VL and AVX512BW.
 	//int16x8& operator>>=(int16x8 v) noexcept { reg = *this >> v; return *this; } // Instruction requires AVX512VL and AVX512BW.
 	int16x8& operator<<=(int v) noexcept { reg = *this << v; return *this; }
@@ -252,15 +249,15 @@ public:
 	template <uint index> int128 with(int8 v) noexcept { return with_int8<index>(v); }
 
 	int8x16 operator~() const noexcept { return andnot(reg, int8x16{ -1 }); }
-	int8x16 operator-() const noexcept { return int8x16{} - reg; }
+	int8x16 operator-() const noexcept { return int8x16{} - *this; }
 	int8x16 operator&(int8x16 v) const noexcept { return _mm_and_si128(reg, v); }
 	int8x16 operator|(int8x16 v) const noexcept { return _mm_or_si128(reg, v); }
 	int8x16 operator^(int8x16 v) const noexcept { return _mm_xor_si128(reg, v); }
 	int8x16 operator+(int8x16 v) const noexcept { return _mm_add_epi8(reg, v.reg); }
 	int8x16 operator-(int8x16 v) const noexcept { return _mm_sub_epi8(reg, v.reg); }
 	//int8x16 operator*(int8x16 v) const noexcept { return _mm_mul_epi8(reg, v.reg); } // Instruction does not exist.
-	int8x16 operator/(int8x16 v) const noexcept { return _mm_div_epi8(reg, v.reg); }
-	int8x16 operator%(int8x16 v) const noexcept { return _mm_rem_epi8(reg, v.reg); }
+	// int8x16 operator/(int8x16 v) const noexcept { return _mm_div_epi8(reg, v.reg); }
+	// int8x16 operator%(int8x16 v) const noexcept { return _mm_rem_epi8(reg, v.reg); }
 	//int8x16 operator<<(int8x16 v) const noexcept { return _mm_sllv_epi8(reg, v.reg); } // Instruction does not exist.
 	//int8x16 operator>>(int8x16 v) const noexcept { return _mm_srlv_epi8(reg, v.reg); } // Instruction does not exist.
 	//int8x16 operator<<(int v) const noexcept { return _mm_slli_epi8(reg, v); } // Instruction does not exist.
@@ -273,7 +270,7 @@ public:
 	int8x16& operator+=(int8x16 v) noexcept { reg = *this + v; return *this; }
 	int8x16& operator-=(int8x16 v) noexcept { reg = *this - v; return *this; }
 	//int8x16& operator*=(int8x16 v) noexcept { reg = *this * v; return *this; } // Instruction does not exist.
-	int8x16& operator/=(int8x16 v) noexcept { reg = *this / v; return *this; }
+	// int8x16& operator/=(int8x16 v) noexcept { reg = *this / v; return *this; }
 	//int8x16& operator<<=(int8x16 v) noexcept { reg = *this << v; return *this; } // Instruction does not exist.
 	//int8x16& operator>>=(int8x16 v) noexcept { reg = *this >> v; return *this; } // Instruction does not exist.
 	//int8x16& operator<<=(int v) noexcept { reg = *this << v; return *this; } // Instruction does not exist.
@@ -384,10 +381,10 @@ public:
 	int256() = default;
 	int256(__m256i v) noexcept : reg(v) {}
 	explicit int256(std::nullptr_t) noexcept = delete;
-	explicit int256(const int64* p) noexcept : reg(_mm256_load_si256(reinterpret_cast<const __m256i*>(p))) {}
-	explicit int256(const int32* p) noexcept : reg(_mm256_load_si256(reinterpret_cast<const __m256i*>(p))) {}
-	explicit int256(const int16* p) noexcept : reg(_mm256_load_si256(reinterpret_cast<const __m256i*>(p))) {}
-	explicit int256(const int8* p) noexcept : reg(_mm256_load_si256(reinterpret_cast<const __m256i*>(p))) {}
+	explicit int256(const int64* p) noexcept : reg(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(p))) {}
+	explicit int256(const int32* p) noexcept : reg(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(p))) {}
+	explicit int256(const int16* p) noexcept : reg(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(p))) {}
+	explicit int256(const int8* p) noexcept : reg(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(p))) {}
 	explicit int256(int64 v) noexcept : reg(_mm256_set1_epi64x(v)) {}
 	explicit int256(int32 v) noexcept : reg(_mm256_set1_epi32(v)) {}
 	explicit int256(int16 v) noexcept : reg(_mm256_set1_epi16(v)) {}
@@ -452,15 +449,15 @@ public:
 	template <uint index> int256 with(int64 v) noexcept { return with_int64<index>(v); }
 
 	int64x4 operator~() const noexcept { return andnot(reg, int64x4{ -1 }); }
-	int64x4 operator-() const noexcept { return int64x4{} - reg; }
+	int64x4 operator-() const noexcept { return int64x4{} - *this; }
 	int64x4 operator&(int64x4 v) const noexcept { return _mm256_and_si256(reg, v); }
 	int64x4 operator|(int64x4 v) const noexcept { return _mm256_or_si256(reg, v); }
 	int64x4 operator^(int64x4 v) const noexcept { return _mm256_xor_si256(reg, v); }
 	int64x4 operator+(int64x4 v) const noexcept { return _mm256_add_epi64(reg, v.reg); }
 	int64x4 operator-(int64x4 v) const noexcept { return _mm256_sub_epi64(reg, v.reg); }
 	//int64x4 operator*(int64x4 v) const noexcept { return _mm256_mul_epi64(reg, v.reg); } // Instruction does not exist.
-	int64x4 operator/(int64x4 v) const noexcept { return _mm256_div_epi64(reg, v.reg); }
-	int64x4 operator%(int64x4 v) const noexcept { return _mm256_rem_epi64(reg, v.reg); }
+	// int64x4 operator/(int64x4 v) const noexcept { return _mm256_div_epi64(reg, v.reg); }
+	// int64x4 operator%(int64x4 v) const noexcept { return _mm256_rem_epi64(reg, v.reg); }
 	int64x4 operator<<(int64x4 v) const noexcept { return _mm256_sllv_epi64(reg, v.reg); }
 	int64x4 operator>>(int64x4 v) const noexcept { return _mm256_srlv_epi64(reg, v.reg); }
 	int64x4 operator<<(int v) const noexcept { return _mm256_slli_epi64(reg, v); }
@@ -473,7 +470,7 @@ public:
 	int64x4& operator+=(int64x4 v) noexcept { reg = *this + v; return *this; }
 	int64x4& operator-=(int64x4 v) noexcept { reg = *this - v; return *this; }
 	//int64x4& operator*=(int64x4 v) noexcept { reg = *this * v; return *this; } // Instruction does not exist.
-	int64x4& operator/=(int64x4 v) noexcept { reg = *this / v; return *this; }
+	// int64x4& operator/=(int64x4 v) noexcept { reg = *this / v; return *this; }
 	int64x4& operator<<=(int64x4 v) noexcept { reg = *this << v; return *this; }
 	int64x4& operator>>=(int64x4 v) noexcept { reg = *this >> v; return *this; }
 	int64x4& operator<<=(int v) noexcept { reg = *this << v; return *this; }
@@ -495,15 +492,15 @@ public:
 	template <uint index> int256 with(int32 v) noexcept { return with_int32<index>(v); }
 
 	int32x8 operator~() const noexcept { return andnot(reg, int32x8{ -1 }); }
-	int32x8 operator-() const noexcept { return int32x8{} - reg; }
+	int32x8 operator-() const noexcept { return int32x8{} - *this; }
 	int32x8 operator&(int32x8 v) const noexcept { return _mm256_and_si256(reg, v); }
 	int32x8 operator|(int32x8 v) const noexcept { return _mm256_or_si256(reg, v); }
 	int32x8 operator^(int32x8 v) const noexcept { return _mm256_xor_si256(reg, v); }
 	int32x8 operator+(int32x8 v) const noexcept { return _mm256_add_epi32(reg, v.reg); }
 	int32x8 operator-(int32x8 v) const noexcept { return _mm256_sub_epi32(reg, v.reg); }
 	int32x8 operator*(int32x8 v) const noexcept { return _mm256_mul_epi32(reg, v.reg); }
-	int32x8 operator/(int32x8 v) const noexcept { return _mm256_div_epi32(reg, v.reg); }
-	int32x8 operator%(int32x8 v) const noexcept { return _mm256_rem_epi32(reg, v.reg); }
+	// int32x8 operator/(int32x8 v) const noexcept { return _mm256_div_epi32(reg, v.reg); }
+	// int32x8 operator%(int32x8 v) const noexcept { return _mm256_rem_epi32(reg, v.reg); }
 	int32x8 operator<<(int32x8 v) const noexcept { return _mm256_sllv_epi32(reg, v.reg); }
 	int32x8 operator>>(int32x8 v) const noexcept { return _mm256_srlv_epi32(reg, v.reg); }
 	int32x8 operator<<(int v) const noexcept { return _mm256_slli_epi32(reg, v); }
@@ -516,7 +513,7 @@ public:
 	int32x8& operator+=(int32x8 v) noexcept { reg = *this + v; return *this; }
 	int32x8& operator-=(int32x8 v) noexcept { reg = *this - v; return *this; }
 	int32x8& operator*=(int32x8 v) noexcept { reg = *this * v; return *this; }
-	int32x8& operator/=(int32x8 v) noexcept { reg = *this / v; return *this; }
+	// int32x8& operator/=(int32x8 v) noexcept { reg = *this / v; return *this; }
 	int32x8& operator<<=(int32x8 v) noexcept { reg = *this << v; return *this; }
 	int32x8& operator>>=(int32x8 v) noexcept { reg = *this >> v; return *this; }
 	int32x8& operator<<=(int v) noexcept { reg = *this << v; return *this; }
@@ -540,15 +537,15 @@ public:
 	template <uint index> int256 with(int16 v) noexcept { return with_int16<index>(v); }
 
 	int16x16 operator~() const noexcept { return andnot(reg, int16x16{ -1 }); }
-	int16x16 operator-() const noexcept { return int16x16{} - reg; }
+	int16x16 operator-() const noexcept { return int16x16{} - *this; }
 	int16x16 operator&(int16x16 v) const noexcept { return _mm256_and_si256(reg, v); }
 	int16x16 operator|(int16x16 v) const noexcept { return _mm256_or_si256(reg, v); }
 	int16x16 operator^(int16x16 v) const noexcept { return _mm256_xor_si256(reg, v); }
 	int16x16 operator+(int16x16 v) const noexcept { return _mm256_add_epi16(reg, v.reg); }
 	int16x16 operator-(int16x16 v) const noexcept { return _mm256_sub_epi16(reg, v.reg); }
 	//int16x16 operator*(int16x16 v) const noexcept { return _mm256_mul_epi16(reg, v.reg); } // Instruction does not exist.
-	int16x16 operator/(int16x16 v) const noexcept { return _mm256_div_epi16(reg, v.reg); }
-	int16x16 operator%(int16x16 v) const noexcept { return _mm256_rem_epi16(reg, v.reg); }
+	// int16x16 operator/(int16x16 v) const noexcept { return _mm256_div_epi16(reg, v.reg); }
+	// int16x16 operator%(int16x16 v) const noexcept { return _mm256_rem_epi16(reg, v.reg); }
 	//int16x16 operator<<(int16x16 v) const noexcept { return _mm256_sllv_epi16(reg, v.reg); } // Instruction requires AVX512VL and AVX512BW.
 	//int16x16 operator>>(int16x16 v) const noexcept { return _mm256_srlv_epi16(reg, v.reg); } // Instruction requires AVX512VL and AVX512BW.
 	int16x16 operator<<(int v) const noexcept { return _mm256_slli_epi16(reg, v); }
@@ -561,7 +558,7 @@ public:
 	int16x16& operator+=(int16x16 v) noexcept { reg = *this + v; return *this; }
 	int16x16& operator-=(int16x16 v) noexcept { reg = *this - v; return *this; }
 	//int16x16& operator*=(int16x16 v) noexcept { reg = *this * v; return *this; } // Instruction does not exist.
-	int16x16& operator/=(int16x16 v) noexcept { reg = *this / v; return *this; }
+	// int16x16& operator/=(int16x16 v) noexcept { reg = *this / v; return *this; }
 	//int16x16& operator<<=(int16x16 v) noexcept { reg = *this << v; return *this; } // Instruction requires AVX512VL and AVX512BW.
 	//int16x16& operator>>=(int16x16 v) noexcept { reg = *this >> v; return *this; } // Instruction requires AVX512VL and AVX512BW.
 	int16x16& operator<<=(int v) noexcept { reg = *this << v; return *this; }
@@ -588,15 +585,15 @@ public:
 	template <uint index> int256 with(int8 v) noexcept { return with_int8<index>(v); }
 
 	int8x32 operator~() const noexcept { return andnot(reg, int8x32{ -1 }); }
-	int8x32 operator-() const noexcept { return int8x32{} - reg; }
+	int8x32 operator-() const noexcept { return int8x32{} - *this; }
 	int8x32 operator&(int8x32 v) const noexcept { return _mm256_and_si256(reg, v); }
 	int8x32 operator|(int8x32 v) const noexcept { return _mm256_or_si256(reg, v); }
 	int8x32 operator^(int8x32 v) const noexcept { return _mm256_xor_si256(reg, v); }
 	int8x32 operator+(int8x32 v) const noexcept { return _mm256_add_epi8(reg, v.reg); }
 	int8x32 operator-(int8x32 v) const noexcept { return _mm256_sub_epi8(reg, v.reg); }
 	//int8x32 operator*(int8x32 v) const noexcept { return _mm256_mul_epi8(reg, v.reg); } // Instruction does not exist.
-	int8x32 operator/(int8x32 v) const noexcept { return _mm256_div_epi8(reg, v.reg); }
-	int8x32 operator%(int8x32 v) const noexcept { return _mm256_rem_epi8(reg, v.reg); }
+	// int8x32 operator/(int8x32 v) const noexcept { return _mm256_div_epi8(reg, v.reg); }
+	// int8x32 operator%(int8x32 v) const noexcept { return _mm256_rem_epi8(reg, v.reg); }
 	//int8x32 operator<<(int8x32 v) const noexcept { return _mm256_sllv_epi8(reg, v.reg); } // Instruction does not exist.
 	//int8x32 operator>>(int8x32 v) const noexcept { return _mm256_srlv_epi8(reg, v.reg); } // Instruction does not exist.
 	//int8x32 operator<<(int v) const noexcept { return _mm256_slli_epi8(reg, v); } // Instruction does not exist.
@@ -609,7 +606,7 @@ public:
 	int8x32& operator+=(int8x32 v) noexcept { reg = *this + v; return *this; }
 	int8x32& operator-=(int8x32 v) noexcept { reg = *this - v; return *this; }
 	//int8x32& operator*=(int8x32 v) noexcept { reg = *this * v; return *this; } // Instruction does not exist.
-	int8x32& operator/=(int8x32 v) noexcept { reg = *this / v; return *this; }
+	// int8x32& operator/=(int8x32 v) noexcept { reg = *this / v; return *this; }
 	//int8x32& operator<<=(int8x32 v) noexcept { reg = *this << v; return *this; } // Instruction does not exist.
 	//int8x32& operator>>=(int8x32 v) noexcept { reg = *this >> v; return *this; } // Instruction does not exist.
 	//int8x32& operator<<=(int v) noexcept { reg = *this << v; return *this; } // Instruction does not exist.

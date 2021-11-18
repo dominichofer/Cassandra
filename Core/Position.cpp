@@ -70,7 +70,7 @@ BitBoard Position::ParityQuadrants() const
 	E ^= E >> 8;
 	E ^= E >> 16;
 	E &= 0x0000'0011'0000'0011ULL;
-	return E * 0x0000'0000'0F0F'0F0FULL;
+	return BitBoard{ E * 0x0000'0000'0F0F'0F0FULL };
 }
 
 Position FlipCodiagonal(Position pos) noexcept

@@ -14,7 +14,7 @@ namespace Bit
 
 	TEST(Bit, RemoveLSB)
 	{
-		uint64_t a;
+		uint64 a;
 		a = 0; RemoveLSB(a); ASSERT_EQ(a, 0ULL);
 		a = 1; RemoveLSB(a); ASSERT_EQ(a, 0ULL);
 		a = 2; RemoveLSB(a); ASSERT_EQ(a, 0ULL);

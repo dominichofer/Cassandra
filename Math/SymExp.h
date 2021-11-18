@@ -5,13 +5,38 @@
 #include <vector>
 
 // Forward declaration
-class SymExps;
+class SymExp;
 class Var;
 using Vars = std::vector<Var>;
 namespace AST
 {
 	class Node;
 }
+
+class SymExps
+{
+	std::vector<SymExp> vec;
+public:
+	SymExps(std::vector<SymExp> vec) noexcept : vec(std::move(vec)) {}
+
+	[[nodiscard]] SymExps At(const Var&, double value) const;
+	template <typename T>
+	[[nodiscard]] SymExps At(const Vars&, const std::vector<T>& values) const;
+
+	      SymExp& operator[](std::size_t i)       { return vec[i]; }
+	const SymExp& operator[](std::size_t i) const { return vec[i]; }
+
+	[[nodiscard]] auto begin() noexcept { return vec.begin(); }
+	[[nodiscard]] auto begin() const noexcept { return vec.begin(); }
+	[[nodiscard]] auto cbegin() const noexcept { return vec.cbegin(); }
+	[[nodiscard]] auto end() noexcept { return vec.end(); }
+	[[nodiscard]] auto end() const noexcept { return vec.end(); }
+	[[nodiscard]] auto cend() const noexcept { return vec.cend(); }
+
+	[[nodiscard]] std::vector<double> value() const;
+
+	operator std::vector<SymExp>() { return vec; }
+};
 
 // Wrapper to provide value semantics
 class SymExp
@@ -47,7 +72,7 @@ public:
 		std::vector<SymExp> ret;
 		for (std::size_t i = 0; i < vars.size(); i++)
 			ret.push_back(Derive(vars[i]).At(vars, values));
-		return ret;
+		return { ret };
 	}
 	[[nodiscard]] SymExp Simplify() const;
 	[[nodiscard]] std::string to_string() const;
@@ -65,37 +90,15 @@ public:
 	friend SymExp log(SymExp);
 };
 
-class SymExps
+template <typename T>
+[[nodiscard]] SymExps SymExps::At(const Vars& vars, const std::vector<T>& values) const
 {
-	std::vector<SymExp> vec;
-public:
-	SymExps(std::vector<SymExp> vec) noexcept : vec(std::move(vec)) {}
-
-	[[nodiscard]] SymExps At(const Var&, double value) const;
-	template <typename T>
-	[[nodiscard]] SymExps At(const Vars&, const std::vector<T>& values) const
-	{
-		std::vector<SymExp> ret;
-		ret.reserve(vec.size());
-		for (const auto& v : vec)
-			ret.push_back(v.At(vars, values));
-		return { ret };
-	}
-
-	      SymExp& operator[](std::size_t i)       { return vec[i]; }
-	const SymExp& operator[](std::size_t i) const { return vec[i]; }
-
-	[[nodiscard]] auto begin() noexcept { return vec.begin(); }
-	[[nodiscard]] auto begin() const noexcept { return vec.begin(); }
-	[[nodiscard]] auto cbegin() const noexcept { return vec.cbegin(); }
-	[[nodiscard]] auto end() noexcept { return vec.end(); }
-	[[nodiscard]] auto end() const noexcept { return vec.end(); }
-	[[nodiscard]] auto cend() const noexcept { return vec.cend(); }
-
-	[[nodiscard]] std::vector<double> value() const;
-
-	operator std::vector<SymExp>() { return vec; }
-};
+	std::vector<SymExp> ret;
+	ret.reserve(vec.size());
+	for (const auto& v : vec)
+		ret.push_back(v.At(vars, values));
+	return { ret };
+}
 
 class Var final : public SymExp
 {

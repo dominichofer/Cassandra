@@ -1,5 +1,6 @@
 #include "SymExp.h"
 #include <cassert>
+#include <cmath>
 #include <numeric>
 
 using namespace AST;

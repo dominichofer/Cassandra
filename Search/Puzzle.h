@@ -6,10 +6,9 @@
 #include <chrono>
 #include <execution>
 #include <functional>
-#include <ranges>
-#include <format>
 #include <string>
 #include <set>
+#include <ranges>
 #include <range/v3/view/filter.hpp>
 
 struct Request
@@ -34,17 +33,17 @@ struct Request
 
 [[nodiscard]] inline std::string to_string(const Request& r) { return (r.HasMove() ? to_string(r.move) + " " : std::string{}) + to_string(r.intensity); }
 
-template <>
-struct std::formatter<Request> : std::formatter<std::string>
-{
-	auto format(const Request& r, format_context& ctx)
-	{
-		if (r.HasMove())
-			return std::formatter<std::string>::format(to_string(r.move) + " " + to_string(r.intensity), ctx);
-		else
-			return std::formatter<std::string>::format(to_string(r.intensity), ctx);
-	}
-};
+// template <>
+// struct std::formatter<Request> : std::formatter<std::string>
+// {
+// 	auto format(const Request& r, format_context& ctx)
+// 	{
+// 		if (r.HasMove())
+// 			return std::formatter<std::string>::format(to_string(r.move) + " " + to_string(r.intensity), ctx);
+// 		else
+// 			return std::formatter<std::string>::format(to_string(r.intensity), ctx);
+// 	}
+// };
 
 struct Result
 {
@@ -75,11 +74,11 @@ public:
 		[[nodiscard]] bool operator==(const Task&) const noexcept = default;
 		[[nodiscard]] bool operator!=(const Task&) const noexcept = default;
 
-		const Request& Request() const noexcept { return request; }
-		const Result& Result() const noexcept { return result; }
+		const Request& GetRequest() const noexcept { return request; }
+		const Result& GetResult() const noexcept { return result; }
 
 		[[nodiscard]] Field Move() const { return request.move; }
-		[[nodiscard]] Intensity Intensity() const { return request.intensity; }
+		[[nodiscard]] Intensity GetIntensity() const { return request.intensity; }
 		[[nodiscard]] int Score() const { return result.score; }
 		[[nodiscard]] uint64 Nodes() const { return result.nodes; }
 		[[nodiscard]] std::chrono::duration<double> Duration() const { return result.duration; }
@@ -142,7 +141,7 @@ public:
 	[[nodiscard]] std::string to_string() const;
 };
 
-inline [[nodiscard]] std::string to_string(const Puzzle& puzzle) { return puzzle.to_string(); }
+inline std::string to_string(const Puzzle& puzzle) { return puzzle.to_string(); }
 inline std::ostream& operator<<(std::ostream& os, const Puzzle& puzzle) { return os << to_string(puzzle); }
 
 inline uint64 Nodes(const Puzzle& p) { return p.Nodes(); }

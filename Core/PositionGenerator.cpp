@@ -11,8 +11,8 @@ Position Random::operator()() noexcept
 	//  25% chance to belong to opponent,
 	//  50% chance to be empty.
 
-	BitBoard a = dist(rnd_engine);
-	BitBoard b = dist(rnd_engine);
+	BitBoard a{ dist(rnd_engine) };
+	BitBoard b{ dist(rnd_engine) };
 	return { a & ~b, b & ~a };
 }
 

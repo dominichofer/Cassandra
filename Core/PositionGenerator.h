@@ -21,7 +21,7 @@ namespace PosGen
 	class Random final : public PositionGenerator
 	{
 		std::mt19937_64 rnd_engine;
-		std::uniform_int_distribution<uint64_t> dist{ 0, -1 };
+		std::uniform_int_distribution<uint64> dist{ 0, -1ULL };
 	public:
 		Random(unsigned int seed = std::random_device{}()) : rnd_engine(seed) {}
 

@@ -1,5 +1,5 @@
 #pragma once
-//#include <atomic>
+#include <atomic>
 #include <functional>
 #include <vector>
 #include <optional>
@@ -60,5 +60,5 @@ public:
 private:
 	mutable std::atomic<uint64_t> updates{0}, lookups{0}, hits{0};
 	std::function<std::size_t(const key_type&)> hash_fkt;
-	alignas(std::hardware_destructive_interference_size) std::vector<Node> buckets;
+	/*alignas(std::hardware_destructive_interference_size)*/ std::vector<Node> buckets;
 };

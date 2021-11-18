@@ -3,6 +3,7 @@
 #include <execution>
 #include <functional>
 #include <shared_mutex>
+#include <mutex>
 #include <optional>
 #include <vector>
 #include <ranges>

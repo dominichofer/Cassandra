@@ -1,5 +1,11 @@
 #include "pch.h"
 
+struct PosScore
+{
+	Position pos;
+	int8_t score;
+};
+
 const PosScore Zero_empty_0 = {
 	"X X X X X X X X"
 	"O O O O O O O O"
@@ -291,16 +297,16 @@ TEST_F(AlphaBetaFailHardTest, Four_empty_1) { Test_all_windows(Four_empty_1); }
 TEST_F(AlphaBetaFailHardTest, Four_empty_2) { Test_all_windows(Four_empty_2); }
 TEST_F(AlphaBetaFailHardTest, Four_empty_3) { Test_all_windows(Four_empty_3); }
 TEST_F(AlphaBetaFailHardTest, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(AlphaBetaFailHardTest, FForum_1) { Test(FForum[1]); }
-TEST_F(AlphaBetaFailHardTest, FForum_2) { Test(FForum[2]); }
-TEST_F(AlphaBetaFailHardTest, FForum_3) { Test(FForum[3]); }
-TEST_F(AlphaBetaFailHardTest, FForum_4) { Test(FForum[4]); }
-TEST_F(AlphaBetaFailHardTest, FForum_5) { Test(FForum[5]); }
-TEST_F(AlphaBetaFailHardTest, FForum_6) { Test(FForum[6]); }
-TEST_F(AlphaBetaFailHardTest, FForum_7) { Test(FForum[7]); }
-TEST_F(AlphaBetaFailHardTest, FForum_8) { Test(FForum[8]); }
-TEST_F(AlphaBetaFailHardTest, FForum_9) { Test(FForum[9]); }
-TEST_F(AlphaBetaFailHardTest, FForum_10) { Test(FForum[10]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_1) { Test(FForum[1]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_2) { Test(FForum[2]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_3) { Test(FForum[3]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_4) { Test(FForum[4]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_5) { Test(FForum[5]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_6) { Test(FForum[6]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_7) { Test(FForum[7]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_8) { Test(FForum[8]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_9) { Test(FForum[9]); }
+// TEST_F(AlphaBetaFailHardTest, FForum_10) { Test(FForum[10]); }
 
 
 class AlphaBetaFailSoftTest : public ::testing::Test
@@ -356,16 +362,16 @@ TEST_F(AlphaBetaFailSoftTest, Four_empty_1) { Test_all_windows(Four_empty_1); }
 TEST_F(AlphaBetaFailSoftTest, Four_empty_2) { Test_all_windows(Four_empty_2); }
 TEST_F(AlphaBetaFailSoftTest, Four_empty_3) { Test_all_windows(Four_empty_3); }
 TEST_F(AlphaBetaFailSoftTest, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(AlphaBetaFailSoftTest, FForum_1) { Test(FForum[1]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_2) { Test(FForum[2]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_3) { Test(FForum[3]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_4) { Test(FForum[4]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_5) { Test(FForum[5]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_6) { Test(FForum[6]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_7) { Test(FForum[7]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_8) { Test(FForum[8]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_9) { Test(FForum[9]); }
-TEST_F(AlphaBetaFailSoftTest, FForum_10) { Test(FForum[10]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_1) { Test(FForum[1]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_2) { Test(FForum[2]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_3) { Test(FForum[3]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_4) { Test(FForum[4]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_5) { Test(FForum[5]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_6) { Test(FForum[6]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_7) { Test(FForum[7]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_8) { Test(FForum[8]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_9) { Test(FForum[9]); }
+// TEST_F(AlphaBetaFailSoftTest, FForum_10) { Test(FForum[10]); }
 
 class PVSTest : public ::testing::Test
 {
@@ -423,16 +429,16 @@ TEST_F(PVSTest, Four_empty_1) { Test_all_windows(Four_empty_1); }
 TEST_F(PVSTest, Four_empty_2) { Test_all_windows(Four_empty_2); }
 TEST_F(PVSTest, Four_empty_3) { Test_all_windows(Four_empty_3); }
 TEST_F(PVSTest, Five_empty) { Test_all_windows(Five_empty); }
-TEST_F(PVSTest, FForum_1) { Test(FForum[1]); }
-TEST_F(PVSTest, FForum_2) { Test(FForum[2]); }
-TEST_F(PVSTest, FForum_3) { Test(FForum[3]); }
-TEST_F(PVSTest, FForum_4) { Test(FForum[4]); }
-TEST_F(PVSTest, FForum_5) { Test(FForum[5]); }
-TEST_F(PVSTest, FForum_6) { Test(FForum[6]); }
-TEST_F(PVSTest, FForum_7) { Test(FForum[7]); }
-TEST_F(PVSTest, FForum_8) { Test(FForum[8]); }
-TEST_F(PVSTest, FForum_9) { Test(FForum[9]); }
-TEST_F(PVSTest, FForum_10) { Test(FForum[10]); }
+// TEST_F(PVSTest, FForum_1) { Test(FForum[1]); }
+// TEST_F(PVSTest, FForum_2) { Test(FForum[2]); }
+// TEST_F(PVSTest, FForum_3) { Test(FForum[3]); }
+// TEST_F(PVSTest, FForum_4) { Test(FForum[4]); }
+// TEST_F(PVSTest, FForum_5) { Test(FForum[5]); }
+// TEST_F(PVSTest, FForum_6) { Test(FForum[6]); }
+// TEST_F(PVSTest, FForum_7) { Test(FForum[7]); }
+// TEST_F(PVSTest, FForum_8) { Test(FForum[8]); }
+// TEST_F(PVSTest, FForum_9) { Test(FForum[9]); }
+// TEST_F(PVSTest, FForum_10) { Test(FForum[10]); }
 
 class PVS_TT : public ::testing::Test
 {
@@ -470,13 +476,13 @@ public:
 	}
 };
 
-TEST_F(PVS_TT, FForum_1) { Test(FForum[1]); }
-TEST_F(PVS_TT, FForum_2) { Test(FForum[2]); }
-TEST_F(PVS_TT, FForum_3) { Test(FForum[3]); }
-TEST_F(PVS_TT, FForum_4) { Test(FForum[4]); }
-TEST_F(PVS_TT, FForum_5) { Test(FForum[5]); }
-TEST_F(PVS_TT, FForum_6) { Test(FForum[6]); }
-TEST_F(PVS_TT, FForum_7) { Test(FForum[7]); }
-TEST_F(PVS_TT, FForum_8) { Test(FForum[8]); }
-TEST_F(PVS_TT, FForum_9) { Test(FForum[9]); }
-TEST_F(PVS_TT, FForum_10) { Test(FForum[10]); }
+// TEST_F(PVS_TT, FForum_1) { Test(FForum[1]); }
+// TEST_F(PVS_TT, FForum_2) { Test(FForum[2]); }
+// TEST_F(PVS_TT, FForum_3) { Test(FForum[3]); }
+// TEST_F(PVS_TT, FForum_4) { Test(FForum[4]); }
+// TEST_F(PVS_TT, FForum_5) { Test(FForum[5]); }
+// TEST_F(PVS_TT, FForum_6) { Test(FForum[6]); }
+// TEST_F(PVS_TT, FForum_7) { Test(FForum[7]); }
+// TEST_F(PVS_TT, FForum_8) { Test(FForum[8]); }
+// TEST_F(PVS_TT, FForum_9) { Test(FForum[9]); }
+// TEST_F(PVS_TT, FForum_10) { Test(FForum[10]); }

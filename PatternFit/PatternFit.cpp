@@ -140,8 +140,8 @@ void FitAccuracyModel(const DataBase<Puzzle>& data, const AAGLEM& evaluator)
         // Extract all data from puzzle
         std::vector<DV> dv;
         for (const Puzzle::Task& task : p.tasks)
-            if (task.IsDone() and task.Intensity().IsCertain())
-                dv.emplace_back(task.Intensity().depth, task.Score());
+            if (task.IsDone() and task.GetIntensity().IsCertain())
+                dv.emplace_back(task.GetIntensity().depth, task.Score());
 
         // Put pairwise score diffs into groups
         for (int i = 0; i < dv.size(); i++)

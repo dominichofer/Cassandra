@@ -4,7 +4,12 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <iterator>
+#include <span>
+#include <string>
 #include <functional>
+#include <map>
+#include <ranges>
 #include <range/v3/all.hpp>
 
 
@@ -350,7 +355,7 @@ namespace views
 	static details::drop_each_range_adaptor drop_each;
 }
 
-inline DataBase<Puzzle> LoadDB(const std::string_view fmt)
+inline DataBase<Puzzle> LoadDB(const std::string& pre, const std::string& post)
 {
 	DataBase<Puzzle> db;
 	for (int i = 0; i < 10; i++)
@@ -358,7 +363,7 @@ inline DataBase<Puzzle> LoadDB(const std::string_view fmt)
 		{
 			try
 			{
-				db.Add(std::format(fmt, i, j));
+				db.Add(pre + std::to_string(i) + std::to_string(j) + post);
 			}
 			catch (...)
 			{}
@@ -366,7 +371,7 @@ inline DataBase<Puzzle> LoadDB(const std::string_view fmt)
 	return db;
 }
 
-inline DataBase<Puzzle> LoadEvalFit() { return LoadDB(R"(G:\Reversi\play{}{}_eval_fit.puz)"); }
-inline DataBase<Puzzle> LoadAccuracyFit() { return LoadDB(R"(G:\Reversi\play{}{}_accuracy_fit.puz)"); }
-inline DataBase<Puzzle> LoadMoveSort() { return LoadDB(R"(G:\Reversi\play{}{}_move_sort.puz)"); }
-inline DataBase<Puzzle> LoadBenchmark() { return LoadDB(R"(G:\Reversi\play{}{}_benchmark.puz)"); }
+inline DataBase<Puzzle> LoadEvalFit() { return LoadDB(R"(G:\Reversi\play)", "_eval_fit.puz)"); }
+inline DataBase<Puzzle> LoadAccuracyFit() { return LoadDB(R"(G:\Reversi\play)", "_accuracy_fit.puz)"); }
+inline DataBase<Puzzle> LoadMoveSort() { return LoadDB(R"(G:\Reversi\play)", "_move_sort.puz)"); }
+inline DataBase<Puzzle> LoadBenchmark() { return LoadDB(R"(G:\Reversi\play)", "_benchmark.puz)"); }

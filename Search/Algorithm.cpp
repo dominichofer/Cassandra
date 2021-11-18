@@ -38,7 +38,7 @@ uint64_t PotentialMoves(const Position& pos) noexcept
 	return EightNeighboursAndSelf(pos.Opponent()) & pos.Empties();
 	//BitBoard O = pos.Opponent();
 	//O |= (O >> 8) | (O << 8);
-	//BitBoard tmp = O & 0x7E7E7E7E7E7E7E7Eui64;
+	//BitBoard tmp = O & 0x7E7E7E7E7E7E7E7EULL;
 	//O |= tmp << 1 | tmp >> 1;
 	//return O & pos.Empties();
 }
@@ -46,7 +46,7 @@ uint64_t PotentialMoves(const Position& pos) noexcept
 uint64_t OpponentsExposed(const Position& pos) noexcept
 {
 	auto b = pos.Empties();
-	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7Fui64) | ((b << 1) & 0xFEFEFEFEFEFEFEFEui64);
+	b |= ((b >> 1) & 0x7F7F7F7F7F7F7F7FULL) | ((b << 1) & 0xFEFEFEFEFEFEFEFEULL);
 	b |= (b >> 8) | (b << 8);
 	return b & pos.Opponent();
 }

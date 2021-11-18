@@ -1,5 +1,6 @@
 #include "Puzzle.h"
-#include <ranges>
+#include <algorithm>
+#include <range/v3/all.hpp>
 
 std::set<Request> Request::AllMoves(Position pos)
 {
@@ -25,7 +26,7 @@ void Puzzle::insert(const Request& r)
 
 void Puzzle::erase(const Request& suspect)
 {
-	std::erase_if(tasks, [&suspect](const Task& t) { return t.Request() == suspect; });
+	std::erase_if(tasks, [&suspect](const Task& t) { return t.GetRequest() == suspect; });
 }
 
 void Puzzle::erase_if(std::function<bool(const Task&)> pred)
@@ -40,7 +41,7 @@ void Puzzle::erase_if_undone()
 
 void Puzzle::ClearResult(const Request& r)
 {
-	ClearResultIf([&r](const Task& task) { return task.Request() == r; });
+	ClearResultIf([&r](const Task& task) { return task.GetRequest() == r; });
 }
 
 void Puzzle::ClearResultIf(std::function<bool(const Task&)> pred)
@@ -79,7 +80,7 @@ bool Puzzle::AnyTaskDone() const
 bool Puzzle::Contains(const Request& suspect) const
 {
 	return std::ranges::any_of(tasks,
-		[&suspect](const Task& t) { return t.Request() == suspect; });
+		[&suspect](const Task& t) { return t.GetRequest() == suspect; });
 }
 
 bool Puzzle::Contains(Field move) const
@@ -91,9 +92,9 @@ bool Puzzle::Contains(Field move) const
 Result Puzzle::ResultOf(const Request& suspect) const noexcept(false)
 {
 	auto it = std::ranges::find_if(tasks,
-		[&suspect](const Task& task) { return task.Request() == suspect; });
+		[&suspect](const Task& task) { return task.GetRequest() == suspect; });
 	if (it != tasks.end())
-		return it->Result();
+		return it->GetResult();
 	throw std::runtime_error("Puzzle does not contain request.");
 }
 
@@ -127,7 +128,7 @@ std::set<Intensity> Puzzle::SolvedIntensities() const
 	// Add all solved intensities from tasks with no moves
 	for (const Task& t : tasks)
 		if (t.IsDone() and not t.HasMove())
-			set.insert(t.Intensity());
+			set.insert(t.GetIntensity());
 
 	return set;
 }
@@ -139,7 +140,7 @@ std::set<Intensity> Puzzle::SolvedIntensitiesOfAllMoves() const
 	// Add all solved intensities from tasks with moves
 	for (const Task& t : tasks)
 		if (t.IsDone() and t.HasMove())
-			set.insert(t.Intensity() + 1);
+			set.insert(t.GetIntensity() + 1);
 
 	// Filter out intensities that aren't solved in all possible moves
 	for (Field move : PossibleMoves(pos))
@@ -180,17 +181,17 @@ std::optional<int> Puzzle::MaxSolvedIntensityScore() const
 		return ResultOf(max).score;
 
 	Moves pm = PossibleMoves(pos);
-	return std::ranges::max(
+	return ranges::max(
 		tasks
-		| std::views::filter([&](const Task& t) { return t.IsDone() and t.HasMove() and pm.contains(t.Move()) and t.Intensity() == max - 1; })
-		| std::views::transform([&](const Task& t) { return -t.Score(); }));
+		| ranges::views::filter([&](const Task& t) { return t.IsDone() and t.HasMove() and pm.contains(t.Move()) and t.GetIntensity() == max - 1; })
+		| ranges::views::transform([&](const Task& t) { return -t.Score(); }));
 
 
 	//int max_score = -inf_score;
 	//Intensity max_intensity{ -1 };
 
 	//std::optional<IntensityResult> ret = std::nullopt;
-	//auto cmp = [](const Task& l, const Task& r) { return l.Intensity() < r.Intensity(); };
+	//auto cmp = [](const Task& l, const Task& r) { return l.GetIntensity() < r.GetIntensity(); };
 	//auto possible_moves = PossibleMoves(pos);
 	//if (possible_moves and ContainsAllPossibleMovesDone())
 	//{
@@ -200,7 +201,7 @@ std::optional<int> Puzzle::MaxSolvedIntensityScore() const
 	//		Task t = std::ranges::max(
 	//			tasks | std::views::filter([move](const Task& t) { return t.Move() == move and t.IsDone(); }),
 	//			cmp);
-	//		ir.intensity = std::min(ir.intensity, t.Intensity());
+	//		ir.intensity = std::min(ir.intensity, t.GetIntensity());
 	//		ir.result.score = std::max(ir.result.score, -t.Score());
 	//		ir.result.nodes += t.Nodes();
 	//		ir.result.duration += t.Duration();
@@ -212,8 +213,8 @@ std::optional<int> Puzzle::MaxSolvedIntensityScore() const
 	//if (done_tasks_with_no_moves)
 	//{
 	//	Task t = std::ranges::max(done_tasks_with_no_moves, cmp);
-	//	if (not ret.has_value() or t.Intensity() >= ret.value().intensity)
-	//		ret = IntensityResult(t.Intensity(), t.Result());
+	//	if (not ret.has_value() or t.GetIntensity() >= ret.value().intensity)
+	//		ret = IntensityResult(t.GetIntensity(), t.Result());
 	//}
 	//return ret;
 }
@@ -232,7 +233,7 @@ bool Puzzle::Solve(const Search::Algorithm& algorithm)
 			position = Play(position, task.Move());
 
 		const auto start = std::chrono::high_resolution_clock::now();
-		int score = alg->Eval(position, task.Intensity());
+		int score = alg->Eval(position, task.GetIntensity());
 		const auto stop = std::chrono::high_resolution_clock::now();
 
 		task.ResolveWith(score, alg->nodes, stop - start);
@@ -249,7 +250,7 @@ std::string Puzzle::to_string() const
 	for (const Task& task : tasks)
 	{
 		bool has_move = task.HasMove();
-		auto intensity = task.Intensity();
+		auto intensity = task.GetIntensity();
 
 		ret += " (";
 		// move

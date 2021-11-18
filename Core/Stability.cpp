@@ -12,10 +12,10 @@ public:
 	[[nodiscard]] BitBoard StableStonesOpponent(const Position&) const; // Stable stones of the opponent
 
 private:
-	[[nodiscard]] static uint64_t FullLineHorizontal(uint64_t discs);
-	[[nodiscard]] static uint64_t FullLineVertival(uint64_t discs);
-	[[nodiscard]] static uint64_t FullLineDiagonal(uint64_t discs);
-	[[nodiscard]] static uint64_t FullLineCodiagonal(uint64_t discs);
+	[[nodiscard]] static uint64 FullLineHorizontal(uint64 discs);
+	[[nodiscard]] static uint64 FullLineVertival(uint64 discs);
+	[[nodiscard]] static uint64 FullLineDiagonal(uint64 discs);
+	[[nodiscard]] static uint64 FullLineCodiagonal(uint64 discs);
 
 	// edge_stables[Player][Opponent] holds the stable discs of player and opponent
 	std::array<std::array<uint8_t, 256>, 256> edge_stables{};
@@ -24,8 +24,8 @@ private:
 StabilityAnalyzer::StabilityAnalyzer()
 {
 	for (int empty_count = 56; empty_count <= 64; empty_count++)
-		for (uint64_t p = 0; p < 256; p++)
-			for (uint64_t o = 0; o < 256; o++)
+		for (uint64 p = 0; p < 256; p++)
+			for (uint64 o = 0; o < 256; o++)
 			{
 				if (p & o)
 					continue;
@@ -42,8 +42,8 @@ StabilityAnalyzer::StabilityAnalyzer()
 				{
 					Position A_next = Play(A, move);
 					Position B_next = Play(B, move);
-					uint64_t A_unchanged = ~(A.Player() ^ A_next.Opponent());
-					uint64_t B_unchanged = ~(B.Player() ^ B_next.Opponent());
+					uint64 A_unchanged = ~(A.Player() ^ A_next.Opponent());
+					uint64 B_unchanged = ~(B.Player() ^ B_next.Opponent());
 
 					stables &= edge_stables[A_next.Opponent()][A_next.Player()] & A_unchanged;
 					stables &= edge_stables[B_next.Opponent()][B_next.Player()] & B_unchanged;
@@ -57,11 +57,11 @@ StabilityAnalyzer::StabilityAnalyzer()
 
 BitBoard StabilityAnalyzer::StableEdges(const Position& pos) const
 {	
-	constexpr uint64_t L0_Left = BitBoard::VerticalLine(7);
-	constexpr uint64_t L0_Right = BitBoard::VerticalLine(0);
+	constexpr uint64 L0_Left = BitBoard::VerticalLine(7);
+	constexpr uint64 L0_Right = BitBoard::VerticalLine(0);
 
 	const auto stable_L0_Bottom = edge_stables[static_cast<uint8_t>(pos.Player())][static_cast<uint8_t>(pos.Opponent())];
-	const auto stable_L0_Top = static_cast<uint64_t>(edge_stables[pos.Player() >> 56][pos.Opponent() >> 56]) << 56;
+	const auto stable_L0_Top = static_cast<uint64>(edge_stables[pos.Player() >> 56][pos.Opponent() >> 56]) << 56;
 	const auto stable_L0_Left  = PDep(edge_stables[PExt(pos.Player(), L0_Left )][PExt(pos.Opponent(), L0_Left )], L0_Left );
 	const auto stable_L0_Right = PDep(edge_stables[PExt(pos.Player(), L0_Right)][PExt(pos.Opponent(), L0_Right)], L0_Right);
 
@@ -92,7 +92,7 @@ BitBoard StabilityAnalyzer::StableStonesOpponent(const Position& pos) const
 	return stables;
 }
 
-uint64_t StabilityAnalyzer::FullLineHorizontal(uint64_t discs)
+uint64 StabilityAnalyzer::FullLineHorizontal(uint64 discs)
 {
 	// 4 x AND, 3 x SHIFT, 1 x MUL
 	// 8 OPs
@@ -103,7 +103,7 @@ uint64_t StabilityAnalyzer::FullLineHorizontal(uint64_t discs)
 	return discs * 0xFFULL;
 }
 
-uint64_t StabilityAnalyzer::FullLineVertival(uint64_t discs)
+uint64 StabilityAnalyzer::FullLineVertival(uint64 discs)
 {
 	// 4 x AND, 3 x SHIFT, 1 x MUL
 	// 8 OPs
@@ -114,16 +114,16 @@ uint64_t StabilityAnalyzer::FullLineVertival(uint64_t discs)
 	return discs * 0x0101010101010101ULL;
 }
 
-uint64_t StabilityAnalyzer::FullLineDiagonal(const uint64_t discs)
+uint64 StabilityAnalyzer::FullLineDiagonal(const uint64 discs)
 {
 	// 5 x SHR, 5 x SHL, 7x AND, 10 x OR
 	// 27 OPs
-	constexpr uint64_t edge = 0xFF818181818181FFULL;
+	constexpr uint64 edge = 0xFF818181818181FFULL;
 
-	uint64_t full_l = discs & (edge | (discs >> 9));
-	uint64_t full_r = discs & (edge | (discs << 9));
-	uint64_t edge_l = edge | (edge >> 9);
-	uint64_t edge_r = edge | (edge << 9);
+	uint64 full_l = discs & (edge | (discs >> 9));
+	uint64 full_r = discs & (edge | (discs << 9));
+	uint64 edge_l = edge | (edge >> 9);
+	uint64 edge_r = edge | (edge << 9);
 	full_l &= edge_l | (full_l >> 18);
 	full_r &= edge_r | (full_r << 18);
 	edge_l |= edge_l >> 18;
@@ -134,16 +134,16 @@ uint64_t StabilityAnalyzer::FullLineDiagonal(const uint64_t discs)
 	return full_r & full_l;
 }
 
-uint64_t StabilityAnalyzer::FullLineCodiagonal(const uint64_t discs)
+uint64 StabilityAnalyzer::FullLineCodiagonal(const uint64 discs)
 {
 	// 5 x SHR, 5 x SHL, 7x AND, 10 x OR
 	// 27 OPs
-	constexpr uint64_t edge = 0xFF818181818181FFULL;
+	constexpr uint64 edge = 0xFF818181818181FFULL;
 
-	uint64_t full_l = discs & (edge | (discs >> 7));
-	uint64_t full_r = discs & (edge | (discs << 7));
-	uint64_t edge_l = edge | (edge >> 7);
-	uint64_t edge_r = edge | (edge << 7);
+	uint64 full_l = discs & (edge | (discs >> 7));
+	uint64 full_r = discs & (edge | (discs << 7));
+	uint64 edge_l = edge | (edge >> 7);
+	uint64 edge_r = edge | (edge << 7);
 	full_l &= edge_l | (full_l >> 14);
 	full_r &= edge_r | (full_r << 14);
 	edge_l |= edge_l >> 14;

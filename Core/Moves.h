@@ -42,7 +42,7 @@ public:
 	[[nodiscard]] CUDA_CALLABLE std::size_t size() const noexcept { return popcount(b); }
 
 	[[nodiscard]] CUDA_CALLABLE Field front() const noexcept { return b.FirstSetField(); }
-	[[nodiscard]] CUDA_CALLABLE void pop_front() noexcept { b.ClearFirstSet(); }
+	CUDA_CALLABLE void pop_front() noexcept { b.ClearFirstSet(); }
 
 	[[nodiscard]] CUDA_CALLABLE Iterator begin() const noexcept { return b; }
 	[[nodiscard]] CUDA_CALLABLE Iterator end() const noexcept { return {}; }

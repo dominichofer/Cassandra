@@ -6,6 +6,11 @@
 #include <iostream>
 #include <shared_mutex>
 
+template<class, template<class...> class>
+inline constexpr bool is_specialization = false;
+template<template<class...> class T, class... Args>
+inline constexpr bool is_specialization<T<Args...>, T> = true;
+
 //template <typename T>
 //struct compact
 //{
@@ -102,7 +107,7 @@ public:
 	requires std::is_arithmetic_v<T> or std::is_enum_v<T>
 	void write(const T& t)
 	{
-		stream.write(reinterpret_cast<const char*>(std::addressof(t)), sizeof T);
+		stream.write(reinterpret_cast<const char*>(std::addressof(t)), sizeof(T));
 	}
 
 	template <typename T>
@@ -127,14 +132,14 @@ public:
 	}
 
 	template <typename T>
-	requires std::is_same_v<T, std::vector<typename T::value_type, typename T::allocator_type>>
+	requires is_specialization<T, std::vector>
 	T read()
 	{
 		auto size = read<std::size_t>();
 		T vec;
 		vec.reserve(size);
 		for (std::size_t i = 0; i < size; i++)
-			vec.push_back(read<T::value_type>());
+			vec.push_back(read<typename T::value_type>());
 		return vec;
 	}
 
@@ -238,17 +243,17 @@ public:
 
 	void write(const Puzzle::Task& task)
 	{
-		write(task.Request());
-		write(task.Result());
+		write(task.GetRequest());
+		write(task.GetResult());
 	}
 	
 	template <typename T>
 	requires std::is_same_v<T, Puzzle::Task>
 	T read()
 	{
-		auto request = read<decltype(Puzzle::Task::request)>();
-		auto result = read<decltype(Puzzle::Task::result)>();
-		return { request, result };
+		auto request = read<Request>();
+		auto result = read<Result>();
+		return T(request, result);
 	}
 
 	void write(const Puzzle& p)

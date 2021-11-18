@@ -7,13 +7,13 @@
 #include <tuple>
 #include <vector>
 
-constexpr int min_score = -32;
-constexpr int max_score = +32;
-constexpr int inf_score = +33;
-constexpr int undefined_score = +35;
+inline int min_score = -32;
+inline int max_score = +32;
+inline int inf_score = +33;
+inline int undefined_score = +35;
 
 template <typename T>
-concept score_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, int>;
+concept score_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, int>; // TODO: Is this used?
 
 // Maps input to (.., "-1", "+0", "+1", ..)
 std::string SignedInt(int);

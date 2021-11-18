@@ -45,7 +45,7 @@ private:
 	value_type value{};
 };
 
-static_assert(sizeof(OneNode) <= std::hardware_constructive_interference_size);
+static_assert(sizeof(OneNode) <= 64);
 
 //class TwoNode
 //{

@@ -15,7 +15,7 @@ CUDA_CALLABLE bool HasMoves(const Position& pos) noexcept
 #ifdef __AVX2__
 bool detail::HasMoves_AVX2(const Position& pos) noexcept
 {
-	const int64x4 maskO = int64x4(pos.Opponent()) & int64x4(0x7E7E7E7E7E7E7E7EI64, 0x00FFFFFFFFFFFF00I64, 0x007E7E7E7E7E7E00I64, 0x007E7E7E7E7E7E00I64);
+	const int64x4 maskO = int64x4(pos.Opponent()) & int64x4(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
 	const int64x4 P(pos.Player());
 
 	int64x4 flip1 = maskO & (P << int64x4(1, 8, 7, 9));

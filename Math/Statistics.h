@@ -6,16 +6,14 @@
 #include <type_traits>
 
 // population variance
-template <typename Iterator, typename Function = std::identity>
-double Variance(Iterator first, Iterator last, Function trafo = {})
+template <typename I, typename S, typename P = std::identity>
+double Variance(I first, S last, P proj = {})
 {
-	static_assert(std::is_convertible_v<std::iterator_traits<Iterator>::value_type, double>);
-
 	double E_of_X = 0;
 	double E_of_X_sq = 0;
 	for (int64_t n = 1; first != last; ++first, ++n)
 	{
-		const double x = trafo(*first);
+		const double x = proj(*first);
 		E_of_X += (x - E_of_X) / n;
 		E_of_X_sq += (x * x - E_of_X_sq) / n;
 	}
@@ -23,82 +21,78 @@ double Variance(Iterator first, Iterator last, Function trafo = {})
 }
 
 // population variance
-template <typename Container, typename Function = std::identity>
-double Variance(const Container& c, Function trafo = {})
+template <std::ranges::forward_range Range, typename P = std::identity>
+double Variance(Range&& r, P proj = {})
 {
-	return Variance(c.begin(), c.end(), trafo);
+	return Variance(r.begin(), r.end(), std::move(proj));
 }
 
 // population standard deviation
-template <typename Iterator, typename Function = std::identity>
-double StandardDeviation(Iterator first, Iterator last, Function trafo = {})
+template <typename I, typename S, typename P = std::identity>
+double StandardDeviation(I first, S last, P proj = {})
 {
-	return std::sqrt(Variance(first, last, trafo));
+	return std::sqrt(Variance(first, last, std::move(proj)));
 }
 
 // population standard deviation
-template <typename Container, typename Function = std::identity>
-double StandardDeviation(const Container& c, Function trafo = {})
+template <std::ranges::forward_range Range, typename P = std::identity>
+double StandardDeviation(Range&& r, P proj = {})
 {
-	return StandardDeviation(c.begin(), c.end(), trafo);
+	return StandardDeviation(r.begin(), r.end(), std::move(proj));
 }
 
-template <typename Iterator, typename Function = std::identity>
-double Average(Iterator first, Iterator last, Function trafo = {})
+template <typename I, typename S, typename P = std::identity>
+double Average(I first, S last, P proj = {})
 {
-	static_assert(std::is_convertible_v<std::iterator_traits<Iterator>::value_type, double>);
-
 	double E_of_X = 0;
 	for (int64_t n = 1; first != last; ++first, ++n)
 	{
-		const double x = trafo(*first);
+		const double x = proj(*first);
 		E_of_X += (x - E_of_X) / n;
 	}
 	return E_of_X;
 }
 
-template <typename Container, typename Function = std::identity>
-double Average(const Container& c, Function trafo = {})
+template <std::ranges::forward_range Range, typename P = std::identity>
+double Average(Range&& r, P proj = {})
 {
-	return Average(c.begin(), c.end(), trafo);
+	return Average(r.begin(), r.end(), std::move(proj));
 }
 
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the best model if the true model is not in the set of candidates.
-template <typename Iterator, typename Function = std::identity>
-double AIC(Iterator first_error, Iterator last_error, std::size_t parameters, Function trafo = {})
+template <typename I, typename S, typename P = std::identity>
+double AIC(I first_error, S last_error, std::size_t parameters, P proj = {})
 {
 	std::size_t n = std::distance(first_error, last_error);
-	return n * log(Variance(first_error, last_error)) + 2 * (parameters + 1);
+	return n * log(Variance(first_error, last_error, std::move(proj))) + 2 * (parameters + 1);
 }
 
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the best model if the true model is not in the set of candidates.
-template <typename Container, typename Function = std::identity>
-double AIC(const Container& c, std::size_t parameters, Function trafo = {})
+template <std::ranges::forward_range Range, typename P = std::identity>
+double AIC(Range&& r, std::size_t parameters, P proj = {})
 {
-	std::size_t n = c.size();
-	return n * log(Variance(c)) + 2 * (parameters + 1);
+	return AIC(r.begin(), r.end(), parameters, std::move(proj));
 }
 
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the true model if it's in the set of candidates.
-template <typename Iterator, typename Function = std::identity>
-double BIC(Iterator first_error, Iterator last_error, std::size_t parameters, Function trafo = {})
+template <typename I, typename S, typename P = std::identity>
+double BIC(I first_error, S last_error, std::size_t parameters, P proj = {})
 {
 	std::size_t n = std::distance(first_error, last_error);
-	return n * log(Variance(first_error, last_error)) + parameters * log(n);
+	return n * log(Variance(first_error, last_error, std::move(proj))) + parameters * log(n);
 }
 
 // Bayesian Information Criterion
 // for the gaussian special case https://en.wikipedia.org/wiki/Bayesian_information_criterion#Gaussian_special_case
 // Good for selecting the true model if it's in the set of candidates.
-template <typename Container, typename Function = std::identity>
-double BIC(const Container& c, std::size_t parameters, Function trafo = {})
+template <std::ranges::forward_range Range, typename P = std::identity>
+double BIC(Range&& r, std::size_t parameters, P proj = {})
 {
-	std::size_t n = c.size();
-	return n * log(Variance(c)) + parameters * log(n);
+	return BIC(r.begin(), r.end(), parameters, std::move(proj));
 }

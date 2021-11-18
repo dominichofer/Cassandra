@@ -52,7 +52,7 @@ private:
 	KeyValuePair Get() const; // thread-safe
 };
 
-static_assert(sizeof(BigNode) <= std::hardware_constructive_interference_size);
+static_assert(sizeof(BigNode) <= 64);
 
 
 struct BigNodeHashTable : public HashTable<BigNode>

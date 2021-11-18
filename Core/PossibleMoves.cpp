@@ -21,20 +21,20 @@ Moves detail::PossibleMoves_AVX512(const Position& pos) noexcept
 	// = 19 OPs
 
 	// 1 x AND
-	const __m512i maskO = _mm512_set1_epi64(pos.Opponent()) & _mm512_set_epi64(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL, 0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
-	const __m512i shift1 = _mm512_set_epi64(1, 8, 7, 9, -1, -8, -7, -9);
+	const __m512i maskO = _mm512_set1_epULL(pos.Opponent()) & _mm512_set_epULL(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL, 0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
+	const __m512i shift1 = _mm512_set_epULL(1, 8, 7, 9, -1, -8, -7, -9);
 	const __m512i shift2 = shift1 + shift1;
 
 	// 6 x SHIFT, 5 x AND, 3 x OR
-	__m512i flip = maskO & _mm512_rolv_epi64(_mm512_set1_epi64(pos.Player()), shift1);
-	__m512i mask = maskO & _mm512_rolv_epi64(maskO, shift1);
-	flip |= maskO & _mm512_rolv_epi64(flip, shift1);
-	flip |= mask & _mm512_rolv_epi64(flip, shift2);
-	flip |= mask & _mm512_rolv_epi64(flip, shift2);
-	flip = _mm512_rolv_epi64(flip, shift1);
+	__m512i flip = maskO & _mm512_rolv_epULL(_mm512_set1_epULL(pos.Player()), shift1);
+	__m512i mask = maskO & _mm512_rolv_epULL(maskO, shift1);
+	flip |= maskO & _mm512_rolv_epULL(flip, shift1);
+	flip |= mask & _mm512_rolv_epULL(flip, shift2);
+	flip |= mask & _mm512_rolv_epULL(flip, shift2);
+	flip = _mm512_rolv_epULL(flip, shift1);
 
 	// 1 x NOT, 2 x OR, 1 x AND
-	return ~(P | O) & _mm512_reduce_or_epi64(flip);
+	return ~(P | O) & _mm512_reduce_or_epULL(flip);
 }
 #endif
 
