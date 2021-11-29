@@ -14,9 +14,7 @@
 #include <iostream>
 #include <iomanip>
 #include <set>
-#include <format>
 #include <omp.h>
-#include <experimental/generator>
 
 class OutputFormater
 {
@@ -67,16 +65,16 @@ public:
 		int diff = eval - score;
 		auto nps = nodes / time.count();
 
-		std::string s = std::format("{:>3} | {:<6} | {:+03} |", index, to_string(intensity), eval);
+		std::string s = fmt::format("{:>3} | {:<6} | {:+03} |", index, to_string(intensity), eval);
 		if (test)
 		{
-			s += std::format(" {:+03} |", score);
+			s += fmt::format(" {:+03} |", score);
 			if (diff)
-				s += std::format(" {:+03} |", diff);
+				s += fmt::format(" {:+03} |", diff);
 			else
 				s += "     |";
 		}
-		return s + std::format(std::locale(""), "{:15.3f} |{:>17L} |{:>14.0Lf}\n", time.count(), nodes, nodes / time.count());
+		return s + fmt::format(std::locale(""), "{:15.3f} |{:>17L} |{:>14.0Lf}\n", time.count(), nodes, nodes / time.count());
 	}
 	std::string Line(std::size_t index, const Request& request, int score, const Result& result)
 	{
@@ -96,10 +94,10 @@ public:
 	{
 		std::string s = test ? "                         " : "             ";
 		if (test and diff)
-			s += std::format("| {:+03} |", diff);
+			s += fmt::format("| {:+03} |", diff);
 		else
 			s += "|     |";
-		return s + std::format(std::locale(""), "{:15.3f} |{:>17L} |{:>14.0Lf}\n", time.count(), nodes, nodes / time.count());
+		return s + fmt::format(std::locale(""), "{:15.3f} |{:>17L} |{:>14.0Lf}\n", time.count(), nodes, nodes / time.count());
 	}
 };
 
@@ -128,10 +126,10 @@ void Test(PuzzleRange auto puzzles)
 
 auto CreateNewData(int d1, int d2)
 {
-	std::string eval_fit_name = std::format(R"(G:\Reversi\play{}{}_eval_fit.puz)", d1, d2);
-	std::string accuracy_fit_name = std::format(R"(G:\Reversi\play{}{}_accuracy_fit.puz)", d1, d2);
-	std::string move_sort_name = std::format(R"(G:\Reversi\play{}{}_move_sort.puz)", d1, d2);
-	std::string benchmark_name = std::format(R"(G:\Reversi\play{}{}_benchmark.puz)", d1, d2);
+	std::string eval_fit_name = fmt::format(R"(G:\Reversi\play{}{}_eval_fit.puz)", d1, d2);
+	std::string accuracy_fit_name = fmt::format(R"(G:\Reversi\play{}{}_accuracy_fit.puz)", d1, d2);
+	std::string move_sort_name = fmt::format(R"(G:\Reversi\play{}{}_move_sort.puz)", d1, d2);
+	std::string benchmark_name = fmt::format(R"(G:\Reversi\play{}{}_benchmark.puz)", d1, d2);
 
 	if (not std::filesystem::exists(eval_fit_name))
 	{

@@ -23,7 +23,7 @@ void TimePatternEval()
 		pattern_eval.Eval(p);
 	auto stop = std::chrono::high_resolution_clock::now();
 
-	std::cout << "Avg time to eval default patterns: " << (stop - start) / size << std::endl << std::endl;
+	std::cout << "Avg time to eval default patterns: " << ((stop - start) / size).count() << " ns" << std::endl << std::endl;
 }
 
 void TimeLateEndgame() // AlphaBetaFailSoft
@@ -54,7 +54,7 @@ void TimeLateEndgame() // AlphaBetaFailSoft
 }
 
 template <typename ExecutionPolicy, PuzzleRange Range>
-void Benchmark(ExecutionPolicy&& expo, auto E, auto d, Range&& puzzles)
+void Benchmark(ExecutionPolicy&& expo, int E, auto d, Range&& puzzles)
 {
 	AAGLEM pattern_eval = DefaultPatternEval();
 	HashTablePVS tt{ 10'000'000 };
@@ -67,7 +67,7 @@ void Benchmark(ExecutionPolicy&& expo, auto E, auto d, Range&& puzzles)
 	auto size = std::ranges::distance(puzzles);
 	auto nodes = Nodes(puzzles);
 	std::cout
-		<< std::format(std::locale(""), "{:8} | {:6} | {}/pos | {:13L} N/s | {:15L} | {:0.2f} s\n",
+		<< fmt::format(std::locale(""), "{:8} | {:6} | {}/pos | {:13L} N/s | {:15L} | {:0.2f} s\n",
 			E, d, short_time_format(duration / size), std::size_t(nodes / duration.count()), nodes, duration.count());
 }
 
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 		{
 			try
 			{
-				benchmark.Add(std::format(R"(G:\Reversi\play{}{}_benchmark.puz)", i, j));
+				benchmark.Add(fmt::format(R"(G:\Reversi\play{}{}_benchmark.puz)", i, j));
 			}
 			catch (...) {}
 		}
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 			auto e = groups[index].front().pos.EmptyCount();
 			auto d = groups[index].front().tasks.front().GetIntensity().depth;
 			std::cout
-				<< std::format(std::locale(""), "{:8} | {:5} | {}/pos | {:11L} N/s | {:14L} | {:0.2f} s\n",
+				<< fmt::format(std::locale(""), "{:8} | {:5} | {}/pos | {:11L} N/s | {:14L} | {:0.2f} s\n",
 					e, d, short_time_format(duration / size), std::size_t(nodes / duration.count()), nodes, duration.count());
 			index++;
 		}

@@ -275,7 +275,7 @@ DataPair LoadData(int lower, int upper, std::size_t train_size, std::size_t test
     DataPair data;
     for (int e = lower; e <= upper; e++)
     {
-        std::vector<Puzzle> puzzles = Load<std::vector<Puzzle>>(std::format(R"(G:\Reversi\rnd\e{}.puz)", e));
+        std::vector<Puzzle> puzzles = Load<std::vector<Puzzle>>(fmt::format(R"(G:\Reversi\rnd\e{}.puz)", e));
         for (std::size_t i = 0; i < train_size; i++)
             data.train.push_back(puzzles[i].pos, puzzles[i].HasTaskWithoutMove() ? puzzles[i].MaxIntensity().Score() : 0); // TODO: WTF, why is ther a zero?
         for (std::size_t i = 0; i < test_size; i++)
@@ -322,16 +322,16 @@ int main()
         DataPair data;
         for (std::size_t e = 1 + PatternEvaluator::block_size * block; e <= PatternEvaluator::block_size * (block + 1); e++)
         {
-            auto puzzles = Load<std::vector<Puzzle>>(std::format(R"(G:\Reversi\rnd_100k\e{}.puz)", e));
+            auto puzzles = Load<std::vector<Puzzle>>(fmt::format(R"(G:\Reversi\rnd_100k\e{}.puz)", e));
             data.Add(puzzles, test_fraction);
         }
 
         std::vector<float> weights;
         if (std::ranges::all_of(data.train.Score(), [](int score) { return score == 0; }))
-            weights = Load<std::vector<float>>(std::format(R"(G:\Reversi\weights\block{}.w)", block - 1));
+            weights = Load<std::vector<float>>(fmt::format(R"(G:\Reversi\weights\block{}.w)", block - 1));
         else
             weights = FittedWeights(pattern, data.train);
-        Save(std::format(R"(G:\Reversi\weights\block{}.w)", block), weights);
+        Save(fmt::format(R"(G:\Reversi\weights\block{}.w)", block), weights);
 
         auto [train_sd, test_sd] = EvalWeights(weights, pattern, data);
         std::cout << "Block " << block << ": train error " << train_sd << ", test error " << test_sd << "\n";

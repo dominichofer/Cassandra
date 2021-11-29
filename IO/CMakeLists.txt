@@ -12,4 +12,4 @@ add_library(
     PosScore.h
 )
 
-target_link_libraries(IO LINK_PUBLIC Core Search)
+target_link_libraries(IO LINK_PUBLIC Core Pattern Search)

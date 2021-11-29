@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 
     for (int i = 18; i <= 22; i++)
     {
-        const auto input = std::format(R"(G:\Reversi\rnd\play00_eval_fit.puz)", i);
+        const auto input = fmt::format(R"(G:\Reversi\rnd\play00_eval_fit.puz)", i);
         std::vector<PosScore> data = LoadVec_old<PosScore>(input);
         for (int i = 0; i < data.size(); i++)
         {

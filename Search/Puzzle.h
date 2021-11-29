@@ -33,17 +33,17 @@ struct Request
 
 [[nodiscard]] inline std::string to_string(const Request& r) { return (r.HasMove() ? to_string(r.move) + " " : std::string{}) + to_string(r.intensity); }
 
-// template <>
-// struct std::formatter<Request> : std::formatter<std::string>
-// {
-// 	auto format(const Request& r, format_context& ctx)
-// 	{
-// 		if (r.HasMove())
-// 			return std::formatter<std::string>::format(to_string(r.move) + " " + to_string(r.intensity), ctx);
-// 		else
-// 			return std::formatter<std::string>::format(to_string(r.intensity), ctx);
-// 	}
-// };
+template <>
+struct fmt::formatter<Request> : fmt::formatter<std::string>
+{
+	auto format(const Request& r, format_context& ctx)
+	{
+		if (r.HasMove())
+			return fmt::formatter<std::string>::format(to_string(r.move) + " " + to_string(r.intensity), ctx);
+		else
+			return fmt::formatter<std::string>::format(to_string(r.intensity), ctx);
+	}
+};
 
 struct Result
 {

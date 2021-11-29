@@ -8,6 +8,7 @@ add_library(
     Core.h
     CountLastFlip.cpp
     Flips.cpp
+    Format.h
     HashTable.h
     HasMoves.cpp
     Interval.cpp

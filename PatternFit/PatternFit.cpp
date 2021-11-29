@@ -1,7 +1,6 @@
 #include "PatternFit.h"
 #include "Search/Puzzle.h"
 #include "IO/IO.h"
-#include <ranges>
 #include <iostream>
 #include <vector>
 #include <map>
@@ -66,7 +65,7 @@ void FitWeights(const DataBase<Puzzle>& data, std::vector<BitBoard> pattern, int
     fitter.Fit();
     SaveWeights(fitter.Weights(), block);
     if (print_results)
-        std::cout << std::format("Block {}: train error {:.2f}, test error {:.2f}\n", block, StandardDeviation(fitter.TrainError()), StandardDeviation(fitter.TestError()));
+        std::cout << fmt::format("Block {}: train error {:.2f}, test error {:.2f}\n", block, StandardDeviation(fitter.TrainError()), StandardDeviation(fitter.TestError()));
 }
 
 void FitWeights(const DataBase<Puzzle>& data, std::vector<BitBoard> pattern, int block_size, bool print_results)
@@ -93,7 +92,7 @@ void EvaluateAccuracyFit(DataBase<Puzzle>& data, HashTablePVS& tt, AAGLEM& evalu
         data | std::views::reverse | std::views::filter([](const Puzzle& p) { return p.pos.EmptyCount() <= 25 and p.pos.EmptyCount() > 10; }),
         [&](Puzzle& p, std::size_t index)
         {
-            p.erase_if([&p](const Puzzle::Task& t) { return t.Request() != Request::ExactScore(p.pos); });
+            p.erase_if([&p](const Puzzle::Task& t) { return t.GetRequest() != Request::ExactScore(p.pos); });
             for (int d = 0; d <= std::min(10, p.pos.EmptyCount() - 10); d++)
                 p.insert(Request(d));
             p.insert(Request::ExactScore(p.pos));

@@ -3,6 +3,7 @@
 #include "Bit.h"
 #include "BitBoard.h"
 #include "Confidence.h"
+#include "Format.h"
 #include "HashTable.h"
 #include "Interval.h"
 #include "Metronome.h"

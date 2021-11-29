@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <format>
 #include <map>
 #include <set>
 //#include <windows.h>
@@ -56,7 +55,7 @@ int main()
 
 	for (int i = 0; i <= 0; i++)
 	{
-		DataBase<Puzzle> puzzles{ std::format(R"(G:\Reversi\play{}{}_eval_fit.puz)", i, i) };
+		DataBase<Puzzle> puzzles{ fmt::format(R"(G:\Reversi\play{}{}_eval_fit.puz)", i, i) };
 		std::map<std::pair<int, int>, int> hist;
 		for (const Puzzle& p : puzzles)
 		{
