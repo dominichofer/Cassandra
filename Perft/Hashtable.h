@@ -15,14 +15,17 @@ public:
 	// locks
 	ScopedLock(T& atomic) : atomic(atomic)
 	{
-		assert(atomic != locked_state);
 		do { // atomic spinlock
 			value = atomic.exchange(locked_state, std::memory_order_acquire);
 		} while (value == locked_state);
 	}
 
 	// unlocks
-	~ScopedLock() { atomic.store(value, std::memory_order_release); }
+	~ScopedLock()
+	{
+		assert(value != locked_state);
+		atomic.store(value, std::memory_order_release);
+	}
 };
 
 struct PositionDepthPair
