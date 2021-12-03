@@ -1,5 +1,7 @@
 */wandb/*
 
+CMakeSettings.json
+
 # Prerequisites
 *.d
 
@@ -90,6 +92,7 @@ artifacts/
 *_i.c
 *_p.c
 *_i.h
+*.idb
 *.ilk
 *.meta
 *.obj

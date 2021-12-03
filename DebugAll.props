@@ -17,9 +17,12 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <AdditionalIncludeDirectories>$(SolutionDir)range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Dominic\source\repos\fmt\include\;C:\Users\Dominic\source\repos\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Users\Dominic\source\repos\fmt\out\install\x64-Debug\lib\fmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

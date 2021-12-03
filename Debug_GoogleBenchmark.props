@@ -9,10 +9,10 @@
     <Link />
     <ClCompile />
     <Link>
-      <AdditionalDependencies>..\benchmark\out\build\x64-Debug\src\benchmark.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\Users\Dominic\source\repos\benchmark\out\build\x64-Debug\src\benchmark.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
-      <AdditionalIncludeDirectories>..\benchmark\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Dominic\source\repos\benchmark\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup />

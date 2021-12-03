@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.18)
 project(Cassandra LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "-march=native -w -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "/arch:AVX2 /std:c++latest /EHsc /MP")
+    set(CMAKE_CXX_FLAGS_DEBUG "/Od /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE "/Ox /MD /GL")
+else()
+	set(CMAKE_CXX_FLAGS "-march=native -w -mmmx -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2 -mavx -mavx2")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g")
+	set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+endif()
 
 include(FetchContent)
 
