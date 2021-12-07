@@ -8,14 +8,14 @@ class StabilityAnalyzer
 public:
 	StabilityAnalyzer();
 
-	[[nodiscard]] BitBoard StableEdges(const Position&) const; // Stable edges of player and opponent
-	[[nodiscard]] BitBoard StableStonesOpponent(const Position&) const; // Stable stones of the opponent
+	BitBoard StableEdges(const Position&) const; // Stable edges of player and opponent
+	BitBoard StableStonesOpponent(const Position&) const; // Stable stones of the opponent
 
 private:
-	[[nodiscard]] static uint64 FullLineHorizontal(uint64 discs);
-	[[nodiscard]] static uint64 FullLineVertival(uint64 discs);
-	[[nodiscard]] static uint64 FullLineDiagonal(uint64 discs);
-	[[nodiscard]] static uint64 FullLineCodiagonal(uint64 discs);
+	static uint64 FullLineHorizontal(uint64 discs);
+	static uint64 FullLineVertival(uint64 discs);
+	static uint64 FullLineDiagonal(uint64 discs);
+	static uint64 FullLineCodiagonal(uint64 discs);
 
 	// edge_stables[Player][Opponent] holds the stable discs of player and opponent
 	std::array<std::array<uint8_t, 256>, 256> edge_stables{};

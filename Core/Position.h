@@ -40,13 +40,13 @@ public:
 		throw;
 	}
 
-	//[[nodiscard]] constexpr auto operator<=>(const Position&) const noexcept = default;
-	[[nodiscard]] CUDA_CALLABLE constexpr bool operator==(const Position& o) const noexcept { return std::tie(P, O) == std::tie(o.P, o.O); }
-	[[nodiscard]] CUDA_CALLABLE constexpr bool operator!=(const Position& o) const noexcept { return std::tie(P, O) != std::tie(o.P, o.O); }
-	[[nodiscard]] CUDA_CALLABLE constexpr bool operator<(const Position& o) const noexcept { return std::tie(P, O) < std::tie(o.P, o.O); }
+	//constexpr auto operator<=>(const Position&) const noexcept = default;
+	CUDA_CALLABLE constexpr bool operator==(const Position& o) const noexcept { return std::tie(P, O) == std::tie(o.P, o.O); }
+	CUDA_CALLABLE constexpr bool operator!=(const Position& o) const noexcept { return std::tie(P, O) != std::tie(o.P, o.O); }
+	CUDA_CALLABLE constexpr bool operator<(const Position& o) const noexcept { return std::tie(P, O) < std::tie(o.P, o.O); }
 
-	[[nodiscard]] CUDA_CALLABLE BitBoard Player() const noexcept { return P; }
-	[[nodiscard]] CUDA_CALLABLE BitBoard Opponent() const noexcept { return O; }
+	CUDA_CALLABLE BitBoard Player() const noexcept { return P; }
+	CUDA_CALLABLE BitBoard Opponent() const noexcept { return O; }
 
 	CUDA_CALLABLE void FlipCodiagonal() noexcept;
 	CUDA_CALLABLE void FlipDiagonal() noexcept;
@@ -54,39 +54,38 @@ public:
 	CUDA_CALLABLE void FlipVertical() noexcept;
 	CUDA_CALLABLE void FlipToUnique() noexcept;
 
-	[[nodiscard]] CUDA_CALLABLE BitBoard Discs() const { return P | O; }
-	[[nodiscard]] CUDA_CALLABLE BitBoard Empties() const { return ~Discs(); }
-	[[nodiscard]] CUDA_CALLABLE int EmptyCount() const { return popcount(Empties()); }
+	CUDA_CALLABLE BitBoard Discs() const { return P | O; }
+	CUDA_CALLABLE BitBoard Empties() const { return ~Discs(); }
+	CUDA_CALLABLE int EmptyCount() const { return popcount(Empties()); }
 
-	[[nodiscard]] BitBoard ParityQuadrants() const;
+	BitBoard ParityQuadrants() const;
 };
 
 template <typename T>
 concept pos_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, Position>;
 
-[[nodiscard]] CUDA_CALLABLE Position FlipCodiagonal(Position) noexcept;
-[[nodiscard]] CUDA_CALLABLE Position FlipDiagonal(Position) noexcept;
-[[nodiscard]] CUDA_CALLABLE Position FlipHorizontal(Position) noexcept;
-[[nodiscard]] CUDA_CALLABLE Position FlipVertical(Position) noexcept;
-[[nodiscard]] CUDA_CALLABLE Position FlipToUnique(Position) noexcept;
+CUDA_CALLABLE Position FlipCodiagonal(Position) noexcept;
+CUDA_CALLABLE Position FlipDiagonal(Position) noexcept;
+CUDA_CALLABLE Position FlipHorizontal(Position) noexcept;
+CUDA_CALLABLE Position FlipVertical(Position) noexcept;
+CUDA_CALLABLE Position FlipToUnique(Position) noexcept;
 
 
 // TODO: Add tests for these 6 and the Neighbours!
-//[[nodiscard]] CUDA_CALLABLE inline BitBoard PotentialMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Opponent()); }
-//[[nodiscard]] CUDA_CALLABLE inline BitBoard PotentialCounterMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Player()); }
+// CUDA_CALLABLE inline BitBoard PotentialMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Opponent()); }
+// CUDA_CALLABLE inline BitBoard PotentialCounterMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Player()); }
 //
-//[[nodiscard]] CUDA_CALLABLE inline BitBoard ExposedPlayers(const Position& pos) noexcept { return pos.Player() & EightNeighboursAndSelf(pos.Empties()); }
-//[[nodiscard]] CUDA_CALLABLE inline BitBoard ExposedOpponents(const Position& pos) noexcept { return pos.Opponent() & EightNeighboursAndSelf(pos.Empties()); }
+// CUDA_CALLABLE inline BitBoard ExposedPlayers(const Position& pos) noexcept { return pos.Player() & EightNeighboursAndSelf(pos.Empties()); }
+// CUDA_CALLABLE inline BitBoard ExposedOpponents(const Position& pos) noexcept { return pos.Opponent() & EightNeighboursAndSelf(pos.Empties()); }
 //
-//[[nodiscard]] CUDA_CALLABLE inline BitBoard IsolatedPlayers(const Position& pos) noexcept { return pos.Player() & ~EightNeighboursAndSelf(pos.Empties()); }
-//[[nodiscard]] CUDA_CALLABLE inline BitBoard IsolatedOpponents(const Position& pos) noexcept { return pos.Opponent() & ~EightNeighboursAndSelf(pos.Empties()); }
+// CUDA_CALLABLE inline BitBoard IsolatedPlayers(const Position& pos) noexcept { return pos.Player() & ~EightNeighboursAndSelf(pos.Empties()); }
+// CUDA_CALLABLE inline BitBoard IsolatedOpponents(const Position& pos) noexcept { return pos.Opponent() & ~EightNeighboursAndSelf(pos.Empties()); }
 
-[[nodiscard]] std::string SingleLine(const Position&);
-[[nodiscard]] std::string MultiLine(const Position&);
-[[nodiscard]] inline std::string to_string(const Position& pos) { return SingleLine(pos); }
+std::string SingleLine(const Position&);
+std::string MultiLine(const Position&);
+inline std::string to_string(const Position& pos) { return SingleLine(pos); }
 inline std::ostream& operator<<(std::ostream& os, const Position& pos) { return os << to_string(pos); }
 
-[[nodiscard]]
 constexpr Position operator""_pos(const char* c, std::size_t size)
 {
 	assert(size == 120);
@@ -105,72 +104,53 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 	return { P, O };
 }
 
-[[nodiscard]]
 CUDA_CALLABLE int EvalGameOver(const Position&) noexcept;
 
-[[nodiscard]]
 CUDA_CALLABLE Position Play(const Position&, Field move, BitBoard flips);
-
-[[nodiscard]]
 CUDA_CALLABLE Position Play(const Position&, Field move);
 
-[[nodiscard]]
 CUDA_CALLABLE Position PlayPass(const Position&) noexcept;
 
-[[nodiscard]]
 CUDA_CALLABLE BitBoard Flips(const Position&, Field move) noexcept;
 
-[[nodiscard]]
 int CountLastFlip(const Position&, Field move) noexcept;
 
-[[nodiscard]]
 BitBoard StableEdges(const Position&);
 
 // Stable stones of the opponent.
-[[nodiscard]]
 BitBoard StableStonesOpponent(const Position&);
 
 // Stable corners + 1 of the opponent.
-[[nodiscard]]
 BitBoard StableCornersOpponent(const Position&);
 
-[[nodiscard]]
 int StabilityBasedMaxScore(const Position&);
 
-[[nodiscard]]
 CUDA_CALLABLE Moves PossibleMoves(const Position&) noexcept;
 
 namespace detail
 {
 	#ifdef __AVX512F__
-		[[nodiscard]]
 		Moves PossibleMoves_AVX512(const Position&) noexcept;
 	#endif
 
 	#ifdef __AVX2__
-		[[nodiscard]]
 		Moves PossibleMoves_AVX2(const Position&) noexcept;
 	#endif
 
-	[[nodiscard]]
 	CUDA_CALLABLE Moves PossibleMoves_x64(const Position&) noexcept;
 }
 
-[[nodiscard]]
 CUDA_CALLABLE bool HasMoves(const Position&) noexcept;
 
 namespace detail
 {
 	#ifdef __AVX512F__
-		[[nodiscard]]
 		bool HasMoves_AVX512(const Position&) noexcept;
 	#endif
 
 	#ifdef __AVX2__
-		[[nodiscard]]
 		bool HasMoves_AVX2(const Position&) noexcept;
 	#endif
 
-	[[nodiscard]]
 	CUDA_CALLABLE bool HasMoves_x64(const Position&) noexcept;
 }

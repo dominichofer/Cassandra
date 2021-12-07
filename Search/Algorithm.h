@@ -277,15 +277,15 @@ private:
 	int MTD_f(const Position&, const Intensity&, int guess);
 };
 
-[[nodiscard]] OpenInterval NextZeroWindow(const OpenInterval&, int best_score) noexcept;
-[[nodiscard]] OpenInterval NextFullWindow(const OpenInterval&, int best_score) noexcept;
+OpenInterval NextZeroWindow(const OpenInterval&, int best_score) noexcept;
+OpenInterval NextFullWindow(const OpenInterval&, int best_score) noexcept;
 
-[[nodiscard]] Search::Result AllMovesSearched(const OpenInterval&, const Search::Findings&) noexcept;
+Search::Result AllMovesSearched(const OpenInterval&, const Search::Findings&) noexcept;
 
 
 uint64_t PotentialMoves(const Position&) noexcept;
 
-[[nodiscard]] CUDA_CALLABLE inline int DoubleCornerPopcount(const BitBoard& b) noexcept { return popcount(b) + popcount(b & BitBoard::Corners()); }
-[[nodiscard]] CUDA_CALLABLE inline int DoubleCornerPopcount(const Moves& m) noexcept { return m.size() + (m & BitBoard::Corners()).size(); }
+CUDA_CALLABLE inline int DoubleCornerPopcount(const BitBoard& b) noexcept { return popcount(b) + popcount(b & BitBoard::Corners()); }
+CUDA_CALLABLE inline int DoubleCornerPopcount(const Moves& m) noexcept { return m.size() + (m & BitBoard::Corners()).size(); }
 
 int32_t MoveOrderingScorer(const Position&, Field move) noexcept;

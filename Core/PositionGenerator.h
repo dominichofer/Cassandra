@@ -82,10 +82,10 @@ class ChildrenGenerator
 			Moves moves;
 
 			PosMov(Position pos, Moves moves) : pos(pos), moves(moves) {}
-			[[nodiscard]] bool operator==(const PosMov&) const noexcept = default;
-			[[nodiscard]] bool operator!=(const PosMov&) const noexcept = default;
-			//[[nodiscard]] bool operator==(const PosMov& o) const noexcept { return std::tie(pos, moves) == std::tie(o.pos, o.moves); }
-			//[[nodiscard]] bool operator!=(const PosMov& o) const noexcept { return !(*this == o); }
+			bool operator==(const PosMov&) const noexcept = default;
+			bool operator!=(const PosMov&) const noexcept = default;
+			//bool operator==(const PosMov& o) const noexcept { return std::tie(pos, moves) == std::tie(o.pos, o.moves); }
+			//bool operator!=(const PosMov& o) const noexcept { return !(*this == o); }
 		};
 		const int plies = 0;
 		const bool pass_is_a_ply = false;
@@ -100,10 +100,10 @@ class ChildrenGenerator
 		Iterator() noexcept = default;
 		Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept;
 
-		[[nodiscard]] bool operator==(const Iterator& o) const noexcept { return (stack.empty() && o.stack.empty()) || std::tie(plies, pass_is_a_ply, stack) == std::tie(o.plies, o.pass_is_a_ply, o.stack); }
-		[[nodiscard]] bool operator!=(const Iterator& o) const noexcept { return !(*this == o); }
+		bool operator==(const Iterator& o) const noexcept { return (stack.empty() && o.stack.empty()) || std::tie(plies, pass_is_a_ply, stack) == std::tie(o.plies, o.pass_is_a_ply, o.stack); }
+		bool operator!=(const Iterator& o) const noexcept { return !(*this == o); }
 		Iterator& operator++();
-		[[nodiscard]] const Position& operator*() const noexcept { return stack.back().pos; }
+		const Position& operator*() const noexcept { return stack.back().pos; }
 	};
 
 	const Position start;
@@ -113,10 +113,10 @@ public:
 	ChildrenGenerator(const Position& start, int plies, bool pass_is_a_ply) noexcept
 		: start(start), plies(plies), pass_is_a_ply(pass_is_a_ply) {}
 
-	[[nodiscard]] Iterator begin() const { return {start, plies, pass_is_a_ply}; }
-	[[nodiscard]] Iterator cbegin() const { return {start, plies, pass_is_a_ply}; }
-	[[nodiscard]] static Iterator end() { return {}; }
-	[[nodiscard]] static Iterator cend() { return {}; }
+	Iterator begin() const { return {start, plies, pass_is_a_ply}; }
+	Iterator cbegin() const { return {start, plies, pass_is_a_ply}; }
+	static Iterator end() { return {}; }
+	static Iterator cend() { return {}; }
 };
 
 ChildrenGenerator Children(Position, int plies, bool pass_is_a_ply);

@@ -48,16 +48,16 @@ class Configurations
 			*this = end(); // marks generator as depleted.
 			return *this;
 		}
-		[[nodiscard]] Position operator*() const { return Position::From(PDep(p, pattern), PDep(o, pattern)); }
+		Position operator*() const { return Position::From(PDep(p, pattern), PDep(o, pattern)); }
 
-		[[nodiscard]] bool operator==(const Iterator&) const noexcept = default;
-		[[nodiscard]] bool operator!=(const Iterator&) const noexcept = default;
+		bool operator==(const Iterator&) const noexcept = default;
+		bool operator!=(const Iterator&) const noexcept = default;
 	};
 public:
 	Configurations(BitBoard pattern) noexcept : pattern(pattern) {}
 
-	[[nodiscard]] Iterator begin() const noexcept { return pattern; }
-	[[nodiscard]] Iterator cbegin() const noexcept { return pattern; }
-	[[nodiscard]] static Iterator end() noexcept { return {}; }
-	[[nodiscard]] static Iterator cend() noexcept { return {}; }
+	Iterator begin() const noexcept { return pattern; }
+	Iterator cbegin() const noexcept { return pattern; }
+	static Iterator end() noexcept { return {}; }
+	static Iterator cend() noexcept { return {}; }
 };

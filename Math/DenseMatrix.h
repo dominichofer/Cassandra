@@ -25,8 +25,8 @@ public:
 		return m;
 	}
 
-	[[nodiscard]] auto operator==(const DenseMatrix& o) const noexcept { return (rows == o.rows) && (cols == o.cols) && (data == o.data); }
-	[[nodiscard]] auto operator!=(const DenseMatrix& o) const noexcept { return !(*this == o); }
+	auto operator==(const DenseMatrix& o) const noexcept { return (rows == o.rows) && (cols == o.cols) && (data == o.data); }
+	auto operator!=(const DenseMatrix& o) const noexcept { return !(*this == o); }
 
 	std::size_t Rows() const noexcept override { return rows; }
 	std::size_t Cols() const noexcept override { return cols; }

@@ -21,9 +21,9 @@ public:
 
 	operator std::vector<value_type>() const { return data; }
 
-	[[nodiscard]] auto operator<=>(const Vector&) const noexcept = default;
+	auto operator<=>(const Vector&) const noexcept = default;
 
-	[[nodiscard]] std::size_t size() const noexcept { return data.size(); }
+	std::size_t size() const noexcept { return data.size(); }
 	void push_back(const value_type& x) noexcept { data.push_back(x); }
 	void push_back(value_type&& x) noexcept { data.push_back(std::move(x)); }
 	void reserve(std::size_t new_capacity) noexcept { data.reserve(new_capacity); }
@@ -32,17 +32,17 @@ public:
 	template <typename Iterator>
 	void insert(std::vector<value_type>::const_iterator where, Iterator first, Iterator last) { data.insert(where, first, last); }
 
-	[[nodiscard]] auto begin() noexcept { return data.begin(); }
-	[[nodiscard]] auto begin() const noexcept { return data.begin(); }
-	[[nodiscard]] auto cbegin() const noexcept { return data.cbegin(); }
-	[[nodiscard]] auto end() noexcept { return data.end(); }
-	[[nodiscard]] auto end() const noexcept { return data.end(); }
-	[[nodiscard]] auto cend() const noexcept { return data.cend(); }
+	auto begin() noexcept { return data.begin(); }
+	auto begin() const noexcept { return data.begin(); }
+	auto cbegin() const noexcept { return data.cbegin(); }
+	auto end() noexcept { return data.end(); }
+	auto end() const noexcept { return data.end(); }
+	auto cend() const noexcept { return data.cend(); }
 
-	[[nodiscard]] value_type& operator[](std::size_t i) noexcept { return data[i]; }
-	[[nodiscard]] value_type& operator()(std::size_t i) noexcept { return data[i]; }
-	[[nodiscard]] const value_type& operator[](std::size_t i) const noexcept { return data[i]; }
-	[[nodiscard]] const value_type& operator()(std::size_t i) const noexcept { return data[i]; }
+	value_type& operator[](std::size_t i) noexcept { return data[i]; }
+	value_type& operator()(std::size_t i) noexcept { return data[i]; }
+	const value_type& operator[](std::size_t i) const noexcept { return data[i]; }
+	const value_type& operator()(std::size_t i) const noexcept { return data[i]; }
 
 	Vector& operator+=(const Vector& x) 
 	{

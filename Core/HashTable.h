@@ -33,7 +33,7 @@ public:
 		buckets[index].Update(key, value);
 	}
 
-	[[nodiscard]] std::optional<value_type> LookUp(const key_type& key) const
+	std::optional<value_type> LookUp(const key_type& key) const
 	{
 		lookups++;
 		auto index = hash_fkt(key) % buckets.size();

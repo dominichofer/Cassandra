@@ -51,23 +51,23 @@ public:
 	void push_back(const Task& u) { tasks.push_back(u); }
 	void push_back(Task&& u) { tasks.push_back(std::move(u)); }
 	void reserve(std::size_t new_capacity) { tasks.reserve(new_capacity); }
-	[[nodiscard]] std::size_t size() const noexcept { return tasks.size(); }
-	[[nodiscard]] decltype(auto) front() const noexcept { return tasks.front(); }
-	[[nodiscard]] decltype(auto) back() const noexcept { return tasks.back(); }
-	[[nodiscard]] decltype(auto) begin() noexcept { return tasks.begin(); }
-	[[nodiscard]] decltype(auto) begin() const noexcept { return tasks.begin(); }
-	[[nodiscard]] decltype(auto) cbegin() const noexcept { return tasks.cbegin(); }
-	[[nodiscard]] decltype(auto) end() noexcept { return tasks.end(); }
-	[[nodiscard]] decltype(auto) end() const noexcept { return tasks.end(); }
-	[[nodiscard]] decltype(auto) cend() const noexcept { return tasks.cend(); }
-	[[nodiscard]] decltype(auto) operator[](std::size_t index) const noexcept { return tasks[index]; }
-	[[nodiscard]] decltype(auto) operator[](std::size_t index) noexcept { return tasks[index]; }
+	std::size_t size() const noexcept { return tasks.size(); }
+	decltype(auto) front() const noexcept { return tasks.front(); }
+	decltype(auto) back() const noexcept { return tasks.back(); }
+	decltype(auto) begin() noexcept { return tasks.begin(); }
+	decltype(auto) begin() const noexcept { return tasks.begin(); }
+	decltype(auto) cbegin() const noexcept { return tasks.cbegin(); }
+	decltype(auto) end() noexcept { return tasks.end(); }
+	decltype(auto) end() const noexcept { return tasks.end(); }
+	decltype(auto) cend() const noexcept { return tasks.cend(); }
+	decltype(auto) operator[](std::size_t index) const noexcept { return tasks[index]; }
+	decltype(auto) operator[](std::size_t index) noexcept { return tasks[index]; }
 
 	// thread-safe
-	[[nodiscard]] std::size_t Scheduled() const noexcept { return next.load(std::memory_order_acquire); }
-	[[nodiscard]] std::size_t Processed() const noexcept { return processed.load(std::memory_order_acquire); }
-	[[nodiscard]] bool HasWork() const noexcept { return Scheduled() < tasks.size(); }
-	[[nodiscard]] bool IsDone() const noexcept { return Processed() == tasks.size(); }
+	std::size_t Scheduled() const noexcept { return next.load(std::memory_order_acquire); }
+	std::size_t Processed() const noexcept { return processed.load(std::memory_order_acquire); }
+	bool HasWork() const noexcept { return Scheduled() < tasks.size(); }
+	bool IsDone() const noexcept { return Processed() == tasks.size(); }
 
 	void lock() noexcept { mutex.lock(); }
 	void unlock() noexcept { mutex.unlock(); }
@@ -111,10 +111,10 @@ public:
 	virtual void LockData() = 0;
 	virtual void UnlockData() = 0;
 	// thread-safe
-	[[nodiscard]] virtual bool IsDone() const noexcept = 0;
-	[[nodiscard]] virtual std::size_t Scheduled() const noexcept = 0;
-	[[nodiscard]] virtual std::size_t Processed() const noexcept = 0;
-	[[nodiscard]] virtual std::size_t size() const noexcept = 0;
+	virtual bool IsDone() const noexcept = 0;
+	virtual std::size_t Scheduled() const noexcept = 0;
+	virtual std::size_t Processed() const noexcept = 0;
+	virtual std::size_t size() const noexcept = 0;
 };
 
 template <typename Task>
@@ -143,10 +143,10 @@ public:
 	}
 	void LockData() override { mutex.lock(); }
 	void UnlockData() override { mutex.unlock(); }
-	[[nodiscard]] bool IsDone() const noexcept override { return next == tasks.size(); }
-	[[nodiscard]] std::size_t Scheduled() const noexcept override { return next; }
-	[[nodiscard]] std::size_t Processed() const noexcept override { return std::max(std::size_t(0), next - 1); }
-	[[nodiscard]] std::size_t size() const noexcept override { return tasks.size(); }
+	bool IsDone() const noexcept override { return next == tasks.size(); }
+	std::size_t Scheduled() const noexcept override { return next; }
+	std::size_t Processed() const noexcept override { return std::max(std::size_t(0), next - 1); }
+	std::size_t size() const noexcept override { return tasks.size(); }
 };
 
 template <typename Task>
@@ -175,10 +175,10 @@ public:
 	}
 	void LockData() override { tasks.lock(); }
 	void UnlockData() override { tasks.unlock(); }
-	[[nodiscard]] bool IsDone() const noexcept override { return tasks.IsDone(); }
-	[[nodiscard]] std::size_t Scheduled() const noexcept override { return tasks.Scheduled(); }
-	[[nodiscard]] std::size_t Processed() const noexcept override { return tasks.Processed(); }
-	[[nodiscard]] std::size_t size() const noexcept override { return tasks.size(); }
+	bool IsDone() const noexcept override { return tasks.IsDone(); }
+	std::size_t Scheduled() const noexcept override { return tasks.Scheduled(); }
+	std::size_t Processed() const noexcept override { return tasks.Processed(); }
+	std::size_t size() const noexcept override { return tasks.size(); }
 };
 
 //template <typename Task>
@@ -271,28 +271,28 @@ public:
 	void push_back(const Task& u) { tls.push_back(u); AddCumSize(); }
 	void push_back(Task&& u) { tls.push_back(std::move(u)); AddCumSize(); }
 	void reserve(std::size_t new_capacity) { tls.reserve(new_capacity); cum_sizes.reserve(new_capacity); }
-	[[nodiscard]] std::size_t size() const { return tls.size(); }
-	[[nodiscard]] decltype(auto) front() const { return tls.front(); }
-	[[nodiscard]] decltype(auto) back() const { return tls.back(); }
-	[[nodiscard]] decltype(auto) begin() { return tls.begin(); }
-	[[nodiscard]] decltype(auto) begin() const { return tls.begin(); }
-	[[nodiscard]] decltype(auto) cbegin() const { return tls.cbegin(); }
-	[[nodiscard]] decltype(auto) end() { return tls.end(); }
-	[[nodiscard]] decltype(auto) end() const { return tls.end(); }
-	[[nodiscard]] decltype(auto) cend() const { return tls.cend(); }
-	[[nodiscard]] decltype(auto) operator[](std::size_t group_index) const { return tls[group_index]; }
-	[[nodiscard]] decltype(auto) operator[](std::size_t group_index) { return tls[group_index]; }
+	std::size_t size() const { return tls.size(); }
+	decltype(auto) front() const { return tls.front(); }
+	decltype(auto) back() const { return tls.back(); }
+	decltype(auto) begin() { return tls.begin(); }
+	decltype(auto) begin() const { return tls.begin(); }
+	decltype(auto) cbegin() const { return tls.cbegin(); }
+	decltype(auto) end() { return tls.end(); }
+	decltype(auto) end() const { return tls.end(); }
+	decltype(auto) cend() const { return tls.cend(); }
+	decltype(auto) operator[](std::size_t group_index) const { return tls[group_index]; }
+	decltype(auto) operator[](std::size_t group_index) { return tls[group_index]; }
 
 	// thread-safe
-	[[nodiscard]] std::size_t Scheduled() const noexcept { return next.load(std::memory_order_acquire); }
-	[[nodiscard]] std::size_t Processed() const noexcept { return processed.load(std::memory_order_acquire); }
-	[[nodiscard]] bool HasWork() const noexcept { return Scheduled() < tls.size(); }
-	[[nodiscard]] bool IsDone() const noexcept { return Processed() == tls.size(); }
+	std::size_t Scheduled() const noexcept { return next.load(std::memory_order_acquire); }
+	std::size_t Processed() const noexcept { return processed.load(std::memory_order_acquire); }
+	bool HasWork() const noexcept { return Scheduled() < tls.size(); }
+	bool IsDone() const noexcept { return Processed() == tls.size(); }
 
-	[[nodiscard]] std::size_t Scheduled(std::size_t group_index) const { return tls[group_index].Scheduled(); }
-	[[nodiscard]] std::size_t Processed(std::size_t group_index) const { return tls[group_index].Processed(); }
-	[[nodiscard]] bool HasWork(std::size_t group_index) const { return tls[group_index].HasWork(); }
-	[[nodiscard]] bool IsDone(std::size_t group_index) const { return tls[group_index].IsDone(); }
+	std::size_t Scheduled(std::size_t group_index) const { return tls[group_index].Scheduled(); }
+	std::size_t Processed(std::size_t group_index) const { return tls[group_index].Processed(); }
+	bool HasWork(std::size_t group_index) const { return tls[group_index].HasWork(); }
+	bool IsDone(std::size_t group_index) const { return tls[group_index].IsDone(); }
 
 	void lock(std::size_t group_index) noexcept { tls[group_index].lock(); }
 	void unlock(std::size_t group_index) noexcept { tls[group_index].unlock(); }
@@ -333,8 +333,8 @@ public:
 	virtual void Process() = 0;
 	virtual void LockData() = 0;
 	virtual void UnlockData() = 0;
-	[[nodiscard]] virtual bool IsDone() const noexcept = 0;
-	[[nodiscard]] virtual bool IsDone(std::size_t group_index) const noexcept = 0;
+	virtual bool IsDone() const noexcept = 0;
+	virtual bool IsDone(std::size_t group_index) const noexcept = 0;
 };
 
 template <typename Task>
@@ -376,8 +376,8 @@ public:
 	}
 	void LockData() override { mutex.lock(); }
 	void UnlockData() override { mutex.unlock(); }
-	[[nodiscard]] bool IsDone() const noexcept override { return next == cum_sizes.back(); }
-	[[nodiscard]] bool IsDone(std::size_t group_index) const noexcept override { return next >= cum_sizes[group_index]; }
+	bool IsDone() const noexcept override { return next == cum_sizes.back(); }
+	bool IsDone(std::size_t group_index) const noexcept override { return next >= cum_sizes[group_index]; }
 };
 
 
@@ -405,8 +405,8 @@ public:
 	}
 	void LockData() override { tlgs.lock(); }
 	void UnlockData() override { tlgs.unlock(); }
-	[[nodiscard]] bool IsDone() const noexcept override { return tlgs.IsDone(); }
-	[[nodiscard]] bool IsDone(std::size_t group_index) const noexcept override { return tlgs.IsDone(group_index); }
+	bool IsDone() const noexcept override { return tlgs.IsDone(); }
+	bool IsDone(std::size_t group_index) const noexcept override { return tlgs.IsDone(group_index); }
 };
 
 template <nested_range nRange, typename ExecutionPolicy>

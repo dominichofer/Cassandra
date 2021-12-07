@@ -207,19 +207,19 @@ public:
 	}
 
 	using value_type = T;
-	[[nodiscard]] std::size_t size() const noexcept { return vec.size(); }
-	[[nodiscard]] decltype(auto) begin() noexcept { return vec.begin(); }
-	[[nodiscard]] decltype(auto) begin() const noexcept { return vec.begin(); }
-	[[nodiscard]] decltype(auto) cbegin() noexcept { return vec.cbegin(); }
-	[[nodiscard]] decltype(auto) end() noexcept { return vec.end(); }
-	[[nodiscard]] decltype(auto) end() const noexcept { return vec.end(); }
-	[[nodiscard]] decltype(auto) cend() noexcept { return vec.cend(); }
-	[[nodiscard]] decltype(auto) operator[](std::size_t index) const noexcept { return vec[index]; }
-	[[nodiscard]] decltype(auto) operator[](std::size_t index) noexcept { return vec[index]; }
+	std::size_t size() const noexcept { return vec.size(); }
+	decltype(auto) begin() noexcept { return vec.begin(); }
+	decltype(auto) begin() const noexcept { return vec.begin(); }
+	decltype(auto) cbegin() noexcept { return vec.cbegin(); }
+	decltype(auto) end() noexcept { return vec.end(); }
+	decltype(auto) end() const noexcept { return vec.end(); }
+	decltype(auto) cend() noexcept { return vec.cend(); }
+	decltype(auto) operator[](std::size_t index) const noexcept { return vec[index]; }
+	decltype(auto) operator[](std::size_t index) noexcept { return vec[index]; }
 
-	[[nodiscard]] std::size_t Sections() const noexcept { return section.size(); }
-	[[nodiscard]] std::span<T> Section(std::size_t i) noexcept { return std::span<T>(vec.begin() + section[i].first, vec.begin() + section[i].last); }
-	[[nodiscard]] std::vector<std::span<T>> AsSections()
+	std::size_t Sections() const noexcept { return section.size(); }
+	std::span<T> Section(std::size_t i) noexcept { return std::span<T>(vec.begin() + section[i].first, vec.begin() + section[i].last); }
+	std::vector<std::span<T>> AsSections()
 	{
 		std::vector<std::span<T>> ret;
 		for (std::size_t i = 0; i < section.size(); i++)

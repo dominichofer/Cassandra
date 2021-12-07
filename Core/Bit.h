@@ -47,7 +47,6 @@ namespace std
 #endif
 
 
-[[nodiscard]]
 CUDA_CALLABLE inline uint64 GetLSB(uint64 b) noexcept
 {
 	#pragma warning(suppress : 4146)
@@ -59,7 +58,6 @@ CUDA_CALLABLE inline void RemoveLSB(uint64& b) noexcept
 	b &= b - 1;
 }
 
-[[nodiscard]]
 CUDA_CALLABLE inline uint64 BExtr(uint64 src, uint start, uint len) noexcept
 {
 	#if defined(_MSC_VER) && !defined(__CUDA_ARCH__)
@@ -69,19 +67,16 @@ CUDA_CALLABLE inline uint64 BExtr(uint64 src, uint start, uint len) noexcept
 	#endif
 }
 
-[[nodiscard]]
 inline uint64 PDep(uint64 src, uint64 mask) noexcept
 {
 	return _pdep_u64(src, mask);
 }
 
-[[nodiscard]]
 inline uint64 PExt(uint64 src, uint64 mask) noexcept
 {
 	return _pext_u64(src, mask);
 }
 
-[[nodiscard]]
 CUDA_CALLABLE inline uint64 BSwap(uint64 b) noexcept
 {
 	#if defined(__CUDA_ARCH__)

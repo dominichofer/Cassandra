@@ -8,17 +8,17 @@ struct Intensity
 
 	Intensity(int depth, Confidence certainty = Confidence::Certain()) noexcept : depth(depth), certainty(certainty) {}
 
-	//[[nodiscard]] static Intensity Certain(int depth) noexcept { return { depth, Confidence::Certain() }; }
-	[[nodiscard]] static Intensity Exact(const Position& pos) noexcept { return { pos.EmptyCount() }; }
+	//static Intensity Certain(int depth) noexcept { return { depth, Confidence::Certain() }; }
+	static Intensity Exact(const Position& pos) noexcept { return { pos.EmptyCount() }; }
 
-	[[nodiscard]] bool operator==(const Intensity&) const noexcept = default;
-	[[nodiscard]] bool operator!=(const Intensity&) const noexcept = default;
-	[[nodiscard]] auto operator<=>(const Intensity&) const noexcept = default;
-	[[nodiscard]] Intensity operator+(int d) const noexcept { return { depth + d, certainty }; }
-	[[nodiscard]] Intensity operator-(int d) const noexcept { return { depth - d, certainty }; }
+	bool operator==(const Intensity&) const noexcept = default;
+	bool operator!=(const Intensity&) const noexcept = default;
+	auto operator<=>(const Intensity&) const noexcept = default;
+	Intensity operator+(int d) const noexcept { return { depth + d, certainty }; }
+	Intensity operator-(int d) const noexcept { return { depth - d, certainty }; }
 
-	[[nodiscard]] bool IsCertain() const noexcept { return certainty.IsCertain(); }
-	[[nodiscard]] bool IsExact(const Position& pos) const noexcept { return *this == Exact(pos); }
+	bool IsCertain() const noexcept { return certainty.IsCertain(); }
+	bool IsExact(const Position& pos) const noexcept { return *this == Exact(pos); }
 };
 
 namespace Search
@@ -34,17 +34,17 @@ namespace Search
 	//	Request(int depth, Confidence certainty, OpenInterval window) noexcept : intensity(depth, certainty), window(window) {}
 	//	Request(int depth, Confidence certainty) noexcept : intensity(depth, certainty) {}
 	//
-	//	[[nodiscard]] static Request Certain(int depth, OpenInterval window = OpenInterval::Whole()) noexcept { return { Intensity::Certain(depth), window }; }
-	//	[[nodiscard]] static Request Exact(const Position& pos) noexcept { return Certain(pos.EmptyCount()); }
+	//	static Request Certain(int depth, OpenInterval window = OpenInterval::Whole()) noexcept { return { Intensity::Certain(depth), window }; }
+	//	static Request Exact(const Position& pos) noexcept { return Certain(pos.EmptyCount()); }
 	//
-	//	[[nodiscard]] int depth() const noexcept { return intensity.depth; }
-	//	[[nodiscard]] Confidence certainty() const noexcept { return intensity.certainty; }
+	//	int depth() const noexcept { return intensity.depth; }
+	//	Confidence certainty() const noexcept { return intensity.certainty; }
 	//
-	//	[[nodiscard]] Request operator-() const noexcept { return { intensity.depth, intensity.certainty, -window }; }
-	//	[[nodiscard]] operator OpenInterval() const noexcept { return window; }
+	//	Request operator-() const noexcept { return { intensity.depth, intensity.certainty, -window }; }
+	//	operator OpenInterval() const noexcept { return window; }
 	//
-	//	[[nodiscard]] bool IsCertain() const noexcept { return intensity.IsCertain(); }
-	//	[[nodiscard]] bool IsExact(const Position& pos) const noexcept { return intensity.IsExact(pos); }
+	//	bool IsCertain() const noexcept { return intensity.IsCertain(); }
+	//	bool IsExact(const Position& pos) const noexcept { return intensity.IsExact(pos); }
 	//};
 
 	struct Result
@@ -56,27 +56,27 @@ namespace Search
 		Result(int depth, const ClosedInterval& window) noexcept : intensity({ depth }), window(window) {}
 		Result(const Intensity& i, int score) noexcept : intensity(i), window({ score, score }) {}
 
-		[[nodiscard]] static Result Exact(const Position& pos, int score) noexcept { return { pos.EmptyCount(), score }; }
+		static Result Exact(const Position& pos, int score) noexcept { return { pos.EmptyCount(), score }; }
 
-		[[nodiscard]] static Result FailHigh(const Intensity& i, int score) noexcept { return { i, {score, max_score} }; }
-		[[nodiscard]] static Result FailHigh(const Position& pos, int score) noexcept { return FailHigh(pos.EmptyCount(), score); }
-		[[nodiscard]] void FailedHigh() noexcept { window.TryIncreaseUpper(max_score); }
-		//[[nodiscard]] static Result FailHigh(int depth, int score) noexcept { return { { depth }, {score, max_score} }; }
+		static Result FailHigh(const Intensity& i, int score) noexcept { return { i, {score, max_score} }; }
+		static Result FailHigh(const Position& pos, int score) noexcept { return FailHigh(pos.EmptyCount(), score); }
+		void FailedHigh() noexcept { window.TryIncreaseUpper(max_score); }
+		//static Result FailHigh(int depth, int score) noexcept { return { { depth }, {score, max_score} }; }
 
-		[[nodiscard]] static Result FailLow(const Intensity& i, int score) noexcept { return { i, {min_score, score} }; }
-		[[nodiscard]] static Result FailLow(const Position& pos, int score) noexcept { return FailLow(pos.EmptyCount(), score); }
-		[[nodiscard]] void FailedLow() noexcept { window.TryDecreaseLower(min_score); }
-		//[[nodiscard]] static Result FailLow(int depth, int score) noexcept { return { { depth }, {min_score, score} }; }
+		static Result FailLow(const Intensity& i, int score) noexcept { return { i, {min_score, score} }; }
+		static Result FailLow(const Position& pos, int score) noexcept { return FailLow(pos.EmptyCount(), score); }
+		void FailedLow() noexcept { window.TryDecreaseLower(min_score); }
+		//static Result FailLow(int depth, int score) noexcept { return { { depth }, {min_score, score} }; }
 
-		//[[nodiscard]] static Result CertainFailSoft(const Intensity&, int depth, int score) noexcept;
+		//static Result CertainFailSoft(const Intensity&, int depth, int score) noexcept;
 
-		//[[nodiscard]] static Result ExactFailHard(const Request&, const Position&, int score) noexcept;
-		//[[nodiscard]] static Result ExactFailSoft(const Request&, const Position&, int score) noexcept;
+		//static Result ExactFailHard(const Request&, const Position&, int score) noexcept;
+		//static Result ExactFailSoft(const Request&, const Position&, int score) noexcept;
 
-		[[nodiscard]] int lower() const { return window.lower(); }
-		[[nodiscard]] int upper() const { return window.upper(); }
-		[[nodiscard]] int depth() const noexcept { return intensity.depth; }
-		[[nodiscard]] int Score() const noexcept { 
+		int lower() const { return window.lower(); }
+		int upper() const { return window.upper(); }
+		int depth() const noexcept { return intensity.depth; }
+		int Score() const noexcept { 
 			if (window.IsSingleton())
 				return window.lower();
 			if (window.lower() == min_score)
@@ -84,17 +84,17 @@ namespace Search
 			return window.lower();
 		}
 
-		[[nodiscard]] bool operator==(const Result&) const noexcept = default;
-		[[nodiscard]] bool operator!=(const Result&) const noexcept = default;
+		bool operator==(const Result&) const noexcept = default;
+		bool operator!=(const Result&) const noexcept = default;
 
-		[[nodiscard]] Result operator-() const noexcept { return { intensity, -window }; }
-		[[nodiscard]] Result operator+(int i) const noexcept { return { { intensity.depth + i, intensity.certainty }, window }; }
+		Result operator-() const noexcept { return { intensity, -window }; }
+		Result operator+(int i) const noexcept { return { { intensity.depth + i, intensity.certainty }, window }; }
 
-		[[nodiscard]] bool Satisfies(const Intensity& i, const OpenInterval& request) const noexcept { return (intensity >= i) and (window > request); }
+		bool Satisfies(const Intensity& i, const OpenInterval& request) const noexcept { return (intensity >= i) and (window > request); }
 
-		[[nodiscard]] bool IsExact(const Position& pos) const noexcept { return intensity.IsExact(pos) && window.IsSingleton(); }
-		//[[nodiscard]] bool IsFailHigh() const noexcept { return window.upper() == max_score; }
-		//[[nodiscard]] bool IsFailLow() const noexcept { return window.lower() == min_score; }
+		bool IsExact(const Position& pos) const noexcept { return intensity.IsExact(pos) && window.IsSingleton(); }
+		//bool IsFailHigh() const noexcept { return window.upper() == max_score; }
+		//bool IsFailLow() const noexcept { return window.lower() == min_score; }
 	};
 
 	struct Findings

@@ -22,7 +22,7 @@ public:
 		for (std::size_t i = 0; i < m_cache.size(); i++)
 			m_cache[i] = sum_pow3(i);
 	}
-	[[nodiscard]] int SumPow3(uint64 exp) const noexcept { return m_cache[exp]; }
+	int SumPow3(uint64 exp) const noexcept { return m_cache[exp]; }
 };
 
 static SumPow3Cache sum_pow_3_cache;

@@ -54,7 +54,6 @@ inline constexpr bool is_specialization<T<Args...>, T> = true;
 //}
 //
 //template <typename value_type>
-//[[nodiscard]]
 //std::vector<value_type> Load_dense(std::istream& stream)
 //{
 //	stream.seekg(0, stream.end);
@@ -73,7 +72,6 @@ inline constexpr bool is_specialization<T<Args...>, T> = true;
 //}
 //
 //template <typename value_type>
-//[[nodiscard]]
 //std::vector<value_type> Load(const std::filesystem::path& file)
 //{
 //	std::istream stream(file, std::ios::binary);
@@ -289,7 +287,6 @@ BinaryFileStream(const std::filesystem::path& file) -> BinaryFileStream<std::fst
 //
 //// Project
 //template <typename T, std::enable_if_t<std::is_same_v<T, Project<typename T::value_type>>, bool> = true>
-//[[nodiscard]]
 //T Read(std::istream& stream)
 //{
 //	std::size_t size = Read<std::size_t>(stream);
@@ -302,7 +299,6 @@ BinaryFileStream(const std::filesystem::path& file) -> BinaryFileStream<std::fst
 //
 //// PuzzleProject
 //template <typename T, std::enable_if_t<std::is_same_v<T, PuzzleProject>, bool> = true>
-//[[nodiscard]]
 //T Read(std::istream& stream)
 //{
 //	std::size_t size = Read<std::size_t>(stream);
@@ -326,14 +322,12 @@ void Save(const std::filesystem::path& file, Iterator first, Iterator last)
 }
 
 template <typename T>
-[[nodiscard]]
 T Load(const std::filesystem::path& file)
 {
 	return BinaryFileStream{ file }.read<T>();
 }
 
 template <typename T>
-[[nodiscard]]
 std::vector<T> LoadVec_old(const std::filesystem::path& file)
 {
 	std::ifstream stream(file, std::ios::binary);
@@ -356,7 +350,6 @@ std::vector<T> LoadVec_old(const std::filesystem::path& file)
 }
 
 template <typename T>
-[[nodiscard]]
 void Save_old(const std::filesystem::path& file, const T& vec)
 {
 	std::ofstream stream(file, std::ios::binary);

@@ -19,21 +19,21 @@ class SymExps
 public:
 	SymExps(std::vector<SymExp> vec) noexcept : vec(std::move(vec)) {}
 
-	[[nodiscard]] SymExps At(const Var&, double value) const;
+	SymExps At(const Var&, double value) const;
 	template <typename T>
-	[[nodiscard]] SymExps At(const Vars&, const std::vector<T>& values) const;
+	SymExps At(const Vars&, const std::vector<T>& values) const;
 
 	      SymExp& operator[](std::size_t i)       { return vec[i]; }
 	const SymExp& operator[](std::size_t i) const { return vec[i]; }
 
-	[[nodiscard]] auto begin() noexcept { return vec.begin(); }
-	[[nodiscard]] auto begin() const noexcept { return vec.begin(); }
-	[[nodiscard]] auto cbegin() const noexcept { return vec.cbegin(); }
-	[[nodiscard]] auto end() noexcept { return vec.end(); }
-	[[nodiscard]] auto end() const noexcept { return vec.end(); }
-	[[nodiscard]] auto cend() const noexcept { return vec.cend(); }
+	auto begin() noexcept { return vec.begin(); }
+	auto begin() const noexcept { return vec.begin(); }
+	auto cbegin() const noexcept { return vec.cbegin(); }
+	auto end() noexcept { return vec.end(); }
+	auto end() const noexcept { return vec.end(); }
+	auto cend() const noexcept { return vec.cend(); }
 
-	[[nodiscard]] std::vector<double> value() const;
+	std::vector<double> value() const;
 
 	operator std::vector<SymExp>() { return vec; }
 };
@@ -56,29 +56,29 @@ public:
 	~SymExp() = default;
 
 	template <typename Vec>
-	[[nodiscard]] SymExp At(const Vars& vars, const Vec& values) const
+	SymExp At(const Vars& vars, const Vec& values) const
 	{
 		SymExp tmp = *this;
 		for (std::size_t i = 0; i < vars.size(); i++)
 			tmp = tmp.At(vars[i], values[i]);
 		return tmp;
 	}
-	[[nodiscard]] SymExp At(const Var&, double value) const;
-	[[nodiscard]] SymExp Derive(const Var&) const;
-	[[nodiscard]] SymExps Derive(const Vars&) const;
+	SymExp At(const Var&, double value) const;
+	SymExp Derive(const Var&) const;
+	SymExps Derive(const Vars&) const;
 	template <typename Vec>
-	[[nodiscard]] SymExps DeriveAt(const Vars& vars, const Vec& values) const
+	 SymExps DeriveAt(const Vars& vars, const Vec& values) const
 	{
 		std::vector<SymExp> ret;
 		for (std::size_t i = 0; i < vars.size(); i++)
 			ret.push_back(Derive(vars[i]).At(vars, values));
 		return { ret };
 	}
-	[[nodiscard]] SymExp Simplify() const;
-	[[nodiscard]] std::string to_string() const;
+	SymExp Simplify() const;
+	std::string to_string() const;
 
-	[[nodiscard]] bool has_value() const;
-	[[nodiscard]] double value() const;
+	bool has_value() const;
+	double value() const;
 
 	friend SymExp operator-(SymExp);
 	friend SymExp operator+(SymExp, SymExp);
@@ -91,7 +91,7 @@ public:
 };
 
 template <typename T>
-[[nodiscard]] SymExps SymExps::At(const Vars& vars, const std::vector<T>& values) const
+SymExps SymExps::At(const Vars& vars, const std::vector<T>& values) const
 {
 	std::vector<SymExp> ret;
 	ret.reserve(vec.size());
@@ -108,8 +108,8 @@ public:
 	Var(double value) noexcept;
 };
 
-[[nodiscard]] inline std::string to_string(const SymExp& se) { return se.to_string(); }
-[[nodiscard]] inline std::ostream& operator<<(std::ostream& os, const SymExp& se) { return os << to_string(se); }
+inline std::string to_string(const SymExp& se) { return se.to_string(); }
+inline std::ostream& operator<<(std::ostream& os, const SymExp& se) { return os << to_string(se); }
 
 
 namespace AST
@@ -130,14 +130,14 @@ namespace AST
 	class Node
 	{
 	public:
-		[[nodiscard]] virtual std::unique_ptr<Node> Clone() const noexcept = 0;
-		[[nodiscard]] virtual std::unique_ptr<Node> Eval(const Symbol&, double value) const = 0;
-		[[nodiscard]] virtual std::unique_ptr<Node> Derive(const Symbol&) const = 0;
-		[[nodiscard]] virtual std::unique_ptr<Node> Simplify() const = 0;
-		[[nodiscard]] virtual std::string to_string() const = 0;
+		virtual std::unique_ptr<Node> Clone() const noexcept = 0;
+		virtual std::unique_ptr<Node> Eval(const Symbol&, double value) const = 0;
+		virtual std::unique_ptr<Node> Derive(const Symbol&) const = 0;
+		virtual std::unique_ptr<Node> Simplify() const = 0;
+		virtual std::string to_string() const = 0;
 
-		[[nodiscard]] virtual bool has_value() const { return false; }
-		[[nodiscard]] virtual double value() const { throw; }
+		virtual bool has_value() const { return false; }
+		virtual double value() const { throw; }
 	};
 
 	class Value final : public Node
@@ -146,14 +146,14 @@ namespace AST
 	public:
 		Value(double value) noexcept : val(value) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Value>(val); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override { return Clone(); }
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol&) const override { return std::make_unique<Value>(0); }
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override { return Clone(); }
-		[[nodiscard]] std::string to_string() const override { return std::to_string(val); }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Value>(val); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override { return Clone(); }
+		std::unique_ptr<Node> Derive(const Symbol&) const override { return std::make_unique<Value>(0); }
+		std::unique_ptr<Node> Simplify() const override { return Clone(); }
+		std::string to_string() const override { return std::to_string(val); }
 
-		[[nodiscard]] bool has_value() const override { return true; }
-		[[nodiscard]] double value() const override { return val; }
+		bool has_value() const override { return true; }
+		double value() const override { return val; }
 	};
 
 	class Symbol final : public Node
@@ -164,11 +164,11 @@ namespace AST
 		Symbol() noexcept : name('$' + std::to_string(counter++)) {}
 		Symbol(std::string name) noexcept : name(std::move(name)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Symbol>(name); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol& s, double value) const override { return s.name == name ? std::make_unique<Value>(value) : Clone(); }
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override { return std::make_unique<Value>(s.name == name ? 1 : 0); }
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override { return Clone(); }
-		[[nodiscard]] std::string to_string() const override { return name; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Symbol>(name); }
+		std::unique_ptr<Node> Eval(const Symbol& s, double value) const override { return s.name == name ? std::make_unique<Value>(value) : Clone(); }
+		std::unique_ptr<Node> Derive(const Symbol& s) const override { return std::make_unique<Value>(s.name == name ? 1 : 0); }
+		std::unique_ptr<Node> Simplify() const override { return Clone(); }
+		std::string to_string() const override { return name; }
 	};
 
 	class Neg final : public Node
@@ -177,11 +177,11 @@ namespace AST
 	public:
 		Neg(std::unique_ptr<Node>&& node) noexcept : node(std::move(node)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Neg>(node->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "-(" + node->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Neg>(node->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "-(" + node->to_string() + ")"; }
 	};
 
 	class Add final : public Node
@@ -190,11 +190,11 @@ namespace AST
 	public:
 		Add(std::unique_ptr<Node>&& l, std::unique_ptr<Node>&& r) noexcept : l(std::move(l)), r(std::move(r)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Add>(l->Clone(), r->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "(" + l->to_string() + " + " + r->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Add>(l->Clone(), r->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "(" + l->to_string() + " + " + r->to_string() + ")"; }
 	};
 
 	class Sub final : public Node
@@ -203,11 +203,11 @@ namespace AST
 	public:
 		Sub(std::unique_ptr<Node>&& l, std::unique_ptr<Node>&& r) noexcept : l(std::move(l)), r(std::move(r)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Sub>(l->Clone(), r->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "(" + l->to_string() + " - " + r->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Sub>(l->Clone(), r->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "(" + l->to_string() + " - " + r->to_string() + ")"; }
 	};
 
 	class Mul final : public Node
@@ -216,11 +216,11 @@ namespace AST
 	public:
 		Mul(std::unique_ptr<Node>&& l, std::unique_ptr<Node>&& r) noexcept : l(std::move(l)), r(std::move(r)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Mul>(l->Clone(), r->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "(" + l->to_string() + " * " + r->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Mul>(l->Clone(), r->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "(" + l->to_string() + " * " + r->to_string() + ")"; }
 	};
 
 	class Div final : public Node
@@ -229,11 +229,11 @@ namespace AST
 	public:
 		Div(std::unique_ptr<Node>&& l, std::unique_ptr<Node>&& r) noexcept : l(std::move(l)), r(std::move(r)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Div>(l->Clone(), r->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "(" + l->to_string() + " / " + r->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Div>(l->Clone(), r->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "(" + l->to_string() + " / " + r->to_string() + ")"; }
 	};
 
 	class Pow final : public Node
@@ -242,11 +242,11 @@ namespace AST
 	public:
 		Pow(std::unique_ptr<Node>&& l, std::unique_ptr<Node>&& r) noexcept : l(std::move(l)), r(std::move(r)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Pow>(l->Clone(), r->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "pow(" + l->to_string() + ", " + r->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Pow>(l->Clone(), r->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "pow(" + l->to_string() + ", " + r->to_string() + ")"; }
 	};
 
 	class Exp final : public Node
@@ -256,11 +256,11 @@ namespace AST
 	public:
 		Exp(std::unique_ptr<Node>&& node) noexcept : node(std::move(node)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Exp>(node->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "exp(" + node->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Exp>(node->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "exp(" + node->to_string() + ")"; }
 	};
 
 	class Log final : public Node
@@ -270,10 +270,10 @@ namespace AST
 	public:
 		Log(std::unique_ptr<Node>&& node) noexcept : node(std::move(node)) {}
 
-		[[nodiscard]] std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Log>(node->Clone()); }
-		[[nodiscard]] std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
-		[[nodiscard]] std::unique_ptr<Node> Derive(const Symbol& s) const override;
-		[[nodiscard]] std::unique_ptr<Node> Simplify() const override;
-		[[nodiscard]] std::string to_string() const override { return "log(" + node->to_string() + ")"; }
+		std::unique_ptr<Node> Clone() const noexcept override { return std::make_unique<Log>(node->Clone()); }
+		std::unique_ptr<Node> Eval(const Symbol&, double value) const override;
+		std::unique_ptr<Node> Derive(const Symbol& s) const override;
+		std::unique_ptr<Node> Simplify() const override;
+		std::string to_string() const override { return "log(" + node->to_string() + ")"; }
 	};
 }

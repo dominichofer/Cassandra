@@ -15,11 +15,11 @@ public:
 		std::sort(m_moves.begin(), m_moves.end(), [](const auto& l, const auto& r) { return l.first > r.first; });
 	}
 
-	[[nodiscard]] std::size_t size() const noexcept { return m_moves.size(); }
-	[[nodiscard]] bool empty() const noexcept { return m_moves.empty(); }
+	std::size_t size() const noexcept { return m_moves.size(); }
+	bool empty() const noexcept { return m_moves.empty(); }
 
-	[[nodiscard]] decltype(auto) begin() const noexcept { return m_moves.begin(); }
-	[[nodiscard]] decltype(auto) cbegin() const noexcept { return m_moves.cbegin(); }
-	[[nodiscard]] decltype(auto) end() const noexcept { return m_moves.end(); }
-	[[nodiscard]] decltype(auto) cend() const noexcept { return m_moves.cend(); }
+	decltype(auto) begin() const noexcept { return m_moves.begin(); }
+	decltype(auto) cbegin() const noexcept { return m_moves.cbegin(); }
+	decltype(auto) end() const noexcept { return m_moves.end(); }
+	decltype(auto) cend() const noexcept { return m_moves.cend(); }
 };

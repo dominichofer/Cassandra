@@ -24,14 +24,14 @@ struct Request
 	static Request ExactScore(const Position& pos) { return Request(pos.EmptyCount()); }
 	static std::set<Request> AllMoves(Position);
 
-	[[nodiscard]] bool operator==(const Request&) const noexcept = default;
-	[[nodiscard]] bool operator!=(const Request&) const noexcept = default;
-	[[nodiscard]] auto operator<=>(const Request&) const noexcept = default;
+	bool operator==(const Request&) const noexcept = default;
+	bool operator!=(const Request&) const noexcept = default;
+	auto operator<=>(const Request&) const noexcept = default;
 
-	[[nodiscard]] bool HasMove() const { return move != Field::none; }
+	bool HasMove() const { return move != Field::none; }
 };
 
-[[nodiscard]] inline std::string to_string(const Request& r) { return (r.HasMove() ? to_string(r.move) + " " : std::string{}) + to_string(r.intensity); }
+inline std::string to_string(const Request& r) { return (r.HasMove() ? to_string(r.move) + " " : std::string{}) + to_string(r.intensity); }
 
 
 struct Result
@@ -44,10 +44,10 @@ struct Result
 	Result(int score) noexcept : score(score) {}
 	Result(int score, uint64 nodes, std::chrono::duration<double> duration) noexcept : score(score), nodes(nodes), duration(duration) {}
 
-	[[nodiscard]] bool operator==(const Result&) const noexcept = default;
-	[[nodiscard]] bool operator!=(const Result&) const noexcept = default;
+	bool operator==(const Result&) const noexcept = default;
+	bool operator!=(const Result&) const noexcept = default;
 
-	[[nodiscard]] bool HasValue() const { return score != undefined_score; }
+	bool HasValue() const { return score != undefined_score; }
 };
 
 class Puzzle
@@ -60,20 +60,20 @@ public:
 	public:
 		Task(Request request, Result result = {}) noexcept : request(request), result(result) {}
 
-		[[nodiscard]] bool operator==(const Task&) const noexcept = default;
-		[[nodiscard]] bool operator!=(const Task&) const noexcept = default;
+		bool operator==(const Task&) const noexcept = default;
+		bool operator!=(const Task&) const noexcept = default;
 
 		const Request& GetRequest() const noexcept { return request; }
 		const Result& GetResult() const noexcept { return result; }
 
-		[[nodiscard]] Field Move() const { return request.move; }
-		[[nodiscard]] Intensity GetIntensity() const { return request.intensity; }
-		[[nodiscard]] int Score() const { return result.score; }
-		[[nodiscard]] uint64 Nodes() const { return result.nodes; }
-		[[nodiscard]] std::chrono::duration<double> Duration() const { return result.duration; }
+		 Field Move() const { return request.move; }
+		 Intensity GetIntensity() const { return request.intensity; }
+		 int Score() const { return result.score; }
+		 uint64 Nodes() const { return result.nodes; }
+		 std::chrono::duration<double> Duration() const { return result.duration; }
 
-		[[nodiscard]] bool IsDone() const { return result.HasValue(); }
-		[[nodiscard]] bool HasMove() const { return request.HasMove(); }
+		bool IsDone() const { return result.HasValue(); }
+		bool HasMove() const { return request.HasMove(); }
 
 		void ResolveWith(const ::Result& r) { result = r; }
 		void ResolveWith(int score, uint64 nodes, std::chrono::duration<double> duration) { ResolveWith({ score, nodes, duration }); }
@@ -91,12 +91,12 @@ public:
 	static Puzzle WithExactScore(Position pos, int score) { return { pos, pos.EmptyCount(), score }; }
 	static Puzzle WithAllMoves(Position);
 
-	[[nodiscard]] bool operator==(const Puzzle&) const noexcept = default;
-	[[nodiscard]] bool operator!=(const Puzzle&) const noexcept = default;
+	bool operator==(const Puzzle&) const noexcept = default;
+	bool operator!=(const Puzzle&) const noexcept = default;
 
 	void clear() noexcept { tasks.clear(); }
-	[[nodiscard]] std::size_t size() const noexcept { return tasks.size(); }
-	[[nodiscard]] bool empty() const noexcept { return tasks.empty(); }
+	std::size_t size() const noexcept { return tasks.size(); }
+	bool empty() const noexcept { return tasks.empty(); }
 
 	void insert(const Request&);
 	template <std::ranges::range R>
@@ -109,25 +109,25 @@ public:
 	void ClearResult(const Request&);
 	void ClearResultIf(std::function<bool(const Task&)> pred);
 
-	[[nodiscard]] uint64 Nodes() const;
-	[[nodiscard]] std::chrono::duration<double> Duration() const;
+	uint64 Nodes() const;
+	std::chrono::duration<double> Duration() const;
 
-	[[nodiscard]] bool AllTasksDone() const;
-	[[nodiscard]] bool AnyTaskDone() const;
-	[[nodiscard]] bool Contains(const Request&) const;
-	[[nodiscard]] bool Contains(Field move) const; // TODO: Remove?
-	[[nodiscard]] Result ResultOf(const Request&) const noexcept(false);
-	[[nodiscard]] std::set<Field> BestMoves() const;
-	[[nodiscard]] std::set<Intensity> SolvedIntensities() const; // TODO: Add test!
-	[[nodiscard]] std::set<Intensity> SolvedIntensitiesOfAllMoves() const; // TODO: Add test!
-	[[nodiscard]] std::optional<Intensity> MaxSolvedIntensity() const; // TODO: Add test!
-	[[nodiscard]] std::optional<Intensity> MaxSolvedIntensityOfAllMoves() const; // TODO: Add test!
-	[[nodiscard]] std::optional<int> MaxSolvedIntensityScore() const; // TODO: Add test!
+	bool AllTasksDone() const;
+	bool AnyTaskDone() const;
+	bool Contains(const Request&) const;
+	bool Contains(Field move) const; // TODO: Remove?
+	Result ResultOf(const Request&) const noexcept(false);
+	std::set<Field> BestMoves() const;
+	std::set<Intensity> SolvedIntensities() const; // TODO: Add test!
+	std::set<Intensity> SolvedIntensitiesOfAllMoves() const; // TODO: Add test!
+	std::optional<Intensity> MaxSolvedIntensity() const; // TODO: Add test!
+	std::optional<Intensity> MaxSolvedIntensityOfAllMoves() const; // TODO: Add test!
+	std::optional<int> MaxSolvedIntensityScore() const; // TODO: Add test!
 
 	bool Solve(const Search::Algorithm&);
 
 	// "--XO-- (+01) (A1 : +00) (B5 d7 87% : +01)"
-	[[nodiscard]] std::string to_string() const;
+	std::string to_string() const;
 };
 
 inline std::string to_string(const Puzzle& puzzle) { return puzzle.to_string(); }
@@ -169,18 +169,18 @@ inline std::chrono::duration<double> Duration(const range<Puzzle> auto& puzzles)
 //	PuzzleProject(std::vector<Puzzle> wu) noexcept : TaskLibrary<Puzzle>(std::move(wu)) {}
 //	PuzzleProject(const TaskLibrary<Puzzle>& o) noexcept : TaskLibrary<Puzzle>(o) {}
 //
-//	[[nodiscard]] uint64 Nodes() const;
-//	[[nodiscard]] std::chrono::duration<double> Duration() const;
+//	uint64 Nodes() const;
+//	std::chrono::duration<double> Duration() const;
 //
 //	void MakeAllHave(const ::Request&);
 //	void erase(const ::Request& r) { for (auto& x : wu) ::erase(x, r); }
 //	void PrepareForTests();
 //
 //	// thread-safe
-//	//[[nodiscard]] std::size_t Scheduled(const Request&) const { return next.load(std::memory_order_acquire); }
-//	//[[nodiscard]] std::size_t Processed(const Request&) const { return processed.load(std::memory_order_acquire); }
-//	//[[nodiscard]] bool HasWork() const { return Scheduled() < wu.size(); }
-//	//[[nodiscard]] bool IsDone() const { return Processed() == wu.size(); }
+//	//std::size_t Scheduled(const Request&) const { return next.load(std::memory_order_acquire); }
+//	//std::size_t Processed(const Request&) const { return processed.load(std::memory_order_acquire); }
+//	//bool HasWork() const { return Scheduled() < wu.size(); }
+//	//bool IsDone() const { return Processed() == wu.size(); }
 //};
 //
 //

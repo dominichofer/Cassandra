@@ -10,11 +10,11 @@
 #include "Table.h"
 #include <string>
 
-[[nodiscard]] Field ParseField(const std::string&);
+Field ParseField(const std::string&);
 
-[[nodiscard]] Position ParsePosition_SingleLine(const std::string&) noexcept(false);
+Position ParsePosition_SingleLine(const std::string&) noexcept(false);
 
-[[nodiscard]] std::string short_time_format(std::chrono::duration<double> duration);
+std::string short_time_format(std::chrono::duration<double> duration);
 
 template <typename T>
 std::string to_string(const std::vector<T>& vec)

@@ -9,6 +9,7 @@ class Spinlock
 {
 	std::atomic_flag spinlock{};
 public:
+	[[nodiscard]] Spinlock() = default;
 	[[nodiscard]] bool try_lock() noexcept { return spinlock.test_and_set(std::memory_order_acquire); }
 	void lock() noexcept { while (try_lock()) continue; }
 	void unlock() noexcept { spinlock.clear(std::memory_order_release); }
@@ -24,7 +25,7 @@ struct TT_Info
 	TT_Info(const Search::Result& result, Field best_move) noexcept
 		: result(result), best_move(best_move) {}
 
-	[[nodiscard]] operator Search::Result() const noexcept { return result; }
+	operator Search::Result() const noexcept { return result; }
 };
 
 class OneNode
@@ -36,7 +37,7 @@ public:
 	OneNode() noexcept = default;
 
 	void Update(const key_type&, const value_type&);
-	[[nodiscard]] std::optional<value_type> LookUp(const key_type&) const;
+	std::optional<value_type> LookUp(const key_type&) const;
 	void Clear();
 
 private:
