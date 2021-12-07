@@ -20,30 +20,6 @@ void PrintHelp()
 		<< std::endl;
 }
 
-std::size_t NumberOfDifferentPositions(const std::vector<Position>& all)
-{
-	return std::inner_product(all.begin() + 1, all.end(),
-							  all.begin(),
-							  std::size_t(1), std::plus(), std::not_equal_to());
-}
-
-// Counts Othello positions that occure once and only once in the list.
-std::size_t NumberOfUniqueRealizations(const std::vector<Position>& all)
-{
-	const int64_t size = static_cast<int64_t>(all.size());
-	if (size < 2)
-		return size;
-
-	int64_t sum = (all[0] != all[1]) ? 1 : 0;
-	#pragma omp parallel for reduction(+:sum)
-	for (int64_t i = 1; i < size - 1; i++)
-		if ((all[i-1] != all[i]) && (all[i] != all[i+1]))
-			sum++;
-	if (all[size - 2] != all[size - 1])
-		sum++;
-	return sum;
-}
-
 int main(int argc, char* argv[])
 {
 	int depth = 16;
