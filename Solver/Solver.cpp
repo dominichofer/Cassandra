@@ -16,88 +16,31 @@
 #include <set>
 #include <omp.h>
 
-class OutputFormater
+class SolverTable : public Table
 {
 	bool test;
-	std::string Fmt(int diff) const
-	{
-		std::string s;
-		s += "{:>9}|"; // index
-		s += "{:<6}|"; // depth
-		s += " {:+03} |"; // eval
-		if (test)
-		{
-			s += " {:+03} |"; // score
-			if (diff)
-				s += " {:+03} |"; // diff
-			else
-				s += "   {:1}  |"; // diff
-		}
-		else
-		{
-			s += "{:0}"; // score
-			s += "{:0}"; // diff
-		}
-		s += "{:>16.3}|"; // time
-		s += "{:>18}|"; // nodes
-		s += "{:>14.0}"; // N/s
-		return s + '\n';
-	}
 public:
-	OutputFormater(bool test) noexcept : test(test) {}
+	SolverTable(bool test) : test(test)
+	{
+		AddColumn("#", 2, "{:>2L}");
+		AddColumn("depth", 6, "{:6}");
+		AddColumn("eval", 5, " {:+03} ");
+		AddColumn("score", 5, " {:+03} ", test);
+		AddColumn("diff", 5, " {:+03} ", test);
+		AddColumn("time [s]", 16, "{:>#16.3f}");
+		AddColumn("nodes", 18, "{:>18L}");
+		AddColumn("nodes/s", 14, "{:>14.0Lf}");
+	}
+	void PrintRow(std::size_t index, const Request& request, int score, const Result& result)
+	{
+		int diff = score - result.score;
+		auto duration = result.duration.count();
 
-	std::string Header() const
-	{
-		if (test)
-			return "  # | depth  | eval|score| diff|       time (s) |        nodes (N) |             N/s\n" + Footer();
-		return "  # | depth  | eval|       time (s) |        nodes (N) |             N/s\n" + Footer();
+		Table::PrintRow(index, to_string(request.intensity), score, result.score, diff ? std::optional(diff) : std::nullopt, duration, result.nodes, duration ? std::optional(result.nodes / duration) : std::nullopt);
 	}
-
-	std::string Footer() const
+	void PrintSummary(auto std_dev, auto duration, auto nodes)
 	{
-		if (test)
-			return "----+--------+-----+-----+-----+----------------+------------------+-----------------\n";
-		return "----+--------+-----+----------------+------------------+-----------------\n";
-	}
-
-	std::string Line(std::size_t index, Intensity intensity, int eval, int score, std::chrono::duration<double> time, std::size_t nodes)
-	{
-		int diff = eval - score;
-		auto nps = nodes / time.count();
-
-		std::string s = fmt::format("{:>3} | {:<6} | {:+03} |", index, to_string(intensity), eval);
-		if (test)
-		{
-			s += fmt::format(" {:+03} |", score);
-			if (diff)
-				s += fmt::format(" {:+03} |", diff);
-			else
-				s += "     |";
-		}
-		return s + fmt::format(std::locale(""), "{:15.3f} |{:>17L} |{:>14.0Lf}\n", time.count(), nodes, nodes / time.count());
-	}
-	std::string Line(std::size_t index, const Request& request, int score, const Result& result)
-	{
-		return Line(index, request.intensity, score, result.score, result.duration, result.nodes);
-	}
-	std::string Line(std::size_t index, Intensity intensity, int eval, std::chrono::duration<double> time, std::size_t nodes)
-	{
-		assert(not test);
-		return Line(index, intensity, eval, 0 /*ignored*/, time, nodes);
-	}
-	std::string Line(std::size_t index, const Request& request, const Result& result)
-	{
-		return Line(index, request.intensity, result.score, result.duration, result.nodes);
-	}
-
-	std::string Summary(int diff, std::chrono::duration<double> time, std::size_t nodes)
-	{
-		std::string s = test ? "                         " : "             ";
-		if (test and diff)
-			s += fmt::format("| {:+03} |", diff);
-		else
-			s += "|     |";
-		return s + fmt::format(std::locale(""), "{:15.3f} |{:>17L} |{:>14.0Lf}\n", time.count(), nodes, nodes / time.count());
+		Table::PrintRow(Table::Empty, Table::Empty, Table::Empty, Table::Empty, std_dev ? std::optional(std_dev) : std::nullopt, duration, nodes, nodes / duration);
 	}
 };
 
@@ -108,9 +51,10 @@ void Test(PuzzleRange auto puzzles)
 	AAGLEM pattern_eval = DefaultPatternEval();
 	HashTablePVS tt{ 1'000'000 };
 
+	SolverTable table(/*test*/ true);
+	table.PrintHeader();
+
 	std::vector<int> diff;
-	OutputFormater formater(true);
-	std::cout << formater.Header();
 	Process(std::execution::seq, puzzles,
 		[&](Puzzle& p, std::size_t index) {
 			auto exact = Request::ExactScore(p.pos);
@@ -118,10 +62,10 @@ void Test(PuzzleRange auto puzzles)
 			p.ClearResult(exact);
 			p.Solve(IDAB{ tt, pattern_eval });
 			diff.push_back(old_score - p.ResultOf(exact).score);
-			std::cout << formater.Line(index, exact, old_score, p.ResultOf(exact));
+			table.PrintRow(index, exact, old_score, p.ResultOf(exact));
 		});
-	std::cout << formater.Footer();
-	std::cout << formater.Summary(StandardDeviation(diff), Duration(puzzles), Nodes(puzzles));
+	table.PrintSeparator();
+	table.PrintSummary(StandardDeviation(diff), Duration(puzzles).count(), Nodes(puzzles));
 }
 
 auto CreateNewData(int d1, int d2)
@@ -550,6 +494,8 @@ void SolveSomeAccuracyFit()
 
 int main(int argc, char* argv[])
 {
+	std::locale::global(std::locale(""));
+
 	Test(FForum_1); std::cout << '\n';
 	Test(FForum_2); std::cout << '\n';
 	Test(FForum_3); std::cout << '\n';
