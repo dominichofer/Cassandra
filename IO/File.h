@@ -89,7 +89,7 @@ class BinaryFileStream
 	Stream stream;
 public:
 	BinaryFileStream() = default;
-	BinaryFileStream(const std::filesystem::path& file) : stream(file, std::ios::binary)
+	BinaryFileStream(const std::filesystem::path& file) : stream(file, std::ios::binary | std::ios::in | std::ios::out)
 	{
 		if (not stream.is_open())
 			throw std::fstream::failure("Can not open '" + file.string() + "' for binary intput/output.");
