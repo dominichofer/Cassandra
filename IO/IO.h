@@ -5,7 +5,9 @@
 #include "Integers.h"
 #include "PosScore.h"
 #include "File.h"
+#include "Format.h"
 #include "PatternEval.h"
+#include "Table.h"
 #include <string>
 
 [[nodiscard]] Field ParseField(const std::string&);

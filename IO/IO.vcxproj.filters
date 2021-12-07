@@ -8,10 +8,13 @@
     <ClInclude Include="File.h" />
     <ClInclude Include="PatternEval.h" />
     <ClInclude Include="Database.h" />
+    <ClInclude Include="Table.h" />
+    <ClInclude Include="Format.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />
     <ClCompile Include="IO.cpp" />
     <ClCompile Include="PatternEval.cpp" />
+    <ClCompile Include="Table.cpp" />
   </ItemGroup>
 </Project>

@@ -28,6 +28,5 @@
     <ClInclude Include="Interval.h" />
     <ClInclude Include="Algorithms.h" />
     <ClInclude Include="Metronome.h" />
-    <ClInclude Include="Format.h" />
   </ItemGroup>
 </Project>

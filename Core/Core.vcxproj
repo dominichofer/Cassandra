@@ -82,7 +82,6 @@
   <ItemGroup>
     <ClInclude Include="Algorithms.h" />
     <ClInclude Include="Confidence.h" />
-    <ClInclude Include="Format.h" />
     <ClInclude Include="Interval.h" />
     <ClInclude Include="Metronome.h" />
     <ClInclude Include="Ranges.h" />
