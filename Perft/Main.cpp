@@ -5,6 +5,7 @@
 #include <numeric>
 #include <chrono>
 #include <string>
+#include <iostream>
 
 void PrintHelp()
 {
@@ -19,7 +20,7 @@ int main(int argc, char* argv[])
 {
 	std::locale::global(std::locale(""));
 	int depth = 16;
-	std::size_t RAM = 1_GB;
+	std::size_t RAM = 48_GB;
 
 	for (int i = 0; i < argc; i++)
 	{
@@ -42,7 +43,7 @@ int main(int argc, char* argv[])
 	table.AddColumn("Pos/s", 16, "{:>16.0Lf}");
 	table.PrintHeader();
 
-	for (int d = 1; d <= depth; d++)
+	for (int d = 11; d <= depth; d++)
 	{
 		engine->clear();
 		auto start = std::chrono::high_resolution_clock::now();
@@ -51,10 +52,7 @@ int main(int argc, char* argv[])
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1'000.0;
 		bool correct = (Correct(d) == result);
 
-		if (duration)
-			table.PrintRow(d, result, correct, duration, result / duration);
-		else
-			table.PrintRow(d, result, correct, duration, Table::Empty);
+		table.PrintRow(d, result, correct, duration, duration ? std::optional(result / duration) : std::nullopt);
 	}
 	return 0;
 }

@@ -14,6 +14,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{5942BE07-41EF-4CF8-B990-978E7B63EF06}</ProjectGuid>
     <RootNamespace>IO</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -68,28 +69,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Database.h" />
-    <ClInclude Include="FForum.h" />
-    <ClInclude Include="File.h" />
+    <ClInclude Include="Filebased.h" />
+    <ClInclude Include="Stream.h" />
     <ClInclude Include="Format.h" />
     <ClInclude Include="Integers.h" />
     <ClInclude Include="IO.h" />
-    <ClInclude Include="PatternEval.h" />
     <ClInclude Include="PosScore.h" />
     <ClInclude Include="Table.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />
     <ClCompile Include="IO.cpp" />
-    <ClCompile Include="PatternEval.cpp" />
+    <ClCompile Include="Stream.cpp" />
     <ClCompile Include="Table.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
-      <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Search\Search.vcxproj">
-      <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

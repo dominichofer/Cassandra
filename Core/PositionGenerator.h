@@ -2,7 +2,7 @@
 #include "Position.h"
 #include "Moves.h"
 #include "Player.h"
-
+#include <execution>
 #include <random>
 #include <iterator>
 #include <vector>
@@ -48,7 +48,7 @@ namespace PosGen
 		const int empty_count;
 		std::vector<Position> start;
 		std::mt19937_64 rnd_engine{ std::random_device{}() };
-		std::uniform_int_distribution<int> start_pick;
+		std::uniform_int_distribution<std::size_t> start_pick;
 	public:
 		Played(Player& first, Player& second, int empty_count, std::vector<Position> start) noexcept(false);
 		Played(Player& first, Player& second, int empty_count, Position start = Position::Start()) noexcept(false) : Played(first, second, empty_count, std::vector{ start }) {}
@@ -70,56 +70,9 @@ namespace PosGen
 
 	std::set<Position> generate_n_unique(int count, PositionGenerator&);
 	std::set<Position> generate_n_unique(int count, PositionGenerator&&);
+	std::set<Position> generate_n_unique(std::execution::parallel_policy, int count, PositionGenerator&);
+	std::set<Position> generate_n_unique(std::execution::parallel_policy, int count, PositionGenerator&&);
 }
 
-class ChildrenGenerator
-{
-	class Iterator
-	{
-		struct PosMov
-		{
-			Position pos;
-			Moves moves;
-
-			PosMov(Position pos, Moves moves) : pos(pos), moves(moves) {}
-			bool operator==(const PosMov&) const noexcept = default;
-			bool operator!=(const PosMov&) const noexcept = default;
-			//bool operator==(const PosMov& o) const noexcept { return std::tie(pos, moves) == std::tie(o.pos, o.moves); }
-			//bool operator!=(const PosMov& o) const noexcept { return !(*this == o); }
-		};
-		const int plies = 0;
-		const bool pass_is_a_ply = false;
-		std::vector<PosMov> stack{};
-	public:
-		using difference_type = std::ptrdiff_t;
-		using value_type = Field;
-		using reference = Field&;
-		using pointer = Field*;
-		using iterator_category = std::forward_iterator_tag;
-
-		Iterator() noexcept = default;
-		Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept;
-
-		bool operator==(const Iterator& o) const noexcept { return (stack.empty() && o.stack.empty()) || std::tie(plies, pass_is_a_ply, stack) == std::tie(o.plies, o.pass_is_a_ply, o.stack); }
-		bool operator!=(const Iterator& o) const noexcept { return !(*this == o); }
-		Iterator& operator++();
-		const Position& operator*() const noexcept { return stack.back().pos; }
-	};
-
-	const Position start;
-	const int plies;
-	const bool pass_is_a_ply;
-public:
-	ChildrenGenerator(const Position& start, int plies, bool pass_is_a_ply) noexcept
-		: start(start), plies(plies), pass_is_a_ply(pass_is_a_ply) {}
-
-	Iterator begin() const { return {start, plies, pass_is_a_ply}; }
-	Iterator cbegin() const { return {start, plies, pass_is_a_ply}; }
-	static Iterator end() { return {}; }
-	static Iterator cend() { return {}; }
-};
-
-ChildrenGenerator Children(Position, int plies, bool pass_is_a_ply);
-ChildrenGenerator Children(Position, int empty_count);
 
 std::vector<Position> AllUnique(Position, int empty_count);

@@ -3,59 +3,75 @@
 #include <stdexcept>
 #include "Vector.h"
 
-// Interface
-class Matrix
-{
-public:
-	virtual std::size_t Rows() const noexcept = 0;
-	virtual std::size_t Cols() const noexcept = 0;
-
-	virtual Vector Ax(const Vector&) const = 0;
-	virtual Vector ATx(const Vector&) const = 0;
-
-	auto operator*(const Vector& x) const { return Ax(x); }
-};
-
-
 namespace
 {
 	// Proxy
-	class TransposedMatrix final : public Matrix
+	template <typename T>
+	requires requires (const T& t) { t.Rows(); t.Cols(); }
+	struct TransposedMatrix
 	{
-		const Matrix& m;
-	public:
-		explicit TransposedMatrix(const Matrix& m) noexcept : m(m) {}
+		const T& m;
 
-		std::size_t Rows() const noexcept override { return m.Cols(); }
-		std::size_t Cols() const noexcept override { return m.Rows(); }
+		explicit TransposedMatrix(const T& m) noexcept : m(m) {}
 
-		Vector Ax(const Vector& x) const override { return m.ATx(x); }
-		Vector ATx(const Vector& x) const override { return m.Ax(x); }
+		std::size_t Rows() const { return m.Cols(); }
+		std::size_t Cols() const { return m.Rows(); }
 	};
 }
 
-inline auto transposed(const Matrix& m) { return TransposedMatrix(m); }
+template <typename T, typename U>
+std::valarray<U> operator*(const TransposedMatrix<T>& mat, const std::valarray<U>& x)
+{
+	return x * mat.m;
+}
+
+template <typename T, typename U>
+std::valarray<U> operator*(const std::valarray<U>& x, const TransposedMatrix<T>& mat)
+{
+	return mat.m * x;
+}
+
+template <typename T>
+auto transposed(const T& m) { return TransposedMatrix(m); }
+
+template <typename T>
+auto transposed(const TransposedMatrix<T>& m) { return m.m; }
+
 
 namespace
 {
 	// Proxy
-	class TwoMatrix final : public Matrix
+	template <typename L, typename R>
+	requires requires (L l, R r) { l.Rows(); l.Cols(); r.Rows(); r.Cols(); }
+	struct TwoMatrix
 	{
-		const Matrix& l;
-		const Matrix& r;
-	public:
-		TwoMatrix(const Matrix& l, const Matrix& r) : l(l), r(r)
+		const L& l;
+		const R& r;
+
+		TwoMatrix(const L& l, const R& r) : l(l), r(r)
 		{
-			if(l.Cols() != r.Rows())
+			if (l.Cols() != r.Rows())
 				throw std::runtime_error("Size mismatch.");
 		}
+		operator L() const { return fallback::operator*(l, r); }
 
-		std::size_t Rows() const noexcept override { return l.Rows(); }
-		std::size_t Cols() const noexcept override { return r.Cols(); }
-
-		Vector Ax(const Vector& x) const override { return l.Ax(r.Ax(x)); }
-		Vector ATx(const Vector& x) const override { return r.ATx(l.ATx(x)); }
+		std::size_t Rows() const { return l.Rows(); }
+		std::size_t Cols() const { return r.Cols(); }
 	};
 }
 
-inline auto operator*(const Matrix& l, const Matrix& r) { return TwoMatrix(l, r); }
+template <typename L, typename R, typename T>
+std::valarray<T> operator*(const TwoMatrix<L, R>& mat, const std::valarray<T>& x)
+{
+	return mat.l * (mat.r * x);
+}
+
+template <typename L, typename R, typename T>
+std::valarray<T> operator*(const std::valarray<T>& x, const TwoMatrix<L, R>& mat)
+{
+	return (x * mat.l) * mat.r;
+}
+
+template <typename L, typename R>
+requires requires (L l, R r) { l.Rows(); l.Cols(); r.Rows(); r.Cols(); }
+auto operator*(const L& l, const R& r) { return TwoMatrix(l, r); }

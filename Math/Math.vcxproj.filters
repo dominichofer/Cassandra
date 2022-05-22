@@ -3,16 +3,15 @@
   <ItemGroup>
     <ClInclude Include="MatrixCSR.h" />
     <ClInclude Include="DenseMatrix.h" />
-    <ClInclude Include="Vector.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="SymExp.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SymExp.cpp" />
-    <ClCompile Include="Algorithm.cpp" />
   </ItemGroup>
 </Project>

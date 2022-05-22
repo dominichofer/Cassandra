@@ -2,19 +2,18 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="Integers.h" />
-    <ClInclude Include="FForum.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="PosScore.h" />
-    <ClInclude Include="File.h" />
-    <ClInclude Include="PatternEval.h" />
+    <ClInclude Include="Stream.h" />
     <ClInclude Include="Database.h" />
     <ClInclude Include="Table.h" />
     <ClInclude Include="Format.h" />
+    <ClInclude Include="Filebased.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Integers.cpp" />
     <ClCompile Include="IO.cpp" />
-    <ClCompile Include="PatternEval.cpp" />
     <ClCompile Include="Table.cpp" />
+    <ClCompile Include="Stream.cpp" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
-//
-// pch.cpp
-// Include the standard header and generate the precompiled header.
-//
-
 #include "pch.h"
+
+bool AllTrue(const std::valarray<bool>& v)
+{
+	return std::ranges::all_of(v, std::identity());
+}

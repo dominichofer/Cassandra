@@ -1,20 +1,32 @@
 #include "Player.h"
-#include "Algorithm.h"
-#include <vector>
-#include <tuple>
-#include <algorithm>
-#include <random>
 
 Position FixedDepthPlayer::Play(const Position& pos)
 {
-	auto possible_moves = PossibleMoves(pos);
-	if (not possible_moves)
+	Moves moves = PossibleMoves(pos);
+	if (moves.empty())
 		return PlayPass(pos);
-	//return ::Play(pos, PVS{ tt, evaluator }.BestMove(pos, Intensity(depth - 1)));
-	std::vector<std::pair<Field, int>> move_score;
-	for (Field move : possible_moves)
-		move_score.emplace_back(move, PVS{ tt, evaluator }.Eval(::Play(pos, move), Intensity(depth - 1)));
-	std::shuffle(move_score.begin(), move_score.end(), rnd_engine);
-	std::sort(move_score.begin(), move_score.end(), [](const std::pair<Field, int>& l, const std::pair<Field, int>& r) { return l.second < r.second; });
-	return ::Play(pos, move_score.back().first);
+
+	if (intensity == 0) // random
+	{
+		int rnd = std::uniform_int_distribution<int>(0, moves.size() - 1)(rnd_engine);
+		return ::Play(pos, moves[rnd]);
+	}
+
+	Field move = alg.Eval_BestMove(pos, intensity).move;
+	return ::Play(pos, move);
+}
+
+Field FixedDepthPlayer::ChooseMove(const Position& pos)
+{
+	Moves moves = PossibleMoves(pos);
+	if (moves.empty())
+		return Field::invalid;
+
+	if (intensity == 0) // random
+	{
+		int rnd = std::uniform_int_distribution<int>(0, moves.size() - 1)(rnd_engine);
+		return moves[rnd];
+	}
+
+	return alg.Eval_BestMove(pos, intensity).move;
 }

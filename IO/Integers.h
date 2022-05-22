@@ -3,7 +3,7 @@
 #include <string>
 
 // Maps input to (..,'n', 'u', 'm', '', 'k', 'M', 'G',..)
-char MetricPrefix(int magnitude_base_1000) noexcept(false);
+std::string MetricPrefix(int magnitude_base_1000) noexcept(false);
 
 std::size_t ParseBytes(const std::string& bytes) noexcept(false);
 

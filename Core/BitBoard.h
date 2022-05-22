@@ -15,13 +15,12 @@ enum class Field : uint8_t
 	A6, B6, C6, D6, E6, F6, G6, H6,
 	A7, B7, C7, D7, E7, F7, G7, H7,
 	A8, B8, C8, D8, E8, F8, G8, H8,
-	invalid, none
+	invalid
 };
 
 // Field::A1 -> "A1"
 // etc
 // Field::invalid -> "--"
-// Field::none -> "--"
 std::string to_string(Field) noexcept;
 
 inline std::ostream& operator<<(std::ostream& os, Field f) { return os << to_string(f); }
@@ -37,6 +36,9 @@ public:
 	CUDA_CALLABLE constexpr explicit BitBoard(Field f) noexcept : BitBoard(1ULL << static_cast<uint8>(f)) {}
 
 	static constexpr BitBoard Bit(int x, int y) noexcept { return BitBoard{ 1ULL << (x + y * 8) }; }
+
+	static constexpr BitBoard All() noexcept { return BitBoard{ 0xFFFFFFFFFFFFFFFFULL }; }
+	static constexpr BitBoard Empty() noexcept { return BitBoard{ 0 }; }
 
 	static constexpr BitBoard HorizontalLine(int i) noexcept { return BitBoard{ 0xFFULL << (i * 8) }; }
 	static constexpr BitBoard VerticalLine(int i) noexcept { return BitBoard{ 0x0101010101010101ULL << i }; }
@@ -60,8 +62,8 @@ public:
 	static constexpr BitBoard LowerHalf() noexcept { return BitBoard{ 0x00000000FFFFFFFFULL }; }
 	static constexpr BitBoard StrictlyLeftUpper() noexcept { return BitBoard{ 0xFEFCF8F0E0C08000ULL }; }
 	static constexpr BitBoard StrictlyLeftLower() noexcept { return BitBoard{ 0x0080C0E0F0F8FCFEULL }; }
-	static constexpr BitBoard StrictlyRighUppert() noexcept { return BitBoard{ 0x7F3F1F0F07030100ULL }; }
-	static constexpr BitBoard StrictlyRighLowert() noexcept { return BitBoard{ 0x000103070F1F3F7FULL }; }
+	static constexpr BitBoard StrictlyRighUpper() noexcept { return BitBoard{ 0x7F3F1F0F07030100ULL }; }
+	static constexpr BitBoard StrictlyRighLower() noexcept { return BitBoard{ 0x000103070F1F3F7FULL }; }
 
 	CUDA_CALLABLE constexpr operator uint64() const noexcept { return b; }
 

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="CoreIO.h" />
+    <ClInclude Include="Stream.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CoreIO.cpp" />
+    <ClCompile Include="Stream.cpp" />
+  </ItemGroup>
+</Project>

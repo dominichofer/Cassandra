@@ -1,27 +1,27 @@
 #include "Integers.h"
-#include <exception>
+#include <stdexcept>
 
-char MetricPrefix(int magnitude_base_1000) noexcept(false)
+std::string MetricPrefix(int magnitude_base_1000) noexcept(false)
 {
 	switch (magnitude_base_1000)
 	{
-		case -8: return 'y';
-		case -7: return 'z';
-		case -6: return 'a';
-		case -5: return 'f';
-		case -4: return 'p';
-		case -3: return 'n';
-		case -2: return 'u';
-		case -1: return 'm';
-		case  0: return ' ';
-		case +1: return 'k';
-		case +2: return 'M';
-		case +3: return 'G';
-		case +4: return 'T';
-		case +5: return 'P';
-		case +6: return 'E';
-		case +7: return 'Z';
-		case +8: return 'Y';
+		case -8: return "y";
+		case -7: return "z";
+		case -6: return "a";
+		case -5: return "f";
+		case -4: return "p";
+		case -3: return "n";
+		case -2: return "u";
+		case -1: return "m";
+		case  0: return "";
+		case +1: return "k";
+		case +2: return "M";
+		case +3: return "G";
+		case +4: return "T";
+		case +5: return "P";
+		case +6: return "E";
+		case +7: return "Z";
+		case +8: return "Y";
 		default: throw std::runtime_error("Magnitude out of range.");
 	}
 }

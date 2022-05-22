@@ -2,7 +2,7 @@
 
 void Metronome::CallbackLoop(std::stop_token token)
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	std::unique_lock lock(mutex);
 	while (!token.stop_requested())
 	{
 		cv.wait_for(lock, period);
@@ -29,6 +29,6 @@ void Metronome::Stop()
 
 void Metronome::Force()
 {
-	std::unique_lock<std::mutex> lock(mutex);
+	std::unique_lock lock(mutex);
 	callback();
 }

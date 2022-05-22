@@ -6,32 +6,33 @@
 #include <vector>
 #include <limits>
 #include <stdexcept>
+#include <span>
 #include "Vector.h"
 #include "Matrix.h"
 
 // Compressed Sparse Row Matrix
-// With fixed number of elements per row. With only 1 as element but the matrix can have multiple entries per element.
+// With fixed number of non-zero elements per row. With only 1 as element but the matrix can have multiple entries per element.
 template <typename IndexType>
-class MatrixCSR : public Matrix
+class MatrixCSR
 {
 public:
 	using index_type = IndexType;
 private:
-	const std::size_t row_size; // number of elements in a row
+	const std::size_t elements_per_row; // number of non-zero elements in a row
 	const std::size_t cols;
 	std::vector<index_type> col_indices;
 public:
-	MatrixCSR(std::size_t row_size, std::size_t cols, std::size_t rows)
-		: row_size(row_size)
+	MatrixCSR(std::size_t elements_per_row, std::size_t cols, std::size_t rows) // TODO: Swap cols and rows!
+		: elements_per_row(elements_per_row)
 		, cols(cols)
-		, col_indices(rows * row_size)
+		, col_indices(rows * elements_per_row)
 	{
 		if (std::numeric_limits<index_type>::max() < cols)
-			throw std::runtime_error("Template type 'index_type' is too small to represent 'cols'.");
+			throw std::runtime_error("Template type 'IndexType' is too small to represent 'cols'.");
 	}
 
-	std::size_t Rows() const noexcept override { return col_indices.size() / row_size; }
-	std::size_t Cols() const noexcept override { return cols; }
+	std::size_t Rows() const noexcept { return col_indices.size() / elements_per_row; }
+	std::size_t Cols() const noexcept { return cols; }
 
 	auto begin() noexcept { return col_indices.begin(); }
 	auto begin() const noexcept { return col_indices.begin(); }
@@ -40,79 +41,82 @@ public:
 	auto end() const noexcept { return col_indices.end(); }
 	auto cend() const noexcept { return col_indices.cend(); }
 
-	auto begin(std::size_t row) noexcept { return col_indices.begin() + row * row_size; }
-	auto begin(std::size_t row) const noexcept { return col_indices.begin() + row * row_size; }
-	auto cbegin(std::size_t row) const noexcept { return col_indices.cbegin() + row * row_size; }
-	auto end(std::size_t row) noexcept { return col_indices.begin() + (row + 1) * row_size; }
-	auto end(std::size_t row) const noexcept { return col_indices.begin() + (row + 1) * row_size; }
-	auto cend(std::size_t row) const noexcept { return col_indices.cbegin() + (row + 1) * row_size; }
+	auto begin(std::size_t row) noexcept { return col_indices.begin() + row * elements_per_row; }
+	auto begin(std::size_t row) const noexcept { return col_indices.begin() + row * elements_per_row; }
+	auto cbegin(std::size_t row) const noexcept { return col_indices.cbegin() + row * elements_per_row; }
+	auto end(std::size_t row) noexcept { return col_indices.begin() + (row + 1) * elements_per_row; }
+	auto end(std::size_t row) const noexcept { return col_indices.begin() + (row + 1) * elements_per_row; }
+	auto cend(std::size_t row) const noexcept { return col_indices.cbegin() + (row + 1) * elements_per_row; }
 
-	Vector Ax(const Vector& x) const override
-	{
-		if (x.size() != Cols())
-			throw std::runtime_error("Size mismatch.");
-
-		const int64_t rows = static_cast<int64_t>(Rows());
-		Vector result(rows, 0);
-		#pragma omp parallel for
-		for (int64_t i = 0; i < rows; i++)
-		{
-			double sum = 0; // prevents cache thrashing
-			for (auto j = i * row_size; j < (i + 1) * row_size; j++)
-				sum += x[col_indices[j]];
-			result[i] = static_cast<Vector::value_type>(sum);
-		}
-		return result;
-	}
-
-	Vector ATx(const Vector& x) const override
-	{
-		if (x.size() != Rows())
-			throw std::runtime_error("Size mismatch.");
-
-		const int64_t rows = static_cast<int64_t>(Rows());
-		const int64_t cols = static_cast<int64_t>(Cols());
-		Vector result(cols, 0);
-		#pragma omp parallel
-		{
-			Vector local_result(cols, 0); // prevents cache thrashing
-			#pragma omp for nowait
-			for (int64_t i = 0; i < rows; i++)
-				for (auto j = i * row_size; j < (i + 1) * row_size; j++)
-					local_result[col_indices[j]] += x[i];
-
-			#pragma omp critical
-			{
-				result += local_result;
-			}
-		}
-		return result;
-	}
-	
+	auto Row(std::size_t row) noexcept { return std::span(begin(row), end(row)); }
+	auto Row(std::size_t row) const noexcept { return std::span(begin(row), end(row)); }
+		
 	// Returns diag(A' * A)
-	Vector DiagATA() const
+	template <typename T>
+	std::valarray<T> DiagATA() const
 	{
-		Vector ret(cols, 0);
+		std::valarray<T> ret(cols);
 		#pragma omp parallel
 		{
-			Vector local_ret(cols, 0); // prevents cache thrashing
-
+			std::valarray<T> local_ret(cols); // prevents cache thrashing
 			#pragma omp for nowait schedule(static)
 			for (int64_t i = 0; i < col_indices.size(); i++)
-				local_ret[col_indices[i]] += 1.0;
+				local_ret[col_indices[i]] += 1;
 
 			#pragma omp critical
-			{
-				ret += local_ret;
-			}
+			ret += local_ret;
 		}
 		return ret;
 	}
 
 	// Jacobi Preconditioner Square
 	// Returns 1 / diag(A' * A)
-	Vector JacobiPreconditionerSquare(Vector::value_type infinity = std::numeric_limits<Vector::value_type>::infinity()) const
+	template <typename T>
+	std::valarray<T> JacobiPreconditionerSquare(T infinity = std::numeric_limits<T>::infinity()) const
 	{
-		return inv(DiagATA(), infinity);
+		auto diag = DiagATA<T>();
+		for (auto& elem : diag)
+			if (elem == 0)
+				elem = infinity;
+			else
+				elem = T(1) / elem;
+		return diag;
 	}
 };
+
+template <typename T, typename U>
+std::valarray<T> operator*(const MatrixCSR<U>& mat, const std::valarray<T>& x)
+{
+	if (x.size() != mat.Cols())
+		throw std::runtime_error("Size mismatch.");
+
+	const int64_t rows = static_cast<int64_t>(mat.Rows());
+	std::valarray<T> result(rows);
+	#pragma omp parallel for schedule(static)
+	for (int64_t i = 0; i < rows; i++)
+		result[i] = std::accumulate(mat.begin(i), mat.end(i), T(0), [&x](T t, const auto& i) { return t + x[i]; });
+	return result;
+}
+
+template <typename T, typename U>
+std::valarray<T> operator*(const std::valarray<T>& x, const MatrixCSR<U>& mat)
+{
+	if (x.size() != mat.Rows())
+		throw std::runtime_error("Size mismatch.");
+
+	const int64_t rows = static_cast<int64_t>(mat.Rows());
+	const int64_t cols = static_cast<int64_t>(mat.Cols());
+	std::valarray<T> result(cols);
+	#pragma omp parallel
+	{
+		std::valarray<T> local_result(cols); // prevents cache thrashing
+		#pragma omp for nowait schedule(static)
+		for (int64_t i = 0; i < rows; i++)
+			for (auto col_index : mat.Row(i))
+				local_result[col_index] += x[i];
+
+		#pragma omp critical
+		result += local_result;
+	}
+	return result;
+}

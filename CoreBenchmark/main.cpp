@@ -1,11 +1,6 @@
-#include "benchmark/benchmark.h"
-#include "Core/Core.h"
-#include "Pattern/Evaluator.h"
-#include "Pattern/DenseIndexer.h"
+#include "pch.h"
 #include <random>
 #include <numeric>
-
-using namespace detail;
 
 void popcount(benchmark::State& state)
 {
@@ -14,7 +9,10 @@ void popcount(benchmark::State& state)
 	const uint64_t b = dist(rng);
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(popcount(b));
+	{
+		auto value = popcount(b);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(popcount);
@@ -27,7 +25,10 @@ void FlipVertical(benchmark::State& state)
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipVertical(b));
+	{
+		auto value = FlipVertical(b);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(FlipVertical);
@@ -39,7 +40,10 @@ void FlipCodiagonal(benchmark::State& state)
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipCodiagonal(b));
+	{
+		auto value = FlipCodiagonal(b);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(FlipCodiagonal);
@@ -51,7 +55,10 @@ void FlipDiagonal(benchmark::State& state)
 	const BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipDiagonal(b));
+	{
+		auto value = FlipDiagonal(b);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(FlipDiagonal);
@@ -60,13 +67,29 @@ void FlipHorizontal(benchmark::State& state)
 {
 	std::mt19937_64 rng;
 	std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
-	const BitBoard b{ dist(rng) };
+	BitBoard b{ dist(rng) };
 
 	for (auto _ : state)
-		benchmark::DoNotOptimize(FlipHorizontal(b));
+	{
+		auto value = FlipHorizontal(b);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(FlipHorizontal);
+
+void EmptyCount(benchmark::State& state)
+{
+	auto pos = PosGen::Random{}();
+
+	for (auto _ : state)
+	{
+		auto value = pos.EmptyCount();
+		benchmark::DoNotOptimize(value);
+	}
+	state.SetItemsProcessed(state.iterations());
+}
+BENCHMARK(EmptyCount);
 
 void Flips(benchmark::State& state)
 {
@@ -76,7 +99,8 @@ void Flips(benchmark::State& state)
 	for (auto _ : state)
 	{
 		move = (move + 1) % 64;
-		benchmark::DoNotOptimize(Flips(pos, static_cast<Field>(move)));
+		auto value = Flips(pos, static_cast<Field>(move));
+		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
@@ -90,7 +114,8 @@ void CountLastFlip(benchmark::State& state)
 	for (auto _ : state)
 	{
 		move = (move + 1) % 64;
-		benchmark::DoNotOptimize(CountLastFlip(pos, static_cast<Field>(move)));
+		auto value = CountLastFlip(pos, static_cast<Field>(move));
+		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
@@ -100,7 +125,10 @@ void PossibleMoves_x64(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(detail::PossibleMoves_x64(pos));
+	{
+		auto value = detail::PossibleMoves_x64(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PossibleMoves_x64);
@@ -109,7 +137,10 @@ void PossibleMoves_AVX2(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(detail::PossibleMoves_AVX2(pos));
+	{
+		auto value = detail::PossibleMoves_AVX2(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PossibleMoves_AVX2);
@@ -118,7 +149,10 @@ void PossibleMoves(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(PossibleMoves(pos));
+	{
+		auto value = PossibleMoves(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(PossibleMoves);
@@ -127,7 +161,10 @@ void HasMoves_x64(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(HasMoves_x64(pos));
+	{
+		auto value = detail::HasMoves_x64(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(HasMoves_x64);
@@ -136,7 +173,10 @@ void HasMoves_AVX2(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(HasMoves_AVX2(pos));
+	{
+		auto value = detail::HasMoves_AVX2(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(HasMoves_AVX2);
@@ -145,7 +185,10 @@ void HasMoves(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(HasMoves(pos));
+	{
+		auto value = HasMoves(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(HasMoves);
@@ -154,84 +197,38 @@ void EvalGameOver(benchmark::State& state)
 {
 	auto pos = PosGen::Random{}();
 	for (auto _ : state)
-		benchmark::DoNotOptimize(EvalGameOver(pos));
+	{
+		auto value = EvalGameOver(pos);
+		benchmark::DoNotOptimize(value);
+	}
 	state.SetItemsProcessed(state.iterations());
 }
 BENCHMARK(EvalGameOver);
 
-void StableEdges(benchmark::State& state)
-{
-	auto pos = PosGen::Random{}();
-	for (auto _ : state)
-		benchmark::DoNotOptimize(StableEdges(pos));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(StableEdges);
+//void StableEdges(benchmark::State& state)
+//{
+//	auto pos = PosGen::Random{}();
+//	for (auto _ : state)
+//	{
+//		auto value = StableEdges(pos);
+//		benchmark::DoNotOptimize(value);
+//	}
+//	state.SetItemsProcessed(state.iterations());
+//}
+//BENCHMARK(StableEdges);
+//
+//void StableStonesOpponent(benchmark::State& state)
+//{
+//	auto pos = PosGen::Random{}();
+//	for (auto _ : state)
+//	{
+//		auto value = StableStonesOpponent(pos);
+//		benchmark::DoNotOptimize(value);
+//	}
+//	state.SetItemsProcessed(state.iterations());
+//}
+//BENCHMARK(StableStonesOpponent);
+//
 
-void StableStonesOpponent(benchmark::State& state)
-{
-	auto pos = PosGen::Random{}();
-	for (auto _ : state)
-		benchmark::DoNotOptimize(StableStonesOpponent(pos));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(StableStonesOpponent);
-
-using namespace Pattern;
-
-constexpr BitBoard PatternH{ 0x00000000000000E7ULL }; // HorizontalSymmetric
-constexpr BitBoard PatternD{ 0x8040201008040303ULL }; // DiagonalSymmetric
-constexpr BitBoard PatternA{ 0x0000000000000F0FULL }; // Asymmetric
-
-void PatternEvalOverhead(benchmark::State& state)
-{
-	PosGen::Random rnd;
-	for (auto _ : state)
-		benchmark::DoNotOptimize(rnd());
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PatternEvalOverhead);
-
-void PatternEvalH(benchmark::State& state)
-{
-	auto indexer = CreateDenseIndexer(PatternH);
-	Weights compressed(indexer->reduced_size);
-	std::iota(compressed.begin(), compressed.end(), 1);
-	auto evaluator = CreateEvaluator(PatternH, compressed);
-	auto gen = PosGen::Random(13);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(evaluator->Eval(gen()));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PatternEvalH);
-
-void PatternEvalD(benchmark::State& state)
-{
-	auto indexer = CreateDenseIndexer(PatternD);
-	Weights compressed(indexer->reduced_size);
-	std::iota(compressed.begin(), compressed.end(), 1);
-	auto evaluator = CreateEvaluator(PatternD, compressed);
-	auto gen = PosGen::Random(13);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(evaluator->Eval(gen()));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PatternEvalD);
-
-void PatternEvalA(benchmark::State& state)
-{
-	auto indexer = CreateDenseIndexer(PatternA);
-	Weights compressed(indexer->reduced_size);
-	std::iota(compressed.begin(), compressed.end(), 1);
-	auto evaluator = CreateEvaluator(PatternA, compressed);
-	auto gen = PosGen::Random(13);
-
-	for (auto _ : state)
-		benchmark::DoNotOptimize(evaluator->Eval(gen()));
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(PatternEvalA);
 
 BENCHMARK_MAIN();

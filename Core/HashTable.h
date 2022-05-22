@@ -43,7 +43,7 @@ public:
 		return ret;
 	}
 
-	void Clear()
+	void clear()
 	{
 		//updates = 0;
 		//lookups = 0;

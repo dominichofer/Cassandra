@@ -1,19 +1,5 @@
 #include "Position.h"
-
-std::string SignedInt(int score)
-{
-	std::string sign = (score >= 0) ? "+" : "-";
-	std::string number = std::to_string(std::abs(score));
-	return sign + number;
-}
-
-std::string DoubleDigitSignedInt(int score)
-{
-	std::string sign = (score >= 0) ? "+" : "-";
-	std::string filling_zero = (std::abs(score) < 10) ? "0" : "";
-	std::string number = std::to_string(std::abs(score));
-	return sign + filling_zero + number;
-}
+#include "Format.h"
 
 void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
 void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
@@ -105,7 +91,7 @@ Position FlipToUnique(Position pos) noexcept
 
 std::string SingleLine(const Position& pos)
 {
-	auto str = std::string(64, '-') + " X";
+	std::string str = "---------------------------------------------------------------- X";
 	for (int i = 0; i < 64; i++)
 	{
 		if (pos.Player().Get(static_cast<Field>(63 - i)))
@@ -133,28 +119,27 @@ std::string MultiLine(const Position& pos)
 
 	for (int i = 0; i < 64; i++)
 	{
-		auto& field = board[22 + 2 * i + 4 * (i / 8)];
-
-		if (pos.Player().Get(static_cast<Field>(63 - i)))
-			field = 'X';
-		else if (pos.Opponent().Get(static_cast<Field>(63 - i)))
-			field = 'O';
-		else if (moves.contains(static_cast<Field>(63 - i)))
-			field = '+';
+		Field field = static_cast<Field>(63 - i);
+		char symbol = '-';
+		if (pos.Player().Get(field))
+			symbol = 'X';
+		else if (pos.Opponent().Get(field))
+			symbol = 'O';
+		else if (moves.contains(field))
+			symbol = '+';
+		board[22 + 2 * i + 4 * (i / 8)] = symbol;
 	}
 	return board;
 }
 
-
-
 int EvalGameOver(const Position& pos) noexcept
 {
-	const auto Ps = popcount(pos.Player());
-	const auto Os = popcount(pos.Opponent());
-	if (Ps > Os)
-		return 32 - Os;
-	if (Ps < Os)
-		return Ps - 32;
+	int P = popcount(pos.Player());
+	int O = popcount(pos.Opponent());
+	if (P > O)
+		return 32 - O;
+	if (P < O)
+		return P - 32;
 	return 0;
 }
 

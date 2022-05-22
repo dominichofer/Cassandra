@@ -1,10 +1,9 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <ostream>
 #include <vector>
 
-// Forward declaration
+// Forward declarations
 class SymExp;
 class Var;
 using Vars = std::vector<Var>;
@@ -67,7 +66,7 @@ public:
 	SymExp Derive(const Var&) const;
 	SymExps Derive(const Vars&) const;
 	template <typename Vec>
-	 SymExps DeriveAt(const Vars& vars, const Vec& values) const
+	SymExps DeriveAt(const Vars& vars, const Vec& values) const
 	{
 		std::vector<SymExp> ret;
 		for (std::size_t i = 0; i < vars.size(); i++)
@@ -109,7 +108,6 @@ public:
 };
 
 inline std::string to_string(const SymExp& se) { return se.to_string(); }
-inline std::ostream& operator<<(std::ostream& os, const SymExp& se) { return os << to_string(se); }
 
 
 namespace AST

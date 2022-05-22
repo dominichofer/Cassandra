@@ -1,21 +1,9 @@
 #pragma once
-#include "Core/Position.h"
+#include "Core/Core.h"
 #include <functional>
 #include <iterator>
 
-template <typename T>
-static constexpr inline T pown(T base, unsigned int exponent)
-{
-	T result = 1;
-	while (exponent)
-	{
-		if (exponent % 2)
-			result *= base;
-		base *= base;
-		exponent >>= 1;
-	}
-	return result;
-}
+int pown(int base, unsigned int exponent);
 
 int FastIndex(const Position&, BitBoard pattern) noexcept;
 
@@ -48,7 +36,7 @@ class Configurations
 			*this = end(); // marks generator as depleted.
 			return *this;
 		}
-		Position operator*() const { return Position::From(PDep(p, pattern), PDep(o, pattern)); }
+		Position operator*() const { return { PDep(p, pattern), PDep(o, pattern) }; }
 
 		bool operator==(const Iterator&) const noexcept = default;
 		bool operator!=(const Iterator&) const noexcept = default;

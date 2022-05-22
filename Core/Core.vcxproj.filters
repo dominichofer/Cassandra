@@ -6,12 +6,11 @@
     <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
-    <ClCompile Include="Stability.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
     <ClCompile Include="HasMoves.cpp" />
-    <ClCompile Include="Interval.cpp" />
     <ClCompile Include="Metronome.cpp" />
+    <ClCompile Include="Children.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Moves.h" />
@@ -24,9 +23,12 @@
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="MoreTypes.h" />
     <ClInclude Include="Ranges.h" />
-    <ClInclude Include="Confidence.h" />
-    <ClInclude Include="Interval.h" />
-    <ClInclude Include="Algorithms.h" />
     <ClInclude Include="Metronome.h" />
+    <ClInclude Include="Executor.h" />
+    <ClInclude Include="Algorithms.h" />
+    <ClInclude Include="Format.h" />
+    <ClInclude Include="Finally.h" />
+    <ClInclude Include="Children.h" />
+    <ClInclude Include="BestMoves.h" />
   </ItemGroup>
 </Project>

@@ -5,16 +5,20 @@ import time
 import math
 import matplotlib.pyplot as plt
 import struct
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision as tv
+#import torch
+#import torch.nn as nn
+#import torch.nn.functional as F
+#import torchvision as tv
 from PIL import Image, ImageDraw
 import sys
 
 class BitBoard:
     def __init__(self, b:numpy.uint64=0):
         self.__b = b
+
+    @staticmethod
+    def FromField(x, y):
+        return BitBoard(numpy.uint64(1) << (y * 8 + x))
 
     def __eq__(self, o):
         return self.__b == o.__b
@@ -44,7 +48,9 @@ class BitBoard:
             self.__b &= ~(1 << (63 - x - 8 * y))
 
 class Position:
-    def __init__(self, P=BitBoard(), O=BitBoard()):
+    P = BitBoard()
+    O = BitBoard()
+    def __init__(self, P, O):
         if not isinstance(P, BitBoard):
             P = BitBoard(P)
         if not isinstance(O, BitBoard):
@@ -52,8 +58,16 @@ class Position:
         self.P = P
         self.O = O
 
-def PlayPass(pos:Position):
+    @staticmethod
+    def Start():
+        return Position(BitBoard(0x0000000810000000), BitBoard(0x0000001008000000))
+
+def PlayPass(pos:Position) -> Position:
     return Position(pos.O, pos.P)
+
+def Play(pos:Position, x, y) -> Position:
+    flips = Flips(pos, x, y)
+    return Position(pos.O ^ flips, pos.P ^ flips ^ BitBoard.FromField(x, y))
 
 def FlipsInOneDirection(pos:Position, x, y, dx, dy) -> BitBoard:
     flips = BitBoard()
@@ -145,7 +159,7 @@ class State():
         self.pos = pos
         self.bb = BitBoard()
     def add(self, x, y):
-        if self.bb[x,y] == False:
+        if not self.bb[x,y]:
             self.bb[x,y] = True
             return True
         return False
@@ -185,20 +199,29 @@ class Remove(State):
 
 class PositionFrame(wx.Frame):
     def __init__(self, pos:Position):
-        wx.Frame.__init__(self, None, title='Browser', style=wx.DEFAULT_FRAME_STYLE & ~wx.RESIZE_BORDER)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(DrawingPanel(self, pos))
-        self.SetSizer(sizer)
+        super(PositionFrame, self).__init__(None, title='Browser', style=wx.DEFAULT_FRAME_STYLE & ~wx.RESIZE_BORDER)
+
+        self.TextBox = wx.TextCtrl(self, size=(403,-1), style = wx.TE_PROCESS_ENTER)
+        self.Bind(wx.EVT_TEXT_ENTER, self.TextEnter)
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(DrawingPanel(self, pos))
+        vbox.Add(self.TextBox)
+        self.SetSizer(vbox)
         self.Fit()
-        self.Show(True)
+        self.Show()
+
+
+    def TextEnter(self, event):
+        wx.MessageBox(self.TextBox.GetValue())
 
 class DrawingPanel(wx.Panel):
     def __init__(self, parent, pos:Position):
         self.d = 50
         self.pos = pos
         self.state = DoNothing(self.pos)
-        self.toggle_bb = BitBoard()
-        wx.Panel.__init__(self, parent, size=(8 * self.d + 3, 8 * self.d + 3), style=wx.SIMPLE_BORDER)
+
+        super(DrawingPanel, self).__init__(parent, size=(8 * self.d + 3, 8 * self.d + 3), style=wx.SIMPLE_BORDER)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
@@ -337,9 +360,9 @@ if __name__ == '__main__':
     #        else:
     #            name += '-'
     #print(name)
-    for pos in DataGenerator():
-        to_png(pos)
+    #for pos in DataGenerator():
+    #    to_png(pos)
 
-    #app = wx.App()
-    #frame = PositionFrame(Position(BitBoard(0x0000000810000000), BitBoard(0x0000001008000000)))
-    #app.MainLoop()
+    app = wx.App()
+    frame = PositionFrame(Position.Start())
+    app.MainLoop()

@@ -3,11 +3,12 @@
   <ItemGroup>
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Evaluator.cpp" />
-    <ClCompile Include="DenseIndexer.cpp" />
+    <ClCompile Include="Indexer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Evaluator.h" />
-    <ClInclude Include="DenseIndexer.h" />
+    <ClInclude Include="Indexer.h" />
+    <ClInclude Include="Pattern.h" />
   </ItemGroup>
 </Project>

@@ -1,97 +1,266 @@
 #pragma once
-#include "IO/IO.h"
-#include "Math/MatrixCSR.h"
-#include "Math/Solver.h"
-#include "Math/Statistics.h"
-#include "Pattern/DenseIndexer.h"
-#include <vector>
+#include "Core/Core.h"
+#include "Search/Search.h"
+#include "Pattern/Pattern.h"
+#include "Math/Math.h"
+#include <valarray>
 
-class PositionScore
+//namespace
+//{
+//    auto CreateMatrix(const GroupIndexer& indexer, const random_access_range<Position> auto& pos)
+//    {
+//        auto elements_per_row = indexer.Variations().size();
+//        auto rows = ranges::size(pos);
+//        auto cols = indexer.index_space_size;
+//        MatrixCSR<int> mat(elements_per_row, cols, rows);
+//
+//        #pragma omp parallel for schedule(static)
+//        for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
+//            indexer.InsertIndices(pos[i], mat.Row(i));
+//        return mat;
+//    }
+//
+//    auto to_position()
+//    {
+//        return ranges::views::transform([](const NoMovePuzzle& p) { return p.pos; });
+//    }
+//
+//    auto to_position(const ranges::range auto& puz)
+//    {
+//        return puz | to_position();
+//    }
+//
+//    auto to_score()
+//    {
+//        return ranges::views::transform([](const NoMovePuzzle& p) { return static_cast<float>(p.ResultOf(p.MaxSolvedIntensity().value()).score); });
+//    }
+//
+//    auto to_score(const ranges::range auto& puz)
+//    {
+//        return puz | to_score();
+//    }
+//
+//    auto Error(const SymExp& function, const Vars& vars,
+//        std::ranges::range auto&& x,
+//        std::ranges::range auto&& y)
+//    {
+//        return ranges::views::transform(x, y,
+//            [&function, &vars](const auto& x, const auto& y) {
+//                return function.At(vars, x).value() - y;
+//            });
+//    }
+//
+//    auto FitModel(const SymExp& model, const Vars& params, const Vars& vars,
+//        ranges::range auto&& x,
+//        ranges::range auto&& y,
+//        const std::valarray<double>& param_values)
+//    {
+//        static int counter = 0;
+//        std::valarray<double> fitted_params = NonLinearLeastSquaresFit(model, params, vars, x, y, param_values);
+//        auto fitted_model = model.At(params, fitted_params);
+//        auto err = Error(fitted_model, vars, x, y);
+//
+//        std::fstream stream(fmt::format(R"(G:\Reversi\{}_err.log)", counter), std::ios::out);
+//        stream << Variance(err) << "\n";
+//        for (auto e : err)
+//            stream << e << "\n";
+//        stream.close();
+//
+//        stream = std::fstream(fmt::format(R"(G:\Reversi\{}_y.log)", counter++), std::ios::out);
+//        stream << Variance(y) << "\n";
+//        for (auto e : y)
+//            stream << e << "\n";
+//        stream.close();
+//
+//        float R_sq = 1.0 - Variance(err) / Variance(y);
+//        return std::make_tuple(fitted_params, R_sq);
+//    }
+//}
+//
+//std::valarray<float> FitWeights(const std::ranges::random_access_range auto& data, const std::vector<BitBoard>& pattern, int iterations = 10)
+//{
+//    static int counter = 0;
+//    auto indexer = GroupIndexer(pattern);
+//    auto matrix = CreateMatrix(indexer, to_position(data));
+//    std::valarray<float> score(ranges::size(data));
+//    for (int i = 0; i < score.size(); i++)
+//    {
+//        auto p = static_cast<const NoMovePuzzle&>(data[i]);
+//        score[i] = p.ResultOf(p.MaxSolvedIntensity().value()).score;
+//    }
+//    auto weights = std::valarray<float>(indexer.index_space_size);
+//    DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(100.0f));
+//    PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
+//    solver.Iterate(10);
+//
+//    std::fstream stream(fmt::format(R"(G:\Reversi\{}.log)", counter++), std::ios::out);
+//    auto X = score;
+//    auto Y = matrix * solver.X();
+//    for (auto [x,y] : ranges::views::zip(X, Y))
+//        stream << x << "," << y << "\n";
+//    stream.close();
+//
+//    return solver.X();
+//}
+//template <ranges::range T>
+//std::valarray<float> FitWeights_2(T&& data, const std::vector<BitBoard>& pattern, int iterations = 10)
+//{
+//    std::vector<ranges::range_value_t<T>> vec(data.begin(), data.end());
+//    return FitWeights(vec, pattern, iterations);
+//}
+//template <ranges::range T>
+//std::valarray<float> FitWeights_2(T&& data, auto&& add, const std::vector<BitBoard>& pattern, int iterations = 10)
+//{
+//    std::vector<ranges::range_value_t<T>> vec(data.begin(), data.end());
+//    vec.insert(vec.end(), add.begin(), add.end());
+//    return FitWeights(vec, pattern, iterations);
+//}
+//
+//void EvalForAccuracyFit(range<NoMovePuzzle> auto& data, const Algorithm&, int max_depth);
+
+// returns R^2
+//double ImproveAccuracyModel(AAGLEM& model, ranges::range auto&& data)
+//{
+//    struct DepthScore { int depth, score; };
+//    struct DDED {
+//        int Depth, depth, empty_count, score_diff;
+//        std::valarray<int> dde() const { return { Depth, depth, empty_count }; }
+//        auto dde_tuple() const { return std::make_tuple(Depth, depth, empty_count); }
+//    };
+//
+//    std::vector<DDED> tmp;
+//    for (const NoMovePuzzle& p : data)
+//    {
+//        int empty_count = p.EmptyCount();
+//        std::vector<DepthScore> relevant;
+//        for (const NoMovePuzzle::Task& t : p.tasks)
+//            if (t.IsDone() and t.IsCertain())
+//                relevant.emplace_back(t.Depth(), t.Score());
+//        for (const DepthScore& small : relevant)
+//            for (const DepthScore& big : relevant)
+//                if (small.depth < big.depth)
+//                    tmp.emplace_back(big.depth, small.depth, empty_count, small.score - big.score);
+//    }
+//    std::sort(std::execution::par, tmp.begin(), tmp.end(), [](const DDED& l, const DDED& r) { return l.dde_tuple() < r.dde_tuple(); });
+//    auto diffs = tmp | ranges::views::chunk_by([](const DDED& l, const DDED& r) { return l.dde_tuple() == r.dde_tuple(); });
+//
+//    auto x = diffs | ranges::views::transform([](auto&& rng) { return ranges::front(rng).dde(); });
+//    auto y = diffs | ranges::views::transform([](auto&& rng) { return StandardDeviation(rng | ranges::views::transform(&DDED::score_diff)); });
+//
+//    Var D, d, E, alpha, beta, gamma, delta, epsilon;
+//    SymExp accuracy_forumla = model.Accuracy(D, d, E, alpha, beta, gamma, delta, epsilon);
+//
+//    auto [fitted_params, R_sq] = FitModel(accuracy_forumla, { alpha, beta, gamma, delta, epsilon }, { D, d, E }, x, y, model.accuracy_parameters);
+//    model.accuracy_parameters = fitted_params;
+//    return R_sq;
+//}
+//
+//void Improve(
+//	AAGLEM&,
+//	const range<NoMovePuzzle> auto& weight_fit_data,
+//	range<NoMovePuzzle> auto& accuracy_model_data,
+//	const Algorithm&,
+//	int max_depth);
+
+
+namespace
 {
-    // Constraint: pos.size() == score.size()
-    std::vector<Position> pos;
-    std::vector<float> score;
-public:
-    PositionScore() noexcept = default;
-
-    const std::vector<Position>& Pos() const noexcept { return pos; }
-    const std::vector<float>& Score() const noexcept { return score; }
-
-    void push_back(const Position& pos, float score) { this->pos.push_back(pos); this->score.push_back(score); }
-    void reserve(std::size_t new_capacity) { pos.reserve(new_capacity); score.reserve(new_capacity); }
-    std::size_t size() const { return pos.size(); }
-    bool empty() const { return pos.empty(); }
-    void clear() { pos.clear(); score.clear(); }
-};
-
-class TrainAndTest_PositionScore
-{
-public:
-    PositionScore train;
-    PositionScore test;
-
-    void Add(PuzzleRange auto&& puzzle, double test_fraction) noexcept(false)
+    auto CreateMatrix(const GroupIndexer& indexer, random_access_range<Position> auto&& pos)
     {
-        std::size_t size = std::distance(puzzle.begin(), puzzle.end());
-        std::size_t test_size = size * test_fraction;
-        std::size_t train_size = size - test_size;
+        auto elements_per_row = indexer.Variations().size();
+        auto rows = ranges::size(pos);
+        auto cols = indexer.index_space_size;
+        MatrixCSR<int> mat(elements_per_row, cols, rows);
 
-        train.reserve(train.size() + train_size);
-        test.reserve(test.size() + test_size);
-        for (const Puzzle& p : puzzle | std::views::take(train_size))
-            train.push_back(p.pos, p.MaxSolvedIntensityScore().value_or(0));
-
-        for (const Puzzle& p : puzzle | std::views::drop(train_size) | std::views::take(test_size))
-            test.push_back(p.pos, p.MaxSolvedIntensityScore().value_or(0));
+        #pragma omp parallel for schedule(static)
+        for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
+            indexer.InsertIndices(pos[i], mat.Row(i));
+        return mat;
     }
 
-    void clear() { train.clear(); test.clear(); }
-};
+    template <std::ranges::random_access_range Rng>
+    auto to_valarray(Rng&& rng) -> std::valarray<std::ranges::range_value_t<Rng>>
+    {
+        int64_t size = std::ranges::size(rng);
+        std::valarray<std::ranges::range_value_t<decltype(rng)>> arr(size);
+        #pragma omp parallel for schedule(static)
+        for (int64_t i = 0; i < size; i++)
+            arr[i] = rng[i];
+        return arr;
+    }
+}
 
-class WeightFitter
+std::valarray<float> FittedWeights(const std::vector<BitBoard>& pattern, random_access_range<PosScore> auto&& data, int iterations = 10)
 {
-    TrainAndTest_PositionScore data;
-    std::vector<BitBoard> pattern;
-    std::vector<float> weights, train_error, test_error;
-public:
-    WeightFitter() noexcept = default;
-    template <PuzzleRange Range>
-    WeightFitter(std::vector<BitBoard> pattern, Range&& puzzle, double test_fraction)
-        : pattern(std::move(pattern))
-    {
-        AddData(puzzle, test_fraction);
-    }
+    auto pos = data | ranges::views::transform(&PosScore::pos);
+    auto score = to_valarray(data | ranges::views::transform([](const PosScore& ps) { return static_cast<float>(ps.score); }));
+    auto indexer = GroupIndexer(pattern);
+    auto matrix = CreateMatrix(indexer, pos);
+    auto weights = std::valarray<float>(indexer.index_space_size);
+    DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(100.0f));
+    PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
+    solver.Iterate(iterations);
 
-    void Pattern(std::vector<BitBoard> pattern) { this->pattern = std::move(pattern); }
-    const std::vector<BitBoard>& Pattern() const { return pattern; }
+    return solver.X();
+}
+std::valarray<float> FittedWeights(const std::vector<BitBoard>& pattern, range<PosScore> auto&& data, int iterations = 10)
+{
+    return FittedWeights(pattern, data | ranges::to_vector, iterations);
+}
 
-    void AddData(PuzzleRange auto&& puzzle, double test_fraction)
-    {
-        // Apply test_fraction to each EmptyCount.
-        for (int e = 0; e <= 64; e++)
-            data.Add(puzzle | std::views::filter([e](const Puzzle& p) { return p.pos.EmptyCount() == e; }), test_fraction);
-    }
-    void ClearData() { data.clear(); }
-    void SetData(PuzzleRange auto&& puzzle, double test_fraction) { ClearData(); AddData(puzzle, test_fraction); }
+GLEM FittedGLEM(const std::vector<BitBoard>& pattern, random_access_range<PosScore> auto&& data, int iterations = 10)
+{
+    return { pattern, FittedWeights(pattern, data, iterations) };
+}
 
-    std::size_t TrainSize() const { return data.train.size(); }
-    std::size_t TestSize() const { return data.test.size(); }
-    std::size_t size() const { return TrainSize() + TestSize(); }
+std::valarray<double> FittedParameters(
+    const SymExp& function,
+    const Vars& params,
+    const Vars& vars,
+    ranges::random_access_range auto&& x,
+    ranges::random_access_range auto&& y,
+    const std::valarray<double>& param_values)
+{
+    return NonLinearLeastSquaresFit(function, params, vars, x, y, param_values, /*steps*/ 1'000, /*damping_factor*/ 0.1);
+}
 
-    void Fit();
+AM FittedAM(ranges::random_access_range auto&& x, ranges::random_access_range auto&& y)
+{
+    AM model;
+    return { FittedParameters(model.Function(), model.Params(), model.Vars(), x, y, model.param_values) };
+}
 
-    const std::vector<float>& Weights() const { return weights; }
-    const std::vector<float>& TrainError() const { return train_error; }
-    const std::vector<float>& TestError() const { return test_error; }
+struct PosMultiDepthScore
+{
+    Position pos;
+    std::array<int, 60> score_of_depth;
+
+    PosMultiDepthScore(Position pos) : pos(pos) { score_of_depth.fill(undefined_score); }
 };
 
-void FitWeights(const DataBase<Puzzle>& data, std::vector<BitBoard> pattern, int block_size, int block, bool print_results = false);
-void FitWeights(const DataBase<Puzzle>& data, int block, bool print_results = false);
-void FitWeights(const DataBase<Puzzle>& data, std::vector<BitBoard> pattern, int block_size, bool print_results = false);
-void FitWeights(const DataBase<Puzzle>& data, bool print_results = false);
+AM FittedAM(range<PosMultiDepthScore> auto&& data)
+{
+    struct XY {
+        int big_depth, small_depth, empty_count, score_diff;
 
-void EvaluateAccuracyFit(DataBase<Puzzle>& data, HashTablePVS&, AAGLEM&);
-void FitAccuracyModel(const DataBase<Puzzle>& data, const AAGLEM&);
+        auto operator<=>(const XY&) const noexcept = default;
 
-void FitPattern(const DataBase<Puzzle>& eval_fit, DataBase<Puzzle>& accuracy_fit, HashTablePVS&, AAGLEM&, std::vector<BitBoard> pattern, int block_size);
-void FitPattern(const DataBase<Puzzle>& eval_fit, DataBase<Puzzle>& accuracy_fit, HashTablePVS&, AAGLEM&);
+        std::valarray<int> x() const { return { big_depth, small_depth, empty_count }; }
+        int y() const { return score_diff; }
+    };
+
+    std::vector<XY> xy;
+    for (const PosMultiDepthScore& datum : data)
+        for (int big = 0; big < datum.score_of_depth.size(); big++)
+            if (datum.score_of_depth[big] != undefined_score)
+                for (int small = 0; small < big; small++)
+                    if (datum.score_of_depth[small] != undefined_score)
+                        xy.emplace_back(big, small, datum.pos.EmptyCount(), datum.score_of_depth[big] - datum.score_of_depth[small]);
+
+    std::sort(std::execution::par, xy.begin(), xy.end());
+    auto chunks = xy | ranges::views::chunk_by([](const XY& l, const XY& r) { return ranges::all_of(l.x() == r.x(), std::identity()); });
+    auto x = chunks | ranges::views::transform([](auto&& rng) { return ranges::front(rng).x(); }) | ranges::to_vector;
+    auto y = chunks | ranges::views::transform([](auto&& rng) { return StandardDeviation(rng | ranges::views::transform(&XY::y)); }) | ranges::to_vector;
+
+    return FittedAM(x, y);
+}

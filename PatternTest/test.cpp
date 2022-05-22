@@ -1,143 +1,187 @@
 #include "pch.h"
+#include "PatternIO/PatternIO.h"
+#include <vector>
 
-using namespace Pattern;
+const BitBoard pattern_h =
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- # - - - - # -"
+	"# # # # # # # #"_BitBoard;
 
-constexpr BitBoard HorizontalSymmetric{ 0x00000000000000E7ULL };
-constexpr BitBoard DiagonalSymmetric{ 0x8040201008040303ULL };
-constexpr BitBoard Asymmetric{ 0x000000000000000FULL };
-TEST(MetaTest, HorizontalSymmetric)
+const BitBoard pattern_d =
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - # - - -"
+	"- - - - - # - #"
+	"- - - - - - # #"
+	"- - - - - # # #"_BitBoard;
+
+const BitBoard pattern_a =
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - - - - - -"
+	"- - - # # # # #"
+	"- - - # # # # #"_BitBoard;
+
+template <typename T>
+std::set<T> SymmetryVariations(const T& t)
 {
-	ASSERT_EQ(HorizontalSymmetric, FlipHorizontal(HorizontalSymmetric));
+	return {
+		t,
+		FlipCodiagonal(t),
+		FlipDiagonal(t),
+		FlipHorizontal(t),
+		FlipVertical(t),
+		FlipCodiagonal(FlipHorizontal(t)),
+		FlipDiagonal(FlipHorizontal(t)),
+		FlipVertical(FlipHorizontal(t))
+	};
 }
 
-TEST(MetaTest, DiagonalSymmetric)
+TEST(Metatest, PatternH)
 {
-	ASSERT_EQ(DiagonalSymmetric, FlipDiagonal(DiagonalSymmetric));
+	ASSERT_EQ(pattern_h, FlipHorizontal(pattern_h));
+}
+TEST(Metatest, PatternD)
+{
+	ASSERT_EQ(pattern_d, FlipDiagonal(pattern_d));
+}
+TEST(Metatest, PatternA)
+{
+	ASSERT_NE(pattern_a, FlipHorizontal(pattern_a));
+	ASSERT_NE(pattern_a, FlipVertical(pattern_a));
+	ASSERT_NE(pattern_a, FlipDiagonal(pattern_a));
+	ASSERT_NE(pattern_a, FlipCodiagonal(pattern_a));
 }
 
-TEST(MetaTest, Asymmetric)
+TEST(Metatest, SymmetryVariations)
 {
-	ASSERT_NE(Asymmetric, FlipHorizontal(Asymmetric));
-	ASSERT_NE(Asymmetric, FlipDiagonal(Asymmetric));
+	ASSERT_EQ(SymmetryVariations(pattern_h).size(), std::size_t(4));
+	ASSERT_EQ(SymmetryVariations(pattern_d).size(), std::size_t(4));
+	ASSERT_EQ(SymmetryVariations(pattern_a).size(), std::size_t(8));
 }
 
-TEST(DenseIndexer, CreateDenseIndexer_HorizontalSymmetric)
+// Tests that the indexer covers the index space when it is called with all configurations of the pattern.
+void ConfigurationsCoverIndexSpace(const Indexer& indexer, BitBoard pattern)
 {
-	const auto indexer = CreateDenseIndexer(HorizontalSymmetric);
-	ASSERT_EQ(indexer->variations, 4);
-
 	std::vector<int> indices;
-	for (const Position& pos : Configurations(HorizontalSymmetric))
-		indices.push_back(indexer->DenseIndex(pos, 0));
-	std::sort(indices.begin(), indices.end());
+	for (auto config : Configurations(pattern))
+		indices.push_back(indexer.DenseIndex(config, 0));
 
-	for (int i = 0; i < indexer->reduced_size; i++)
-		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
+	for (int i = 0; i < indexer.index_space_size; i++)
+	{
+		auto is_i = [i](int value) { return value == i; };
+		ASSERT_TRUE(ranges::any_of(indices, is_i));
+	}
 }
 
-TEST(DenseIndexer, CreateDenseIndexer_DiagonalSymmetric)
+TEST(Indexer, HorizontalSymmetric)
 {
-	const auto indexer = CreateDenseIndexer(DiagonalSymmetric);
-	ASSERT_EQ(indexer->variations, 4);
+	auto indexer = CreateIndexer(pattern_h);
+	ASSERT_EQ(indexer->Variations().size(), 4);
+	ConfigurationsCoverIndexSpace(*indexer, pattern_h);
+}
 
+TEST(Indexer, DiagonalSymmetric)
+{
+	auto indexer = CreateIndexer(pattern_d);
+	ASSERT_EQ(indexer->Variations().size(), 4);
+	ConfigurationsCoverIndexSpace(*indexer, pattern_d);
+}
+
+TEST(Indexer, Asymmetric)
+{
+	auto indexer = CreateIndexer(pattern_a);
+	ASSERT_EQ(indexer->Variations().size(), 8);
+	ConfigurationsCoverIndexSpace(*indexer, pattern_a);
+}
+
+TEST(GroupIndexer, Mix)
+{
+	GroupIndexer indexer({ pattern_h, pattern_d, pattern_a });
+
+	auto size = indexer.Variations().size();
+	auto size_h = CreateIndexer(pattern_h)->Variations().size();
+	auto size_d = CreateIndexer(pattern_d)->Variations().size();
+	auto size_a = CreateIndexer(pattern_a)->Variations().size();
+	ASSERT_EQ(size, size_h + size_d + size_a);
+
+	std::vector<int> tmp(size);
 	std::vector<int> indices;
-	for (const Position& pos : Configurations(DiagonalSymmetric))
-		indices.push_back(indexer->DenseIndex(pos, 0));
-	std::sort(indices.begin(), indices.end());
+	for (auto config : Configurations(pattern_h))
+	{
+		indexer.InsertIndices(config, tmp);
+		indices.push_back(tmp[0]);
+	}
+	for (auto config : Configurations(pattern_d))
+	{
+		indexer.InsertIndices(config, tmp);
+		indices.push_back(tmp[size_h]);
+	}
+	for (auto config : Configurations(pattern_a))
+	{
+		indexer.InsertIndices(config, tmp);
+		indices.push_back(tmp[size_h + size_d]);
+	}
 
-	for (int i = 0; i < indexer->reduced_size; i++)
-		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
+	// Verify that each index is present at least once
+	ranges::sort(indices);
+	EXPECT_EQ(indices.front(), 0);
+	for (int i = 1; i < indexer.index_space_size; i++)
+		EXPECT_GE(indices[i+1] - indices[i], 0);
+	EXPECT_EQ(indices.back(), indexer.index_space_size - 1);
 }
 
-TEST(DenseIndexer, CreateDenseIndexer_Asymmetric)
+void SymmetryicIndependant(const BitBoard pattern, std::span<const float> weights)
 {
-	const auto indexer = CreateDenseIndexer(Asymmetric);
-	ASSERT_EQ(indexer->variations, 8);
-
-	std::vector<int> indices;
-	for (const Position& pos : Configurations(Asymmetric))
-		indices.push_back(indexer->DenseIndex(pos, 0));
-	std::sort(indices.begin(), indices.end());
-
-	for (int i = 0; i < indexer->reduced_size; i++)
-		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
-}
-
-TEST(DenseIndexer, CreateDenseIndexer_Group)
-{
-	const auto indexer = CreateDenseIndexer({HorizontalSymmetric, DiagonalSymmetric, Asymmetric});
-	ASSERT_EQ(indexer->variations, 16);
-
-	std::vector<int> indices;
-	for (const Position& pos : Configurations(HorizontalSymmetric))
-		indices.push_back(indexer->DenseIndex(pos, 0));
-	for (const Position& pos : Configurations(DiagonalSymmetric))
-		indices.push_back(indexer->DenseIndex(pos, 4));
-	for (const Position& pos : Configurations(Asymmetric))
-		indices.push_back(indexer->DenseIndex(pos, 8));
-
-	for (int i = 0; i < indexer->reduced_size; i++)
-		ASSERT_TRUE(std::find(indices.begin(), indices.end(), i) != indices.end());
-}
-
-void Test_SymmetryIndependance(const BitBoard pattern, const Weights& compressed)
-{
-	const auto eval = CreateEvaluator(pattern, compressed);
+	auto model = GLEM(pattern, weights);
 
 	// Assert score's independance of symmetry flips
 	for (auto config : Configurations(pattern))
 	{
-		const auto score_0 = eval->Eval(config);
-		config.FlipHorizontal();
-		const auto score_1 = eval->Eval(config);
-		config.FlipVertical();
-		const auto score_2 = eval->Eval(config);
-		config.FlipHorizontal();
-		const auto score_3 = eval->Eval(config);
-		config.FlipDiagonal();
-		const auto score_4 = eval->Eval(config);
-		config.FlipHorizontal();
-		const auto score_5 = eval->Eval(config);
-		config.FlipVertical();
-		const auto score_6 = eval->Eval(config);
-		config.FlipHorizontal();
-		const auto score_7 = eval->Eval(config);
-
-		ASSERT_EQ(score_0, score_1);
-		ASSERT_EQ(score_0, score_2);
-		ASSERT_EQ(score_0, score_3);
-		ASSERT_EQ(score_0, score_4);
-		ASSERT_EQ(score_0, score_5);
-		ASSERT_EQ(score_0, score_6);
-		ASSERT_EQ(score_0, score_7);
+		auto original_score = model.Eval(config);
+		for (auto var : SymmetryVariations(config))
+			ASSERT_EQ(original_score, model.Eval(var));
 	}
 }
 
-TEST(Evaluator, HorizontalSymmetric_is_independant_of_symmetry)
+TEST(GLEM, HorizontalSymmetric_is_independent_of_symmetry)
 {
-	const auto weights = Weights(CreateDenseIndexer(HorizontalSymmetric)->reduced_size, 0);
-	Test_SymmetryIndependance(HorizontalSymmetric, weights);
+	std::vector<float> weights(CreateIndexer(pattern_h)->index_space_size);
+	ranges::iota(weights, 1);
+	SymmetryicIndependant(pattern_h, weights);
 }
 
-TEST(Evaluator, DiagonalSymmetric_is_independant_of_symmetry)
+TEST(GLEM, DiagonalSymmetric_is_independent_of_symmetry)
 {
-	const auto weights = Weights(CreateDenseIndexer(DiagonalSymmetric)->reduced_size, 0);
-	Test_SymmetryIndependance(DiagonalSymmetric, weights);
+	std::vector<float> weights(CreateIndexer(pattern_d)->index_space_size);
+	ranges::iota(weights, 1);
+	SymmetryicIndependant(pattern_d, weights);
 }
 
-TEST(Evaluator, Asymmetric_is_independant_of_symmetry)
+TEST(GLEM, Asymmetric_is_independent_of_symmetry)
 {
-	const auto weights = Weights(CreateDenseIndexer(Asymmetric)->reduced_size, 0);
-	Test_SymmetryIndependance(Asymmetric, weights);
+	std::vector<float> weights(CreateIndexer(pattern_a)->index_space_size);
+	ranges::iota(weights, 1);
+	SymmetryicIndependant(pattern_a, weights);
 }
 
-void Test_Expansion(BitBoard pattern)
+void GLEM_Eval_is_equivalent_to_DenseIndex(BitBoard pattern)
 {
-	auto indexer = CreateDenseIndexer(pattern);
+	auto indexer = CreateIndexer(pattern);
 
-	Weights compressed(indexer->reduced_size);
-	std::iota(compressed.begin(), compressed.end(), 1);
-	auto evaluator = CreateEvaluator(pattern, compressed);
+	std::vector<float> weights(indexer->index_space_size);
+	ranges::iota(weights, 1);
+	auto model = GLEM(pattern, weights);
 	PosGen::Random rnd(78);
 
 	for (int i = 0; i < 100'000; i++)
@@ -145,24 +189,92 @@ void Test_Expansion(BitBoard pattern)
 		Position pos = rnd();
 
 		float sum = 0;
-		for (int i = 0; i < indexer->variations; i++)
-			sum += compressed[indexer->DenseIndex(pos, i)];
+		for (int i = 0; i < indexer->Variations().size(); i++)
+			sum += weights[indexer->DenseIndex(pos, i)];
 
-		ASSERT_EQ(sum, evaluator->Eval(pos));
+		ASSERT_EQ(sum, model.Eval(pos));
 	}
 }
 
-TEST(Evaluator, Weights_Expansion_HorizontalSymmetric)
+TEST(GLEM, Weights_Expansion_HorizontalSymmetric)
 {
-	Test_Expansion(HorizontalSymmetric);
+	GLEM_Eval_is_equivalent_to_DenseIndex(pattern_h);
 }
 
-TEST(Evaluator, Weights_Expansion_DiagonalSymmetric)
+TEST(GLEM, Weights_Expansion_DiagonalSymmetric)
 {
-	Test_Expansion(DiagonalSymmetric);
+	GLEM_Eval_is_equivalent_to_DenseIndex(pattern_d);
 }
 
-TEST(Evaluator, Weights_Expansion_Asymmetric)
+TEST(GLEM, Weights_Expansion_Asymmetric)
 {
-	Test_Expansion(Asymmetric);
+	GLEM_Eval_is_equivalent_to_DenseIndex(pattern_a);
+}
+
+TEST(Stream, serialize_deserialize_GLEM)
+{
+	std::vector pattern = {
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - # # # # #"
+		"- - - # # # # #"_BitBoard,
+
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - #"
+		"- - - - - - # #"
+		"- - - - - # # #"
+		"- - - - # # # #"_BitBoard
+	};
+	GLEM in(pattern);
+
+	std::stringstream stream;
+	Serialize(in, stream);
+	auto out = Deserialize<decltype(in)>(stream);
+
+	EXPECT_TRUE(ranges::equal(in.Pattern(), out.Pattern()));
+	EXPECT_TRUE(ranges::equal(in.Weights(), out.Weights()));
+}
+
+TEST(Stream, serialize_deserialize_AAGLEM)
+{
+	auto BB1 =
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - # # # # #"
+		"- - - # # # # #"_BitBoard;
+
+	auto BB2 =
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - -"
+		"- - - - - - - #"
+		"- - - - - - # #"
+		"- - - - - # # #"
+		"- - - - # # # #"_BitBoard;
+	std::vector<int> block_boundaries = { 1,2,3 };
+	std::valarray<double> acc = { 1,2,3,4,5 };
+	AAGLEM in({ BB1, BB2 }, block_boundaries, acc);
+
+	std::stringstream stream;
+	Serialize(in, stream);
+	auto out = Deserialize<decltype(in)>(stream);
+
+	EXPECT_TRUE(ranges::equal(in.Pattern(), out.Pattern()));
+	EXPECT_TRUE(ranges::equal(in.BlockBoundaries(), out.BlockBoundaries()));
+	EXPECT_TRUE(ranges::equal(in.AccuracyModel().param_values, out.AccuracyModel().param_values));
+	auto a = in.GetWeights();
+	auto b = out.GetWeights();
+	EXPECT_TRUE(ranges::equal(in.GetWeights(), out.GetWeights()));
 }

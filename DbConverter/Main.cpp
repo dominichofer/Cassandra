@@ -31,7 +31,7 @@ void PrintHistogram(const range<Puzzle> auto& puzzles)
 		std::set<Intensity> set = p.SolvedIntensities();
 		std::vector<Intensity> ints{ set.begin(), set.end() };
 		std::sort(ints.begin(), ints.end());
-		hist[std::make_pair(p.pos.EmptyCount(), std::move(ints))]++;
+		hist[std::make_pair(p.EmptyCount(), std::move(ints))]++;
 	}
 	for (const auto& h : hist)
 		std::cout << "e" << h.first.first << " : " << to_string(h.first.second) << " : " << h.second << '\n';
@@ -45,7 +45,7 @@ int main()
 	//DataBase<Puzzle> puzzles = LoadEvalFit();
 
 	//Process(std::execution::par,
-	//	puzzles | std::views::filter([](const Puzzle& p) { return p.pos.EmptyCount() <= 20; }),
+	//	puzzles | std::views::filter([](const Puzzle& p) { return p.EmptyCount() <= 20; }),
 	//	[&](Puzzle& p, std::size_t index) {
 	//		p.insert(Request::ExactScore(p.pos));
 	//		p.Solve(IDAB{ tt, evaluator });
@@ -59,7 +59,7 @@ int main()
 		std::map<std::pair<int, int>, int> hist;
 		for (const Puzzle& p : puzzles)
 		{
-			hist[std::make_pair(p.pos.EmptyCount(), p.MaxSolvedIntensityScore().value_or(-99))]++;
+			hist[std::make_pair(p.EmptyCount(), p.MaxSolvedIntensityScore().value_or(-99))]++;
 		}
 		for (int e = 0; e <= 60; e++)
 		for (int i = -32; i <= +32; i++)

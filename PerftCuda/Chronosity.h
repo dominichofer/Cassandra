@@ -2,7 +2,8 @@
 #include "cuda_runtime.h"
 #include <functional>
 
-inline void ErrorCheck(const std::function<cudaError_t(void)>& fkt) {
+inline void ErrorCheck(const std::function<cudaError_t(void)>& fkt)
+{
 	cudaError_t err = fkt();
 	if (err != cudaSuccess) 
 		printf("Error: %s\n", cudaGetErrorString(err));

@@ -6,9 +6,16 @@ Position RandomPlayer::Play(const Position& pos)
 	if (possible_moves.empty())
 		return PlayPass(pos);
 
-	int rnd = std::uniform_int_distribution<int>(0, possible_moves.size() - 1)(rnd_engine);
-	auto it = possible_moves.begin();
-	std::advance(it, rnd);
+	std::size_t rnd = std::uniform_int_distribution<std::size_t>(0, possible_moves.size() - 1)(rnd_engine);
+	return ::Play(pos, possible_moves[rnd]);
+}
 
-	return ::Play(pos, *it);
+Field RandomPlayer::ChooseMove(const Position& pos)
+{
+	Moves possible_moves = PossibleMoves(pos);
+	if (possible_moves.empty())
+		return Field::invalid;
+
+	std::size_t rnd = std::uniform_int_distribution<std::size_t>(0, possible_moves.size() - 1)(rnd_engine);
+	return static_cast<Field>(rnd);
 }

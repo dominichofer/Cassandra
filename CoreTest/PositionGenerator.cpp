@@ -90,6 +90,7 @@ namespace OEIS_Tests
 	TEST(Children, possible_games_at_ply_9) { ASSERT_EQ(Number_of_possible_games(9), 3'005'288); }
 	TEST(Children, possible_games_at_ply_10) { ASSERT_EQ(Number_of_possible_games(10), 24'571'056); }
 }
+
 TEST(PosGen, Random_is_deterministic)
 {
 	int seed = 42;
@@ -120,9 +121,13 @@ TEST(PosGen, RandomWithEmptyCount_returns_empty_count)
 
 class MockPlayer : public Player
 {
-	Position Play(const Position& in) override
+	Position Play(const Position& pos) override
 	{
-		return Position{ in.Opponent(), in.Player() | GetLSB(in.Empties()) };
+		return Position{ pos.Opponent(), pos.Player() | pos.Empties().FirstSet() };
+	}
+	Field ChooseMove(const Position& pos) override
+	{
+		return pos.Empties().FirstSetField();
 	}
 };
 

@@ -79,9 +79,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
-      <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
     </ProjectReference>
@@ -90,23 +87,38 @@
     <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="AlphaBetaFailHard.cpp" />
     <ClCompile Include="AlphaBetaFailSoft.cpp" />
-    <ClCompile Include="HashTablePVS.cpp" />
-    <ClCompile Include="IDAB.cpp" />
+    <ClCompile Include="AlphaBetaFailSuperSoft.cpp" />
+    <ClCompile Include="HashTable.cpp" />
+    <ClCompile Include="Intensity.cpp" />
+    <ClCompile Include="Interval.cpp" />
     <ClCompile Include="NegaMax.cpp" />
-    <ClCompile Include="Objects.cpp" />
-    <ClCompile Include="Puzzle.cpp" />
     <ClCompile Include="PrincipalVariation.cpp" />
+    <ClCompile Include="PrincipalVariation2.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SortedMoves.cpp" />
+    <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="HashTablePVS.h" />
+    <ClInclude Include="AlphaBetaFailHard.h" />
+    <ClInclude Include="AlphaBetaFailSoft.h" />
+    <ClInclude Include="AlphaBetaFailSuperSoft.h" />
+    <ClInclude Include="Confidence.h" />
+    <ClInclude Include="FForum.h" />
+    <ClInclude Include="HashTable.h" />
+    <ClInclude Include="IDAB.h" />
+    <ClInclude Include="Intensity.h" />
+    <ClInclude Include="Interval.h" />
+    <ClInclude Include="MTDf.h" />
+    <ClInclude Include="NegaMax.h" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="Objects.h" />
-    <ClInclude Include="Executor.h" />
-    <ClInclude Include="Puzzle.h" />
+    <ClInclude Include="PrincipalVariation.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="SortedMoves.h" />
+    <ClInclude Include="Stability.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Search.natvis" />

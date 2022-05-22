@@ -50,11 +50,11 @@ public:
 
 	int Count(const Position& pos, Field f) const noexcept
 	{
-		const auto move = static_cast<uint8>(f);
-		const auto x = move % 8;
-		const auto y = move / 8;
+		auto move = static_cast<uint8>(f);
+		auto x = move % 8;
+		auto y = move / 8;
 
-		const auto P = pos.Player() & mask[move][0]; // mask out unrelated bits to make dummy 0 bits for outside
+		auto P = pos.Player() & mask[move][0]; // mask out unrelated bits to make dummy 0 bits for outside
 
 		return flip_count[x][BExtr(P, move & 0xF8, 8)]
 			+ flip_count[y][PExt(P, mask[move][1])]

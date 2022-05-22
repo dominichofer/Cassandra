@@ -2,25 +2,17 @@
 #include "Bit.h"
 #include "BitBoard.h"
 #include "Moves.h"
+#include "Algorithms.h"
 #include <cstdint>
+#include <ranges>
 #include <string>
 #include <tuple>
 #include <vector>
 
-inline int min_score = -32;
-inline int max_score = +32;
-inline int inf_score = +33;
-inline int undefined_score = +35;
-
-template <typename T>
-concept score_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, int>; // TODO: Is this used?
-
-// Maps input to (.., "-1", "+0", "+1", ..)
-std::string SignedInt(int);
-
-// Maps input to (.., "-01", "+00", "+01", ..)
-std::string DoubleDigitSignedInt(int);
-
+constexpr int min_score = -32;
+constexpr int max_score = +32;
+constexpr int inf_score = +33;
+constexpr int undefined_score = +35;
 
 // A board where every field is either taken by exactly one player or is empty.
 class Position
@@ -33,14 +25,6 @@ public:
 	static Position Start();
 	static Position StartETH();
 
-	static constexpr Position From(BitBoard P, BitBoard O) noexcept(false)
-	{
-		if ((P & O).empty())
-			return { P, O };
-		throw;
-	}
-
-	//constexpr auto operator<=>(const Position&) const noexcept = default;
 	CUDA_CALLABLE constexpr bool operator==(const Position& o) const noexcept { return std::tie(P, O) == std::tie(o.P, o.O); }
 	CUDA_CALLABLE constexpr bool operator!=(const Position& o) const noexcept { return std::tie(P, O) != std::tie(o.P, o.O); }
 	CUDA_CALLABLE constexpr bool operator<(const Position& o) const noexcept { return std::tie(P, O) < std::tie(o.P, o.O); }
@@ -54,15 +38,12 @@ public:
 	CUDA_CALLABLE void FlipVertical() noexcept;
 	CUDA_CALLABLE void FlipToUnique() noexcept;
 
-	CUDA_CALLABLE BitBoard Discs() const { return P | O; }
-	CUDA_CALLABLE BitBoard Empties() const { return ~Discs(); }
-	CUDA_CALLABLE int EmptyCount() const { return popcount(Empties()); }
+	CUDA_CALLABLE BitBoard Discs() const noexcept { return P | O; }
+	CUDA_CALLABLE BitBoard Empties() const noexcept { return ~Discs(); }
+	CUDA_CALLABLE int EmptyCount() const noexcept { return popcount(Empties()); }
 
-	BitBoard ParityQuadrants() const;
+	BitBoard ParityQuadrants() const; // TODO: Make this a free function!
 };
-
-template <typename T>
-concept pos_range = std::ranges::range<T> and std::is_same_v<std::ranges::range_value_t<T>, Position>;
 
 CUDA_CALLABLE Position FlipCodiagonal(Position) noexcept;
 CUDA_CALLABLE Position FlipDiagonal(Position) noexcept;
@@ -84,7 +65,10 @@ CUDA_CALLABLE Position FlipToUnique(Position) noexcept;
 std::string SingleLine(const Position&);
 std::string MultiLine(const Position&);
 inline std::string to_string(const Position& pos) { return SingleLine(pos); }
-inline std::ostream& operator<<(std::ostream& os, const Position& pos) { return os << to_string(pos); }
+
+#ifndef __NVCC__
+template <> struct fmt::formatter<Position> : to_string_formatter<Position> {};
+#endif
 
 constexpr Position operator""_pos(const char* c, std::size_t size)
 {
@@ -114,16 +98,6 @@ CUDA_CALLABLE Position PlayPass(const Position&) noexcept;
 CUDA_CALLABLE BitBoard Flips(const Position&, Field move) noexcept;
 
 int CountLastFlip(const Position&, Field move) noexcept;
-
-BitBoard StableEdges(const Position&);
-
-// Stable stones of the opponent.
-BitBoard StableStonesOpponent(const Position&);
-
-// Stable corners + 1 of the opponent.
-BitBoard StableCornersOpponent(const Position&);
-
-int StabilityBasedMaxScore(const Position&);
 
 CUDA_CALLABLE Moves PossibleMoves(const Position&) noexcept;
 

@@ -5,12 +5,12 @@
 #include <omp.h>
 #include <numeric>
 
-#include "../Core/BitBoard.cpp"
-#include "../Core/PossibleMoves.cpp"
-#include "../Core/Position.cpp"
-#include "../Core/Flips.cpp"
-#include "../Core/HasMoves.cpp"
-#include "../Core/PositionGenerator.cpp"
+#include "Core/BitBoard.cpp"
+#include "Core/PossibleMoves.cpp"
+#include "Core/Position.cpp"
+#include "Core/Flips.cpp"
+#include "Core/HasMoves.cpp"
+#include "Core/PositionGenerator.cpp"
 
 // perft for 0 plies left
 __host__ __device__ int64 perft_0()

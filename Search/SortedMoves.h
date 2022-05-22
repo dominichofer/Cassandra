@@ -2,24 +2,66 @@
 #include "Core/Core.h"
 #include <algorithm>
 #include <functional>
+#include <vector>
+#include <tuple>
+#include <iterator>
+#include <valarray>
 
 class SortedMoves
 {
-	std::vector<std::pair<int32_t, Field>> m_moves; // TODO: Implement custom Iterator!
+	std::vector<uint32_t> m_moves;
 public:
-	SortedMoves(const Moves& possible_moves, const std::function<int32_t(Field)>& metric)
+	class Iterator
+	{
+		std::vector<uint32_t>::const_iterator it;
+	public:
+		using difference_type = std::ptrdiff_t;
+		using value_type = Field;
+		using reference = Field&;
+		using pointer = Field*;
+		using iterator_category = std::forward_iterator_tag;
+
+		constexpr Iterator() noexcept = default;
+		CUDA_CALLABLE Iterator(std::vector<uint32_t>::const_iterator it) noexcept : it(it) {}
+		CUDA_CALLABLE Iterator& operator++() noexcept { ++it; return *this; }
+		CUDA_CALLABLE Field operator*() const noexcept { return static_cast<Field>(*it); }
+
+		CUDA_CALLABLE bool operator==(const Iterator& o) const noexcept { return it == o.it; }
+		CUDA_CALLABLE bool operator!=(const Iterator& o) const noexcept { return it != o.it; }
+	};
+
+	SortedMoves(const Moves& possible_moves, auto&& metric)
 	{
 		m_moves.reserve(possible_moves.size());
-		for (const auto& move : possible_moves)
-			m_moves.emplace_back(metric(move), move);
-		std::sort(m_moves.begin(), m_moves.end(), [](const auto& l, const auto& r) { return l.first > r.first; });
+		for (Field move : possible_moves)
+			m_moves.push_back(metric(move) + static_cast<uint8_t>(move));
+		std::ranges::sort(m_moves);
 	}
 
 	std::size_t size() const noexcept { return m_moves.size(); }
 	bool empty() const noexcept { return m_moves.empty(); }
 
-	decltype(auto) begin() const noexcept { return m_moves.begin(); }
-	decltype(auto) cbegin() const noexcept { return m_moves.cbegin(); }
-	decltype(auto) end() const noexcept { return m_moves.end(); }
-	decltype(auto) cend() const noexcept { return m_moves.cend(); }
+	CUDA_CALLABLE Iterator begin() const noexcept { return m_moves.begin(); }
+	CUDA_CALLABLE Iterator end() const noexcept { return m_moves.end(); }
+};
+
+
+inline BitBoard PotentialMoves(const Position& pos) noexcept
+{
+	return EightNeighboursAndSelf(pos.Opponent()) & pos.Empties();
+}
+
+inline CUDA_CALLABLE int DoubleCornerPopcount(const BitBoard& b) noexcept { return popcount(b) + popcount(b & BitBoard::Corners()); }
+inline CUDA_CALLABLE int DoubleCornerPopcount(const Moves& m) noexcept { return m.size() + (m & BitBoard::Corners()).size(); }
+
+class MoveSorter
+{
+	// Factory of SortedMoves
+
+	std::valarray<float> weights;
+public:
+	MoveSorter(std::valarray<float> weights) noexcept : weights(weights) {}
+	//MoveSorter() : MoveSorter(5, 6, 15, 11) {}
+	
+	SortedMoves Sort(const Moves&, const Position&) const;
 };

@@ -1,27 +1,41 @@
-#include "Algorithm.h"
-#include "Core/Core.h"
+#include "AlphaBetaFailHard.h"
 #include <algorithm>
+#include <cassert>
 
-using namespace Search;
-
-int AlphaBetaFailHard::Eval(const Position& pos, const Intensity&, const OpenInterval& window)
+int AlphaBetaFailHard::Eval(const Position& pos, Intensity, OpenInterval window)
 {
-	return window.clamp(Eval_N(pos, window));
+	nodes = 0;
+	return Eval_N(pos, window);
 }
 
-int AlphaBetaFailHard::Eval(const Position& pos, const Intensity&)
+ScoreMove AlphaBetaFailHard::Eval_BestMove(const Position& pos, Intensity, OpenInterval window)
 {
-	return Eval_N(pos, OpenInterval::Whole());
+	nodes = 0;
+	return Eval_BestMove_N(pos, window);
 }
 
-int AlphaBetaFailHard::Eval(const Position& pos, const OpenInterval& window)
+ScoreMove AlphaBetaFailHard::Eval_BestMove_N(const Position& pos, OpenInterval window)
 {
-	return window.clamp(Eval_N(pos, window));
-}
+	nodes++;
+	Moves moves = PossibleMoves(pos);
+	if (!moves)
+	{
+		auto passed = PlayPass(pos);
+		if (HasMoves(passed))
+			return -Eval_BestMove_N(passed, -window);
+		return EvalGameOver(pos);
+	}
 
-int AlphaBetaFailHard::Eval(const Position& pos)
-{
-	return Eval_N(pos, OpenInterval::Whole());
+	ScoreMove best;
+	for (Field move : moves)
+	{
+		int score = -Eval_N(Play(pos, move), -window);
+		if (score > window)
+			return { window.Upper(), move };
+		best.ImproveWith(score, move);
+		window.TryIncreaseLower(score);
+	}
+	return best;
 }
 
 int AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval window)
@@ -43,7 +57,8 @@ int AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval window)
 
 	nodes++;
 	Moves moves = PossibleMoves(pos);
-	if (!moves) {
+	if (!moves)
+	{
 		auto passed = PlayPass(pos);
 		if (HasMoves(passed))
 			return -Eval_N(passed, -window);
@@ -54,37 +69,45 @@ int AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval window)
 	{
 		int score = -Eval_N(Play(pos, move), -window);
 		if (score > window)
-			return window.upper();
+			return window.Upper();
 		window.TryIncreaseLower(score);
 	}
-	return window.lower();
+	return window.Lower();
 }
 
 int AlphaBetaFailHard::Eval_3(const Position& pos, OpenInterval window, Field move1, Field move2, Field move3)
 {
 	assert(pos.EmptyCount() == 3);
+	assert(pos.Empties().Get(move1));
+	assert(pos.Empties().Get(move2));
+	assert(pos.Empties().Get(move3));
 	nodes++;
-	int score = inf_score;
+	int score = -inf_score;
 
-	if (auto flips = Flips(pos, move1)) {
+	if (auto flips = Flips(pos, move1))
+	{
 		score = -Eval_2(Play(pos, move1, flips), -window, move2, move3);
 		if (score > window)
-			return window.upper();
+			return window.Upper();
 		window.TryIncreaseLower(score);
 	}
 
-	if (auto flips = Flips(pos, move2)) {
+	if (auto flips = Flips(pos, move2))
+	{
 		score = -Eval_2(Play(pos, move2, flips), -window, move1, move3);
 		if (score > window)
-			return window.upper();
+			return window.Upper();
 		window.TryIncreaseLower(score);
 	}
 
 	if (auto flips = Flips(pos, move3))
-		return window.clamp(-Eval_2(Play(pos, move3, flips), -window, move1, move2));
+	{
+		score = -Eval_2(Play(pos, move3, flips), -window, move1, move2);
+		return window.clamp(score);
+	}
 
-	if (score != inf_score)
-		return window.lower();
+	if (score != -inf_score)
+		return window.Lower();
 
 	auto passed = PlayPass(pos);
 	if (HasMoves(passed))
@@ -95,21 +118,27 @@ int AlphaBetaFailHard::Eval_3(const Position& pos, OpenInterval window, Field mo
 int AlphaBetaFailHard::Eval_2(const Position& pos, OpenInterval window, Field move1, Field move2)
 {
 	assert(pos.EmptyCount() == 2);
+	assert(pos.Empties().Get(move1));
+	assert(pos.Empties().Get(move2));
 	nodes++;
-	int score = inf_score;
+	int score = -inf_score;
 
-	if (auto flips = Flips(pos, move1)) {
+	if (auto flips = Flips(pos, move1))
+	{
 		score = -Eval_1(Play(pos, move1, flips), -window, move2);
 		if (score > window)
-			return window.upper();
+			return window.Upper();
 		window.TryIncreaseLower(score);
 	}
 
 	if (auto flips = Flips(pos, move2))
-		return window.clamp(-Eval_1(Play(pos, move2, flips), -window, move1));
+	{
+		score = -Eval_1(Play(pos, move2, flips), -window, move1);
+		return window.clamp(score);
+	}
 
-	if (score != inf_score)
-		return window.lower();
+	if (score != -inf_score)
+		return window.Lower();
 
 	auto passed = PlayPass(pos);
 	if (HasMoves(passed))
@@ -120,6 +149,7 @@ int AlphaBetaFailHard::Eval_2(const Position& pos, OpenInterval window, Field mo
 int AlphaBetaFailHard::Eval_1(const Position& pos, OpenInterval window, Field move1)
 {
 	assert(pos.EmptyCount() == 1);
+	assert(pos.Empties().Get(move1));
 	return window.clamp(NegaMax::Eval_1(pos, move1));
 }
 

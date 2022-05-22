@@ -1,5 +1,8 @@
 #include "PerftCuda.h"
-#include "Core/Core.h"
+#include "Core/Children.h"
+#include "Core/Position.h"
+#include "Core/PositionGenerator.h"
+#include "Core/Moves.h"
 
 // forward declaration
 int64 perft_cuda(const Position&, const int depth, const int cuda_depth);
@@ -55,6 +58,6 @@ int64 CudaHashTablePerft::calculate(const int depth)
 
 	// Makes use of 4-fold symmetrie.
 	Position pos = Position::Start();
-	pos = Play(pos, PossibleMoves(pos).First());
+	pos = Play(pos, PossibleMoves(pos).front());
 	return 4 * calculate(pos, depth-1);
 }

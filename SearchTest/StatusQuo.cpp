@@ -64,8 +64,8 @@
 //				EXPECT_FALSE(status_quo.IsUpperCut());
 //				EXPECT_EQ(status_quo.SearchWindow().lower(), alpha);
 //				EXPECT_EQ(status_quo.SearchWindow().upper(), beta);
-//				EXPECT_EQ(status_quo.GetResult().window.lower(), lower);
-//				EXPECT_EQ(status_quo.GetResult().window.upper(), upper);
+//				EXPECT_EQ(status_quo.GetResult().window.Lower(), lower);
+//				EXPECT_EQ(status_quo.GetResult().window.Upper(), upper);
 //				EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
 //				EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //				EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
@@ -85,8 +85,8 @@
 //			EXPECT_FALSE(status_quo.IsUpperCut());
 //			EXPECT_EQ(status_quo.SearchWindow().lower(), score);
 //			EXPECT_EQ(status_quo.SearchWindow().upper(), beta);
-//			EXPECT_EQ(status_quo.GetResult().window.lower(), score);
-//			EXPECT_EQ(status_quo.GetResult().window.upper(), score);
+//			EXPECT_EQ(status_quo.GetResult().window.Lower(), score);
+//			EXPECT_EQ(status_quo.GetResult().window.Upper(), score);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
@@ -107,8 +107,8 @@
 //
 //				EXPECT_TRUE(status_quo.IsUpperCut());
 //				auto result = status_quo.GetResult();
-//				EXPECT_EQ(result.window.lower(), lower);
-//				EXPECT_EQ(result.window.upper(), max_score);
+//				EXPECT_EQ(result.window.Lower(), lower);
+//				EXPECT_EQ(result.window.Upper(), max_score);
 //				EXPECT_EQ(result.depth, intensity.depth);
 //				EXPECT_EQ(result.certainty, intensity.certainty);
 //				EXPECT_EQ(result.best_move, Field::A2);
@@ -143,8 +143,8 @@
 //				status_quo.Improve(Result({ lower, upper }, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A1);
 //				
 //				EXPECT_FALSE(status_quo.IsUpperCut());
-//				EXPECT_EQ(status_quo.GetResult().window.lower(), lower);
-//				EXPECT_EQ(status_quo.GetResult().window.upper(), upper);
+//				EXPECT_EQ(status_quo.GetResult().window.Lower(), lower);
+//				EXPECT_EQ(status_quo.GetResult().window.Upper(), upper);
 //				EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //				EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //				EXPECT_EQ(status_quo.GetResult().best_move, Field::A1);
@@ -161,8 +161,8 @@
 //			status_quo.Improve(Result::ExactScore(score, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A1);
 //			
 //			EXPECT_FALSE(status_quo.IsUpperCut());
-//			EXPECT_EQ(status_quo.GetResult().window.lower(), score);
-//			EXPECT_EQ(status_quo.GetResult().window.upper(), score);
+//			EXPECT_EQ(status_quo.GetResult().window.Lower(), score);
+//			EXPECT_EQ(status_quo.GetResult().window.Upper(), score);
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A1);
@@ -182,8 +182,8 @@
 //			status_quo.Improve(Result::ExactScore(score, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A1);
 //			
 //			EXPECT_FALSE(status_quo.IsUpperCut());
-//			EXPECT_EQ(status_quo.GetResult().window.lower(), score);
-//			EXPECT_EQ(status_quo.GetResult().window.upper(), score);
+//			EXPECT_EQ(status_quo.GetResult().window.Lower(), score);
+//			EXPECT_EQ(status_quo.GetResult().window.Upper(), score);
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A1);
@@ -203,8 +203,8 @@
 //			status_quo.Improve(Result::ExactScore(upper, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A2);
 //			
 //			EXPECT_FALSE(status_quo.IsUpperCut());
-//			EXPECT_EQ(status_quo.GetResult().window.lower(), upper);
-//			EXPECT_EQ(status_quo.GetResult().window.upper(), upper);
+//			EXPECT_EQ(status_quo.GetResult().window.Lower(), upper);
+//			EXPECT_EQ(status_quo.GetResult().window.Upper(), upper);
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
@@ -223,8 +223,8 @@
 //			status_quo.Improve(Result::ExactScore(lower, intensity.depth - 1, intensity.certainty, Field::invalid, 1 /*nodes*/), Field::A1);
 //			
 //			EXPECT_FALSE(status_quo.IsUpperCut());
-//			EXPECT_EQ(status_quo.GetResult().window.lower(), upper);
-//			EXPECT_EQ(status_quo.GetResult().window.upper(), upper);
+//			EXPECT_EQ(status_quo.GetResult().window.Lower(), upper);
+//			EXPECT_EQ(status_quo.GetResult().window.Upper(), upper);
 //			EXPECT_EQ(status_quo.GetResult().depth, intensity.depth);
 //			EXPECT_EQ(status_quo.GetResult().certainty, intensity.certainty);
 //			EXPECT_EQ(status_quo.GetResult().best_move, Field::A2);
@@ -242,8 +242,8 @@
 //		limits.Improve(novum);
 //
 //		EXPECT_TRUE(limits.HasResult());
-//		EXPECT_EQ(limits.GetResult().window.lower(), score);
-//		EXPECT_EQ(limits.GetResult().window.upper(), score);
+//		EXPECT_EQ(limits.GetResult().window.Lower(), score);
+//		EXPECT_EQ(limits.GetResult().window.Upper(), score);
 //		EXPECT_EQ(limits.GetResult().depth, novum.depth);
 //		EXPECT_EQ(limits.GetResult().certainty, novum.certainty);
 //		EXPECT_EQ(limits.GetResult().best_move, novum.best_move);
@@ -262,8 +262,8 @@
 //			limits.Improve(novum);
 //
 //			EXPECT_TRUE(limits.HasResult());
-//			EXPECT_EQ(limits.GetResult().window.lower(), lower);
-//			EXPECT_EQ(limits.GetResult().window.upper(), upper);
+//			EXPECT_EQ(limits.GetResult().window.Lower(), lower);
+//			EXPECT_EQ(limits.GetResult().window.Upper(), upper);
 //			EXPECT_EQ(limits.GetResult().depth, novum.depth);
 //			EXPECT_EQ(limits.GetResult().certainty, novum.certainty);
 //			EXPECT_EQ(limits.GetResult().best_move, novum.best_move);
@@ -284,8 +284,8 @@
 ////			EXPECT_FALSE(status_quo.IsUpperCut());
 ////			EXPECT_EQ(status_quo.SearchWindow().lower(), alpha);
 ////			EXPECT_EQ(status_quo.SearchWindow().upper(), upper + 1);
-////			EXPECT_EQ(status_quo.GetResult().window.lower(), lower);
-////			EXPECT_EQ(status_quo.GetResult().window.upper(), upper);
+////			EXPECT_EQ(status_quo.GetResult().window.Lower(), lower);
+////			EXPECT_EQ(status_quo.GetResult().window.Upper(), upper);
 ////			EXPECT_EQ(status_quo.GetResult().best_move, Field::invalid);
 ////			EXPECT_EQ(status_quo.GetResult().depth, result.depth);
 ////			EXPECT_EQ(status_quo.GetResult().certainty, result.certainty);
@@ -348,8 +348,8 @@
 //			limits.Improve(novum);
 //
 //			EXPECT_TRUE(limits.HasResult());
-//			EXPECT_EQ(limits.GetResult().window.lower(), lower);
-//			EXPECT_EQ(limits.GetResult().window.upper(), upper);
+//			EXPECT_EQ(limits.GetResult().window.Lower(), lower);
+//			EXPECT_EQ(limits.GetResult().window.Upper(), upper);
 //			EXPECT_EQ(limits.GetResult().depth, novum.depth);
 //			EXPECT_EQ(limits.GetResult().certainty, novum.certainty);
 //			EXPECT_EQ(limits.GetResult().best_move, novum.best_move);

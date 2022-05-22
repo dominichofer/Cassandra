@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.random
 import matplotlib.pyplot as plt
+import csv
 
 # Generate some test data
 #x = np.random.normal(0, 20, 5_000_000)
@@ -10,23 +11,22 @@ import matplotlib.pyplot as plt
 #y = x + np.random.normal(0, 6.2, np.size(x))
 #y = np.clip(y, -64, 64)
 
-x = []
-y = []
+for block in range(10):
+    with open(f'G:\\Reversi\\{block}.log', newline='') as csvfile:
+        data = list(csv.reader(csvfile))
+        x = np.array([float(x) for x,y in data])
+        y = np.array([float(y) for x,y in data])
 
-import csv
-with open('C:\\Users\\Dominic\\source\\repos\\Cassandra\\bin\\log.log', newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-    l = [row for row in reader]
-    x = np.array([float(x) for x,y in l])
-    y = np.array([float(y) for x,y in l])
+    counts, bins = np.histogram(x, bins=65, range=(-32,32))
+    plt.hist(bins[:-1], bins, weights=counts)
+    plt.show()
 
+    r_squared = np.corrcoef(x, y)[0,1]**2
+    std = numpy.std(x - y)
 
-r_squared = np.corrcoef(x, y)[0,1]**2
-std = numpy.std(x - y)
+    heatmap, xedges, yedges = np.histogram2d(x, y, bins=(65, 65), range=((-32,32),(-32,32)))
 
-heatmap, xedges, yedges = np.histogram2d(x, y, bins=(65, 129), range=((-64,64),(-64,64)))
-
-plt.text(35, -55, '$R^2$={:.3f}\n$\sigma$={:.3f}'.format(r_squared, std))
-plt.set_cmap('gist_heat_r')
-plt.imshow(heatmap.T, extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], origin='lower')
-plt.show()
+    plt.text(-20, 20, '$R^2$={:.3f}\n$\sigma$={:.3f}'.format(r_squared, std), color='white')
+    plt.set_cmap('gist_ncar')
+    plt.imshow(heatmap.T, extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], origin='lower')
+    plt.show()

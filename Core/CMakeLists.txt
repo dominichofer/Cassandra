@@ -4,15 +4,12 @@ add_library(
     BitBoard.cpp
     BitBoard.h
     Bit.h
-    Confidence.h
     Core.h
     CountLastFlip.cpp
+    Executor.h
     Flips.cpp
-    Format.h
     HashTable.h
     HasMoves.cpp
-    Interval.cpp
-    Interval.h
     Metronome.cpp
     Metronome.h
     MoreTypes.h
@@ -25,5 +22,4 @@ add_library(
     PositionGenerator.h
     PossibleMoves.cpp
     Ranges.h
-    Stability.cpp
 )

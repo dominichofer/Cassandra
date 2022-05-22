@@ -16,6 +16,8 @@
 #include <set>
 #include <omp.h>
 
+using namespace std::chrono_literals;
+
 class SolverTable : public Table
 {
 	bool test;
@@ -44,12 +46,12 @@ public:
 	}
 };
 
-using namespace std::chrono_literals;
 
-void Test(PuzzleRange auto puzzles)
+void Test(range<Puzzle> auto puzzles)
 {
-	AAGLEM pattern_eval = DefaultPatternEval();
+	AAGLEM eval = DefaultPatternEval();
 	HashTablePVS tt{ 1'000'000 };
+	IDAB alg{ tt, eval };
 
 	SolverTable table(/*test*/ true);
 	table.PrintHeader();
@@ -60,12 +62,30 @@ void Test(PuzzleRange auto puzzles)
 			auto exact = Request::ExactScore(p.pos);
 			int old_score = p.ResultOf(exact).score;
 			p.ClearResult(exact);
-			p.Solve(IDAB{ tt, pattern_eval });
+			p.Solve(alg);
 			diff.push_back(old_score - p.ResultOf(exact).score);
 			table.PrintRow(index, exact, old_score, p.ResultOf(exact));
 		});
 	table.PrintSeparator();
 	table.PrintSummary(StandardDeviation(diff), Duration(puzzles).count(), Nodes(puzzles));
+}
+
+auto CreateNewData(int d1, int d2, int empty_count, std::size_t size)
+{
+	HashTablePVS tt{ 100'000'000 };
+	AAGLEM pattern_eval = DefaultPatternEval();
+	auto algorithm = PVS{ tt, pattern_eval };
+
+	auto player1 = FixedDepthPlayer(algorithm, d1);
+	auto player2 = FixedDepthPlayer(algorithm, d2);
+
+	std::vector<Position> all = AllUnique(Position::Start(), 50);
+
+	auto set = generate_n_unique(size, PosGen::Played(player1, player2, empty_count, all));
+	std::vector<Position> pos(set.begin(), set.end());
+	std::mt19937_64 rnd_engine(std::random_device{}());
+	std::shuffle(pos.begin(), pos.end(), rnd_engine);
+	return pos;
 }
 
 auto CreateNewData(int d1, int d2)
@@ -77,30 +97,22 @@ auto CreateNewData(int d1, int d2)
 
 	if (not std::filesystem::exists(eval_fit_name))
 	{
-		HashTablePVS tt1{ 100'000'000 };
-		HashTablePVS tt2{ 100'000'000 };
+		HashTablePVS tt{ 100'000'000 };
 		AAGLEM pattern_eval = DefaultPatternEval();
+		auto algorithm = PVS{ tt, pattern_eval };
+
+		auto player1 = FixedDepthPlayer(algorithm, d1);
+		auto player2 = FixedDepthPlayer(algorithm, d2);
+
 		std::mt19937_64 rnd_engine(std::random_device{}());
 
 		auto start = std::chrono::high_resolution_clock::now();
 		std::vector<Position> all = AllUnique(Position::Start(), 50);
 
-		std::unique_ptr<Player> player1;
-		if (d1 == 0)
-			player1 = std::make_unique<RandomPlayer>();
-		else
-			player1 = std::make_unique<FixedDepthPlayer>(tt1, pattern_eval, d1);
-
-		std::unique_ptr<Player> player2;
-		if (d2 == 0)
-			player2 = std::make_unique<RandomPlayer>();
-		else
-			player2 = std::make_unique<FixedDepthPlayer>(tt2, pattern_eval, d2);
-
 		std::vector<Puzzle> eval_fit, accuracy_fit, move_sort, benchmark;
 		for (int e = 0; e <= 50; e++)
 		{
-			auto set = generate_n_unique(102'500, PosGen::Played(*player1, *player2, e, all));
+			auto set = generate_n_unique(102'500, PosGen::Played(player1, player2, e, all));
 			std::vector<Position> pos(set.begin(), set.end());
 			std::shuffle(pos.begin(), pos.end(), rnd_engine);
 			auto it1 = pos.begin();
@@ -126,211 +138,60 @@ auto CreateNewData(int d1, int d2)
 	return std::make_tuple(eval_fit_name, accuracy_fit_name, move_sort_name, benchmark_name);
 }
 
-void SolveEvalFit(DataBase<Puzzle>& data, int exact_till, int depth)
-{
-	const auto block_size = DefaultPatternEval().block_size;
+//void SolveEvalFit(DataBase<Puzzle>& data, int exact_till, int depth)
+//{
+//	const auto block_size = DefaultPatternEval().block_size;
+//
+//	for (int block = 0; block < 50 / block_size; block++)
+//	{
+//		AAGLEM pattern_eval = DefaultPatternEval();
+//		HashTablePVS tt{ 100'000'000 };
+//		auto start = std::chrono::high_resolution_clock::now();
+//		auto IsInBlock = [block, block_size](const Puzzle& p) {
+//			int E = p.EmptyCount();
+//			int lowest_E = 1 + block_size * block;
+//			return (lowest_E <= E) and (E < lowest_E + block_size);
+//		};
+//
+//		auto ex = CreateExecutor(std::execution::par,
+//			data | std::views::filter(IsInBlock),
+//			[&](Puzzle& p, std::size_t index) {
+//				if (p.EmptyCount() <= exact_till)
+//					p.insert(Request::ExactScore(p.pos));
+//				else
+//					p.insert(Request(depth));
+//				p.Solve(IDAB{ tt, pattern_eval });
+//			});
+//
+//		Metronome auto_saver(300s, [&] {
+//			std::cout << "Saving...";
+//			ex->LockData();
+//			data.WriteBack();
+//			ex->UnlockData();
+//			std::cout << "done! Processed " << ex->Processed() << " of " << ex->size() << '\n';
+//			});
+//
+//		auto_saver.Start();
+//		ex->Process();
+//		auto_saver.Stop();
+//		auto_saver.Force();
+//		//FitWeights(data, block, true); // TODO: Reimplement this!!!
+//		auto stop = std::chrono::high_resolution_clock::now();
+//		std::cout << "SolveEvalFit(" << exact_till << ", " << depth << ") of block " << block << " took " << std::chrono::duration_cast<std::chrono::seconds>(stop - start) << '\n';
+//	}
+//}
 
-	for (int block = 0; block < 50 / block_size; block++)
-	{
-		AAGLEM pattern_eval = DefaultPatternEval();
-		HashTablePVS tt{ 100'000'000 };
-		auto start = std::chrono::high_resolution_clock::now();
-		auto IsInBlock = [block, block_size](const Puzzle& p) {
-			int E = p.pos.EmptyCount();
-			int lowest_E = 1 + block_size * block;
-			return (lowest_E <= E) and (E < lowest_E + block_size);
-		};
 
-		auto ex = CreateExecutor(std::execution::par,
-			data | std::views::filter(IsInBlock),
-			[&](Puzzle& p, std::size_t index) {
-				if (p.pos.EmptyCount() <= exact_till)
-					p.insert(Request::ExactScore(p.pos));
-				else
-					p.insert(Request(depth));
-				p.Solve(IDAB{ tt, pattern_eval });
-			});
-
-		Metronome auto_saver(300s, [&] {
-			std::cout << "Saving...";
-			ex->LockData();
-			data.WriteBack();
-			ex->UnlockData();
-			std::cout << "done! Processed " << ex->Processed() << " of " << ex->size() << '\n';
-			});
-
-		auto_saver.Start();
-		ex->Process();
-		auto_saver.Stop();
-		auto_saver.Force();
-		FitWeights(data, block, true);
-		auto stop = std::chrono::high_resolution_clock::now();
-		std::cout << "SolveEvalFit(" << exact_till << ", " << depth << ") of block " << block << " took " << std::chrono::duration_cast<std::chrono::seconds>(stop - start) << '\n';
-	}
-}
-
-class CartesianPoint;
-double norm(const CartesianPoint&);
-CartesianPoint operator/(CartesianPoint, double);
-
-class CartesianPoint
-{
-	std::vector<double> x;
-public:
-	CartesianPoint(int dims) noexcept : x(dims, 0.0) {}
-
-	int size() const noexcept { return x.size(); }
-	      double& operator[](int i)       { return x[i]; }
-	const double& operator[](int i) const { return x[i]; }
-	decltype(auto) begin() noexcept { return x.begin(); }
-	decltype(auto) begin() const noexcept  { return x.begin(); }
-	decltype(auto) end() noexcept { return x.end(); }
-	decltype(auto) end() const noexcept { return x.end(); }
-	decltype(auto) front() const noexcept { return x.front(); }
-	decltype(auto) back() const noexcept { return x.back(); }
-	CartesianPoint normalized() const noexcept
-	{
-		double n = norm(*this);
-		if (n)
-			return *this / n;
-		return *this;
-	}
-
-	CartesianPoint& operator+=(const CartesianPoint& o)
-	{
-		assert(size() == o.size());
-		#pragma omp parallel for schedule(static)
-		for (int64_t i = 0; i < static_cast<int64_t>(size()); i++)
-			x[i] += o[i];
-		return *this;
-	}
-
-	CartesianPoint& operator-=(const CartesianPoint& o)
-	{
-		assert(size() == o.size());
-		#pragma omp parallel for schedule(static)
-		for (int64_t i = 0; i < static_cast<int64_t>(size()); i++)
-			x[i] -= o[i];
-		return *this;
-	}
-
-	CartesianPoint& operator*=(const CartesianPoint& o)
-	{
-		assert(size() == o.size());
-		#pragma omp parallel for schedule(static)
-		for (int64_t i = 0; i < static_cast<int64_t>(size()); i++)
-			x[i] *= o[i];
-		return *this;
-	}
-
-	CartesianPoint& operator*=(double m)
-	{
-		#pragma omp parallel for schedule(static)
-		for (int64_t i = 0; i < static_cast<int64_t>(size()); i++)
-			x[i] *= m;
-		return *this;
-	}
-
-	CartesianPoint& operator/=(double m)
-	{
-		#pragma omp parallel for schedule(static)
-		for (int64_t i = 0; i < static_cast<int64_t>(size()); i++)
-			x[i] /= m;
-		return *this;
-	}
-};
-
-CartesianPoint operator+(CartesianPoint l, const CartesianPoint& r) { return l += r; }
-CartesianPoint operator+(const CartesianPoint& l, CartesianPoint&& r) { return r += l; }
-
-CartesianPoint operator-(CartesianPoint l, const CartesianPoint& r) { return l -= r; }
-CartesianPoint operator-(const CartesianPoint& l, CartesianPoint&& r)
-{
-	assert(l.size() == r.size());
-	const int64_t size = static_cast<int64_t>(r.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		r[i] = l[i] - r[i];
-	return r;
-}
-
-CartesianPoint operator*(CartesianPoint l, const CartesianPoint& r) { return l *= r; }
-CartesianPoint operator*(const CartesianPoint& l, CartesianPoint&& r) { return r *= l; }
-CartesianPoint operator*(CartesianPoint vec, double mul) { return vec *= mul; }
-CartesianPoint operator*(double mul, CartesianPoint vec) { return vec *= mul; }
-
-CartesianPoint operator/(CartesianPoint vec, double mul) { return vec /= mul; }
-
-double dot(const CartesianPoint& l, const CartesianPoint& r)
-{
-	assert(l.size() == r.size());
-
-	const int64_t size = static_cast<int64_t>(l.size());
-	double sum = 0.0;
-	#pragma omp parallel for reduction(+ : sum)
-	for (int64_t i = 0; i < size; i++)
-		sum += l[i] * r[i];
-	return sum;
-}
-
-double L0(const CartesianPoint& x)
-{
-	const int64_t size = static_cast<int64_t>(x.size());
-	double sum = 0.0;
-	#pragma omp parallel for reduction(+ : sum)
-	for (int64_t i = 0; i < size; i++)
-		sum += (x[i] < 0.001 ? 0 : 1);
-	return sum;
-}
-
-double L1(const CartesianPoint& x)
-{
-	const int64_t size = static_cast<int64_t>(x.size());
-	double sum = 0.0;
-	#pragma omp parallel for reduction(+ : sum)
-	for (int64_t i = 0; i < size; i++)
-		sum += std::abs(x[i]);
-	return sum;
-}
-
-double L2(const CartesianPoint& x)
-{
-	return std::sqrt(dot(x, x));
-}
-
-double norm(const CartesianPoint& x)
-{
-	return L2(x);
-}
-
-std::string to_string(const CartesianPoint& vec)
-{
-	using std::to_string;
-	std::string s;
-	for (int i = 0; i < vec.size() - 1; i++)
-		s += to_string(vec[i]) + ", ";
-	return s + to_string(vec.back());
-}
-
-CartesianPoint RandomPointInCube(int dims, double min, double max, std::mt19937_64& rnd_engine)
+std::valarray<double> RandomPointInCube(int dims, double min, double max, std::mt19937_64& rnd_engine)
 {
 	std::uniform_real_distribution<double> dist(min, max);
-	CartesianPoint p(dims);
+	std::valarray<double> p(dims);
 	for (int d = 0; d < dims; d++)
 		p[d] = dist(rnd_engine);
 	return p;
 }
-CartesianPoint RandomPointOnCubeSurface(int dims, double min, double max, std::mt19937_64& rnd_engine)
-{
-	CartesianPoint p = RandomPointInCube(dims, min, max, rnd_engine);
 
-	int special_dim = std::uniform_int_distribution<int>(0, dims - 1)(rnd_engine);
-	bool min_or_max = (std::uniform_int_distribution<int>(0, 1)(rnd_engine) == 0);
-	p[special_dim] = (min_or_max ? min : max);
-	return p;
-}
-
-double Value(const Puzzle& puzzle, const CartesianPoint& w, std::function<double(const Position&, const CartesianPoint&)> metric)
+double Value(const Puzzle& puzzle, const std::valarray<double>& w, std::function<double(const Position&, const std::valarray<double>&)> metric)
 {
 	std::optional<Intensity> opt_max = puzzle.MaxSolvedIntensityOfAllMoves();
 	if (not opt_max.has_value())
@@ -365,7 +226,7 @@ double Value(const Puzzle& puzzle, const CartesianPoint& w, std::function<double
 	return searched_nodes / total_nodes;
 }
 
-double Value(PuzzleRange auto&& puzzles, const CartesianPoint& w, std::function<double(const Position&, const CartesianPoint&)> metric)
+double Value(range<Puzzle> auto&& puzzles, const std::valarray<double>& w, std::function<double(const Position&, const std::valarray<double>&)> metric)
 {
 	return std::transform_reduce(
 		std::execution::par,
@@ -373,7 +234,7 @@ double Value(PuzzleRange auto&& puzzles, const CartesianPoint& w, std::function<
 		0.0, std::plus(), [&](const Puzzle& p) { return Value(p, w, metric); });
 }
 
-double OldMetric(const Position& pos, const CartesianPoint&)
+double OldMetric(const Position& pos, const std::valarray<double>&)
 {
 	double score = 0; // FieldValue[static_cast<uint8_t>(move)];
 	score += DoubleCornerPopcount(EightNeighboursAndSelf(pos.Opponent()) & pos.Empties()) * (1.0 / 1024.0);
@@ -383,9 +244,9 @@ double OldMetric(const Position& pos, const CartesianPoint&)
 	return score;
 }
 
-double Metric(const Position& pos, const CartesianPoint& weights)
+double Metric(const Position& pos, const std::valarray<double>& weights)
 {
-	auto w = weights.begin();
+	auto w = std::begin(weights);
 	double sum = 0;
 
 	//sum += popcount(pos.Player() & BitBoard::Corners()) * *w++;
@@ -417,11 +278,11 @@ double Metric(const Position& pos, const CartesianPoint& weights)
 	return sum;
 }
 
-void ImproveOn(PuzzleRange auto&& puzzles, double best_value, CartesianPoint best_w, std::mt19937_64& rnd_engine)
+void ImproveOn(range<Puzzle> auto&& puzzles, double best_value, std::valarray<double> best_w, std::mt19937_64& rnd_engine)
 {
 	for (int i = 0; i < 500; i++)
 	{
-		CartesianPoint novum = best_w + RandomPointInCube(best_w.size(), -0.001, +0.001, rnd_engine);
+		std::valarray<double> novum = best_w + RandomPointInCube(best_w.size(), -0.001, +0.001, rnd_engine);
 		//novum /= norm(novum);
 		auto novum_value = Value(puzzles, novum, &Metric);
 		//std::cout << novum_value << ": " << to_string(novum) << '\n';
@@ -435,11 +296,11 @@ void ImproveOn(PuzzleRange auto&& puzzles, double best_value, CartesianPoint bes
 	std::cout << best_value << ": " << to_string(best_w) << '\n';
 }
 
-void FindBestMoveSortWeights(PuzzleRange auto&& puzzles)
+void FindBestMoveSortWeights(range<Puzzle> auto&& puzzles)
 {
 	std::mt19937_64 rnd_engine(std::random_device{}());
 
-	CartesianPoint best_w = RandomPointInCube(7, -2, 2, rnd_engine);
+	std::valarray<double> best_w = RandomPointInCube(7, -2, 2, rnd_engine);
 	double best_value = Value(puzzles, best_w, &OldMetric);
 	std::cout << best_value << '\n';
 
@@ -469,7 +330,7 @@ void SolveSomeAccuracyFit()
 	for (int e = 0; e <= 50; e++)
 	{
 		auto ex = CreateExecutor(std::execution::par,
-			puzzles | std::views::filter([e](const Puzzle& p) { return p.pos.EmptyCount() == e; }),
+			puzzles | std::views::filter([e](const Puzzle& p) { return p.EmptyCount() == e; }),
 			[&](Puzzle& p, std::size_t index) {
 				p.insert(Request::ExactScore(p.pos));
 				bool had_work = p.Solve(IDAB{ tt, evaluator });
@@ -502,7 +363,7 @@ int main(int argc, char* argv[])
 	Test(FForum_4); std::cout << '\n';
 	return 0;
 	//DataBase<Puzzle> move_sort = LoadMoveSort();
-	//FindBestMoveSortWeights(move_sort | std::views::filter([](const Puzzle& p) { return p.pos.EmptyCount() >= 10; }));
+	//FindBestMoveSortWeights(move_sort | std::views::filter([](const Puzzle& p) { return p.EmptyCount() >= 10; }));
 	//return 0;
 
 
@@ -516,7 +377,7 @@ int main(int argc, char* argv[])
 	//for (int e = 0; e <= 50; e++)
 	//{
 	//	auto ex = CreateExecutor(std::execution::par,
-	//		move_sort | std::views::filter([e](const Puzzle& p) { return p.pos.EmptyCount() == e; }),
+	//		move_sort | std::views::filter([e](const Puzzle& p) { return p.EmptyCount() == e; }),
 	//		[&](Puzzle& p, std::size_t index) {
 	//			for (Request r : Request::AllMoves(p.pos))
 	//				p.insert(r);

@@ -1,14 +1,14 @@
 #pragma once
 #include "Core/Core.h"
-#include "File.h"
+#include "Stream.h"
 
-#pragma pack(1)
-struct PosScore // TODO: Remove!
-{
-	Position pos{};
-	int8_t score = undefined_score;
-};
-#pragma pack()
+//#pragma pack(1)
+//struct PosScore // TODO: Remove!
+//{
+//	Position pos{};
+//	int8_t score = undefined_score;
+//};
+//#pragma pack()
 //
 //#pragma pack(1)
 //struct CompactPosScore

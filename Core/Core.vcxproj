@@ -14,6 +14,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{211813C1-1E2E-47ED-B1CB-8547349C7B3A}</ProjectGuid>
     <RootNamespace>Core</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -68,21 +69,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BitBoard.cpp" />
+    <ClCompile Include="Children.cpp" />
     <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="HasMoves.cpp" />
-    <ClCompile Include="Interval.cpp" />
     <ClCompile Include="Metronome.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
-    <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Algorithms.h" />
-    <ClInclude Include="Confidence.h" />
-    <ClInclude Include="Interval.h" />
+    <ClInclude Include="BestMoves.h" />
+    <ClInclude Include="Children.h" />
+    <ClInclude Include="Executor.h" />
+    <ClInclude Include="Format.h" />
+    <ClInclude Include="Finally.h" />
     <ClInclude Include="Metronome.h" />
     <ClInclude Include="Ranges.h" />
     <ClInclude Include="BitBoard.h" />

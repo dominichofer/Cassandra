@@ -1,188 +1,199 @@
 #include "Evaluator.h"
 #include "Helpers.h"
-#include "DenseIndexer.h"
-#include <cassert>
-#include <iterator>
+#include "Indexer.h"
+#include <stdexcept>
 
-using namespace Pattern;
-
-template <int variations>
-class Simple final : public Evaluator
+GLEM::GLEM(std::vector<BitBoard> pattern, std::optional<std::span<const float>> weights)
 {
-	static_assert(variations == 4 or variations == 8);
-
-	std::vector<BitBoard> masks;
-	std::vector<Weights> weights;
-public:
-	// masks: The symmetric variations of the pattern.
-	// weights: The corresponding weights.
-	Simple(std::vector<BitBoard> masks, std::vector<Weights> weights)
-		: masks(std::move(masks))
-		, weights(std::move(weights))
+	for (BitBoard p : pattern)
 	{
-		assert(this->masks.size() == variations);
-		assert(this->weights.size() == variations);
-	}
+		auto dense_indexer = CreateIndexer(p);
+		auto size = dense_indexer->index_space_size;
+		auto variations = dense_indexer->Variations();
+		auto expanded_size = pown(3, popcount(p));
 
-	float Eval(const Position& pos) const noexcept override
-	{
-		float sum = 0;
-		for (int i = 0; i < variations; i++)
-			sum += weights[i][FastIndex(pos, masks[i])];
-		return sum;
-	}
-
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept override
-	{
-		std::vector<MaskAndValue> ret;
-		for (int i = 0; i < variations; i++)
-			ret.emplace_back(masks[i], weights[i][FastIndex(pos, masks[i])]);
-		return ret;
-	}
-};
-
-// Composite
-class SumGroup final : public Evaluator
-{
-	std::vector<std::unique_ptr<Evaluator>> components;
-public:
-	SumGroup(std::vector<std::unique_ptr<Evaluator>> evaluators)
-		: components(std::move(evaluators))
-	{}
-
-	float Eval(const Position& pos) const noexcept override
-	{
-		float sum = 0;
-		for (std::size_t i = 0; i < components.size(); i++)
-			sum += components[i]->Eval(pos);
-		return sum;
-	}
-
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept override
-	{
-		std::vector<MaskAndValue> ret;
-		for (std::size_t i = 0; i < components.size(); i++)
+		pattern_index.push_back(static_cast<int>(masks.size()));
+		for (int i = 0; i < static_cast<int>(variations.size()); i++)
 		{
-			auto tmp = components[i]->DetailedEval(pos);
-			ret.insert(ret.end(), tmp.begin(), tmp.end());
+			masks.push_back(variations[i]);
+			w.emplace_back(expanded_size, 0.0f);
+
+			if (weights.has_value())
+			{
+				// Decompress weights
+				for (const Position& config : Configurations(variations[i]))
+					w.back()[FastIndex(config, variations[i])] = weights.value()[dense_indexer->DenseIndex(config, i)];
+			}
+
 		}
-		return ret;
+		if (weights.has_value())
+			weights.value() = weights.value().subspan(size);
 	}
-};
-
-//class EmptyCountSwitch final : public Evaluator
-//{
-//	std::array<std::shared_ptr<Evaluator>, 65> evals;
-//public:
-//	EmptyCountSwitch(std::array<std::shared_ptr<Evaluator>, 65> evaluators)
-//		: evals(std::move(evaluators))
-//	{}
-//
-//	float Eval(const Position& pos) const override
-//	{
-//		return evals[pos.EmptyCount()]->Eval(pos);
-//	}
-//
-//	std::vector<MaskAndValue> DetailedEval(const Position& pos) const override
-//	{
-//		return evals[pos.EmptyCount()]->DetailedEval(pos);
-//	}
-//};
-
-class GameOver final : public Evaluator
-{
-public:
-	GameOver() noexcept = default;
-
-	float Eval(const Position& pos) const noexcept override
-	{
-		return static_cast<float>(EvalGameOver(pos));
-	}
-
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept override
-	{ 
-		return { {~BitBoard{}, GameOver::Eval(pos)} };
-	}
-};
-
-class Zero final : public Evaluator
-{
-public:
-	Zero() noexcept = default;
-
-	float Eval(const Position&) const noexcept override
-	{
-		return 0;
-	}
-
-	std::vector<MaskAndValue> DetailedEval(const Position&) const noexcept override
-	{ 
-		return { {BitBoard{}, 0} };
-	}
-};
-
-std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const BitBoard pattern, std::span<const float> compressed_weights)
-{
-	const auto indexer = CreateDenseIndexer(pattern);
-	const auto full_size = pown(3, popcount(pattern));
-
-	// Reserve memory for weights
-	std::vector<Weights> weights(indexer->variations, Weights(full_size));
-
-	// Decompress weights
-	for (int i = 0; i < indexer->variations; i++)
-	{
-		BitBoard variation = indexer->PatternVariation(i);
-		for (const Position& config : Configurations(variation))
-			weights[i][FastIndex(config, variation)] = compressed_weights[indexer->DenseIndex(config, i)];
-	}
-
-	std::vector<BitBoard> variations;
-	for (int i = 0; i < indexer->variations; i++)
-		variations.push_back(indexer->PatternVariation(i));
-
-	if (indexer->variations == 4)
-		return std::make_unique<Simple<4>>(std::move(variations), std::move(weights));
-	return std::make_unique<Simple<8>>(std::move(variations), std::move(weights));
 }
 
-std::unique_ptr<Evaluator> Pattern::CreateEvaluator(const std::vector<BitBoard>& patterns, std::span<const float> compressed_weights)
+GLEM::GLEM(BitBoard pattern, std::optional<std::span<const float>> weights)
+	: GLEM(std::vector{ pattern }, weights)
+{}
+
+float GLEM::Eval(const Position& pos) const noexcept
 {
-	std::vector<std::unique_ptr<Evaluator>> evaluators;
-	evaluators.reserve(patterns.size());
-	auto begin = compressed_weights.begin();
-	for (BitBoard p : patterns)
+	float sum = 0.0f;
+	for (std::size_t i = 0; i < masks.size(); i += 4)
 	{
-		auto size = CreateDenseIndexer(p)->reduced_size;
-		evaluators.push_back(CreateEvaluator(p, { begin, begin + size }));
-		begin += size;
+		sum += w[i][FastIndex(pos, masks[i])]
+			+ w[i + 1][FastIndex(pos, masks[i + 1])]
+			+ w[i + 2][FastIndex(pos, masks[i + 2])]
+			+ w[i + 3][FastIndex(pos, masks[i + 3])];
 	}
-	return std::make_unique<SumGroup>(std::move(evaluators));
+	return sum;
+}
+
+std::vector<GLEM::MaskAndValue> GLEM::DetailedEval(const Position& pos) const noexcept
+{
+	std::vector<MaskAndValue> ret;
+	ret.reserve(masks.size());
+	for (std::size_t i = 0; i < masks.size(); i++)
+		ret.emplace_back(masks[i], w[i][FastIndex(pos, masks[i])]);
+	return ret;
+}
+
+std::vector<float> GLEM::Weights() const
+{
+	std::vector<float> ret;
+	for (auto index : pattern_index)
+	{
+		auto pattern = masks[index];
+		auto dense_indexer = CreateIndexer(pattern);
+		auto size = dense_indexer->index_space_size;
+
+		auto old_size = ret.size();
+		ret.resize(old_size + size);
+
+		// Compress weights
+		for (const Position& config : Configurations(pattern))
+			ret[old_size + dense_indexer->DenseIndex(config, 0)] = w[index][FastIndex(config, pattern)];
+	}
+	return ret;
+}
+
+std::size_t GLEM::WeightsSize() const
+{
+	std::size_t size = 0;
+	for (auto index : pattern_index)
+		size += CreateIndexer(masks[index])->index_space_size;
+	return size;
+}
+
+std::vector<BitBoard> GLEM::Pattern() const
+{
+	std::vector<BitBoard> ret;
+	ret.reserve(pattern_index.size());
+	for (auto index : pattern_index)
+		ret.push_back(masks[index]);
+	return ret;
 }
 
 AAGLEM::AAGLEM(
-	int block_size,
-	std::vector<BitBoard> pattern,
-	const std::vector<std::vector<float>>& compressed,
-	const std::vector<float>& accuracy_parameters)
-	: block_size(block_size), pattern(std::move(pattern))
+	std::vector<BitBoard> patterns,
+	std::vector<int> block_boundaries,
+	std::valarray<double> accuracy_parameters)
+	: accuracy_model(std::move(accuracy_parameters))
+	, block_boundaries(std::move(block_boundaries))
 {
-	std::shared_ptr<Evaluator> zero_eval = std::make_shared<Zero>();
-	for (auto& e : evals)
-		e = zero_eval;
-	evals[0] = std::make_unique<GameOver>();
+	evals.fill(std::make_shared<GLEM>(patterns));
+}
 
-	alpha = accuracy_parameters[0];
-	beta = accuracy_parameters[1];
-	gamma = accuracy_parameters[2];
-	delta = accuracy_parameters[3];
-	epsilon = accuracy_parameters[4];
-
-	int empty_count = 1;
-	for (const auto& w : compressed)
+AAGLEM::AAGLEM(
+	std::vector<BitBoard> patterns,
+	std::vector<int> block_boundaries,
+	std::span<const float> weights,
+	std::valarray<double> accuracy_parameters)
+	: AAGLEM(std::move(patterns), std::move(block_boundaries), std::move(accuracy_parameters))
+{
+	for (int i = 0; i < Blocks(); i++)
 	{
-		std::shared_ptr<Evaluator> eval = CreateEvaluator(this->pattern, w);
-		for (int i = 0; i < block_size; i++)
-			evals[empty_count++] = eval;
+		SetWeights(i, weights);
+		weights = weights.subspan(GetWeightsSize(i));
 	}
+}
+
+AAGLEM::AAGLEM() : AAGLEM({}, { 0,65 }) {}
+
+float AAGLEM::Eval(const Position& pos) const noexcept
+{
+	return evals[pos.EmptyCount()]->Eval(pos);
+}
+
+std::vector<GLEM::MaskAndValue> AAGLEM::DetailedEval(const Position& pos) const noexcept
+{
+	return evals[pos.EmptyCount()]->DetailedEval(pos);
+}
+
+std::vector<BitBoard> AAGLEM::Pattern() const
+{
+	return evals[0]->Pattern();
+}
+
+std::vector<int> AAGLEM::BlockBoundaries() const
+{
+	return block_boundaries;
+}
+
+std::size_t AAGLEM::Blocks() const
+{
+	return block_boundaries.size() - 1;
+}
+
+std::vector<HalfOpenInterval> AAGLEM::Boundaries() const
+{
+	std::vector<HalfOpenInterval> ret;
+	for (std::size_t i = 0; i < block_boundaries.size() - 1; i++)
+		ret.emplace_back(block_boundaries[i], block_boundaries[i + 1]);
+	return ret;
+}
+
+HalfOpenInterval AAGLEM::Boundaries(int block) const
+{
+	return { block_boundaries[block], block_boundaries[block + 1] };
+}
+
+void AAGLEM::SetWeights(int block, std::span<const float> weights, std::vector<BitBoard> patterns)
+{
+	auto eval = std::make_shared<GLEM>(patterns, weights);
+	for (int e = block_boundaries[block]; e < block_boundaries[block + 1]; e++)
+		evals[e] = eval;
+}
+
+void AAGLEM::SetWeights(int block, std::span<const float> weights)
+{
+	SetWeights(block, weights, evals[block_boundaries[block]]->Pattern());
+}
+
+std::vector<float> AAGLEM::GetWeights(int block) const
+{
+	return evals[block_boundaries[block]]->Weights();
+}
+
+std::vector<float> AAGLEM::GetWeights() const
+{
+	std::vector<float> ret;
+	for (int i = 0; i < Blocks(); i++)
+	{
+		auto w = GetWeights(i);
+		ret.insert(ret.end(), w.begin(), w.end());
+	}
+	return ret;
+}
+
+std::size_t AAGLEM::GetWeightsSize(int block) const
+{
+	return evals[block_boundaries[block]]->WeightsSize();
+}
+
+std::size_t AAGLEM::GetWeightsSize() const
+{
+	std::size_t size = 0;
+	for (int i = 0; i < Blocks(); i++)
+		size += GetWeightsSize(i);
+	return size;
 }

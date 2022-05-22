@@ -2,7 +2,7 @@
 
 void BigNode::Update(const key_type& new_key, const value_type& new_value)
 {
-	ScopedLock lock{m_value};
+	ScopedLock lock{ m_value };
 	if (new_value > lock.value)
 	{
 		m_key = new_key;

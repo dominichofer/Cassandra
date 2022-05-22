@@ -42,5 +42,5 @@ public:
 	int64 calculate(const Position&, int depth) override;
 	int64 calculate(int depth) override;
 
-	void clear() override { hash_table.Clear(); }
+	void clear() override { hash_table.clear(); }
 };
