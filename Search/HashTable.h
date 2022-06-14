@@ -26,6 +26,10 @@ private:
 	value_type value{};
 public:
 	OneNode() noexcept = default;
+	OneNode(const OneNode& o) : key(o.key), value(o.value) {}
+	OneNode(OneNode&& o) : key(o.key), value(o.value) {}
+	OneNode& operator=(const OneNode& o) { key = o.key; value = o.value; }
+	OneNode& operator=(OneNode&& o) { key = o.key; value = o.value; }
 
 	void Update(const key_type&, const value_type&);
 	std::optional<value_type> LookUp(const key_type&) const;

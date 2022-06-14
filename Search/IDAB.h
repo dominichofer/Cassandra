@@ -27,14 +27,18 @@ private:
 	{
 		nodes = 0;
 
-		const std::vector confidence_levels = { 1.1_sigmas, /*1.5_sigmas,*/ Confidence::Certain() }; // 1.1: 86%, 1.5: 93%, 2.0: 97%, 2.6: 99%
 		const int D = request.depth;
 		const int E = pos.EmptyCount();
+		std::vector<Confidence> confidence_levels;
+		//if (D > 20)
+		//	confidence_levels = { 1.1_sigmas, 1.5_sigmas, Confidence::Certain() }; // 1.1: 86%, 1.5: 93%, 2.0: 97%, 2.6: 99%
+		//else
+			confidence_levels = { 1.1_sigmas, /*1.5_sigmas,*/ Confidence::Certain() }; // 1.1: 86%, 1.5: 93%, 2.0: 97%, 2.6: 99%
 		ScoreMove score = 0;
 
 
 		// Iterative deepening
-		for (int d = 5; d < D and d < E - 10; d++)
+		for (int d = 5; d < D and d <= E - 10; d++)
 		{
 			score = base.Eval(pos, { d, confidence_levels[0] }, window);
 			nodes += base.Nodes();
@@ -43,8 +47,11 @@ private:
 		// Iterative broadening
 		for (int level = 0; confidence_levels[level] < request.certainty; level++)
 		{
-			score = base.Eval(pos, { D, confidence_levels[level] }, window);
-			nodes += base.Nodes();
+			auto mtd_f = MTD<Base>{ score, base };
+			score = mtd_f.Eval(pos, { D, confidence_levels[level] }, window);
+			nodes += mtd_f.Nodes();
+			//score = base.Eval(pos, { D, confidence_levels[level] }, window);
+			//nodes += base.Nodes();
 		}
 
 		//return score;

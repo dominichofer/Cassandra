@@ -36,7 +36,7 @@ ScoreMove PVS::Eval_BestMove_N(const Position& pos, Intensity intensity, OpenInt
 	}
 
 	ScoreMove best;
-	for (Field move : SortMoves(moves, pos))
+	for (Field move : SortMoves(moves, pos, intensity.depth))
 	{
 		int score = -PVS_N(Play(pos, move), intensity - 1, -window);
 		if (score > window)
@@ -49,11 +49,12 @@ ScoreMove PVS::Eval_BestMove_N(const Position& pos, Intensity intensity, OpenInt
 
 IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
 {
-	if (pos.EmptyCount() <= 7 and intensity.depth >= pos.EmptyCount())
+	const bool endgame = (intensity.depth >= pos.EmptyCount());
+	if (pos.EmptyCount() <= 7 and endgame)
 		return AlphaBetaFailSuperSoft::Eval_N(pos, window);
 	if (intensity.depth <= 2)
 		return Eval_dN(pos, intensity, window);
-	//if (pos.EmptyCount() <= 14 and intensity.depth < pos.EmptyCount())
+	//if (pos.EmptyCount() <= 10 and not endgame)
 	//	return PVS_N(pos, pos.EmptyCount(), window);
 
 	nodes++;
@@ -65,6 +66,8 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 			return -PVS_N(passed, intensity, -window);
 		return EvalGameOver(pos);
 	}
+	if (moves.size() == 1)
+		return -PVS_N(Play(pos, moves.front()), intensity - 1, -window) + 1;
 
 	Findings findings(intensity, window);
 	if (auto look_up = tt.LookUp(pos); look_up.has_value())
@@ -73,8 +76,8 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 
 	Finally finally([&]() { tt.Update(pos, findings); });
 	bool first = true;
-	if (findings.move == Field::invalid and intensity.depth > 16)
-		findings.move = Eval_BestMove_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move;
+	//if (findings.move == Field::invalid and intensity.depth > 14)
+	//	findings.move = Eval_BestMove_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move;
 	if (findings.move != Field::invalid)
 	{
 		auto ret = -PVS_N(Play(pos, findings.move), intensity - 1, -findings.NextFullWindow());
@@ -84,7 +87,7 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 		moves.erase(findings.move);
 	}
 
-	for (Field move : SortMoves(moves, pos))
+	for (Field move : SortMoves(moves, pos, intensity.depth))
 	{
 		if (not first)
 		{
@@ -106,7 +109,8 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 
 IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
 {
-	if (pos.EmptyCount() <= 7 and intensity.depth >= pos.EmptyCount())
+	const bool endgame = (intensity.depth >= pos.EmptyCount());
+	if (pos.EmptyCount() <= 7 and endgame)
 		return AlphaBetaFailSuperSoft::Eval_N(pos, window);
 	if (intensity.depth <= 2)
 		return Eval_dN(pos, intensity, window);
@@ -120,6 +124,8 @@ IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenIn
 			return -ZWS_N(passed, intensity, -window);
 		return EvalGameOver(pos);
 	}
+	if (moves.size() == 1)
+		return -ZWS_N(Play(pos, moves.front()), intensity - 1, -window) + 1;
 
 	if (auto max = StabilityBasedMaxScore(pos); max < window)
 		return max;
@@ -130,13 +136,27 @@ IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenIn
 			return findings;
 	if (auto mpc = MPC(pos, intensity, window); mpc.has_value())
 		return mpc.value();
-	if (findings.move == Field::invalid)
-		if (auto look_up = tt.LookUp(pos); look_up.has_value())
-			if (findings.Add(look_up.value()))
-				return findings;
+	//if (findings.move == Field::invalid)
+	//	if (auto look_up = tt.LookUp(pos); look_up.has_value())
+	//		if (findings.Add(look_up.value()))
+	//			return findings;
+	
+	// ETC
+	//if (intensity.depth > 5 and intensity.depth < pos.EmptyCount())
+	//{
+	//	for (Field move : moves)
+	//	{
+	//		Position next = Play(pos, move);
+	//		if (auto max = -StabilityBasedMaxScore(next); max > window)
+	//			return max;
+	//		if (auto look_up = tt.LookUp(next); look_up.has_value())
+	//			if (look_up.value().intensity + 1 >= intensity and -look_up.value().window > window)
+	//				return { look_up.value().intensity + 1, -look_up.value().window.Upper() };
+	//	}
+	//}
 
 	Finally finally([&]() { tt.Update(pos, findings); });
-	if (findings.move == Field::invalid and intensity.depth > 16)
+	if (findings.move == Field::invalid and intensity.depth > 14)
 		findings.move = Eval_BestMove_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move;
 	if (findings.move != Field::invalid)
 	{
@@ -146,7 +166,7 @@ IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenIn
 		moves.erase(findings.move);
 	}
 
-	for (Field move : SortMoves(moves, pos))
+	for (Field move : SortMoves(moves, pos, intensity.depth))
 	{
 		auto ret = -ZWS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
 		if (findings.Add(ret, move))
@@ -176,6 +196,8 @@ std::optional<IntensityScore> PVS::MPC(const Position& pos, Intensity intensity,
 
 	// confidence of reduced search
 	Confidence c = Confidence::Certain();
+	if (intensity.certainty == 0.8_sigmas)
+		c = 1.1_sigmas;
 	if (intensity.certainty == 1.1_sigmas)
 		c = 1.5_sigmas;
 	if (intensity.certainty == 1.5_sigmas)
@@ -206,10 +228,10 @@ std::optional<IntensityScore> PVS::MPC(const Position& pos, Intensity intensity,
 
 IntensityScore PVS::Eval_dN(const Position& pos, Intensity intensity, OpenInterval window)
 {
-	nodes++;
 	if (intensity.depth == 0)
 		return Eval_d0(pos);
 
+	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{
@@ -236,8 +258,25 @@ IntensityScore PVS::Eval_d0(const Position& pos)
 	return { /*depth*/ 0, to_score(evaluator.Eval(pos)) };
 }
 
-SortedMoves PVS::SortMoves(Moves moves, const Position& pos)
+SortedMoves PVS::SortMoves(Moves moves, const Position& pos, int depth)
 {
+	//int sort_depth;
+	//int min_depth = 9;
+	//if (pos.EmptyCount() <= 27)
+	//	min_depth += (30 - pos.EmptyCount()) / 3;
+	//if (depth >= min_depth)
+	//{
+	//	sort_depth = (depth - 15) / 3;
+	//	if (pos.EmptyCount() >= 27)
+	//		++sort_depth;
+	//	if (sort_depth < 0)
+	//		sort_depth = 0;
+	//	else if (sort_depth > 6)
+	//		sort_depth = 6;
+	//}
+	//else
+	//	sort_depth = -1;
+
 	return SortedMoves(moves, [pos](Field move)
 		{
 			Position next = Play(pos, move);
@@ -248,13 +287,44 @@ SortedMoves PVS::SortMoves(Moves moves, const Position& pos)
 			auto O9 = EightNeighboursAndSelf(O);
 			auto E9 = EightNeighboursAndSelf(E);
 			auto pm = PossibleMoves(next);
+			int sc = ((((0x0100000000000001ULL & O) << 1) | ((0x8000000000000080ULL & O) >> 1) | ((0x0000000000000081ULL & O) << 8) | ((0x8100000000000000ULL & O) >> 8) | 0x8100000000000081ULL) & O);
 			auto se = StableEdges(next);
+			int potential_mobility = popcount(E & O9) + popcount(E & O9 & BitBoard::Corners());
 
 			uint32_t score = 0;
-			score += popcount(O & E9) << 8;
-			score += popcount(E & O9) << 9;
-			score += (64 - popcount(se & O)) << 14;
-			score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
+			//if (sort_depth < 0)
+			//{
+				//score += potential_mobility << 8;
+				//score += (64 - popcount(sc)) << 13;
+				//score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
+			//}
+			//else
+			//{
+				//score += potential_mobility << 8;
+				//score += (64 - popcount(se & O)) << 13;
+				//score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
+			//	//switch (sort_depth)
+			//	//{
+			//	//	case 0:
+			//	//		score += (Eval_d0(next) >> 1) << 18; // 1 level score bonus
+			//	//		break;
+			//	//	case 1:
+			//	//	case 2:
+			//	//		score += ((Eval_dN(next, sort_depth, { -inf_score, +inf_score }))) << 18;  // 2 level score bonus
+			//	//		break;
+			//	//	default:
+			//	//		//score += 1 << 18;
+			//	//		//if (tt.LookUp(pos).has_value())
+			//	//		//	score -= 1 << 18; // bonus if the position leads to a position stored in the hash-table
+			//	//		score += ((Eval_dN(next, sort_depth, { -inf_score, +inf_score }))) << 18; // > 3 level bonus
+			//	//		break;
+			//	//}
+				score += (popcount(O & E9) + popcount(O & E9 & BitBoard::Corners())) << 8;
+				score += potential_mobility << 9; // get_potential_moves
+				score += (64 - popcount(se & O)) << 14;
+				score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
+			//}
+
 			return score;
 		});
 }

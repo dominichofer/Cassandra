@@ -36,5 +36,5 @@ Position ParsePosition_SingleLine(const std::string& str) noexcept(false)
 		return Position{ P, O };
 	if (str[65] == 'O')
 		return Position{ O, P };
-	throw;
+	throw std::runtime_error("Position string needs to end with 'X' or 'O' to denote who is to play.");
 }

@@ -25,6 +25,38 @@ public:
 		: hash_fkt(std::move(hash_fkt))
 		, buckets(buckets)
 	{}
+	HashTable(const HashTable<Node>& o)
+		: updates(o.updates.load())
+		, lookups(o.lookups.load())
+		, hits(o.hits.load())
+		, hash_fkt(o.hash_fkt)
+		, buckets(o.buckets)
+	{}
+	HashTable(HashTable<Node>&& o)
+		: updates(o.updates.load())
+		, lookups(o.lookups.load())
+		, hits(o.hits.load())
+		, hash_fkt(o.hash_fkt)
+		, buckets(std::move(o.buckets))
+	{}
+	HashTable<Node> operator=(const HashTable<Node>& o)
+	{
+		updates.store(o.updates.load());
+		lookups.store(o.lookups.load());
+		hits.store(o.hits.load());
+		hash_fkt = o.hash_fkt;
+		buckets = o.buckets;
+		return *this;
+	}
+	HashTable<Node> operator=(HashTable<Node>&& o)
+	{
+		updates.store(o.updates.load());
+		lookups.store(o.lookups.load());
+		hits.store(o.hits.load());
+		hash_fkt = o.hash_fkt;
+		buckets = std::move(o.buckets);
+		return *this;
+	}
 
 	void Update(const key_type& key, const value_type& value)
 	{

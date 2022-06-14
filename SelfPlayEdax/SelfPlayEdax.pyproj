@@ -11,6 +11,8 @@
     <OutputPath>.</OutputPath>
     <Name>SelfPlayEdax</Name>
     <RootNamespace>SelfPlayEdax</RootNamespace>
+    <TestFramework>unittest</TestFramework>
+    <InterpreterId>Global|VisualStudio|Python3.10</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +23,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Database.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Edax.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="EdaxOutput.py">
       <SubType>Code</SubType>
     </Compile>
@@ -33,13 +41,25 @@
     <Compile Include="EdaxScript_test.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Game.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Game_test.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Position.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Position_benchmark.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Position_test.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SelfPlayEdax.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|VisualStudio|Python3.10" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -34,5 +34,5 @@ private:
 	IntensityScore Eval_dN(const Position&, Intensity, OpenInterval);
 	IntensityScore Eval_d0(const Position&);
 
-	SortedMoves SortMoves(Moves, const Position&);
+	SortedMoves SortMoves(Moves, const Position&, int depth);
 };
