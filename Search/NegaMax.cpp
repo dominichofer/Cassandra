@@ -1,19 +1,13 @@
 #include "NegaMax.h"
 #include <algorithm>
 
-int NegaMax::Eval(const Position& pos, Intensity, OpenInterval)
+ContextualResult NegaMax::Eval(const Position& pos, Intensity, OpenInterval)
 {
 	nodes = 0;
-	return Eval_N(pos);
+	return eval(pos);
 }
 
-ScoreMove NegaMax::Eval_BestMove(const Position& pos, Intensity, OpenInterval)
-{
-	nodes = 0;
-	return Eval_BestMove_N(pos);
-}
-
-ScoreMove NegaMax::Eval_BestMove_N(const Position& pos)
+ContextualResult NegaMax::eval(const Position& pos)
 {
 	nodes++;
 	Moves moves = PossibleMoves(pos);
@@ -21,15 +15,39 @@ ScoreMove NegaMax::Eval_BestMove_N(const Position& pos)
 	{
 		auto passed = PlayPass(pos);
 		if (HasMoves(passed))
-			return -Eval_BestMove_N(passed);
+			return -eval(passed);
 		return EvalGameOver(pos);
 	}
-
-	ScoreMove best;
+	
+	ContextualResult res;
 	for (Field move : moves)
-		best.ImproveWith(-Eval_N(Play(pos, move)), move);
-	return best;
+		res.ImproveWith(-Eval_N(Play(pos, move)), move);
+	return res;
 }
+
+//ScoreMove NegaMax::Eval_BestMove(const Position& pos, Intensity, OpenInterval)
+//{
+//	nodes = 0;
+//	return Eval_BestMove_N(pos);
+//}
+//
+//ScoreMove NegaMax::Eval_BestMove_N(const Position& pos)
+//{
+//	nodes++;
+//	Moves moves = PossibleMoves(pos);
+//	if (!moves)
+//	{
+//		auto passed = PlayPass(pos);
+//		if (HasMoves(passed))
+//			return -Eval_BestMove_N(passed);
+//		return EvalGameOver(pos);
+//	}
+//
+//	ScoreMove best;
+//	for (Field move : moves)
+//		best.ImproveWith(-Eval_N(Play(pos, move)), move);
+//	return best;
+//}
 
 // Returns the score of pos.
 int NegaMax::Eval_N(const Position& pos)

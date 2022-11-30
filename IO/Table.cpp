@@ -1,28 +1,18 @@
 #include "Table.h"
 #include <ranges>
 
-void Table::AddColumn(std::string title, int width, std::string content_format, bool visible)
+Table::Table(std::string title, std::string format) noexcept
+	: title(std::move(title))
+	, format(std::move(format))
+{}
+
+void Table::PrintHeader() const
 {
-	cols.emplace_back(visible, width, std::move(title), " " + content_format + " ");
+	fmt::print("{}\n", title);
+	PrintSeparator();
 }
 
 void Table::PrintSeparator() const
 {
-	fmt::print("{}\n", fmt::join(
-		cols
-		| std::ranges::views::filter([](const auto& col) { return col.visible; })
-		| std::ranges::views::transform([](const auto& col) { return std::string(col.width + 2, '-'); })
-		, "+")
-	);
-}
-
-void Table::PrintHeader() const
-{
-	fmt::print("{}\n", fmt::join(
-		cols
-		| std::ranges::views::filter([](const auto& col) { return col.visible; })
-		| std::ranges::views::transform([](const auto& col) { return fmt::format(" {:^{}} ", col.title, col.width); })
-		, "|")
-	);
-	PrintSeparator();
+	fmt::print("{}\n", fmt::join(title | std::views::transform([](char c) { return c == '|' ? '+' : '-'; }), ""));
 }

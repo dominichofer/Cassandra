@@ -3,10 +3,8 @@
 #include <iterator>
 #include <ranges>
 
-class Moves
+namespace moves
 {
-	BitBoard b;
-public:
 	class Iterator
 	{
 		BitBoard moves;
@@ -17,21 +15,27 @@ public:
 		using pointer = Field*;
 		using iterator_category = std::forward_iterator_tag;
 
-		constexpr Iterator() noexcept = default;
+		CUDA_CALLABLE Iterator() noexcept = default;
 		CUDA_CALLABLE Iterator(const BitBoard& moves) noexcept : moves(moves) {}
-		CUDA_CALLABLE Iterator& operator++() noexcept { moves.ClearFirstSet(); return *this; }
-		CUDA_CALLABLE Field operator*() const noexcept { return moves.FirstSetField(); }
 
 		CUDA_CALLABLE bool operator==(const Iterator& o) const noexcept { return moves == o.moves; }
 		CUDA_CALLABLE bool operator!=(const Iterator& o) const noexcept { return moves != o.moves; }
-	};
 
+		CUDA_CALLABLE Iterator& operator++() noexcept { moves.ClearFirstSet(); return *this; }
+		CUDA_CALLABLE Field operator*() const noexcept { return moves.FirstSetField(); }
+	};
+}
+
+class Moves
+{
+	BitBoard b;
+public:
 	constexpr Moves() noexcept = default;
-	CUDA_CALLABLE constexpr Moves(BitBoard moves) noexcept : b(moves) {}
+	CUDA_CALLABLE constexpr explicit Moves(BitBoard moves) noexcept : b(moves) {}
 
 	CUDA_CALLABLE bool operator==(const Moves& o) const noexcept { return b == o.b; }
 	CUDA_CALLABLE bool operator!=(const Moves& o) const noexcept { return b != o.b; }
-	CUDA_CALLABLE Moves operator&(const BitBoard& mask) const noexcept { return b & mask; }
+	CUDA_CALLABLE Moves operator&(const BitBoard& mask) const noexcept { return Moves{ b & mask }; }
 
 	CUDA_CALLABLE Field operator[](std::size_t index) const noexcept { return BitBoard(PDep(1ULL << index, b)).FirstSetField(); }
 
@@ -46,6 +50,6 @@ public:
 	CUDA_CALLABLE Field front() const noexcept { return b.FirstSetField(); }
 	CUDA_CALLABLE void pop_front() noexcept { b.ClearFirstSet(); }
 
-	CUDA_CALLABLE Iterator begin() const noexcept { return b; }
-	CUDA_CALLABLE Iterator end() const noexcept { return {}; }
+	CUDA_CALLABLE moves::Iterator begin() const noexcept { return b; }
+	CUDA_CALLABLE moves::Iterator end() const noexcept { return {}; }
 };

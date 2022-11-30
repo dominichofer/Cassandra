@@ -143,22 +143,29 @@ int EvalGameOver(const Position& pos) noexcept
 	return 0;
 }
 
-CUDA_CALLABLE Position Play(const Position& pos, Field move, BitBoard flips)
+CUDA_CALLABLE Position Play(const Position& pos, Field move, BitBoard flips) noexcept
 {
 	assert((pos.Opponent() & flips) == flips); // only flipping opponent stones.
 
 	return { pos.Opponent() ^ flips, pos.Player() ^ flips ^ BitBoard(move) };
 }
 
-CUDA_CALLABLE Position Play(const Position& pos, Field move)
+CUDA_CALLABLE Position Play(const Position& pos, Field move) noexcept
 {
 	//assert(pos.Empties().Get(move)); // move field is free.
 
-	const auto flips = Flips(pos, move);
+	auto flips = Flips(pos, move);
 	return Play(pos, move, flips);
 }
 
 CUDA_CALLABLE Position PlayPass(const Position& pos) noexcept
 {
 	return { pos.Opponent(), pos.Player() };
+}
+
+CUDA_CALLABLE Position PlayOrPass(const Position& pos, Field move) noexcept
+{
+	if (move == Field::invalid)
+		return PlayPass(pos);
+	return Play(pos, move);
 }

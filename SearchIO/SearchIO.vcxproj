@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -80,6 +80,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CoreIO\CoreIO.vcxproj">
+      <Project>{e694a211-602c-44ed-83bb-51579cffeaef}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\IO\IO.vcxproj">
       <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
     </ProjectReference>
@@ -92,6 +95,7 @@
     <ClInclude Include="Stream.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SearchIO.cpp" />
     <ClCompile Include="Stream.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

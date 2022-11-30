@@ -1,21 +1,10 @@
 #include "PrincipalVariation.h"
 #include "Stability.h"
 
-int to_score(float value)
-{
-	return std::clamp(static_cast<int>(std::round(value)), min_score, max_score);
-}
-
-int PVS::Eval(const Position& pos, Intensity intensity, OpenInterval window)
+ContextualResult PVS::Eval(const Position& pos, Intensity intensity, OpenInterval window)
 {
 	nodes = 0;
 	return PVS_N(pos, intensity, window);
-}
-
-ScoreMove PVS::Eval_BestMove(const Position& pos, Intensity intensity, OpenInterval window)
-{
-	nodes = 0;
-	return Eval_BestMove_N(pos, intensity, window);
 }
 
 void PVS::clear()
@@ -23,35 +12,35 @@ void PVS::clear()
 	tt.clear();
 }
 
-ScoreMove PVS::Eval_BestMove_N(const Position& pos, Intensity intensity, OpenInterval window)
-{
-	nodes++;
-	Moves moves = PossibleMoves(pos);
-	if (!moves)
-	{
-		auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -Eval_BestMove_N(passed, intensity, -window);
-		return EvalGameOver(pos);
-	}
+//ScoreMove PVS::Eval_BestMove_N(const Position& pos, Intensity intensity, OpenInterval window)
+//{
+//	nodes++;
+//	Moves moves = PossibleMoves(pos);
+//	if (!moves)
+//	{
+//		auto passed = PlayPass(pos);
+//		if (HasMoves(passed))
+//			return -Eval_BestMove_N(passed, intensity, -window);
+//		return EvalGameOver(pos);
+//	}
+//
+//	ScoreMove best;
+//	for (Field move : SortMoves(moves, pos, intensity.depth))
+//	{
+//		int score = -PVS_N(Play(pos, move), intensity - 1, -window);
+//		if (score > window)
+//			return { score, move };
+//		best.ImproveWith(score, move);
+//		window.TryIncreaseLower(score);
+//	}
+//	return best;
+//}
 
-	ScoreMove best;
-	for (Field move : SortMoves(moves, pos, intensity.depth))
-	{
-		int score = -PVS_N(Play(pos, move), intensity - 1, -window);
-		if (score > window)
-			return { score, move };
-		best.ImproveWith(score, move);
-		window.TryIncreaseLower(score);
-	}
-	return best;
-}
-
-IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
+ContextualResult PVS::PVS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
 {
 	const bool endgame = (intensity.depth >= pos.EmptyCount());
 	if (pos.EmptyCount() <= 7 and endgame)
-		return AlphaBetaFailSuperSoft::Eval_N(pos, window);
+		return AlphaBetaFailSuperSoft::Eval(pos, window);
 	if (intensity.depth <= 2)
 		return Eval_dN(pos, intensity, window);
 	//if (pos.EmptyCount() <= 10 and not endgame)
@@ -76,15 +65,15 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 
 	Finally finally([&]() { tt.Update(pos, findings); });
 	bool first = true;
-	//if (findings.move == Field::invalid and intensity.depth > 14)
-	//	findings.move = Eval_BestMove_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move;
-	if (findings.move != Field::invalid)
+	//if (findings.Move() == Field::invalid and intensity.depth > 14)
+	//	findings.SetMove(PVS_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move);
+	if (findings.Move() != Field::invalid)
 	{
-		auto ret = -PVS_N(Play(pos, findings.move), intensity - 1, -findings.NextFullWindow());
-		if (findings.Add(ret, findings.move))
+		auto ret = -PVS_N(Play(pos, findings.Move()), intensity - 1, -findings.NextFullWindow());
+		if (findings.AddOption(ret, findings.Move()))
 			return findings;
 		first = false;
-		moves.erase(findings.move);
+		moves.erase(findings.Move());
 	}
 
 	for (Field move : SortMoves(moves, pos, intensity.depth))
@@ -93,7 +82,7 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 		{
 			auto zero_window = findings.NextZeroWindow();
 			auto ret = -ZWS_N(Play(pos, move), intensity - 1, -zero_window);
-			if (findings.Add(ret, move))
+			if (findings.AddOption(ret, move))
 				return findings;
 			if (ret < zero_window)
 				continue;
@@ -101,13 +90,13 @@ IntensityScore PVS::PVS_N(const Position& pos, Intensity intensity, const OpenIn
 		first = false;
 
 		auto ret = -PVS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
-		if (findings.Add(ret, move))
+		if (findings.AddOption(ret, move))
 			return findings;
 	}
 	return findings;
 }
 
-IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
+ContextualResult PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
 {
 	const bool endgame = (intensity.depth >= pos.EmptyCount());
 	if (pos.EmptyCount() <= 7 and endgame)
@@ -136,7 +125,7 @@ IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenIn
 			return findings;
 	if (auto mpc = MPC(pos, intensity, window); mpc.has_value())
 		return mpc.value();
-	//if (findings.move == Field::invalid)
+	//if (findings.Move() == Field::invalid)
 	//	if (auto look_up = tt.LookUp(pos); look_up.has_value())
 	//		if (findings.Add(look_up.value()))
 	//			return findings;
@@ -156,26 +145,27 @@ IntensityScore PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenIn
 	//}
 
 	Finally finally([&]() { tt.Update(pos, findings); });
-	if (findings.move == Field::invalid and intensity.depth > 14)
-		findings.move = Eval_BestMove_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move;
-	if (findings.move != Field::invalid)
+	if (findings.Move() == Field::invalid and intensity.depth > 14)
+		findings.SetMove(PVS_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move);
+	if (findings.Move() != Field::invalid)
 	{
-		auto ret = -ZWS_N(Play(pos, findings.move), intensity - 1, -findings.NextFullWindow());
-		if (findings.Add(ret, findings.move))
+		Field move = findings.Move();
+		auto ret = -ZWS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
+		if (findings.AddOption(ret, move))
 			return findings;
-		moves.erase(findings.move);
+		moves.erase(findings.Move());
 	}
 
 	for (Field move : SortMoves(moves, pos, intensity.depth))
 	{
 		auto ret = -ZWS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
-		if (findings.Add(ret, move))
+		if (findings.AddOption(ret, move))
 			return findings;
 	}
 	return findings;
 }
 
-std::optional<IntensityScore> PVS::MPC(const Position& pos, Intensity intensity, const OpenInterval& window)
+std::optional<ContextualResult> PVS::MPC(const Position& pos, Intensity intensity, const OpenInterval& window)
 {
 	if (intensity.IsCertain())
 		return std::nullopt;
@@ -190,9 +180,9 @@ std::optional<IntensityScore> PVS::MPC(const Position& pos, Intensity intensity,
 	float sd_0 = evaluator.Accuracy(D, 0, E);
 
 	if (eval_0 >= window.Upper() + t * sd_0) // fail high
-		return IntensityScore{ intensity, window.Upper() };
+		return ContextualResult{ intensity, window.Upper() };
 	if (eval_0 <= window.Lower() - t * sd_0) // fail low
-		return IntensityScore{ intensity, window.Lower() };
+		return ContextualResult{ intensity, window.Lower() };
 
 	// confidence of reduced search
 	Confidence c = Confidence::Certain();
@@ -213,20 +203,20 @@ std::optional<IntensityScore> PVS::MPC(const Position& pos, Intensity intensity,
 	{
 		int shallow_result = ZWS_N(pos, { d, c }, { upper_limit - 1, upper_limit });
 		if (shallow_result >= upper_limit) // fail high
-			return IntensityScore{ intensity, window.Upper() };
+			return ContextualResult{ intensity, window.Upper() };
 	}
 
 	if (eval_0 <= lower_limit and lower_limit >= min_score)
 	{
 		int shallow_result = ZWS_N(pos, { d, c }, { lower_limit, lower_limit + 1 });
 		if (shallow_result <= lower_limit) // fail low
-			return IntensityScore{ intensity, window.Lower() };
+			return ContextualResult{ intensity, window.Lower() };
 	}
 
 	return std::nullopt;
 }
 
-IntensityScore PVS::Eval_dN(const Position& pos, Intensity intensity, OpenInterval window)
+ContextualResult PVS::Eval_dN(const Position& pos, Intensity intensity, OpenInterval window)
 {
 	if (intensity.depth == 0)
 		return Eval_d0(pos);
@@ -252,7 +242,12 @@ IntensityScore PVS::Eval_dN(const Position& pos, Intensity intensity, OpenInterv
 	return { intensity.depth, best_score };
 }
 
-IntensityScore PVS::Eval_d0(const Position& pos)
+int to_score(float value)
+{
+	return std::clamp(static_cast<int>(std::round(value)), min_score, max_score);
+}
+
+ContextualResult PVS::Eval_d0(const Position& pos)
 {
 	nodes++;
 	return { /*depth*/ 0, to_score(evaluator.Eval(pos)) };

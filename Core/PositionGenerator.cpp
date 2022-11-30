@@ -1,11 +1,7 @@
 #include "PositionGenerator.h"
 #include "Bit.h"
-#include "Children.h"
-#include <set>
 
-using namespace PosGen;
-
-Position Random::operator()() noexcept
+Position RandomPositionGenerator::operator()() noexcept
 {
 	// Each field has a:
 	//  25% chance to belong to player,
@@ -17,7 +13,14 @@ Position Random::operator()() noexcept
 	return { a & ~b, b & ~a };
 }
 
-Position RandomWithEmptyCount::operator()() noexcept
+RandomPositionGeneratorWithEmptyCount::RandomPositionGeneratorWithEmptyCount(int empty_count, unsigned int seed) noexcept(false)
+	: empty_count(empty_count), rnd_engine(seed)
+{
+	if (empty_count < 0 or empty_count > 64)
+		throw std::runtime_error("'empty_count' out of bounds.");
+}
+
+Position RandomPositionGeneratorWithEmptyCount::operator()() noexcept
 {
 	Position pos;
 	while (pos.EmptyCount() > empty_count)
@@ -35,74 +38,70 @@ Position RandomWithEmptyCount::operator()() noexcept
 	return pos;
 }
 
-Played::Played(Player& first, Player& second, int empty_count, std::vector<Position> start) noexcept(false)
-	: first(first), second(second), empty_count(empty_count), start(std::move(start))
+Position RandomPosition(unsigned int seed)
 {
-	start_pick = std::uniform_int_distribution<std::size_t>(0, this->start.size() - 1);
-
-	if (std::ranges::any_of(this->start, [empty_count](const Position& pos) { return pos.EmptyCount() < empty_count; }))
-		throw;
+	return RandomPositionGenerator{ seed }();
 }
 
-Position Played::operator()() noexcept
+std::vector<Position> RandomPositions(int count, unsigned int seed)
 {
-start:
-	Position pos = start[start_pick(rnd_engine)];
-	if (pos.EmptyCount() == empty_count)
-		return pos;
-play:
-	Position old = pos;
-
-	pos = first.Play(pos);
-	if (pos.EmptyCount() == empty_count)
-		return pos;
-
-	pos = second.Play(pos);
-	if (pos.EmptyCount() == empty_count)
-		return pos;
-
-	if (old == pos) // both players passed
-		goto start;
-	goto play;
+	RandomPositionGenerator gen{ seed };
+	std::vector<Position> ret;
+	std::generate_n(std::back_inserter(ret), count, gen);
+	return ret;
 }
 
-std::set<Position> PosGen::generate_n_unique(int count, PositionGenerator& g)
+Position RandomPositionWithEmptyCount(int empty_count, unsigned int seed) noexcept(false)
 {
-	std::set<Position> set;
-	while (set.size() < count)
-		set.insert(g());
-	return set;
-}
-std::set<Position> PosGen::generate_n_unique(int count, PositionGenerator&& g)
-{
-	return generate_n_unique(count, g);
+	return RandomPositionGeneratorWithEmptyCount{ empty_count, seed }();
 }
 
-std::set<Position> PosGen::generate_n_unique(std::execution::parallel_policy, int count, PositionGenerator& g)
+std::vector<Position> RandomPositionsWithEmptyCount(int count, int empty_count, unsigned int seed) noexcept(false)
 {
-	std::set<Position> set;
-	while (set.size() < count)
+	RandomPositionGeneratorWithEmptyCount gen{ empty_count, seed };
+	std::vector<Position> ret;
+	std::generate_n(std::back_inserter(ret), count, gen);
+	return ret;
+}
+
+Position RandomlyPlayedPositionWithEmptyCount(int empty_count, Position start, unsigned int seed) noexcept(false)
+{
+	if (start.EmptyCount() < empty_count)
+		throw std::runtime_error("Input has not enough empty fields.");
+
+	RandomPlayer player{ seed };
+
+	Position pos = start;
+	int pass_count = 0;
+	while (pos.EmptyCount() > empty_count)
 	{
-		std::size_t remaining = count - set.size();
-		#pragma omp parallel
-		{
-			std::set<Position> local_set;
-			#pragma omp for nowait
-			for (int64_t i = 0; i < remaining; i++)
-				local_set.insert(g());
-			#pragma omp critical
-			set.merge(local_set);
-		}
+		Field move = player.ChooseMove(pos);
+		pos = PlayOrPass(pos, move);
+		
+		if (move == Field::invalid)
+			pass_count++;
+		else
+			pass_count = 0;
+
+		if (pass_count == 2)
+			pos = start; // restart
 	}
-	return set;
+	return pos;
+}
+Position RandomlyPlayedPositionWithEmptyCount(int empty_count, unsigned int seed) noexcept(false)
+{
+	return RandomlyPlayedPositionWithEmptyCount(empty_count, Position::Start(), seed);
 }
 
-std::set<Position> PosGen::generate_n_unique(std::execution::parallel_policy p, int count, PositionGenerator&& g) { return generate_n_unique(p, count, g); }
-
-std::vector<Position> AllUnique(Position start, int empty_count)
+std::vector<Position> RandomlyPlayedPositionsWithEmptyCount(int count, int empty_count, Position start, unsigned int seed) noexcept(false)
 {
-	std::set<Position> set;
-	for (Position pos : Children(start, empty_count))
-		set.insert(FlipToUnique(pos));
-	return { set.begin(), set.end() };
+	std::vector<Position> ret(count, start);
+	#pragma omp parallel for
+	for (int i = 0; i < count; i++)
+		ret[i] = RandomlyPlayedPositionWithEmptyCount(empty_count, start, seed + i);
+	return ret;
+}
+std::vector<Position> RandomlyPlayedPositionsWithEmptyCount(int count, int empty_count, unsigned int seed) noexcept(false)
+{
+	return RandomlyPlayedPositionsWithEmptyCount(count, empty_count, Position::Start(), seed);
 }

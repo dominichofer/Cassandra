@@ -90,10 +90,12 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 
 CUDA_CALLABLE int EvalGameOver(const Position&) noexcept;
 
-CUDA_CALLABLE Position Play(const Position&, Field move, BitBoard flips);
-CUDA_CALLABLE Position Play(const Position&, Field move);
+CUDA_CALLABLE Position Play(const Position&, Field move, BitBoard flips) noexcept;
+CUDA_CALLABLE Position Play(const Position&, Field move) noexcept;
 
 CUDA_CALLABLE Position PlayPass(const Position&) noexcept;
+
+CUDA_CALLABLE Position PlayOrPass(const Position&, Field move) noexcept;
 
 CUDA_CALLABLE BitBoard Flips(const Position&, Field move) noexcept;
 

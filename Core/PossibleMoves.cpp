@@ -34,7 +34,7 @@ Moves detail::PossibleMoves_AVX512(const Position& pos) noexcept
 	flip = _mm512_rolv_epULL(flip, shift1);
 
 	// 1 x NOT, 2 x OR, 1 x AND
-	return ~(P | O) & _mm512_reduce_or_epULL(flip);
+	return Moves{ ~(P | O) & _mm512_reduce_or_epULL(flip) };
 }
 #endif
 
@@ -73,7 +73,7 @@ Moves detail::PossibleMoves_AVX2(const Position& pos) noexcept
 	flip2 >>= int64x4(1, 8, 7, 9);
 	
 	// 1 x NOT, 2 x OR, 1 x AND, 1 x function call
-	return pos.Empties() & static_cast<uint64>(reduce_or(flip1 | flip2));
+	return Moves{ pos.Empties() & static_cast<uint64>(reduce_or(flip1 | flip2)) };
 }
 #endif
 
@@ -145,6 +145,6 @@ CUDA_CALLABLE Moves detail::PossibleMoves_x64(const Position& pos) noexcept
 	flip7 <<= 9;
 	flip8 >>= 9;
 
-	return pos.Empties() // 1 x AND, 1 x OR, 1 x NOT
-		& (flip1 | flip2 | flip3 | flip4 | flip5 | flip6 | flip7 | flip8); // 7 x OR
+	return Moves{ pos.Empties() // 1 x AND, 1 x OR, 1 x NOT
+		& (flip1 | flip2 | flip3 | flip4 | flip5 | flip6 | flip7 | flip8) }; // 7 x OR
 }

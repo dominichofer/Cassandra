@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;C:\Users\Dominic\source\repos\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;G:\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>

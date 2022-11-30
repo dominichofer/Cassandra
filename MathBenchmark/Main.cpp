@@ -6,15 +6,10 @@
 class BenchmarkTable : public Table
 {
 public:
-	BenchmarkTable()
-	{
-		AddColumn("name", 20, "{:20}");
-		AddColumn("size", 9, "{:9L}");
-		AddColumn("time", 7, "{:5}s");
-		AddColumn("MB", 7, "{:7L}");
-		AddColumn("GFlop/s", 7, "{:7L}");
-		AddColumn("GByte/s", 7, "{:7L}");
-	}
+	BenchmarkTable() : Table(
+		"        name        |  size   |  time  |  MB   |GFlop/s|GByte/s",
+		"{:20}|{:9L}|{:5}|{:7L}|{:7L}|{:7L}"
+	) {}
 
 	void PrintRow(const std::string& name, int64 size, auto duration, int64 flops, int64 bytes) const
 	{
@@ -57,12 +52,12 @@ MatrixCSR<T> RandomMatrixCSR(std::size_t elements_per_row, std::size_t rows, T c
 }
 
 template <typename T>
-std::valarray<T> RandomVector(std::size_t size)
+std::vector<T> RandomVector(std::size_t size)
 {
 	std::mt19937_64 rng;
 	std::uniform_real_distribution<T> dist{ -1, 1 };
 
-	std::valarray<T> vec(size);
+	std::vector<T> vec(size);
 	for (std::size_t i = 0; i < size; i++)
 		vec[i] = dist(rng);
 	return vec;

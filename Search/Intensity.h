@@ -11,6 +11,8 @@ struct Intensity
 
 	Intensity(int depth, Confidence certainty = Confidence::Certain()) noexcept : depth(depth), certainty(certainty) {}
 	static Intensity Exact() noexcept { return { 99 }; }
+	static Intensity None() noexcept { return { 0, Confidence::Uncertain() }; }
+	static Intensity Limitted(Intensity i, int empty_count) noexcept { return { std::min(i.depth, empty_count), i.certainty }; }
 
 	bool operator==(const Intensity&) const noexcept = default;
 	bool operator!=(const Intensity&) const noexcept = default;
@@ -23,7 +25,8 @@ struct Intensity
 	Intensity operator/(int value) const noexcept { return { depth / value, certainty }; }
 
 	bool IsCertain() const noexcept { return certainty.IsCertain(); }
-	bool IsExact() const noexcept { return *this == Exact(); }
+	bool IsExact() const noexcept { return *this >= Exact(); }
+	bool FullDepth() const noexcept { return depth >= Exact().depth; }
 };
 
 std::string to_string(const Intensity&);

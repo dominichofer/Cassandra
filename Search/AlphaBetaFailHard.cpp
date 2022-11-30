@@ -2,19 +2,13 @@
 #include <algorithm>
 #include <cassert>
 
-int AlphaBetaFailHard::Eval(const Position& pos, Intensity, OpenInterval window)
+ContextualResult AlphaBetaFailHard::Eval(const Position& pos, Intensity, OpenInterval window)
 {
 	nodes = 0;
-	return Eval_N(pos, window);
+	return eval(pos, window);
 }
 
-ScoreMove AlphaBetaFailHard::Eval_BestMove(const Position& pos, Intensity, OpenInterval window)
-{
-	nodes = 0;
-	return Eval_BestMove_N(pos, window);
-}
-
-ScoreMove AlphaBetaFailHard::Eval_BestMove_N(const Position& pos, OpenInterval window)
+ContextualResult AlphaBetaFailHard::eval(const Position& pos, OpenInterval window)
 {
 	nodes++;
 	Moves moves = PossibleMoves(pos);
@@ -22,21 +16,52 @@ ScoreMove AlphaBetaFailHard::Eval_BestMove_N(const Position& pos, OpenInterval w
 	{
 		auto passed = PlayPass(pos);
 		if (HasMoves(passed))
-			return -Eval_BestMove_N(passed, -window);
-		return EvalGameOver(pos);
+			return -eval(passed, -window);
+		return window.clamp(EvalGameOver(pos));
 	}
 
-	ScoreMove best;
+	Field best_move = Field::invalid;
 	for (Field move : moves)
 	{
 		int score = -Eval_N(Play(pos, move), -window);
 		if (score > window)
 			return { window.Upper(), move };
-		best.ImproveWith(score, move);
+		if (score > window.Lower())
+			best_move = move;
 		window.TryIncreaseLower(score);
 	}
-	return best;
+	return { window.Lower(), best_move };
 }
+
+//ScoreMove AlphaBetaFailHard::Eval_BestMove(const Position& pos, Intensity, OpenInterval window)
+//{
+//	nodes = 0;
+//	return Eval_BestMove_N(pos, window);
+//}
+//
+//ScoreMove AlphaBetaFailHard::Eval_BestMove_N(const Position& pos, OpenInterval window)
+//{
+//	nodes++;
+//	Moves moves = PossibleMoves(pos);
+//	if (!moves)
+//	{
+//		auto passed = PlayPass(pos);
+//		if (HasMoves(passed))
+//			return -Eval_BestMove_N(passed, -window);
+//		return EvalGameOver(pos);
+//	}
+//
+//	ScoreMove best;
+//	for (Field move : moves)
+//	{
+//		int score = -Eval_N(Play(pos, move), -window);
+//		if (score > window)
+//			return { window.Upper(), move };
+//		best.ImproveWith(score, move);
+//		window.TryIncreaseLower(score);
+//	}
+//	return best;
+//}
 
 int AlphaBetaFailHard::Eval_N(const Position& pos, OpenInterval window)
 {

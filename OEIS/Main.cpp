@@ -42,21 +42,15 @@ std::size_t NumberOfUniques(const std::vector<Position>& pos)
 void PrintHelp()
 {
 	std::cout
+		<< "A124004: Number of possible Reversi games at the end of the n-th ply. (https://oeis.org/A124004)\n"
+		<< "A124005: Number of different Othello positions at the end of the n-th ply. (https://oeis.org/A124005)\n"
+		<< "A124006: Number of Othello positions with unique realization at the end of the n-th ply. (https://oeis.org/A124006)\n"
+		<< "A125528: Number of different Othello shapes at the end of the n-th ply. (https://oeis.org/A125528)\n"
+		<< "A125529: Number of Othello shapes with unique realization at the end of the n-th ply. (https://oeis.org/A125529)\n"
 		<< "   -d    Depth of perft.\n"
 		<< "   -RAM  Number of hash table bytes.\n"
 		<< "   -h    Prints this help."
 		<< std::endl;
-}
-
-auto advance(auto it, auto end, int n)
-{
-	for (int i = 0; i < n; i++)
-	{
-		if (it == end)
-			return end;
-		++it;
-	}
-	return it;
 }
 
 int main()
@@ -64,22 +58,22 @@ int main()
 	std::locale::global(std::locale(""));
 	std::hash<uint64_t> hash;
 
-	Table table;
-	table.AddColumn("Plies", 5, "{:>5}");
-	table.AddColumn("A124005", 13, "{:>13L}");
-	table.AddColumn("A124006", 13, "{:>13L}");
-	table.AddColumn("A125528", 13, "{:>13L}");
-	table.AddColumn("A125529", 13, "{:>13L}");
-	table.AddColumn("Time [s]", 9, "{:>9.3f}");
+	Table table{
+		"Plies|    A124004    |   A124005   |   A124006   |   A125528   |   A125529   | Time [s]",
+		"{:>5}|{:>15L}|{:>13L}|{:>13L}|{:>13L}|{:>13L}|{:>9.3f}"
+	};
 	table.PrintHeader();
 
 	std::vector<Position> all;
 	all.reserve(4'000'000'000);
 
 	const Position tombstone{ 0, 0 };
+	const Position pos_1 = Play(Position::Start(), PossibleMoves(Position::Start())[0]); // causes symmetries = 4
+	const std::size_t symmetries = 4;
 
 	for (int plies = 1; plies < 20; plies++)
 	{
+		std::size_t games = 0;
 		std::size_t num_different_pos = 0;
 		std::size_t num_unique_pos = 0;
 		std::size_t num_different_shapes = 0;
@@ -94,10 +88,11 @@ int main()
 		for (int part = 0; part < part_count; part++)
 		{
 			all.clear();
-			for (Position pos : Children(Position::Start(), plies, true))
+			for (Position pos : Children(pos_1, plies, true))
 			{
 				if (hash(pos.Player() | pos.Opponent()) % part_count == part)
 				{
+					games++;
 					all.push_back(pos);
 					if (all.size() == all.capacity()) // compress
 					{
@@ -127,8 +122,11 @@ int main()
 		auto stop = std::chrono::high_resolution_clock::now();
 
 		table.PrintRow(plies,
-			num_different_pos, num_unique_pos, 
-			num_different_shapes, num_unique_shapes,
+			symmetries * games,
+			symmetries * num_different_pos,
+			symmetries * num_unique_pos,
+			symmetries * num_different_shapes,
+			symmetries * num_unique_shapes,
 			std::chrono::round<std::chrono::milliseconds>(stop - start).count() / 1000.0);
 	}
 	return 0;

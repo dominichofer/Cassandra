@@ -65,14 +65,14 @@ double Covariance(Range1&& X, Range2&& Y)
 {
 	// From https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online
 
-	double meanx{ 0 }, meany{ 0 }, C{ 0 }, n{ 0 };
+	double mean_x{ 0 }, mean_y{ 0 }, C{ 0 }, n{ 0 };
 	for (auto&& [x, y] : ranges::views::zip(X, Y))
 	{
 		n++;
-		double dx = x - meanx;
-		meanx += dx / n;
-		meany += (y - meany) / n;
-		C += dx * (y - meany);
+		double dx = x - mean_x;
+		mean_x += dx / n;
+		mean_y += (y - mean_y) / n;
+		C += dx * (y - mean_y);
 	}
 	return C / n;
 }
@@ -82,6 +82,19 @@ template <std::ranges::range Range1, std::ranges::range Range2, typename PX, typ
 double Covariance(Range1&& X, Range2&& Y, PX projX, PY projY)
 {
 	return Covariance(ranges::views::transform(X, projX), ranges::views::transform(Y, projY));
+}
+
+// population covariance
+template <typename T>
+DenseMatrix<double> Covariance(const DenseMatrix<T>& X)
+{
+	// From https://en.wikipedia.org/wiki/Covariance_matrix
+
+	DenseMatrix<double> cov(X.Rows(), X.Rows());
+	for (std::size_t i = 0; i < X.Rows(); i++)
+		for (std::size_t j = i; j < X.Rows(); j++)
+			cov(i, j) = cov(j, i) = Covariance(X.Row(i), X.Row(j));
+	return cov;
 }
 
 template <std::ranges::range Range1, std::ranges::range Range2>
@@ -103,25 +116,12 @@ double SampleCovariance(Range1&& X, Range2&& Y)
 	return Covariance(X, Y) * (n / (n + 1));
 }
 
-// population covariance
-template <typename T>
-DenseMatrix<double> Covariance(const DenseMatrix<T>& X)
-{
-	// From https://en.wikipedia.org/wiki/Covariance_matrix
-
-	DenseMatrix<double> cov(X.Rows(), X.Rows());
-	for (std::size_t i = 0; i < X.Rows(); i++)
-		for (std::size_t j = i; j < X.Rows(); j++)
-			cov(i, j) = cov(j, i) = Covariance(X.Row(i), X.Row(j));
-	return cov;
-}
-
 template <typename T>
 DenseMatrix<double> Correlation(const DenseMatrix<T>& X)
 {
 	// From https://en.wikipedia.org/wiki/Correlation
 
-	std::valarray<double> sd(X.Rows());
+	std::vector<double> sd(X.Rows());
 	for (std::size_t i = 0; i < sd.size(); i++)
 		sd[i] = StandardDeviation(X.Row(i));
 

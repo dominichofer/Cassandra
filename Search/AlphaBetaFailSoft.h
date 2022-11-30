@@ -6,10 +6,10 @@
 class AlphaBetaFailSoft : public NegaMax
 {
 public:
-	int Eval(const Position&, Intensity, OpenInterval) override;
-	ScoreMove Eval_BestMove(const Position&, Intensity, OpenInterval) override;
+	using NegaMax::Eval;
+	ContextualResult Eval(const Position&, Intensity, OpenInterval) override;
+	ContextualResult Eval(const Position&, OpenInterval);
 private:
-	ScoreMove Eval_BestMove_N(const Position&, OpenInterval);
 	int Eval_2(const Position&, OpenInterval, Field, Field);
 	int Eval_3(const Position&, OpenInterval, Field, Field, Field);
 protected:

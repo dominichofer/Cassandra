@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "Core/Core.h"
 #include <array>
 
 namespace MoreTypes_128

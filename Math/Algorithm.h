@@ -36,7 +36,7 @@ DenseMatrix<T> CholeskyDecomposition(const DenseMatrix<T>& A)
 }
 
 template <typename M, typename V>
-std::valarray<V> ForwardSubstitution(const DenseMatrix<M>& L, std::valarray<V> b)
+std::vector<V> ForwardSubstitution(const DenseMatrix<M>& L, std::vector<V> b)
 {
     for (int i = 0; i < b.size(); i++)
     {
@@ -48,7 +48,7 @@ std::valarray<V> ForwardSubstitution(const DenseMatrix<M>& L, std::valarray<V> b
 }
 
 template <typename M, typename V>
-std::valarray<V> BackwardSubstitution(const DenseMatrix<M>& U, std::valarray<V> b)
+std::vector<V> BackwardSubstitution(const DenseMatrix<M>& U, std::vector<V> b)
 {
     for (int i = b.size() - 1; i >= 0; i--)
     {
@@ -60,11 +60,11 @@ std::valarray<V> BackwardSubstitution(const DenseMatrix<M>& U, std::valarray<V> 
 }
 
 // Performs a step of the Gauss–Newton algorithm
-std::valarray<double> GaussNewtonStep(
+std::vector<double> GaussNewtonStep(
     const SymExp& function, const Vars& params, const Vars& vars,
     const std::ranges::random_access_range auto& x,
     const std::ranges::random_access_range auto& y,
-    std::valarray<double> param_values,
+    std::vector<double> param_values,
     double damping_factor = 1.0)
 {
     // From https://en.wikipedia.org/wiki/Gauss%E2%80%93Newton_algorithm
@@ -87,9 +87,9 @@ std::valarray<double> GaussNewtonStep(
     DenseMatrix J_T = transposed(J);
 
     auto residual_at_params = residual.At(params, param_values);
-    std::valarray<double> delta_y(y_size);
+    std::vector<double> delta_y(y_size);
     #pragma omp parallel for schedule(static)
-    for (int64_t i = 0; i < y_size; i++)
+    for (int64_t i = 0; i < static_cast<int64_t>(y_size); i++)
         delta_y[i] = residual_at_params.At(vars, x[i]).At(Var{ "y" }, y[i]).value() * damping_factor;
 
     DenseMatrix L = CholeskyDecomposition(J_T * J);
@@ -99,11 +99,11 @@ std::valarray<double> GaussNewtonStep(
 // Fits the 'params' of the non-linear 'function'
 // so it fits the data 'x', 'y' in the sence of least squares,
 // where 'x' corresponds to the 'variable' in 'function'.
-std::valarray<double> NonLinearLeastSquaresFit(
+std::vector<double> NonLinearLeastSquaresFit(
     const SymExp& function, const Vars& params, const Vars& vars,
     std::ranges::random_access_range auto&& x,
     std::ranges::random_access_range auto&& y,
-    std::valarray<double> param_values,
+    std::vector<double> param_values,
     int steps = 1'000,
     double damping_factor = 1.0)
 {
@@ -111,7 +111,7 @@ std::valarray<double> NonLinearLeastSquaresFit(
 
     for (int i = 0; i < steps; i++)
     {
-        std::valarray old = param_values;
+        std::vector old = param_values;
         param_values = GaussNewtonStep(function, params, vars, x, y, param_values);
         if (std::ranges::any_of(param_values, std::isnan<double>))
             return old;

@@ -1,6 +1,6 @@
 #include "Core/Core.h"
 #include "IO/IO.h"
-#include "Pattern/DenseIndexer.h"
+#include "Pattern/Pattern.h"
 #include "Math/DenseMatrix.h"
 #include "Math/MatrixCSR.h"
 #include "Math/Vector.h"

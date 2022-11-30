@@ -19,6 +19,13 @@ TEST(Position, to_string_Parse)
 	EXPECT_EQ(ParsePosition_SingleLine(to_string(pos)), pos);
 }
 
+TEST(ParsePosScore_SingleLine, start_position)
+{
+	PosScore in{ Position::Start(), +12 };
+	PosScore out = ParsePosScore_SingleLine(to_string(in));
+	ASSERT_EQ(in, out);
+}
+
 TEST(Stream, serialize_deserialize_BitBoard)
 {
 	const BitBoard in = BitBoard::HorizontalLine(3);

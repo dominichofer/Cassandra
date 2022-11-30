@@ -33,7 +33,7 @@ const BitBoard pattern_a =
 	"- - - # # # # #"_BitBoard;
 
 template <typename T>
-std::set<T> SymmetryVariations(const T& t)
+std::set<T> SymmetricVariants(const T& t)
 {
 	return {
 		t,
@@ -63,11 +63,11 @@ TEST(Metatest, PatternA)
 	ASSERT_NE(pattern_a, FlipCodiagonal(pattern_a));
 }
 
-TEST(Metatest, SymmetryVariations)
+TEST(Metatest, SymmetricVariants)
 {
-	ASSERT_EQ(SymmetryVariations(pattern_h).size(), std::size_t(4));
-	ASSERT_EQ(SymmetryVariations(pattern_d).size(), std::size_t(4));
-	ASSERT_EQ(SymmetryVariations(pattern_a).size(), std::size_t(8));
+	ASSERT_EQ(SymmetricVariants(pattern_h).size(), std::size_t(4));
+	ASSERT_EQ(SymmetricVariants(pattern_d).size(), std::size_t(4));
+	ASSERT_EQ(SymmetricVariants(pattern_a).size(), std::size_t(8));
 }
 
 // Tests that the indexer covers the index space when it is called with all configurations of the pattern.
@@ -79,8 +79,8 @@ void ConfigurationsCoverIndexSpace(const Indexer& indexer, BitBoard pattern)
 
 	for (int i = 0; i < indexer.index_space_size; i++)
 	{
-		auto is_i = [i](int value) { return value == i; };
-		ASSERT_TRUE(ranges::any_of(indices, is_i));
+		auto equals_i = [i](int value) { return value == i; };
+		ASSERT_TRUE(ranges::any_of(indices, equals_i));
 	}
 }
 
@@ -134,14 +134,14 @@ TEST(GroupIndexer, Mix)
 	}
 
 	// Verify that each index is present at least once
-	ranges::sort(indices);
+	std::ranges::sort(indices);
 	EXPECT_EQ(indices.front(), 0);
 	for (int i = 1; i < indexer.index_space_size; i++)
 		EXPECT_GE(indices[i+1] - indices[i], 0);
 	EXPECT_EQ(indices.back(), indexer.index_space_size - 1);
 }
 
-void SymmetryicIndependant(const BitBoard pattern, std::span<const float> weights)
+void SymmetryIndependant(const BitBoard pattern, std::span<const float> weights)
 {
 	auto model = GLEM(pattern, weights);
 
@@ -149,7 +149,7 @@ void SymmetryicIndependant(const BitBoard pattern, std::span<const float> weight
 	for (auto config : Configurations(pattern))
 	{
 		auto original_score = model.Eval(config);
-		for (auto var : SymmetryVariations(config))
+		for (auto var : SymmetricVariants(config))
 			ASSERT_EQ(original_score, model.Eval(var));
 	}
 }
@@ -158,21 +158,21 @@ TEST(GLEM, HorizontalSymmetric_is_independent_of_symmetry)
 {
 	std::vector<float> weights(CreateIndexer(pattern_h)->index_space_size);
 	ranges::iota(weights, 1);
-	SymmetryicIndependant(pattern_h, weights);
+	SymmetryIndependant(pattern_h, weights);
 }
 
 TEST(GLEM, DiagonalSymmetric_is_independent_of_symmetry)
 {
 	std::vector<float> weights(CreateIndexer(pattern_d)->index_space_size);
 	ranges::iota(weights, 1);
-	SymmetryicIndependant(pattern_d, weights);
+	SymmetryIndependant(pattern_d, weights);
 }
 
 TEST(GLEM, Asymmetric_is_independent_of_symmetry)
 {
 	std::vector<float> weights(CreateIndexer(pattern_a)->index_space_size);
 	ranges::iota(weights, 1);
-	SymmetryicIndependant(pattern_a, weights);
+	SymmetryIndependant(pattern_a, weights);
 }
 
 void GLEM_Eval_is_equivalent_to_DenseIndex(BitBoard pattern)
@@ -182,7 +182,7 @@ void GLEM_Eval_is_equivalent_to_DenseIndex(BitBoard pattern)
 	std::vector<float> weights(indexer->index_space_size);
 	ranges::iota(weights, 1);
 	auto model = GLEM(pattern, weights);
-	PosGen::Random rnd(78);
+	RandomPositionGenerator rnd(78);
 
 	for (int i = 0; i < 100'000; i++)
 	{
@@ -213,68 +213,26 @@ TEST(GLEM, Weights_Expansion_Asymmetric)
 
 TEST(Stream, serialize_deserialize_GLEM)
 {
-	std::vector pattern = {
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - # # # # #"
-		"- - - # # # # #"_BitBoard,
-
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - #"
-		"- - - - - - # #"
-		"- - - - - # # #"
-		"- - - - # # # #"_BitBoard
-	};
-	GLEM in(pattern);
+	GLEM in(pattern::logistello);
 
 	std::stringstream stream;
 	Serialize(in, stream);
 	auto out = Deserialize<decltype(in)>(stream);
 
-	EXPECT_TRUE(ranges::equal(in.Pattern(), out.Pattern()));
-	EXPECT_TRUE(ranges::equal(in.Weights(), out.Weights()));
+	EXPECT_EQ(in.Pattern(), out.Pattern());
+	EXPECT_EQ(in.Weights(), out.Weights());
 }
 
 TEST(Stream, serialize_deserialize_AAGLEM)
 {
-	auto BB1 =
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - # # # # #"
-		"- - - # # # # #"_BitBoard;
-
-	auto BB2 =
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - #"
-		"- - - - - - # #"
-		"- - - - - # # #"
-		"- - - - # # # #"_BitBoard;
-	std::vector<int> block_boundaries = { 1,2,3 };
-	std::valarray<double> acc = { 1,2,3,4,5 };
-	AAGLEM in({ BB1, BB2 }, block_boundaries, acc);
+	AAGLEM in(pattern::logistello, /*block_size*/ 3, /*accuracy_parameters*/ { 1, 2, 3, 4, 5 });
 
 	std::stringstream stream;
 	Serialize(in, stream);
 	auto out = Deserialize<decltype(in)>(stream);
 
-	EXPECT_TRUE(ranges::equal(in.Pattern(), out.Pattern()));
-	EXPECT_TRUE(ranges::equal(in.BlockBoundaries(), out.BlockBoundaries()));
-	EXPECT_TRUE(ranges::equal(in.AccuracyModel().param_values, out.AccuracyModel().param_values));
-	auto a = in.GetWeights();
-	auto b = out.GetWeights();
-	EXPECT_TRUE(ranges::equal(in.GetWeights(), out.GetWeights()));
+	EXPECT_EQ(in.Pattern(), out.Pattern());
+	EXPECT_EQ(in.BlockSize(), out.BlockSize());
+	EXPECT_TRUE(in.AccuracyParameters() == out.AccuracyParameters());
+	EXPECT_EQ(in.Weights(), out.Weights());
 }

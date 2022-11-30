@@ -13,30 +13,30 @@ public:
 	virtual ~IterativeSolver() = default;
 
 	virtual void Reinitialize() = 0;
-	virtual void Reinitialize(std::valarray<T>) = 0;
+	virtual void Reinitialize(std::vector<T>) = 0;
 	virtual void Iterate(int n) = 0;
 	virtual double Residuum() const = 0;
-	virtual std::valarray<T> Error() const = 0;
-	virtual std::valarray<T> X() const = 0;
+	virtual std::vector<T> Error() const = 0;
+	virtual std::vector<T> X() const = 0;
 };
 
 template <typename T>
 class Preconditioner
 {
 public:
-	virtual std::valarray<T> apply(const std::valarray<T>&) const = 0;
-	virtual std::valarray<T> revert(const std::valarray<T>&) const = 0;
+	virtual std::vector<T> apply(const std::vector<T>&) const = 0;
+	virtual std::vector<T> revert(const std::vector<T>&) const = 0;
 };
 
 template <typename T>
 class DiagonalPreconditioner : public Preconditioner<T>
 {
-	std::valarray<T> d;
+	std::vector<T> d;
 public:
-	DiagonalPreconditioner(std::valarray<T> d) : d(std::move(d)) {}
+	DiagonalPreconditioner(std::vector<T> d) : d(std::move(d)) {}
 
-	std::valarray<T> apply(const std::valarray<T>& x) const override { return d * x; }
-	std::valarray<T> revert(const std::valarray<T>& x) const override { return d / x; }
+	std::vector<T> apply(const std::vector<T>& x) const override { return elementwise_multiplication(d, x); }
+	std::vector<T> revert(const std::vector<T>& x) const override { return elementwise_division(d, x); }
 };
 
 // Conjugate Gradient method
@@ -45,10 +45,10 @@ template <typename T, typename Matrix>
 class CG final : public IterativeSolver<T>
 {
 	const Matrix& A;
-	std::valarray<T> x, b, p, r;
+	std::vector<T> x, b, p, r;
 public:
 	// A: has to be symmetric and positive-definite.
-	CG(const Matrix& A, std::valarray<T> x0, std::valarray<T> b)
+	CG(const Matrix& A, std::vector<T> x0, std::vector<T> b)
 		: A(A), x(std::move(x0)), b(std::move(b))
 	{
 		if (A.Cols() != A.Rows()) throw std::runtime_error("Size mismatch.");
@@ -60,7 +60,7 @@ public:
 
 	void Reinitialize() override { p = r = Error(); }
 
-	void Reinitialize(std::valarray<T> start) override
+	void Reinitialize(std::vector<T> start) override
 	{
 		x = std::move(start);
 		Reinitialize();
@@ -72,19 +72,19 @@ public:
 		// 10n x O(vec)  Room for optimization to 5n x O(vec)
 		for (int k = 0; k < n; k++)
 		{
-			const auto r_dot_r_old = dot(r, r);
+			const double r_dot_r_old = dot(r, r);
 			const auto A_p = A * p;
-			const auto alpha = r_dot_r_old / dot(p, A_p);
+			const double alpha = r_dot_r_old / dot(p, A_p);
 			x += alpha * p;
 			r -= alpha * A_p;
-			const auto beta = dot(r, r) / r_dot_r_old;
+			const double beta = dot(r, r) / r_dot_r_old;
 			p = r + beta * p;
 		}
 	}
 
 	double Residuum() const override { return dot(r, r); }
-	std::valarray<T> Error() const override { return b - A * x; }
-	std::valarray<T> X() const override { return x; }
+	std::vector<T> Error() const override { return b - A * x; }
+	std::vector<T> X() const override { return x; }
 };
 
 // Preconditioned Conjugate Gradient method
@@ -94,10 +94,10 @@ class PCG final : public IterativeSolver<T>
 {
 	const Matrix& A;
 	const Preconditioner<T>& P;
-	std::valarray<T> b, x, z, r, p;
+	std::vector<T> b, x, z, r, p;
 public:
 	// A: has to be symmetric and positive-definite.
-	PCG(const Matrix& A, const Preconditioner<T>& P, std::valarray<T> x0, std::valarray<T> b)
+	PCG(const Matrix& A, const Preconditioner<T>& P, std::vector<T> x0, std::vector<T> b)
 		: A(A), P(P), x(std::move(x0)), b(std::move(b))
 	{
 		if (A.Rows() != A.Cols()) throw std::runtime_error("Size mismatch.");
@@ -113,7 +113,7 @@ public:
 		p = z = P.apply(r);
 	}
 
-	void Reinitialize(std::valarray<T> x0) override
+	void Reinitialize(std::vector<T> x0) override
 	{
 		x = std::move(x0);
 		Reinitialize();
@@ -126,7 +126,7 @@ public:
 		for (int k = 0; k < n; k++)
 		{
 			const T r_dot_z_old = dot(r, z);
-			const std::valarray<T> A_p = A * p;
+			const std::vector<T> A_p = A * p;
 			const T alpha = r_dot_z_old / dot(p, A_p);
 			if (not std::isnormal(alpha))
 				break;
@@ -139,8 +139,8 @@ public:
 	}
 
 	double Residuum() const override { return dot(r, r); }
-	std::valarray<T> Error() const override { return b - A * x; }
-	std::valarray<T> X() const override { return x; }
+	std::vector<T> Error() const override { return b - A * x; }
+	std::vector<T> X() const override { return x; }
 };
 
 // Least Squares QR Method
@@ -150,12 +150,12 @@ class LSQR : public IterativeSolver<T>
 {
 	// Source of algorithm: https://web.stanford.edu/group/SOL/software/lsqr/lsqr-toms82a.pdf
 	const Matrix& A;
-	const std::valarray<T>& b;
-	std::valarray<T> x, u, v, w;
+	const std::vector<T>& b;
+	std::vector<T> x, u, v, w;
 	double alpha{ 0 }, beta{ 0 }, phi{ 0 }, rho{ 0 }, phi_bar{ 0 }, rho_bar{ 0 }, residuum;
 public:
 	// A: has to be symmetric and positive-definite.
-	LSQR(const Matrix& A, std::valarray<T> x0, std::valarray<T> b)
+	LSQR(const Matrix& A, std::vector<T> x0, std::vector<T> b)
 		: A(A), b(std::move(b)), x(std::move(x0)), u(A.Rows()), v(A.Cols()), w(A.Cols())
 	{
 		if (A.Cols() != x.size()) throw;
@@ -175,7 +175,7 @@ public:
 		residuum = phi_bar * alpha * std::abs(rho_bar / rho);
 	}
 
-	void Reinitialize(std::valarray<T> x0) override
+	void Reinitialize(std::vector<T> x0) override
 	{
 		x = std::move(x0);
 		Reinitialize();
@@ -203,6 +203,6 @@ public:
 	}
 
 	double Residuum() const override { return residuum; }
-	std::valarray<T> Error() const override { return b - A * x; }
-	std::valarray<T> X() const override { return x; }
+	std::vector<T> Error() const override { return b - A * x; }
+	std::vector<T> X() const override { return x; }
 };

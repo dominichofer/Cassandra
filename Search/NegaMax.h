@@ -10,11 +10,9 @@ public:
 	uint64 Nodes() const override { return nodes; }
 
 	using Algorithm::Eval;
-	using Algorithm::Eval_BestMove;
-	int Eval(const Position&, Intensity, OpenInterval) override;
-	ScoreMove Eval_BestMove(const Position&, Intensity, OpenInterval) override;
+	ContextualResult Eval(const Position&, Intensity, OpenInterval) override;
 private:
-	ScoreMove Eval_BestMove_N(const Position&);
+	ContextualResult eval(const Position&);
 	int Eval_N(const Position&);
 	int Eval_3(const Position&, Field, Field, Field);
 	int Eval_2(const Position&, Field, Field);

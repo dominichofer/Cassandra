@@ -11,20 +11,20 @@ TEST(MatrixCSR, mat_vec_mult)
 	*(A.begin() + 2) = 1; AA(2,1) = 1;
 	*(A.begin() + 3) = 0; AA(3,0) = 1;
 
-	std::valarray x = { 1,2,3 };
-	EXPECT_TRUE(AllTrue(A * x == AA * x));
+	std::vector x = { 1,2,3 };
+	EXPECT_TRUE(A * x == AA * x);
 
 	x = { 1,2,3,4 };
-	EXPECT_TRUE(AllTrue(transposed(A) * x == transposed(AA) * x));
-	EXPECT_TRUE(AllTrue(x * A == x * AA));
+	EXPECT_TRUE(transposed(A) * x == transposed(AA) * x);
+	EXPECT_TRUE(x * A == x * AA);
 }
 
 TEST(CG, DenseMatrix)
 {
 	const std::size_t size = 4;
 	DenseMatrix<float> A(size, size);
-	std::valarray<float> x = {1,2,3,4};
-	std::valarray<float> x0(size);
+	std::vector<float> x = {1,2,3,4};
+	std::vector<float> x0(size);
 
 	std::mt19937_64 rnd_engine(13);
 	auto rnd = [&rnd_engine]() { return std::uniform_real_distribution<float>(0, 1)(rnd_engine); };
@@ -34,7 +34,7 @@ TEST(CG, DenseMatrix)
 			A(i, j) = rnd();
 	A += transposed(A) + static_cast<float>(size) * DenseMatrix<float>::Id(size); // makes it positive definite
 
-	std::valarray b = A * x;
+	std::vector b = A * x;
 
 	CG cg(A, b, x0);
 	cg.Iterate(size);
@@ -48,8 +48,8 @@ TEST(CG, DenseMatrix)
 //	const std::size_t size = 4;
 //	Matrix<float> B(size, size);
 //	MatrixCSR<float, uint8_t> A(size);
-//	std::valarray x(size);
-//	std::valarray _0(size);
+//	std::vector x(size);
+//	std::vector _0(size);
 //
 //	std::mt19937_64 rnd_engine(13);
 //	auto rnd = [&rnd_engine]() { return std::uniform_real_distribution<float>(0, 1)(rnd_engine); };
@@ -70,7 +70,7 @@ TEST(CG, DenseMatrix)
 //	for (int i = 0; i < x.size(); i++)
 //		x[i] = i;
 //
-//	std::valarray b = A * x;
+//	std::vector b = A * x;
 //
 //	CG solver(A, b, _0);
 //	solver.Iterate(size);
@@ -84,8 +84,8 @@ TEST(CG, DenseMatrix)
 //	const std::size_t size = 4;
 //	Matrix<float> B(size, size);
 //	MatrixCSR<float, uint8_t> A(size);
-//	std::valarray x(size);
-//	std::valarray _0(size);
+//	std::vector x(size);
+//	std::vector _0(size);
 //
 //	std::mt19937_64 rnd_engine(13);
 //	auto rnd = [&rnd_engine]() { return std::uniform_real_distribution<float>(0, 1)(rnd_engine); };
@@ -106,7 +106,7 @@ TEST(CG, DenseMatrix)
 //	for (int i = 0; i < x.size(); i++)
 //		x[i] = i;
 //
-//	std::valarray b = A * x;
+//	std::vector b = A * x;
 //
 //	LSQR solver(A, b, _0);
 //	solver.Iterate(size);

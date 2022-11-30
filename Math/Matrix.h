@@ -20,13 +20,13 @@ namespace
 }
 
 template <typename T, typename U>
-std::valarray<U> operator*(const TransposedMatrix<T>& mat, const std::valarray<U>& x)
+std::vector<U> operator*(const TransposedMatrix<T>& mat, const std::vector<U>& x)
 {
 	return x * mat.m;
 }
 
 template <typename T, typename U>
-std::valarray<U> operator*(const std::valarray<U>& x, const TransposedMatrix<T>& mat)
+std::vector<U> operator*(const std::vector<U>& x, const TransposedMatrix<T>& mat)
 {
 	return mat.m * x;
 }
@@ -61,13 +61,13 @@ namespace
 }
 
 template <typename L, typename R, typename T>
-std::valarray<T> operator*(const TwoMatrix<L, R>& mat, const std::valarray<T>& x)
+std::vector<T> operator*(const TwoMatrix<L, R>& mat, const std::vector<T>& x)
 {
 	return mat.l * (mat.r * x);
 }
 
 template <typename L, typename R, typename T>
-std::valarray<T> operator*(const std::valarray<T>& x, const TwoMatrix<L, R>& mat)
+std::vector<T> operator*(const std::vector<T>& x, const TwoMatrix<L, R>& mat)
 {
 	return (x * mat.l) * mat.r;
 }

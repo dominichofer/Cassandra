@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 {
 	std::locale::global(std::locale(""));
 	int depth = 16;
-	std::size_t RAM = 48_GB;
+	std::size_t RAM = 4_GB;
 
 	for (int i = 0; i < argc; i++)
 	{
@@ -35,15 +35,13 @@ int main(int argc, char* argv[])
 	else
 		engine = std::make_unique<UnrolledPerft>(6);
 
-	Table table;
-	table.AddColumn("depth", 5, "{:>5}");
-	table.AddColumn("Positions", 21, "{:>21L}");
-	table.AddColumn("correct", 7, "{:^7}");
-	table.AddColumn("Time [s]", 16, "{:>#16.3f}");
-	table.AddColumn("Pos/s", 16, "{:>16.0Lf}");
+	Table table{
+		"depth|      Positions      |correct|    Time [s]    |     Pos/s      ",
+		"{:>5}|{:>21L}|{:^7}|{:>#16.3f}|{:>16.0Lf}"
+	};
 	table.PrintHeader();
 
-	for (int d = 11; d <= depth; d++)
+	for (int d = 4; d <= depth; d++)
 	{
 		engine->clear();
 		auto start = std::chrono::high_resolution_clock::now();

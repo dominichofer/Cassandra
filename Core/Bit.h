@@ -1,7 +1,9 @@
 #pragma once
 #include "MoreTypes.h"
 
-#ifdef __NVCC__
+#ifndef __NVCC__
+	#include <bit>
+#else
 namespace std
 {
 	#ifdef __CUDA_ARCH__
@@ -36,8 +38,6 @@ namespace std
 		__host__ inline int popcount(uint64 x) noexcept { return static_cast<int>(_mm_popcnt_u64(x)); }
 	#endif
 }
-#else
-	#include <bit>
 #endif
 
 #ifdef __CUDA_ARCH__

@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "Core/Core.h"
 
 namespace CountLastFlip_test
 {

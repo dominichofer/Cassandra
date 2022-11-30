@@ -40,7 +40,7 @@ public:
 			mask[i][3] = BitBoard::VerticalLine(move);
 		}
 
-		for (Field move : {Field::A1, Field::B1, Field::C1, Field::D1, Field::E1, Field::F1, Field::G1, Field::H1})
+		for (Field move : {Field::H8, Field::G8, Field::F8, Field::E8, Field::D8, Field::C8, Field::B8, Field::A8})
 			for (uint64 r = 0; r < 256; r++)
 			{
 				Position pos(r & ~BitBoard(move), ~r & ~BitBoard(move));

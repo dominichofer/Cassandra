@@ -42,5 +42,5 @@ std::string to_string(const Intensity& i)
 	if (i.IsCertain())
 		return to_string(i.depth);
 	else
-		return to_string(i.depth) + " " + to_string(i.certainty);
+		return to_string(i.depth) + "@" + to_string(i.certainty);
 }

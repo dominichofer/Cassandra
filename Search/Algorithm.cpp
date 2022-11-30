@@ -87,41 +87,26 @@
 //	//return field_score - mobility_score - corner_mobility_score - potential_moves_score;
 //}
 
-int Algorithm::Eval(const Position& pos, Intensity depth)
+ContextualResult Algorithm::Eval(const Position& pos, Intensity request)
 {
-	return Eval(pos, depth, { -inf_score, +inf_score });
+	return Eval(pos, Intensity::Limitted(request, pos.EmptyCount()), { -inf_score, +inf_score });
 }
 
-int Algorithm::Eval(const Position& pos, OpenInterval window)
+ContextualResult Algorithm::Eval(const Position& pos, OpenInterval window)
 {
 	return Eval(pos, pos.EmptyCount(), window);
 }
 
-int Algorithm::Eval(const Position& pos)
+ContextualResult Algorithm::Eval(const Position& pos)
 {
 	return Eval(pos, pos.EmptyCount());
 }
 
-ScoreMove Algorithm::Eval_BestMove(const Position& pos, Intensity depth)
-{
-	return Eval_BestMove(pos, depth, { -inf_score, +inf_score });
-}
-
-ScoreMove Algorithm::Eval_BestMove(const Position& pos, OpenInterval window)
-{
-	return Eval_BestMove(pos, pos.EmptyCount(), window);
-}
-
-ScoreMove Algorithm::Eval_BestMove(const Position& pos)
-{
-	return Eval_BestMove(pos, pos.EmptyCount());
-}
-
-void ScoreMove::ImproveWith(int score, Field move)
-{
-	if (score > this->score)
-	{
-		this->score = score;
-		this->move = move;
-	}
-}
+//void ScoreMove::ImproveWith(int score, Field move)
+//{
+//	if (score > this->score)
+//	{
+//		this->score = score;
+//		this->move = move;
+//	}
+//}

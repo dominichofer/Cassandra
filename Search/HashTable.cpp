@@ -24,7 +24,7 @@ void OneNode::Clear()
 {
 	std::scoped_lock lock{ mutex };
 	key = {};
-	value = {};
+	value = DefaultValue();
 }
 
 void TwoNodes::Update(const key_type& new_key, const value_type& new_value)
@@ -57,6 +57,6 @@ void TwoNodes::Clear()
 	std::scoped_lock lock{ mutex };
 	key1 = {};
 	key2 = {};
-	value1 = {};
-	value2 = {};
+	value1 = DefaultValue();
+	value2 = DefaultValue();
 }

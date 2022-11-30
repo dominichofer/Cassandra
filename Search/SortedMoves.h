@@ -5,7 +5,6 @@
 #include <vector>
 #include <tuple>
 #include <iterator>
-#include <valarray>
 
 class SortedMoves
 {
@@ -52,15 +51,15 @@ inline BitBoard PotentialMoves(const Position& pos) noexcept
 }
 
 inline CUDA_CALLABLE int DoubleCornerPopcount(const BitBoard& b) noexcept { return popcount(b) + popcount(b & BitBoard::Corners()); }
-inline CUDA_CALLABLE int DoubleCornerPopcount(const Moves& m) noexcept { return m.size() + (m & BitBoard::Corners()).size(); }
+inline CUDA_CALLABLE int DoubleCornerPopcount(const Moves& m) noexcept { return static_cast<int>(m.size() + (m & BitBoard::Corners()).size()); }
 
 class MoveSorter
 {
 	// Factory of SortedMoves
 
-	std::valarray<float> weights;
+	std::vector<float> weights;
 public:
-	MoveSorter(std::valarray<float> weights) noexcept : weights(weights) {}
+	MoveSorter(std::vector<float> weights) noexcept : weights(weights) {}
 	//MoveSorter() : MoveSorter(5, 6, 15, 11) {}
 	
 	SortedMoves Sort(const Moves&, const Position&) const;

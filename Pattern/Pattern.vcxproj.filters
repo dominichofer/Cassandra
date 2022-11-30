@@ -10,5 +10,6 @@
     <ClInclude Include="Evaluator.h" />
     <ClInclude Include="Indexer.h" />
     <ClInclude Include="Pattern.h" />
+    <ClInclude Include="Names.h" />
   </ItemGroup>
 </Project>

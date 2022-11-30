@@ -4,20 +4,20 @@
 #include "Interval.h"
 
 // This is returned from a search if a best move is needed
-struct ScoreMove
-{
-	int score = -inf_score;
-	Field move = Field::invalid;
-
-	ScoreMove() = default;
-	ScoreMove(int score) noexcept : score(score) {}
-	ScoreMove(int score, Field move) noexcept : score(score), move(move) {}
-
-	operator int() const noexcept { return score; }
-	ScoreMove operator-() const noexcept { return { -score, move }; }
-
-	void ImproveWith(int score, Field move);
-};
+//struct ScoreMove
+//{
+//	int score = -inf_score;
+//	Field move = Field::invalid;
+//
+//	ScoreMove() = default;
+//	ScoreMove(int score) noexcept : score(score) {}
+//	ScoreMove(int score, Field move) noexcept : score(score), move(move) {}
+//
+//	operator int() const noexcept { return score; }
+//	ScoreMove operator-() const noexcept { return { -score, move }; }
+//
+//	void ImproveWith(int score, Field move);
+//};
 
 // This is returned from a search internally if prob-cut is used
 struct IntensityScore
@@ -38,73 +38,108 @@ struct IntensityScore
 	IntensityScore operator-(int depth) const noexcept { return { intensity - depth, score }; }
 };
 
-struct TT_Info
+struct ContextualResult
 {
-	Intensity intensity{ -1, 0.0_sigmas };
-	ClosedInterval window{ min_score, max_score };
-	Field move = Field::invalid;
-};
-
-// This is used in a search to collect relevant information
-struct Findings
-{
-	const Intensity& search_intensity; // for context
-	const OpenInterval& search_window; // for context
 	Intensity intensity = Intensity::Exact();
 	int score = -inf_score;
 	Field move = Field::invalid;
 
-	Findings(const Intensity& search_intensity, const OpenInterval& search_window) noexcept
-		: search_intensity(search_intensity), search_window(search_window) {}
+	ContextualResult() noexcept = default;
+	ContextualResult(int score) noexcept : score(score) {}
+	ContextualResult(int score, Field move) noexcept : score(score), move(move) {}
+	ContextualResult(Intensity intensity, int score) noexcept : intensity(intensity), score(score) {}
+	ContextualResult(Intensity intensity, int score, Field move) noexcept : intensity(intensity), score(score), move(move) {}
 
-	operator IntensityScore() const noexcept { return { intensity, score }; }
-	operator TT_Info() const noexcept
-	{
-		if (score > search_window)
-			return { intensity, { score, max_score }, move };
-		if (score < search_window)
-			return { intensity, { min_score, score }, move };
-		return { intensity, { score, score }, move };
-	}
-	operator ScoreMove() const noexcept { return { score, move }; }
 	operator int() const noexcept { return score; }
 
-	OpenInterval NextFullWindow() { return { std::max(score, search_window.Lower()), search_window.Upper() }; }
-	OpenInterval NextZeroWindow() { int alpha = std::max(score, search_window.Lower()); return { alpha, alpha + 1 }; }
+	ContextualResult operator-() const noexcept { return { intensity, -score, move }; }
+	ContextualResult operator+(int depth) const noexcept { return { intensity + depth, score, move }; }
+	ContextualResult operator-(int depth) const noexcept { return { intensity - depth, score, move }; }
 
-	bool Add(const TT_Info& tt)
+	void ImproveWith(int score, Field move)
 	{
-		move = tt.move;
-		if (tt.intensity >= search_intensity)
+		if (score > this->score)
 		{
-			intensity = tt.intensity;
-			score = tt.window.Lower();
-			if (tt.window.IsSingleton())
+			this->score = score;
+			this->move = move;
+		}
+	}
+};
+
+struct ContextfreeResult
+{
+	Intensity intensity;
+	ClosedInterval window;
+	Field move;
+
+	ContextfreeResult(Intensity intensity, ClosedInterval window, Field move) noexcept : intensity(intensity), window(window), move(move) {}
+	ContextfreeResult(ContextualResult result, OpenInterval search_window) noexcept : intensity(result.intensity), window(ClosedInterval{ result.score, result.score }), move(result.move)
+	{
+		if (result.score > search_window)
+			window = { result.score, max_score };
+		else if (result.score < search_window)
+			window = { min_score, result.score };
+	}
+};
+
+// This is used in a search to collect relevant information
+class Findings
+{
+	const Intensity search_intensity; // for context
+	const OpenInterval search_window; // for context
+	ContextualResult current_best{ Intensity::Exact(), -inf_score, Field::invalid };
+public:
+	Findings(Intensity search_intensity, OpenInterval search_window) noexcept
+		: search_intensity(search_intensity), search_window(search_window) {}
+
+	operator ContextualResult() const noexcept { return current_best + 1; }
+	operator ContextfreeResult() const noexcept { return { current_best + 1, search_window }; }
+
+	Field Move() const noexcept { return current_best.move; }
+	void SetMove(Field move) noexcept { current_best.move = move; }
+
+	OpenInterval NextFullWindow() { int alpha = std::max(current_best.score, search_window.Lower()); return { alpha, search_window.Upper() }; }
+	OpenInterval NextZeroWindow() { int alpha = std::max(current_best.score, search_window.Lower()); return { alpha, alpha + 1 }; }
+
+	bool Add(ContextfreeResult novum)
+	{
+		if (current_best.move == Field::invalid)
+			current_best.move = novum.move; // any move is better than no move
+		if (novum.intensity >= search_intensity)
+		{
+			if (novum.window.IsSingleton())
+			{
+				current_best = { novum.intensity, novum.window.Lower(), novum.move };
 				return true;
-			if (tt.window.Overlaps(search_window))
-				return false;
-			if (tt.window < search_window)
-				score = tt.window.Upper();
-			return true;
+			}
+			if (novum.window > search_window)
+			{
+				current_best = { novum.intensity, novum.window.Lower(), novum.move };
+				return true;
+			}
+			if (novum.window < search_window)
+			{
+				current_best = { novum.intensity, novum.window.Upper(), novum.move };
+				return true;
+			}
+			//current_best = { novum.intensity, novum.window.Lower(), novum.move }; // CONTROVERSAL
+			current_best = { current_best.intensity, novum.window.Lower(), novum.move }; // CONTROVERSAL
 		}
 		return false;
 	}
-	bool Add(const IntensityScore& option, Field option_move)
+	bool AddOption(ContextualResult option, Field move)
 	{
+		//assert(option.intensity >= search_intensity);
+
 		if (option.score > search_window) // beta cut
 		{
-			score = option.score;
-			move = option_move;
-			intensity = option.intensity;
+			current_best = { option.intensity, option.score, move };
 			return true;
 		}
-		if (option.score > score)
-		{
-			score = option.score;
-			move = option_move;
-		}
-		if (option.intensity < intensity)
-			intensity = option.intensity;
+		if (option.score > current_best.score)
+			current_best = { current_best.intensity, option.score, move };
+		if (option.intensity < current_best.intensity)
+			current_best.intensity = option.intensity;
 		return false;
 	}
 };
@@ -114,15 +149,10 @@ class Algorithm
 public:
 	// A requested certainty of 90% means, that any node can be cut (fail high, fail low) if a shallow search
 	// showed that there's a 90% chance that the original search will result in a cut anyway.
-	virtual int Eval(const Position&, Intensity, OpenInterval) = 0;
-	int Eval(const Position&, Intensity);
-	int Eval(const Position&, OpenInterval);
-	int Eval(const Position&);
-
-	virtual ScoreMove Eval_BestMove(const Position&, Intensity, OpenInterval) = 0;
-	ScoreMove Eval_BestMove(const Position&, Intensity);
-	ScoreMove Eval_BestMove(const Position&, OpenInterval);
-	ScoreMove Eval_BestMove(const Position&);
+	virtual ContextualResult Eval(const Position&, Intensity, OpenInterval) = 0;
+	ContextualResult Eval(const Position&, Intensity);
+	ContextualResult Eval(const Position&, OpenInterval);
+	ContextualResult Eval(const Position&);
 
 	virtual uint64 Nodes() const = 0;
 	virtual void clear() {}
@@ -178,9 +208,9 @@ public:
 
 //class TT_Node final : public Node
 //{
-//	TT_Info info;
+//	ContextfreeResult info;
 //public:
-//	TT_Node(TT_Info info) noexcept : info(std::move(info)) {}
+//	TT_Node(ContextfreeResult info) noexcept : info(std::move(info)) {}
 //	std::string to_string(int indentations = 0) const override {
 //		XmlTag tag("TT_Node");
 //		tag.Add("best_move", ::to_string(info.best_move));
@@ -258,7 +288,7 @@ public:
 //		stack.top().Add(std::make_unique<Cut_Node>(std::move(reason), result));
 //		FinalizeSearch();
 //	}
-//	void Add(TT_Info info) {
+//	void Add(ContextfreeResult info) {
 //		stack.top().Add(std::make_unique<TT_Node>(std::move(info)));
 //	}
 //	void Add(Field move, Result result) {

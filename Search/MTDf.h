@@ -17,15 +17,12 @@ public:
 
 	uint64 Nodes() const override { return nodes; }
 
-	int Eval(const Position& pos, Intensity i, OpenInterval w) override { return eval(pos, i, w, false); }
-	ScoreMove Eval_BestMove(const Position& pos, Intensity i, OpenInterval w) override { return eval(pos, i, w, true); }
-private:
-	ScoreMove eval(const Position& pos, Intensity request, OpenInterval window, bool best_move)
+	ContextualResult Eval(const Position& pos, Intensity request, OpenInterval window) override
 	{
 		nodes = 0;
 
 		// From https://en.wikipedia.org/wiki/MTD(f)
-		ScoreMove g = guess;
+		ContextualResult g{ guess };
 		int upperBound = window.Upper();
 		int lowerBound = window.Lower();
 
@@ -33,17 +30,14 @@ private:
 		{
 			int beta = std::max<int>(g, lowerBound + 1);
 
-			if (best_move)
-				g = base.Eval_BestMove(pos, request, { beta - 1, beta });
-			else
-				g = base.Eval(pos, request, { beta - 1, beta });
+			g = base.Eval(pos, request, { beta - 1, beta });
 
 			nodes += base.Nodes();
 
-			if (g < beta)
-				upperBound = g;
+			if (g.score < beta)
+				upperBound = g.score;
 			else
-				lowerBound = g;
+				lowerBound = g.score;
 		}
 		return g;
 	}

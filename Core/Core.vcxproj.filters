@@ -11,6 +11,10 @@
     <ClCompile Include="HasMoves.cpp" />
     <ClCompile Include="Metronome.cpp" />
     <ClCompile Include="Children.cpp" />
+    <ClCompile Include="Field.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameGenerator.cpp" />
+    <ClCompile Include="PositionScore.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Moves.h" />
@@ -30,5 +34,9 @@
     <ClInclude Include="Finally.h" />
     <ClInclude Include="Children.h" />
     <ClInclude Include="BestMoves.h" />
+    <ClInclude Include="Field.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameGenerator.h" />
+    <ClInclude Include="PositionScore.h" />
   </ItemGroup>
 </Project>

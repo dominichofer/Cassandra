@@ -3,7 +3,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <valarray>
 #include <istream>
 #include <ostream>
 
@@ -92,17 +91,6 @@ T Deserialize(std::istream& stream) requires is_specialization<T, std::vector>
 		vec.push_back(Deserialize<typename T::value_type>(stream));
 	return vec;
 }
-
-template <typename T>
-T Deserialize(std::istream& stream) requires is_specialization<T, std::valarray>
-{
-	auto size = Deserialize<std::size_t>(stream);
-	T vec(size);
-	for (std::size_t i = 0; i < size; i++)
-		vec[i] = Deserialize<typename T::value_type>(stream);
-	return vec;
-}
-
 
 // std::chrono::duration
 template <typename T>

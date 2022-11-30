@@ -61,17 +61,17 @@ TEST(DenseMatrix, div_value)
 TEST(DenseMatrix, mul_vec)
 {
 	DenseMatrix A = Matrix(1, 2, 3, 4);
-	std::valarray x = { 1, 2 };
-	std::valarray b = { 5, 11 };
-	EXPECT_TRUE(AllTrue(A * x == b));
+	std::vector x = { 1, 2 };
+	std::vector b = { 5, 11 };
+	EXPECT_TRUE(A * x == b);
 }
 
 TEST(DenseMatrix, mul_vec2)
 {
 	DenseMatrix A = Matrix(1, 2, 3, 4);
-	std::valarray x = { 1, 2 };
-	std::valarray b = { 7, 10 };
-	EXPECT_TRUE(AllTrue(x * A == b));
+	std::vector x = { 1, 2 };
+	std::vector b = { 7, 10 };
+	EXPECT_TRUE(x * A == b);
 }
 
 TEST(DenseMatrix, mul_mat)

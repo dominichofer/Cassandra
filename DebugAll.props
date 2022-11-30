@@ -17,7 +17,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;C:\Users\Dominic\source\repos\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;G:\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>

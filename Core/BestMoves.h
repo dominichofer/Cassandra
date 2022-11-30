@@ -41,7 +41,7 @@ public:
 	bool operator==(const BestMoves&) const noexcept = default;
 	bool operator!=(const BestMoves&) const noexcept = default;
 
-	operator Moves() const noexcept { return (move1 == Field::invalid ? BitBoard() : BitBoard(move1)) | (move2 == Field::invalid ? BitBoard() : BitBoard(move2)); }
+	operator Moves() const noexcept { return Moves{ (move1 == Field::invalid ? BitBoard() : BitBoard(move1)) | (move2 == Field::invalid ? BitBoard() : BitBoard(move2)) }; }
 
 	Field first() const noexcept { return move1; }
 	Field second() const noexcept { return move2; }

@@ -13,6 +13,5 @@ public:
 	FixedDepthPlayer(Algorithm& alg, Intensity intensity, uint64_t seed = std::random_device{}())
 		: alg(alg), intensity(intensity), rnd_engine(seed) {}
 
-	Position Play(const Position&) override;
 	Field ChooseMove(const Position&) override;
 };

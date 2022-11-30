@@ -53,14 +53,14 @@ public:
 		
 	// Returns diag(A' * A)
 	template <typename T>
-	std::valarray<T> DiagATA() const
+	std::vector<T> DiagATA() const
 	{
-		std::valarray<T> ret(cols);
+		std::vector<T> ret(cols);
 		#pragma omp parallel
 		{
-			std::valarray<T> local_ret(cols); // prevents cache thrashing
+			std::vector<T> local_ret(cols); // prevents cache thrashing
 			#pragma omp for nowait schedule(static)
-			for (int64_t i = 0; i < col_indices.size(); i++)
+			for (int64_t i = 0; i < static_cast<int64_t>(col_indices.size()); i++)
 				local_ret[col_indices[i]] += 1;
 
 			#pragma omp critical
@@ -72,7 +72,7 @@ public:
 	// Jacobi Preconditioner Square
 	// Returns 1 / diag(A' * A)
 	template <typename T>
-	std::valarray<T> JacobiPreconditionerSquare(T infinity = std::numeric_limits<T>::infinity()) const
+	std::vector<T> JacobiPreconditionerSquare(T infinity = std::numeric_limits<T>::infinity()) const
 	{
 		auto diag = DiagATA<T>();
 		for (auto& elem : diag)
@@ -85,13 +85,13 @@ public:
 };
 
 template <typename T, typename U>
-std::valarray<T> operator*(const MatrixCSR<U>& mat, const std::valarray<T>& x)
+std::vector<T> operator*(const MatrixCSR<U>& mat, const std::vector<T>& x)
 {
 	if (x.size() != mat.Cols())
 		throw std::runtime_error("Size mismatch.");
 
 	const int64_t rows = static_cast<int64_t>(mat.Rows());
-	std::valarray<T> result(rows);
+	std::vector<T> result(rows);
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < rows; i++)
 		result[i] = std::accumulate(mat.begin(i), mat.end(i), T(0), [&x](T t, const auto& i) { return t + x[i]; });
@@ -99,17 +99,17 @@ std::valarray<T> operator*(const MatrixCSR<U>& mat, const std::valarray<T>& x)
 }
 
 template <typename T, typename U>
-std::valarray<T> operator*(const std::valarray<T>& x, const MatrixCSR<U>& mat)
+std::vector<T> operator*(const std::vector<T>& x, const MatrixCSR<U>& mat)
 {
 	if (x.size() != mat.Rows())
 		throw std::runtime_error("Size mismatch.");
 
 	const int64_t rows = static_cast<int64_t>(mat.Rows());
 	const int64_t cols = static_cast<int64_t>(mat.Cols());
-	std::valarray<T> result(cols);
+	std::vector<T> result(cols);
 	#pragma omp parallel
 	{
-		std::valarray<T> local_result(cols); // prevents cache thrashing
+		std::vector<T> local_result(cols); // prevents cache thrashing
 		#pragma omp for nowait schedule(static)
 		for (int64_t i = 0; i < rows; i++)
 			for (auto col_index : mat.Row(i))

@@ -2,19 +2,13 @@
 #include <algorithm>
 #include <cassert>
 
-int AlphaBetaFailSoft::Eval(const Position& pos, Intensity, OpenInterval window)
+ContextualResult AlphaBetaFailSoft::Eval(const Position& pos, Intensity, OpenInterval window)
 {
 	nodes = 0;
-	return Eval_N(pos, window);
+	return Eval(pos, window);
 }
 
-ScoreMove AlphaBetaFailSoft::Eval_BestMove(const Position& pos, Intensity, OpenInterval window)
-{
-	nodes = 0;
-	return Eval_BestMove_N(pos, window);
-}
-
-ScoreMove AlphaBetaFailSoft::Eval_BestMove_N(const Position& pos, OpenInterval window)
+ContextualResult AlphaBetaFailSoft::Eval(const Position& pos, OpenInterval window)
 {
 	nodes++;
 	Moves moves = PossibleMoves(pos);
@@ -22,21 +16,51 @@ ScoreMove AlphaBetaFailSoft::Eval_BestMove_N(const Position& pos, OpenInterval w
 	{
 		auto passed = PlayPass(pos);
 		if (HasMoves(passed))
-			return -Eval_BestMove_N(passed, -window);
+			return -Eval(passed, -window);
 		return EvalGameOver(pos);
 	}
 
-	ScoreMove best;
+	ContextualResult res;
 	for (Field move : moves)
 	{
 		int score = -Eval_N(Play(pos, move), -window);
 		if (score > window)
 			return { score, move };
-		best.ImproveWith(score, move);
+		res.ImproveWith(score, move);
 		window.TryIncreaseLower(score);
 	}
-	return best;
+	return res;
 }
+
+//ScoreMove AlphaBetaFailSoft::Eval_BestMove(const Position& pos, Intensity, OpenInterval window)
+//{
+//	nodes = 0;
+//	return Eval_BestMove_N(pos, window);
+//}
+//
+//ScoreMove AlphaBetaFailSoft::Eval_BestMove_N(const Position& pos, OpenInterval window)
+//{
+//	nodes++;
+//	Moves moves = PossibleMoves(pos);
+//	if (!moves)
+//	{
+//		auto passed = PlayPass(pos);
+//		if (HasMoves(passed))
+//			return -Eval_BestMove_N(passed, -window);
+//		return EvalGameOver(pos);
+//	}
+//
+//	ScoreMove best;
+//	for (Field move : moves)
+//	{
+//		int score = -Eval_N(Play(pos, move), -window);
+//		if (score > window)
+//			return { score, move };
+//		best.ImproveWith(score, move);
+//		window.TryIncreaseLower(score);
+//	}
+//	return best;
+//}
 
 int AlphaBetaFailSoft::Eval_N(const Position& pos, OpenInterval window)
 {

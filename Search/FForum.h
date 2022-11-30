@@ -2,14 +2,6 @@
 #include "Core/Core.h"
 #include <vector>
 
-struct PosScore
-{
-	Position pos;
-	int score;
-};
-
-inline int EmptyCount(const PosScore& ps) { return ps.pos.EmptyCount(); }
-
 static std::vector<PosScore> FForum =
 {
 	PosScore(Position::Start()),

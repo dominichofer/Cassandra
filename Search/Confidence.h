@@ -1,4 +1,5 @@
 #pragma once
+#include "Core/Core.h"
 #include <cassert>
 #include <cmath>
 #include <limits>
@@ -11,6 +12,7 @@ public:
 	constexpr explicit Confidence(float z) noexcept : z(z) { assert(z >= 0); }
 
 	static constexpr Confidence Certain() noexcept { return Confidence{std::numeric_limits<decltype(z)>::infinity()}; }
+	static constexpr Confidence Uncertain() noexcept { return Confidence{ 0 }; }
 
 	auto operator<=>(const Confidence&) const noexcept = default;
 
@@ -18,6 +20,6 @@ public:
 	bool IsCertain() const noexcept { return *this == Certain(); }
 };
 
-inline std::string to_string(Confidence c) { return std::to_string(static_cast<int>(std::floor(100.0 * (1 + std::erf(c.sigmas() / std::sqrt(2))) / 2))) + '%'; }
+inline std::string to_string(Confidence c) { return fmt::format("{:1.1f}", c.sigmas()); }
 
 constexpr Confidence operator""_sigmas(long double z) { return Confidence{ static_cast<float>(z) }; }

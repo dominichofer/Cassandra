@@ -1,0 +1,21 @@
+Position:
+--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X
+
+Position Score:
+--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X % +70   (no evaluation)
+--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X % +60
+
+Game:
+--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X
+---------------------------OOO-----OOO-----OXO------X----------- X G6
+---------------------------OOO-----OOO-----OXO------X----------- X G6 D7 C6 E8 G3
+
+
+Game-Position-Score file:
+	Games:
+		--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X
+		---------------------------OOO-----OOO-----OXO------X----------- X G6
+		---------------------------OOO-----OOO-----OXO------X----------- X G6 D7 C6 E8 G3
+	Positions:
+		--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X % +70   (no evaluation)
+		--XXXX-O--OOOOOO---OOXXX---OOXXX---OOXXX----OXXX---XOXXX----XXXX X % +60

@@ -14,7 +14,7 @@
     <ProjectGuid>{012a19af-6842-42a7-8e6d-256ee06b1e36}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>NotSet</CharacterSet>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -36,8 +36,11 @@
   <ItemGroup>
     <ClCompile Include="Bit.cpp" />
     <ClCompile Include="BitBoard.cpp" />
+    <ClCompile Include="Children.cpp" />
     <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Flips.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameGenerator.cpp" />
     <ClCompile Include="Metronome.cpp" />
     <ClCompile Include="MoreTypes.cpp" />
     <ClCompile Include="Moves.cpp" />
@@ -46,6 +49,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PositionGenerator.cpp" />
+    <ClCompile Include="PositionScore.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
     <ClCompile Include="EvalGameOver.cpp" />
   </ItemGroup>

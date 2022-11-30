@@ -37,12 +37,11 @@ namespace Flips_test
 
 	void TestField(const Field move)
 	{
-		const auto seed = 14;
-		PosGen::Random rnd(seed);
+		RandomPositionGenerator rnd(/*seed*/ 14);
 
 		for (int i = 0; i < 10'000; i++)
 		{
-			const auto pos = rnd();
+			Position pos = rnd();
 			ASSERT_EQ(Flips(pos, move), Flip_loop(pos, move));
 		}
 	}

@@ -1,6 +1,8 @@
 #include "Children.h"
 
-ChildrenGenerator::Iterator::Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept
+using namespace children;
+
+Iterator::Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept
 	: plies(plies), pass_is_a_ply(pass_is_a_ply)
 {
 	stack.reserve(plies);
@@ -33,9 +35,9 @@ ChildrenGenerator::Iterator::Iterator(const Position& start, int plies, bool pas
 	++(*this);
 }
 
-ChildrenGenerator::Iterator& ChildrenGenerator::Iterator::operator++()
+Iterator& Iterator::operator++()
 {
-	while (!stack.empty())
+	while (not stack.empty())
 	{
 		if (stack.size() == plies + 1 || !stack.back().moves) {
 			stack.pop_back();
@@ -56,7 +58,7 @@ ChildrenGenerator::Iterator& ChildrenGenerator::Iterator::operator++()
 			stack.emplace_back(pos, moves);
 		else
 		{
-			auto passed = PlayPass(pos);
+			const auto passed = PlayPass(pos);
 			const auto passed_moves = PossibleMoves(passed);
 			if (passed_moves)
 			{
@@ -75,14 +77,22 @@ ChildrenGenerator::Iterator& ChildrenGenerator::Iterator::operator++()
 	return *this;
 }
 
-ChildrenGenerator Children(Position start, int plies, bool pass_is_a_ply)
+children::Generator Children(Position start, int plies, bool pass_is_a_ply)
 {
-	assert(plies > 0);
+	assert(plies >= 0);
 	return { start, plies, pass_is_a_ply };
 }
 
-ChildrenGenerator Children(Position start, int empty_count)
+children::Generator Children(Position start, int empty_count)
 {
-	assert(start.EmptyCount() > empty_count);
+	assert(start.EmptyCount() >= empty_count);
 	return { start, start.EmptyCount() - empty_count, false };
+}
+
+std::set<Position> UniqueChildren(Position start, int empty_count)
+{
+	std::set<Position> ret;
+	for (Position pos : Children(start, empty_count))
+		ret.insert(FlipToUnique(pos));
+	return ret;
 }

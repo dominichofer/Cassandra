@@ -263,15 +263,15 @@ class DrawingPanel(wx.Panel):
     def DrawDisc(self, dc, colour, x, y):
         dc.SetPen(wx.Pen(colour))
         dc.SetBrush(wx.Brush(colour))
-        dc.DrawCircle((x + 0.5) * self.d, (y + 0.5) * self.d, self.d * 0.45)
+        dc.DrawCircle(int((x + 0.5) * self.d), int((y + 0.5) * self.d), int(self.d * 0.45))
         
     def DrawX(self, dc:wx.BufferedPaintDC, colour:wx.Colour, x, y):
         pen = wx.Pen(colour)
-        pen.SetWidth(self.d/20)
+        pen.SetWidth(int(self.d/20))
         dc.SetPen(pen)
         dc.SetBrush(wx.Brush(colour))
-        dc.DrawLine((x + 0.4) * self.d, (y + 0.4) * self.d, (x + 0.6) * self.d, (y + 0.6) * self.d)
-        dc.DrawLine((x + 0.4) * self.d, (y + 0.6) * self.d, (x + 0.6) * self.d, (y + 0.4) * self.d)
+        dc.DrawLine(int((x + 0.4) * self.d), int((y + 0.4) * self.d), int((x + 0.6) * self.d), int((y + 0.6) * self.d))
+        dc.DrawLine(int((x + 0.4) * self.d), int((y + 0.6) * self.d), int((x + 0.6) * self.d), int((y + 0.4) * self.d))
 
     def OnPaint(self, event):
         dc = wx.BufferedPaintDC(self)
@@ -289,7 +289,7 @@ class DrawingPanel(wx.Panel):
         for x in [2,6]:
             for y in [2,6]:
                 dc.SetBrush(wx.Brush(grid))
-                dc.DrawCircle(x * self.d, y * self.d, self.d * 0.07)
+                dc.DrawCircle(x * self.d, y * self.d, int(self.d * 0.07))
 
         possible_moves = PossibleMoves(self.pos)   
         for x in range(8):
@@ -364,5 +364,5 @@ if __name__ == '__main__':
     #    to_png(pos)
 
     app = wx.App()
-    frame = PositionFrame(Position.Start())
+    frame = PositionFrame(Position.start())
     app.MainLoop()

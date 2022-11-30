@@ -20,13 +20,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
@@ -93,6 +93,9 @@
     </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SearchIO\SearchIO.vcxproj">
+      <Project>{47b2cd6e-fc2f-4830-a279-9185ab122546}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Search\Search.vcxproj">
       <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>

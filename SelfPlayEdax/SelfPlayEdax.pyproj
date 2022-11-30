@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>cad48711-5e1d-452f-8529-d25cdb4bab43</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SelfPlayEdax.py</StartupFile>
+    <StartupFile>GUI.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -47,6 +47,7 @@
     <Compile Include="Game_test.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="GUI.py" />
     <Compile Include="Position.py">
       <SubType>Code</SubType>
     </Compile>
