@@ -3,7 +3,7 @@
 
 void PatternEvalH(benchmark::State& state)
 {
-	auto evaluator = GLEM(pattern::L0);
+	auto evaluator = ScoreEstimator(pattern::L0);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -17,7 +17,7 @@ BENCHMARK(PatternEvalH);
 
 void PatternEvalD(benchmark::State& state)
 {
-	auto evaluator = GLEM(pattern::D7);
+	auto evaluator = ScoreEstimator(pattern::D7);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -31,7 +31,7 @@ BENCHMARK(PatternEvalD);
 
 void PatternEvalA(benchmark::State& state)
 {
-	auto evaluator = GLEM(pattern::B5);
+	auto evaluator = ScoreEstimator(pattern::B5);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -45,7 +45,7 @@ BENCHMARK(PatternEvalA);
 
 void PatternEvalHDA(benchmark::State& state)
 {
-	auto evaluator = GLEM({ pattern::L0, pattern::D7, pattern::B5 });
+	auto evaluator = ScoreEstimator({ pattern::L0, pattern::D7, pattern::B5 });
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -59,7 +59,7 @@ BENCHMARK(PatternEvalHDA);
 
 void PatternLogistello(benchmark::State& state)
 {
-	auto evaluator = GLEM(pattern::logistello);
+	auto evaluator = ScoreEstimator(pattern::logistello);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -73,7 +73,7 @@ BENCHMARK(PatternLogistello);
 
 void PatternEdax(benchmark::State& state)
 {
-	auto evaluator = GLEM(pattern::edax);
+	auto evaluator = ScoreEstimator(pattern::edax);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -85,9 +85,9 @@ void PatternEdax(benchmark::State& state)
 }
 BENCHMARK(PatternEdax);
 
-void AAGLEM_Edax(benchmark::State& state)
+void MSSE_Edax(benchmark::State& state)
 {
-	auto evaluator = AAGLEM(pattern::edax, /*block_size*/ 10);
+	auto evaluator = MSSE(/*stage_size*/ 5, pattern::edax);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -97,6 +97,6 @@ void AAGLEM_Edax(benchmark::State& state)
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(AAGLEM_Edax);
+BENCHMARK(MSSE_Edax);
 
 BENCHMARK_MAIN();

@@ -31,20 +31,33 @@ if __name__ == '__main__':
         edax_engine(0),
         cassandra_engine(r'G:\Reversi2\iteration1.model', 0),
         cassandra_engine(r'G:\Reversi2\iteration2.model', 0),
-        cassandra_engine(r'G:\Reversi2\it1.model', 0),
-        cassandra_engine(r'G:\Reversi2\it2.model', 0),
-        cassandra_engine(r'G:\Reversi2\it3.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration3.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration4.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration5.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration6.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration7.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration8.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration9.model', 0),
+        cassandra_engine(r'G:\Reversi2\iteration10.model', 0),
+        #cassandra_engine(r'G:\Reversi2\it1.model', 0),
+        #cassandra_engine(r'G:\Reversi2\it2.model', 0),
+        #cassandra_engine(r'G:\Reversi2\it3.model', 0),
         #cassandra_engine(r'G:\Reversi2\blocksize5_it100.model', 0),
         #cassandra_engine(r'G:\Reversi2\pattern_edax_bs_5_spd5_train_100000_d5_exact3_accfit_0_0_0_it0.model', 0),
         #cassandra_engine(r'G:\Reversi2\pattern_edax_bs_5_spd5_train_100000_d5_exact3_accfit_0_0_0_it1.model', 0),
         ]
     names = [
         'Edax4.4 level 0',
-        'Ours Iteration 1',
-        'Ours Iteration 2',
-        'Ours It 1',
-        'Ours It 2',
-        'Ours It 3',
+        'Iteration 1',
+        'Iteration 2',
+        'Iteration 3',
+        'Iteration 4',
+        'Iteration 5',
+        'Iteration 6',
+        'Iteration 7',
+        'Iteration 8',
+        'Iteration 9',
+        'Iteration 10',
         ]
 
     print_timestamped('begin')
@@ -73,15 +86,19 @@ if __name__ == '__main__':
         x = []
         stdev = []
         stdev_err = []
-        for e in range(1, 26):
-            diff = [a - b for a, b, p in zip(exact_scores, scores, pos) if p.empty_count() == e]
+        full_diff = []
+        for e in range(1, 29):
+            diff = [a - b for a, b, p in zip(exact_scores, scores, pos) if p.empty_count() == e and a != undefined_score]
+            full_diff += diff
             if len(diff) > 1:
                 x.append(e)
                 s = statistics.stdev(diff)
                 stdev.append(s)
                 stdev_err.append(SD(len(diff), s))
         plt.plot(x, stdev, label=name)
-        plt.fill_between(x, [s - 2 * e for s, e in zip(stdev, stdev_err)], [s + 2 * e for s, e in zip(stdev, stdev_err)], alpha=.5)
+        plt.fill_between(x, [s - 2 * e for s, e in zip(stdev, stdev_err)], [s + 2 * e for s, e in zip(stdev, stdev_err)], alpha=.25)
+        mad = statistics.mean(abs(d) for d in diff)
+        print(f'{eng.name} stdev:{statistics.stdev(diff)} mad:{mad}')
     
     plt.xlabel('empty fields')
     plt.ylabel('standard deviation')
@@ -89,7 +106,7 @@ if __name__ == '__main__':
     #plt.ylim(0, 10)
     plt.grid(True, which='major', axis='both')
     plt.legend(loc=4)
-    plt.savefig(r'G:\Reversi2\SD_all2.png')
+    plt.savefig(r'G:\Reversi2\SD2.png')
     plt.show()
     
     print_timestamped('end')

@@ -4,17 +4,22 @@
 #include <istream>
 #include <ostream>
 
-// GLEM
-void Serialize(const GLEM&, std::ostream&);
+// ScoreEstimator
+void Serialize(const ScoreEstimator&, std::ostream&);
 template <>
-GLEM Deserialize<GLEM>(std::istream&);
+ScoreEstimator Deserialize<ScoreEstimator>(std::istream&);
+
+// MSSE
+void Serialize(const MSSE&, std::ostream&);
+template <>
+MSSE Deserialize<MSSE>(std::istream&);
 
 // AM
 void Serialize(const AM&, std::ostream&);
 template <>
 AM Deserialize<AM>(std::istream&);
 
-// AAGLEM
-void Serialize(const AAGLEM&, std::ostream&);
+// AAMSSE
+void Serialize(const AAMSSE&, std::ostream&);
 template <>
-AAGLEM Deserialize<AAGLEM>(std::istream&);
+AAMSSE Deserialize<AAMSSE>(std::istream&);

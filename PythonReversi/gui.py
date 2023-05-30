@@ -4,7 +4,6 @@ from pathlib import Path
 from core import Position, possible_moves
 from gui import BoardPanel, ScorePanel, WhiskedValue
 import edax
-import db
 
 
 class PositionFrame(wx.Frame):
@@ -12,7 +11,7 @@ class PositionFrame(wx.Frame):
     def __init__(self):
         super(PositionFrame, self).__init__(None, title='Position', style=wx.DEFAULT_FRAME_STYLE & ~wx.RESIZE_BORDER)
 
-        self.board = BoardPanel(self, 50, Position.start(), self.pos_update)
+        self.board = BoardPanel(self, 50, Position.start(), self.pos_update, black_and_white=False)
 
         self.pos_text = wx.TextCtrl(self, size=(483, -1), style=wx.TE_PROCESS_ENTER)
         self.pos_text.SetFont(wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, faceName='Consolas'))

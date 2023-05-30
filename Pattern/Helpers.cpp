@@ -40,7 +40,7 @@ public:
 
 static SumPow3Cache sum_pow_3_cache;
 
-int FastIndex(const Position& pos, const BitBoard pattern) noexcept
+int FastIndex(Position pos, BitBoard pattern) noexcept
 {
 	return sum_pow_3_cache.SumPow3(PExt(pos.Player(), pattern))
 		+ sum_pow_3_cache.SumPow3(PExt(pos.Opponent(), pattern)) * 2;

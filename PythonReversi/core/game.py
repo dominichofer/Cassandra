@@ -1,16 +1,13 @@
 from .field import field_to_string, parse_field
-from .position import Position, play, play_pass, possible_moves
+from .position import Position, play, auto_pass
 import re
 
 
 class Game:
+
     def __init__(self, start: Position, moves = None):
-        if not possible_moves(start):
-            passed = play_pass(start)
-            if possible_moves(passed):
-                start = passed
-        self.__start = start
-        self.__current = start
+        self.__start = auto_pass(start)
+        self.__current = auto_pass(start)
         self.__moves = []
         for move in (moves or []):
             self.play(move)
@@ -19,20 +16,17 @@ class Game:
     def from_string(s: str):
         # Example input:
         # 'OO-XXXX-OOOOOXX-OOOOXOXOOXOXOXXXOXOOOXXXOXOXOXXXOOXXXXXXOOOOOOOO O C1 h1'
-
-        return Game(
-            Position.from_string(s),
-            [parse_field(m) for m in s[66:].strip().split(' ')]
-            )
+        
+        moves = None
+        if len(s) > 66:
+            moves = [parse_field(m) for m in s[66:].strip().split(' ')]
+        return Game(Position.from_string(s), moves)
 
     def __str__(self) -> str:
         return ' '.join([str(self.__start)] + [field_to_string(m) for m in self.__moves])
                 
     def __eq__(self, o):
         return self.__start == o.__start and self.__moves == o.__moves
-
-    def __neq__(self, o):
-        return not self == o
 
     @property
     def start_position(self) -> Position:
@@ -48,19 +42,13 @@ class Game:
 
     def play(self, move):
         self.__moves.append(move)
-        self.__current = play(self.__current, move)
-
-        # Pass implicit if game is not over
-        if not possible_moves(self.__current):
-            passed = play_pass(self.__current)
-            if possible_moves(passed):
-                self.__current = passed
+        self.__current = auto_pass(play(self.__current, move))
 
     def positions(self):
         pos = self.__start
         yield pos
         for move in self.__moves:
-            pos = play(pos, move)
+            pos = auto_pass(play(pos, move))
             yield pos
 
     

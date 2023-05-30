@@ -13,10 +13,10 @@ class PVS : public AlphaBetaFailSuperSoft
 {
 protected:
 	HT& tt;
-	const AAGLEM& evaluator;
+	const AAMSSE& evaluator;
 public:
 	static inline uint64_t counter = 0; // TODO: Remove!
-	PVS(HT& tt, const AAGLEM& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
+	PVS(HT& tt, const AAMSSE& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
 
 	using AlphaBetaFailSuperSoft::Eval;
 	ContextualResult Eval(const Position&, Intensity, OpenInterval) override;

@@ -27,7 +27,7 @@ Game PlayedGame(Player& first, Player& second, Position start)
 std::vector<Game> PlayedGamesFrom(Player& first, Player& second, const std::vector<Position>& starts)
 {
 	int64_t count = static_cast<int64_t>(starts.size());
-	std::vector<Game> ret(count, Game{});
+	std::vector<Game> ret(count);
 	#pragma omp parallel for
 	for (int64_t i = 0; i < count; i++)
 		ret[i] = PlayedGame(first, second, starts[i]);

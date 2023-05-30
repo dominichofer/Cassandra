@@ -91,7 +91,7 @@ const PosScore Two_empty_1 = {
 	"X X X X X X O -"_pos, +64 / 2  };
 
 const PosScore Two_empty_2 = {
-	"X X X X X X X  "
+	"X X X X X X X -"
 	"X X X X X X X X"
 	"X X X X X X X X"
 	"X X X X X X X X"
@@ -189,7 +189,6 @@ const PosScore Four_empty_3 = {
 	"X X X O O X X X"
 	"X X O X X O X X"
 	"X X - - - - X X"_pos, +56 / 2  };
-
 
 const PosScore Five_empty = {
 	"X X X X X X X -"

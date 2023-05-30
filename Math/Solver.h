@@ -5,6 +5,7 @@
 #include <memory>
 #include <functional>
 #include <stdexcept>
+#include <iostream>
 
 template <typename T>
 class IterativeSolver
@@ -88,7 +89,7 @@ public:
 };
 
 // Preconditioned Conjugate Gradient method
-// Solves A * P(y) = b, where P(y) = x, for x.
+// Solves A * P(y) = b for x, where P(y) = x.
 template <typename T, typename Matrix>
 class PCG final : public IterativeSolver<T>
 {
@@ -133,6 +134,7 @@ public:
 			x += alpha * p;
 			r -= alpha * A_p;
 			z = P.apply(r);
+			std::cout << "sqrt(rsnew): " << std::sqrt(dot(r, z)) << std::endl;
 			const double beta = dot(r, z) / r_dot_z_old;
 			p = z + beta * p;
 		}

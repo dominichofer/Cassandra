@@ -40,10 +40,8 @@ std::vector<Position> Positions(std::vector<Game>::const_iterator begin, std::ve
 {
 	std::vector<Position> ret;
 	for (auto it = begin; it != end; ++it)
-	{
-		std::vector<Position> pos = it->Positions();
-		ret.insert(ret.end(), pos.begin(), pos.end());
-	}
+		for (Position p : it->Positions())
+			ret.push_back(p);
 	return ret;
 }
 std::vector<Position> Positions(const std::vector<Game>& games)

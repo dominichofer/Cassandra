@@ -15,25 +15,43 @@ class BoardModel:
         self.texts = [None] * 64
         
 
-
 class BoardView:
-    def __init__(self, panel, size, model: BoardModel):
+    def __init__(self, panel, size, model: BoardModel, black_and_white: bool):
         self.panel = panel
         self.size = size
+        self.grid_offset = int(size / 2)
+        self.total_size = 8 * self.size + self.grid_offset + 3
+        self.line_width = 3
         self.model = model
-        self.grid_color = wx.Colour(0, 50, 0)
-        self.background_color = wx.Colour(0, 150, 0)
-        self.player_color = wx.Colour("black")
-        self.opponent_color = wx.Colour("white")
-        self.crosses_color = wx.Colour("red")
-        self.text_color = wx.Colour("red")
+
+        if black_and_white:
+            self.background_color = wx.Colour("white")
+            self.board_color = wx.Colour("white")
+            self.grid_color = wx.Colour("black")
+            self.player_fill_color = wx.Colour("black")
+            self.player_border_color = wx.Colour("black")
+            self.opponent_fill_color = wx.Colour("white")
+            self.opponent_border_color = wx.Colour("black")
+            self.cross_color = wx.Colour("black")
+            self.text_color = wx.Colour("black")
+        else:
+            self.background_color = wx.Colour(171, 171, 171)
+            self.board_color = wx.Colour(0, 100, 0)
+            self.grid_color = wx.Colour(0, 50, 0)
+            self.player_fill_color = wx.Colour("black")
+            self.player_border_color = wx.Colour("black")
+            self.opponent_fill_color = wx.Colour("white")
+            self.opponent_border_color = wx.Colour("white")
+            bordeaux = wx.Colour(95, 2, 31)
+            self.cross_color = bordeaux
+            self.text_color = bordeaux
         
     @staticmethod
     def board_to_mask(x, y) -> uint64:
         return uint64(1) << uint64(63 - x - 8 * y)
     
     def screen_to_mask(self, x, y) -> uint64:
-        return self.board_to_mask(int(x / self.size), int(y / self.size))
+        return self.board_to_mask(int((x - self.grid_offset) / self.size), int((y - self.grid_offset) / self.size))
 
     def refresh(self):
         self.panel.Refresh()
@@ -41,46 +59,85 @@ class BoardView:
     def paint(self):
         dc = wx.BufferedPaintDC(self.panel)
 
-        # Board
-        dc.SetPen(wx.Pen(self.grid_color))
+        # Background
         dc.SetBrush(wx.Brush(self.background_color))
+        dc.DrawRectangle(0, 0, self.total_size, self.total_size)
+
+        # Rows / Cols
+        dc.SetTextForeground(self.grid_color)
+        font_size = int(self.size / 3)
+        dc.SetFont(wx.Font(font_size, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        for row in range(8):
+            dc.DrawText(
+                str(row + 1),
+                int(self.size / 4 - font_size / 3),
+                row * self.size + int(self.size / 2 - font_size / 1.5) + self.grid_offset)
+        for x, col in enumerate(['A','B','C','D','E','F','G','H']):
+            dc.DrawText(
+                col,
+                x * self.size + int(self.size / 2 - font_size / 3) + self.grid_offset,
+                int(self.size / 4 - font_size / 1.5))
+
+        # Board
+        dc.SetBrush(wx.Brush(self.board_color))
+        dc.SetPen(wx.Pen(self.grid_color, self.line_width))
         for x in range(8):
             for y in range(8):
-                dc.DrawRectangle(x * self.size, y * self.size, self.size + 1, self.size + 1)
+                dc.DrawRectangle(
+                    x * self.size + self.grid_offset,
+                    y * self.size + self.grid_offset,
+                    self.size + 1,
+                    self.size + 1)
 
-        # Small black dots
-        dc.SetPen(wx.Pen(self.grid_color))
+        # Small dots
         dc.SetBrush(wx.Brush(self.grid_color))
+        dc.SetPen(wx.Pen(self.grid_color))
         for x in [2,6]:
             for y in [2,6]:
-                dc.DrawCircle(x * self.size, y * self.size, int(self.size * 0.07))
+                dc.DrawCircle(
+                    x * self.size + self.grid_offset,
+                    y * self.size + self.grid_offset,
+                    int(1.5 * self.line_width))
         
         # player discs
-        dc.SetPen(wx.Pen(self.player_color))
-        dc.SetBrush(wx.Brush(self.player_color))
+        dc.SetBrush(wx.Brush(self.player_fill_color))
+        dc.SetPen(wx.Pen(self.player_border_color, self.line_width))
         for x in range(8):
             for y in range(8):
                 if self.model.pos.P & self.board_to_mask(x, y):
-                    dc.DrawCircle(int((x + 0.5) * self.size), int((y + 0.5) * self.size), int(self.size * 0.45))
+                    dc.DrawCircle(
+                        int((x + 0.5) * self.size) + self.grid_offset,
+                        int((y + 0.5) * self.size) + self.grid_offset,
+                        int(self.size * 0.48 - self.line_width))
 
         # Opponent discs
-        dc.SetPen(wx.Pen(self.opponent_color))
-        dc.SetBrush(wx.Brush(self.opponent_color))
+        dc.SetBrush(wx.Brush(self.opponent_fill_color))
+        dc.SetPen(wx.Pen(self.opponent_border_color, self.line_width))
         for x in range(8):
             for y in range(8):
                 if self.model.pos.O & self.board_to_mask(x, y):
-                    dc.DrawCircle(int((x + 0.5) * self.size), int((y + 0.5) * self.size), int(self.size * 0.45))
+                    dc.DrawCircle(
+                        int((x + 0.5) * self.size) + self.grid_offset,
+                        int((y + 0.5) * self.size) + self.grid_offset,
+                        int(self.size * 0.48 - self.line_width))
 
         # Crosses
-        pen = wx.Pen(self.crosses_color)
-        pen.SetWidth(int(self.size * 0.05))
+        dc.SetBrush(wx.Brush(self.cross_color))
+        pen = wx.Pen(self.cross_color, self.line_width)
         dc.SetPen(pen)
-        dc.SetBrush(wx.Brush(self.crosses_color))
         for x in range(8):
             for y in range(8):
                 if self.model.crosses & self.board_to_mask(x, y):
-                    dc.DrawLine(int((x + 0.4) * self.size), int((y + 0.4) * self.size), int((x + 0.6) * self.size), int((y + 0.6) * self.size))
-                    dc.DrawLine(int((x + 0.4) * self.size), int((y + 0.6) * self.size), int((x + 0.6) * self.size), int((y + 0.4) * self.size))
+                    dc.DrawLine(
+                        int((x + 0.4) * self.size) + self.grid_offset,
+                        int((y + 0.4) * self.size) + self.grid_offset,
+                        int((x + 0.6) * self.size) + self.grid_offset,
+                        int((y + 0.6) * self.size) + self.grid_offset)
+                    dc.DrawLine(
+                        int((x + 0.4) * self.size) + self.grid_offset,
+                        int((y + 0.6) * self.size) + self.grid_offset,
+                        int((x + 0.6) * self.size) + self.grid_offset,
+                        int((y + 0.4) * self.size) + self.grid_offset)
                     
         # Texts
         dc.SetTextForeground(self.text_color)
@@ -88,8 +145,10 @@ class BoardView:
             for y in range(8):
                 text = self.model.texts[63 - x - 8 * y]
                 if text is not None:
-                    dc.DrawText(text, x * self.size, y * self.size)
-
+                    dc.DrawText(
+                        text,
+                        x * self.size + self.grid_offset,
+                        y * self.size + self.grid_offset)
 
         
 class SetUpBoardController:
@@ -151,10 +210,10 @@ class SetUpBoardController:
 
             
 class BoardPanel(wx.Panel):
-    def __init__(self, parent, size, pos: Position, refresh_callback):
-        super(BoardPanel, self).__init__(parent, size=(8 * size + 3, 8 * size + 3), style=wx.SIMPLE_BORDER)
+    def __init__(self, parent, size, pos: Position, refresh_callback, black_and_white: bool = False):
         self.model = BoardModel(pos)
-        self.view = BoardView(self, size, self.model)
+        self.view = BoardView(self, size, self.model, black_and_white)
+        super(BoardPanel, self).__init__(parent, size=(self.view.total_size, self.view.total_size), style=wx.SIMPLE_BORDER)
         self.controller = SetUpBoardController(self.model, self.view, refresh_callback)
 
         self.Bind(wx.EVT_PAINT, self.on_paint)

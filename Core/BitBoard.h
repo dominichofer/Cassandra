@@ -41,10 +41,14 @@ public:
 	static constexpr BitBoard RightHalf() noexcept { return BitBoard{ 0x0F0F0F0F0F0F0F0FULL }; }
 	static constexpr BitBoard UpperHalf() noexcept { return BitBoard{ 0xFFFFFFFF00000000ULL }; }
 	static constexpr BitBoard LowerHalf() noexcept { return BitBoard{ 0x00000000FFFFFFFFULL }; }
-	static constexpr BitBoard StrictlyLeftUpper() noexcept { return BitBoard{ 0xFEFCF8F0E0C08000ULL }; }
-	static constexpr BitBoard StrictlyLeftLower() noexcept { return BitBoard{ 0x0080C0E0F0F8FCFEULL }; }
-	static constexpr BitBoard StrictlyRighUpper() noexcept { return BitBoard{ 0x7F3F1F0F07030100ULL }; }
-	static constexpr BitBoard StrictlyRighLower() noexcept { return BitBoard{ 0x000103070F1F3F7FULL }; }
+	static constexpr BitBoard RightLowerQuadrant() noexcept { return BitBoard{ 0x000000000F0F0F0FULL }; }
+	static constexpr BitBoard LeftLowerQuadrant() noexcept { return BitBoard{ 0x00000000F0F0F0F0ULL }; }
+	static constexpr BitBoard RightUpperQuadrant() noexcept { return BitBoard{ 0x0F0F0F0F00000000ULL }; }
+	static constexpr BitBoard LeftUpperQuadrant() noexcept { return BitBoard{ 0xF0F0F0F000000000ULL }; }
+	static constexpr BitBoard StrictlyLeftUpperTriangle() noexcept { return BitBoard{ 0xFEFCF8F0E0C08000ULL }; }
+	static constexpr BitBoard StrictlyLeftLowerTriangle() noexcept { return BitBoard{ 0x0080C0E0F0F8FCFEULL }; }
+	static constexpr BitBoard StrictlyRighUpperTriangle() noexcept { return BitBoard{ 0x7F3F1F0F07030100ULL }; }
+	static constexpr BitBoard StrictlyRighLowerTriangle() noexcept { return BitBoard{ 0x000103070F1F3F7FULL }; }
 
 	CUDA_CALLABLE constexpr operator uint64() const noexcept { return b; }
 
@@ -87,6 +91,11 @@ public:
 	void FlipDiagonal() noexcept;
 	void FlipHorizontal() noexcept;
 	void FlipVertical() noexcept;
+
+	bool IsCodiagonallySymmetric() const noexcept;
+	bool IsDiagonallySymmetric() const noexcept;
+	bool IsHorizontallySymmetric() const noexcept;
+	bool IsVerticallySymmetric() const noexcept;
 };
 
 BitBoard FlipCodiagonal(BitBoard) noexcept;

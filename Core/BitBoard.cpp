@@ -82,6 +82,29 @@ void BitBoard::FlipVertical() noexcept
 	b = BSwap(b);
 }
 
+bool BitBoard::IsCodiagonallySymmetric() const noexcept
+{
+	return *this == ::FlipCodiagonal(*this);
+}
+
+bool BitBoard::IsDiagonallySymmetric() const noexcept
+{
+	return *this == ::FlipDiagonal(*this);
+
+}
+
+bool BitBoard::IsHorizontallySymmetric() const noexcept
+{
+	return *this == ::FlipHorizontal(*this);
+
+}
+
+bool BitBoard::IsVerticallySymmetric() const noexcept
+{
+	return *this == ::FlipVertical(*this);
+
+}
+
 BitBoard FlipCodiagonal(BitBoard b) noexcept
 {
 	b.FlipCodiagonal();

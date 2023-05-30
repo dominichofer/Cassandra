@@ -1,3 +1,4 @@
+from turtle import pos
 from numpy import uint64
 from .moves import Moves
 import re
@@ -222,6 +223,14 @@ def play_or_pass(pos: Position, move: int) -> Position:
     if move == 64:
         return play_pass(pos)
     return play(pos, move)
+
+
+def auto_pass(pos: Position) -> Position:
+    if not possible_moves(pos):
+        passed = play_pass(pos)
+        if possible_moves(passed):
+            return passed
+    return pos
 
 
 def possible_moves(pos: Position) -> Moves:

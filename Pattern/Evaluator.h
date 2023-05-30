@@ -5,46 +5,72 @@
 #include <memory>
 #include <span>
 #include <vector>
-#include <vector>
 
-// Generalized Linear Evaluation Model
-class GLEM
+struct MaskAndValue
+{
+	BitBoard mask{};
+	float value{};
+};
+
+class ScoreEstimator
 {
 	std::vector<BitBoard> masks;
 	std::vector<std::vector<float>> w; // expanded weights
-	std::vector<int> pattern_index; // indices in 'masks' which form the patterns. The other masks are symmetric variations.
+	std::vector<BitBoard> pattern;
 public:
-	struct MaskAndValue
-	{
-		BitBoard mask{};
-		float value{};
-	};
+	ScoreEstimator() = default;
+	ScoreEstimator(BitBoard pattern);
+	ScoreEstimator(BitBoard pattern, std::span<const float> weights);
+	ScoreEstimator(std::vector<BitBoard> pattern);
+	ScoreEstimator(std::vector<BitBoard> pattern, std::span<const float> weights);
 
-	GLEM() = default;
-	GLEM(BitBoard pattern);
-	GLEM(BitBoard pattern, std::span<const float> weights);
-	GLEM(std::vector<BitBoard> pattern);
-	GLEM(std::vector<BitBoard> pattern, std::span<const float> weights);
+	std::vector<BitBoard> Pattern() const noexcept { return pattern; }
 
-	float Eval(const Position& pos) const noexcept;
-	std::vector<MaskAndValue> DetailedEval(const Position& pos) const noexcept;
+	float Eval(Position pos) const noexcept;
+	std::vector<MaskAndValue> DetailedEval(Position pos) const noexcept;
 
-	void SetWeights(std::span<const float>);
-	std::vector<float> Weights() const;
 	std::size_t WeightsSize() const;
-	std::vector<BitBoard> Pattern() const;
+	std::vector<float> Weights() const;
+	void Weights(std::span<const float> weights);
+};
+
+// MultiStage Score Estimator
+class MSSE
+{
+	int stage_size;
+	std::vector<ScoreEstimator> estimators;
+public:
+	MSSE() = default;
+	MSSE(int stage_size, BitBoard pattern);
+	MSSE(int stage_size, BitBoard pattern, std::span<const float> weights);
+	MSSE(int stage_size, std::vector<BitBoard> pattern);
+	MSSE(int stage_size, std::vector<BitBoard> pattern, std::span<const float> weights);
+
+	int Stages() const noexcept;
+	int StageSize() const noexcept;
+	std::vector<BitBoard> Pattern() const noexcept;
+
+	float Eval(Position pos) const noexcept;
+	std::vector<MaskAndValue> DetailedEval(Position pos) const noexcept;
+
+	std::size_t WeightsSize() const;
+	std::vector<float> Weights() const;
+	std::vector<float> Weights(int stage) const;
+	void Weights(std::span<const float> weights);
+	void Weights(int stage, std::span<const float> weights);
 };
 
 // Accuracy Model
-struct AM
+class AM
 {
 	std::vector<double> param_values;
-
+public:
 	AM(std::vector<double> param_values = { -0.2, 0.6, 0.16, -0.01, 2.0 }) noexcept : param_values(param_values) {}
 
-	Vars Variables() const { return { Var{"D"}, Var{"d"}, Var{"E"} }; }
-	Vars Parameters() const { return { Var{"alpha"}, Var{"beta"}, Var{"gamma"}, Var{"delta"}, Var{"epsilon"} }; }
-	SymExp Function() const { return Eval(Var{"D"}, Var{"d"}, Var{"E"}, Var{"alpha"}, Var{"beta"}, Var{"gamma"}, Var{"delta"}, Var{"epsilon"}); }
+	Vars Variables() const;
+	Vars Parameters() const;
+	SymExp Function() const;
+	const std::vector<double>& ParameterValues() const;
 
 	auto Eval(auto D, auto d, auto E, auto alpha, auto beta, auto gamma, auto delta, auto epsilon) const noexcept
 	{
@@ -52,63 +78,33 @@ struct AM
 		using std::pow;
 		return (exp(alpha * d) + beta) * pow(D - d, gamma) * (delta * E + epsilon);
 	}
-	auto Eval(int D, int d, int E) const noexcept
-	{
-		return Eval(D, d, E,
-			param_values[0],
-			param_values[1],
-			param_values[2],
-			param_values[3],
-			param_values[4]);
-	}
-	auto Eval(std::vector<int> values) const noexcept
-	{
-		return Eval(values[0], values[1], values[2]);
-	}
+	double Eval(int D, int d, int E) const noexcept;
+	double Eval(std::vector<int> values) const noexcept;
 };
 
-// Accuracy Aware General Linear Evaluation Model
-class AAGLEM
+// Accuracy Aware MultiStage Score Estimator
+struct AAMSSE
 {
-	std::array<std::shared_ptr<GLEM>, 65> glems;
-	int block_size;
-	AM accuracy_model;
-	std::vector<BitBoard> pattern;
-public:
-	AAGLEM();
-	AAGLEM(
-		std::vector<BitBoard> pattern,
-		int block_size,
-		std::vector<double> accuracy_parameters = { -0.2, 0.6, 0.16, -0.01, 2.0 }
-	);
-	AAGLEM(
-		std::vector<BitBoard> pattern,
-		int block_size,
-		std::span<const float> weights,
-		std::vector<double> accuracy_parameters = { -0.2, 0.6, 0.16, -0.01, 2.0 }
-	);
+	// Composition
 
-	float Eval(const Position&) const noexcept;
-	std::vector<GLEM::MaskAndValue> DetailedEval(const Position&) const noexcept;
+	MSSE score_estimator;
+	AM accuracy_estimator;
 
-	GLEM& Evaluator(int block) { return *glems[block * block_size]; }
-	const GLEM& Evaluator(int block) const { return *glems[block * block_size]; }
+	AAMSSE() = default;
+	AAMSSE(MSSE score_estimator, AM accuracy_estimator);
+	AAMSSE(int stage_size, std::vector<BitBoard> pattern);
 
-	AM& AccuracyModel() { return accuracy_model; }
-	const AM& AccuracyModel() const { return accuracy_model; }
+	int Stages() const noexcept;
+	int StageSize() const noexcept;
+	std::vector<BitBoard> Pattern() const noexcept;
 
-	std::vector<BitBoard> Pattern() const { return pattern; }
-	int BlockSize() const { return block_size; }
-	int Blocks() const;
-	std::vector<double> AccuracyParameters() const { return accuracy_model.param_values; }
+	float Score(Position pos) const noexcept;
+	std::vector<MaskAndValue> DetailedScore(Position pos) const noexcept;
+	float Accuracy(int D, int d, int E) const noexcept;
 
-	void SetWeights(int block, std::span<const float> weights);
-	std::vector<float> Weights(int block) const;
+	std::size_t WeightsSize() const;
 	std::vector<float> Weights() const;
-
-	template <typename... Args>
-	auto Accuracy(Args&&... args) const noexcept
-	{
-		return accuracy_model.Eval(std::forward<Args>(args)...);
-	}
+	std::vector<float> Weights(int stage) const;
+	void Weights(int stage, std::span<const float> weights);
 };
+

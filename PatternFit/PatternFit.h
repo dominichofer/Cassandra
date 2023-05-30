@@ -1,9 +1,10 @@
 #pragma once
 #include "Core/Core.h"
-#include "Math/Math.h"
 #include "Pattern/Pattern.h"
 #include "Search/Search.h"
 #include <array>
+#include <span>
+#include <tuple>
 #include <vector>
 
 struct PositionMultiDepthScore
@@ -14,15 +15,30 @@ struct PositionMultiDepthScore
     PositionMultiDepthScore(Position pos) : pos(pos) { score_of_depth.fill(undefined_score); }
 };
 
-void Fit(GLEM& model, const std::vector<PosScore>& data, int iterations = 10);
+// Creates a score estimator, fitted to the given data.
+ScoreEstimator CreateScoreEstimator(
+    const std::vector<BitBoard>& pattern,
+    const std::vector<Position>& pos,
+    const std::vector<float>& score,
+    int iterations = 10);
 
-void Fit(GLEM& model, std::vector<Position>::const_iterator pos_begin, std::vector<Position>::const_iterator pos_end, const std::vector<float>& score, int iterations = 10);
-void Fit(GLEM& model, const std::vector<Position>& pos, const std::vector<float>& score, int iterations = 10);
+// Creates a MultiStage Score Estimator by bootstrapping from the given positions.
+MSSE CreateMultiStageScoreEstimator(
+    int stage_size,
+    const std::vector<BitBoard>& pattern,
+    const std::vector<Position>& pos,
+    Intensity eval_intensity);
 
-// Returns R^2
-double Fit(AM& model, const std::vector<PositionMultiDepthScore>& data);
+// Creates an accuracy model, fitted to the given data.
+// Returns accuracy model and R^2.
+std::pair<AM, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore>);
 
-// Returns R^2
-double Fit(AAGLEM& model,
-    const std::vector<Game>& train_games, int exact_blocks, Intensity train_eval,
-    const std::vector<Game>& accuracy_fit_games, int accuracy_fit_eval_all_depth_till, int accuracy_fit_eval_max_depth);
+// Create Accuracy Aware MultiStage Score Estimator by bootstrapping from the given data.
+// Returns AAMSSE and R^2.
+std::pair<AAMSSE, double> CreateAAMSSE(
+    int stage_size,
+    const std::vector<BitBoard>& pattern,
+    const std::vector<Position>& train_pos,
+    const std::vector<Position>& accuracy_pos,
+    Intensity eval_intensity,
+    int accuracy_max_depth);

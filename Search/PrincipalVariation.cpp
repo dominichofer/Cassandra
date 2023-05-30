@@ -176,7 +176,7 @@ std::optional<ContextualResult> PVS::MPC(const Position& pos, Intensity intensit
 
 	float t = intensity.certainty.sigmas();
 
-	float eval_0 = evaluator.Eval(pos);
+	float eval_0 = evaluator.Score(pos);
 	float sd_0 = evaluator.Accuracy(D, 0, E);
 
 	if (eval_0 >= window.Upper() + t * sd_0) // fail high
@@ -250,7 +250,7 @@ int to_score(float value)
 ContextualResult PVS::Eval_d0(const Position& pos)
 {
 	nodes++;
-	return { /*depth*/ 0, to_score(evaluator.Eval(pos)) };
+	return { /*depth*/ 0, to_score(evaluator.Score(pos)) };
 }
 
 SortedMoves PVS::SortMoves(Moves moves, const Position& pos, int depth)

@@ -10,24 +10,28 @@
 struct Indexer
 {
 	BitBoard pattern;
-	int variations, index_space_size;
-	Indexer(BitBoard pattern, int variations, int index_space_size = 0) noexcept : pattern(pattern), variations(variations), index_space_size(index_space_size) {}
+	int symmetry_group_order; // mathematical order of the group
+	int index_space_size = 0;
 
-	virtual int DenseIndex(const Position&, int index) const = 0; // TODO: Rename to Index!
+	Indexer(BitBoard pattern, int symmetry_group_order) noexcept : pattern(pattern), symmetry_group_order(symmetry_group_order) {}
+
+	virtual int Index(Position) const = 0;
+	std::vector<int> Indices(Position) const;
+	virtual void InsertIndices(Position, std::span<int> location, int offset = 0) const = 0;
 	virtual std::vector<BitBoard> Variations() const = 0;
-	virtual void InsertIndices(const Position&, std::span<int> location, int offset) const = 0;
 };
 
 std::unique_ptr<Indexer> CreateIndexer(BitBoard pattern);
 
 class GroupIndexer
 {
-public:
 	std::vector<std::unique_ptr<Indexer>> indexers;
-	int variations, index_space_size;
+public:
+	int index_space_size;
 
-	GroupIndexer(const std::vector<BitBoard>& pattern);
+	GroupIndexer(std::vector<BitBoard> pattern);
 
+	std::vector<int> Indices(Position) const;
+	void InsertIndices(Position, std::span<int> location) const;
 	std::vector<BitBoard> Variations() const;
-	void InsertIndices(const Position&, std::span<int> location) const;
 };

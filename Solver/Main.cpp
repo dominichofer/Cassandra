@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	std::locale::global(std::locale(""));
 	
 	Intensity intensity = Intensity::Exact();
-	AAGLEM model;
+	AAMSSE model;
 	std::size_t buckets = 10'000'000;
 	std::filesystem::path file;
 	bool solve = false;
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < argc; i++)
 	{
 		if (std::string(argv[i]) == "-d") intensity = ParseIntensity(argv[++i]);
-		else if (std::string(argv[i]) == "-m") model = Deserialize<AAGLEM>(argv[++i]);
+		else if (std::string(argv[i]) == "-m") model = Deserialize<AAMSSE>(argv[++i]);
 		else if (std::string(argv[i]) == "-tt") buckets = std::stoull(argv[++i]);
 		else if (std::string(argv[i]) == "-solve") { file = argv[++i]; solve = true; }
 		else if (std::string(argv[i]) == "-test") { file = argv[++i]; test = true; }

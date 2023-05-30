@@ -59,6 +59,7 @@
     <Compile Include="core_tests\position_test.py" />
     <Compile Include="core_tests\__init__.py" />
     <Compile Include="db.py" />
+    <Compile Include="degenerated_csr_matrix.py" />
     <Compile Include="edax\engine.py" />
     <Compile Include="edax\output.py" />
     <Compile Include="edax\__init__.py" />

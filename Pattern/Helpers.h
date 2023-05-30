@@ -5,12 +5,12 @@
 
 int pown(int base, unsigned int exponent);
 
-int FastIndex(const Position&, BitBoard pattern) noexcept;
+int FastIndex(Position, BitBoard pattern) noexcept;
 
 class Configurations
 {
 	BitBoard pattern;
-
+public:
 	class Iterator
 	{
 		BitBoard pattern{};
@@ -41,7 +41,7 @@ class Configurations
 		bool operator==(const Iterator&) const noexcept = default;
 		bool operator!=(const Iterator&) const noexcept = default;
 	};
-public:
+
 	Configurations(BitBoard pattern) noexcept : pattern(pattern) {}
 
 	Iterator begin() const noexcept { return pattern; }
