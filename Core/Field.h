@@ -1,5 +1,4 @@
 #pragma once
-#include "Format.h"
 #include <cstdint>
 #include <string>
 
@@ -13,13 +12,9 @@ enum class Field : uint8_t
 	H3, G3, F3, E3, D3, C3, B3, A3,
 	H2, G2, F2, E2, D2, C2, B2, A2,
 	H1, G1, F1, E1, D1, C1, B1, A1,
-	invalid
+	PS
 };
 
-// Field::A1 -> "A1"
-// etc
-// Field::invalid -> "--"
-std::string to_string(Field) noexcept;
+inline uint64_t Bit(Field f) { return 1ULL << static_cast<uint8_t>(f); }
 
-template <>
-struct fmt::formatter<Field> : to_string_formatter<Field> {};
+std::string to_string(Field);

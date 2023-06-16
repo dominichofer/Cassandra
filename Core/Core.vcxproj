@@ -71,40 +71,37 @@
     <ClCompile Include="BitBoard.cpp" />
     <ClCompile Include="Children.cpp" />
     <ClCompile Include="CountLastFlip.cpp" />
+    <ClCompile Include="Cuda.h" />
     <ClCompile Include="Field.cpp" />
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameGenerator.cpp" />
-    <ClCompile Include="HasMoves.cpp" />
+    <ClCompile Include="GameScore.cpp" />
     <ClCompile Include="Metronome.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
-    <ClCompile Include="PositionScore.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Algorithms.h" />
-    <ClInclude Include="BestMoves.h" />
     <ClInclude Include="Children.h" />
-    <ClInclude Include="Executor.h" />
+    <ClInclude Include="Estimator.h" />
     <ClInclude Include="Field.h" />
-    <ClInclude Include="Format.h" />
-    <ClInclude Include="Finally.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameGenerator.h" />
+    <ClInclude Include="GameScore.h" />
+    <ClInclude Include="Interval.h" />
     <ClInclude Include="Metronome.h" />
     <ClInclude Include="PositionScore.h" />
-    <ClInclude Include="Ranges.h" />
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Bit.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="HashTable.h" />
-    <ClInclude Include="MoreTypes.h" />
     <ClInclude Include="Moves.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
+    <ClInclude Include="Score.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,16 +4,16 @@ namespace Bit
 {
 	TEST(Bit, countr_zero)
 	{
-		ASSERT_EQ(countr_zero(0ULL), 64);
-		ASSERT_EQ(countr_zero(1ULL), 0);
-		ASSERT_EQ(countr_zero(2ULL), 1);
-		ASSERT_EQ(countr_zero(3ULL), 0);
-		ASSERT_EQ(countr_zero(0x8000000000000000ULL), 63);
+		ASSERT_EQ(std::countr_zero(0ULL), 64);
+		ASSERT_EQ(std::countr_zero(1ULL), 0);
+		ASSERT_EQ(std::countr_zero(2ULL), 1);
+		ASSERT_EQ(std::countr_zero(3ULL), 0);
+		ASSERT_EQ(std::countr_zero(0x8000000000000000ULL), 63);
 	}
 
 	TEST(Bit, RemoveLSB)
 	{
-		uint64 a;
+		uint64_t a;
 		a = 0; RemoveLSB(a); ASSERT_EQ(a, 0ULL);
 		a = 1; RemoveLSB(a); ASSERT_EQ(a, 0ULL);
 		a = 2; RemoveLSB(a); ASSERT_EQ(a, 0ULL);
@@ -23,10 +23,10 @@ namespace Bit
 
 	TEST(Bit, popcount)
 	{
-		ASSERT_EQ(popcount(0ULL), 0);
-		ASSERT_EQ(popcount(1ULL), 1);
-		ASSERT_EQ(popcount(2ULL), 1);
-		ASSERT_EQ(popcount(3ULL), 2);
-		ASSERT_EQ(popcount(0xFFFFFFFFFFFFFFFFULL), 64);
+		ASSERT_EQ(std::popcount(0ULL), 0);
+		ASSERT_EQ(std::popcount(1ULL), 1);
+		ASSERT_EQ(std::popcount(2ULL), 1);
+		ASSERT_EQ(std::popcount(3ULL), 2);
+		ASSERT_EQ(std::popcount(0xFFFFFFFFFFFFFFFFULL), 64);
 	}
 }

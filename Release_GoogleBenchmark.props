@@ -11,6 +11,8 @@
     <Link>
       <AdditionalDependencies>C:\Users\Dominic\source\repos\benchmark\out\build\x64-Release\src\benchmark.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile />
+    <ClCompile />
     <ClCompile>
       <AdditionalIncludeDirectories>C:\Users\Dominic\source\repos\benchmark\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

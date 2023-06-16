@@ -2,6 +2,32 @@
 #include "Helpers.h"
 #include <array>
 
+class SumPow3Cache
+{
+	std::array<int, (1ULL << 16)> cache{};
+
+	static int sum_pow3(uint64_t exp)
+	{
+		int sum = 0;
+		while (exp)
+		{
+			sum += pown(3, std::countr_zero(exp));
+			RemoveLSB(exp);
+		}
+		return sum;
+	}
+public:
+	SumPow3Cache()
+	{
+		for (std::size_t i = 0; i < cache.size(); i++)
+			cache[i] = sum_pow3(i);
+	}
+	int SumPow3(uint64_t exp) const noexcept { return cache[exp]; }
+};
+
+static SumPow3Cache sum_pow_3_cache;
+
+
 int pown(int base, unsigned int exponent)
 {
 	int result = 1;
@@ -15,32 +41,7 @@ int pown(int base, unsigned int exponent)
 	return result;
 }
 
-class SumPow3Cache
-{
-	std::array<int, (1ULL << 16)> cache{};
-
-	static int sum_pow3(uint64 exp)
-	{
-		int sum = 0;
-		while (exp)
-		{
-			sum += pown(3, countr_zero(exp));
-			RemoveLSB(exp);
-		}
-		return sum;
-	}
-public:
-	SumPow3Cache()
-	{
-		for (std::size_t i = 0; i < cache.size(); i++)
-			cache[i] = sum_pow3(i);
-	}
-	int SumPow3(uint64 exp) const noexcept { return cache[exp]; }
-};
-
-static SumPow3Cache sum_pow_3_cache;
-
-int FastIndex(Position pos, BitBoard pattern) noexcept
+int FastIndex(Position pos, uint64_t pattern) noexcept
 {
 	return sum_pow_3_cache.SumPow3(PExt(pos.Player(), pattern))
 		+ sum_pow_3_cache.SumPow3(PExt(pos.Opponent(), pattern)) * 2;
@@ -75,4 +76,27 @@ int FastIndex(Position pos, BitBoard pattern) noexcept
 	//O_2 = mask_4 & pow3_2;
 	//
 	//return reduce_add(P_1 + P_2 + O_1 + O_1 + O_2 + O_2);
+}
+
+Configurations::Iterator::Iterator(uint64_t mask) noexcept
+	: mask(mask)
+	, size(1ULL << std::popcount(mask))
+{}
+
+Configurations::Iterator& Configurations::Iterator::operator++()
+{
+	o++;
+	for (; p < size; p++) {
+		for (; o < size; o++)
+			if ((p & o) == 0u) // fields can only be taken by one player.
+				return *this;
+		o = 0;
+	}
+	*this = end(); // marks generator as depleted.
+	return *this;
+}
+
+Position Configurations::Iterator::operator*() const
+{
+	return { PDep(p, mask), PDep(o, mask) };
 }

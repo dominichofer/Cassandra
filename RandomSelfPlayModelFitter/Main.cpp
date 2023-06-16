@@ -27,7 +27,7 @@ std::vector<T> Sample(int size, const std::set<T>& pool)
 	return samples;
 }
 
-double StandardDeviation(const AAMSSE& model, const std::vector<PosScore>& reference)
+double StandardDeviation(const PatternBasedEstimator& model, const std::vector<PosScore>& reference)
 {
 	std::vector<int> diff;
 	for (const auto& ps : reference)
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 	PrintTimestamp("UniqueChildren");
 
 	std::vector<Position> train_pos, accuracy_pos;
-	AAMSSE model;
+	PatternBasedEstimator model;
 	for (int it = 1; it <= 100; it++)
 	{
 		std::vector<Position> a, b;
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 		PrintTimestamp("Self-play");
 		
 		double R_sq;
-		std::tie(model, R_sq) = CreateAAMSSE(stage_size, pattern, train_pos, accuracy_pos, eval_intensity, accuracy_max_depth);
+		std::tie(model, R_sq) = CreatePatternBasedEstimator(stage_size, pattern, train_pos, accuracy_pos, eval_intensity, accuracy_max_depth);
 		PrintTimestamp("Fitting");
 
 		Serialize(model, fmt::format(R"(G:\Reversi2\iteration{}.model)", it));

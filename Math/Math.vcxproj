@@ -80,7 +80,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="DenseMatrix.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="MatrixCSR.h" />
     <ClInclude Include="Matrix.h" />
@@ -90,7 +89,13 @@
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Algorithm.cpp" />
+    <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="MatrixCSR.cpp" />
+    <ClCompile Include="Statistics.cpp" />
     <ClCompile Include="SymExp.cpp" />
+    <ClCompile Include="TransposedMatrix.h" />
+    <ClCompile Include="Vector.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

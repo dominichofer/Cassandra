@@ -21,12 +21,3 @@ TEST(Game, Positions)
 	EXPECT_EQ(positions[2], pos_2);
 	EXPECT_EQ(positions[3], pos_3);
 }
-
-TEST(Game, to_string)
-{
-	Game game{ Position::Start(), {Field::C4, Field::E3, Field::F2} };
-
-	std::string str = to_string(game);
-
-	EXPECT_EQ(str, "---------------------------OX------XO--------------------------- X C4 E3 F2");
-}

@@ -1,9 +1,9 @@
 #pragma once
+#include "Matrix.h"
 #include <cmath>
 #include <cstdint>
 #include <functional>
 #include <ranges>
-#include "range/v3/all.hpp"
 
 template <typename I, typename S, typename P = std::identity>
 double Average(I first, S last, P proj = {})
@@ -66,7 +66,7 @@ double Covariance(Range1&& X, Range2&& Y)
 	// From https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online
 
 	double mean_x{ 0 }, mean_y{ 0 }, C{ 0 }, n{ 0 };
-	for (auto&& [x, y] : ranges::views::zip(X, Y))
+	for (auto&& [x, y] : std::ranges::views::zip(X, Y))
 	{
 		n++;
 		double dx = x - mean_x;
@@ -81,21 +81,11 @@ double Covariance(Range1&& X, Range2&& Y)
 template <std::ranges::range Range1, std::ranges::range Range2, typename PX, typename PY>
 double Covariance(Range1&& X, Range2&& Y, PX projX, PY projY)
 {
-	return Covariance(ranges::views::transform(X, projX), ranges::views::transform(Y, projY));
+	return Covariance(std::ranges::views::transform(X, projX), std::ranges::views::transform(Y, projY));
 }
 
 // population covariance
-template <typename T>
-DenseMatrix<double> Covariance(const DenseMatrix<T>& X)
-{
-	// From https://en.wikipedia.org/wiki/Covariance_matrix
-
-	DenseMatrix<double> cov(X.Rows(), X.Rows());
-	for (std::size_t i = 0; i < X.Rows(); i++)
-		for (std::size_t j = i; j < X.Rows(); j++)
-			cov(i, j) = cov(j, i) = Covariance(X.Row(i), X.Row(j));
-	return cov;
-}
+Matrix Covariance(const Matrix&);
 
 template <std::ranges::range Range1, std::ranges::range Range2>
 double PopulationCovariance(Range1&& X, Range2&& Y)
@@ -112,25 +102,11 @@ double PopulationCovariance(Range1&& X, Range2&& Y, PX projX, PY projY)
 template <std::ranges::range Range1, std::ranges::range Range2>
 double SampleCovariance(Range1&& X, Range2&& Y)
 {
-	double n = ranges::distance(X);
+	double n = std::ranges::distance(X);
 	return Covariance(X, Y) * (n / (n + 1));
 }
 
-template <typename T>
-DenseMatrix<double> Correlation(const DenseMatrix<T>& X)
-{
-	// From https://en.wikipedia.org/wiki/Correlation
-
-	std::vector<double> sd(X.Rows());
-	for (std::size_t i = 0; i < sd.size(); i++)
-		sd[i] = StandardDeviation(X.Row(i));
-
-	DenseMatrix<double> corr(X.Rows(), X.Rows());
-	for (std::size_t i = 0; i < X.Rows(); i++)
-		for (std::size_t j = i; j < X.Rows(); j++)
-			corr(i, j) = corr(j, i) = Covariance(X.Row(i), X.Row(j)) / (sd[i] * sd[j]);
-	return corr;
-}
+Matrix Correlation(const Matrix&);
 
 // Akaike Information Criterion
 // for the gaussian special case.

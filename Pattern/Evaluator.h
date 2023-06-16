@@ -6,66 +6,43 @@
 #include <span>
 #include <vector>
 
-struct MaskAndValue
-{
-	BitBoard mask{};
-	float value{};
-};
-
+// Pattern based score estimator
 class ScoreEstimator
 {
-	std::vector<BitBoard> masks;
+	std::vector<uint64_t> masks;
 	std::vector<std::vector<float>> w; // expanded weights
-	std::vector<BitBoard> pattern;
+	std::vector<uint64_t> pattern;
 public:
-	ScoreEstimator() = default;
-	ScoreEstimator(BitBoard pattern);
-	ScoreEstimator(BitBoard pattern, std::span<const float> weights);
-	ScoreEstimator(std::vector<BitBoard> pattern);
-	ScoreEstimator(std::vector<BitBoard> pattern, std::span<const float> weights);
+	ScoreEstimator(std::vector<uint64_t> pattern, std::span<const float> weights);
 
-	std::vector<BitBoard> Pattern() const noexcept { return pattern; }
+	float Eval(const Position&) const noexcept;
 
-	float Eval(Position pos) const noexcept;
-	std::vector<MaskAndValue> DetailedEval(Position pos) const noexcept;
-
-	std::size_t WeightsSize() const;
+	std::vector<uint64_t> Pattern() const noexcept { return pattern; }
 	std::vector<float> Weights() const;
-	void Weights(std::span<const float> weights);
 };
 
-// MultiStage Score Estimator
-class MSSE
+class MultiStageScoreEstimator
 {
-	int stage_size;
+	int stage_size; // The max size of a stage.
 	std::vector<ScoreEstimator> estimators;
 public:
-	MSSE() = default;
-	MSSE(int stage_size, BitBoard pattern);
-	MSSE(int stage_size, BitBoard pattern, std::span<const float> weights);
-	MSSE(int stage_size, std::vector<BitBoard> pattern);
-	MSSE(int stage_size, std::vector<BitBoard> pattern, std::span<const float> weights);
+	MultiStageScoreEstimator(int stage_size, std::vector<uint64_t> pattern, std::span<const float> weights);
 
-	int Stages() const noexcept;
-	int StageSize() const noexcept;
-	std::vector<BitBoard> Pattern() const noexcept;
+	std::size_t Stages() const noexcept { return estimators.size(); }
+	int StageSize() const noexcept { return stage_size; }
+	std::vector<uint64_t> Pattern() const noexcept { return estimators.front().Pattern(); }
 
-	float Eval(Position pos) const noexcept;
-	std::vector<MaskAndValue> DetailedEval(Position pos) const noexcept;
+	float Eval(const Position&) const noexcept;
 
-	std::size_t WeightsSize() const;
 	std::vector<float> Weights() const;
 	std::vector<float> Weights(int stage) const;
-	void Weights(std::span<const float> weights);
-	void Weights(int stage, std::span<const float> weights);
 };
 
-// Accuracy Model
-class AM
+class AccuracyModel
 {
 	std::vector<double> param_values;
 public:
-	AM(std::vector<double> param_values = { -0.2, 0.6, 0.16, -0.01, 2.0 }) noexcept : param_values(param_values) {}
+	AccuracyModel(std::vector<double> param_values = { -0.2, 0.6, 0.16, -0.01, 2.0 }) noexcept : param_values(param_values) {}
 
 	Vars Variables() const;
 	Vars Parameters() const;
@@ -82,29 +59,23 @@ public:
 	double Eval(std::vector<int> values) const noexcept;
 };
 
-// Accuracy Aware MultiStage Score Estimator
-struct AAMSSE
+// Accuracy Aware Multi Stage Score Estimator
+class PatternBasedEstimator final : public Estimator
 {
 	// Composition
+public:
+	MultiStageScoreEstimator score;
+	AccuracyModel accuracy;
 
-	MSSE score_estimator;
-	AM accuracy_estimator;
-
-	AAMSSE() = default;
-	AAMSSE(MSSE score_estimator, AM accuracy_estimator);
-	AAMSSE(int stage_size, std::vector<BitBoard> pattern);
+	PatternBasedEstimator(MultiStageScoreEstimator, AccuracyModel);
 
 	int Stages() const noexcept;
 	int StageSize() const noexcept;
-	std::vector<BitBoard> Pattern() const noexcept;
+	std::vector<uint64_t> Pattern() const noexcept;
 
-	float Score(Position pos) const noexcept;
-	std::vector<MaskAndValue> DetailedScore(Position pos) const noexcept;
-	float Accuracy(int D, int d, int E) const noexcept;
+	int Score(const Position& pos) const noexcept override;
+	float Accuracy(const Position&, int small_depth, int big_depth) const noexcept override;
 
-	std::size_t WeightsSize() const;
 	std::vector<float> Weights() const;
 	std::vector<float> Weights(int stage) const;
-	void Weights(int stage, std::span<const float> weights);
 };
-

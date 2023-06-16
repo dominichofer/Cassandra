@@ -3,71 +3,71 @@
 
 TEST(Metatest, PatternA)
 {
-	ASSERT_EQ(pattern_a.IsCodiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_a.IsDiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_a.IsHorizontallySymmetric(), false);
-	ASSERT_EQ(pattern_a.IsVerticallySymmetric(), false);
+	EXPECT_FALSE(IsCodiagonallySymmetric(pattern_a));
+	EXPECT_FALSE(IsDiagonallySymmetric(pattern_a));
+	EXPECT_FALSE(IsHorizontallySymmetric(pattern_a));
+	EXPECT_FALSE(IsVerticallySymmetric(pattern_a));
 }
 
 TEST(Metatest, PatternC)
 {
-	ASSERT_EQ(pattern_c.IsCodiagonallySymmetric(), true);
-	ASSERT_EQ(pattern_c.IsDiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_c.IsHorizontallySymmetric(), false);
-	ASSERT_EQ(pattern_c.IsVerticallySymmetric(), false);
+	EXPECT_TRUE(IsCodiagonallySymmetric(pattern_c));
+	EXPECT_FALSE(IsDiagonallySymmetric(pattern_c));
+	EXPECT_FALSE(IsHorizontallySymmetric(pattern_c));
+	EXPECT_FALSE(IsVerticallySymmetric(pattern_c));
 }
 
 TEST(Metatest, PatternD)
 {
-	ASSERT_EQ(pattern_d.IsCodiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_d.IsDiagonallySymmetric(), true);
-	ASSERT_EQ(pattern_d.IsHorizontallySymmetric(), false);
-	ASSERT_EQ(pattern_d.IsVerticallySymmetric(), false);
+	EXPECT_FALSE(IsCodiagonallySymmetric(pattern_d));
+	EXPECT_TRUE(IsDiagonallySymmetric(pattern_d));
+	EXPECT_FALSE(IsHorizontallySymmetric(pattern_d));
+	EXPECT_FALSE(IsVerticallySymmetric(pattern_d));
 }
 
 TEST(Metatest, PatternH)
 {
-	ASSERT_EQ(pattern_h.IsCodiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_h.IsDiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_h.IsHorizontallySymmetric(), true);
-	ASSERT_EQ(pattern_h.IsVerticallySymmetric(), false);
+	EXPECT_FALSE(IsCodiagonallySymmetric(pattern_h));
+	EXPECT_FALSE(IsDiagonallySymmetric(pattern_h));
+	EXPECT_TRUE(IsHorizontallySymmetric(pattern_h));
+	EXPECT_FALSE(IsVerticallySymmetric(pattern_h));
 }
 
 TEST(Metatest, PatternV)
 {
-	ASSERT_EQ(pattern_v.IsCodiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_v.IsDiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_v.IsHorizontallySymmetric(), false);
-	ASSERT_EQ(pattern_v.IsVerticallySymmetric(), true);
+	EXPECT_FALSE(IsCodiagonallySymmetric(pattern_v));
+	EXPECT_FALSE(IsDiagonallySymmetric(pattern_v));
+	EXPECT_FALSE(IsHorizontallySymmetric(pattern_v));
+	EXPECT_TRUE(IsVerticallySymmetric(pattern_v));
 }
 
 TEST(Metatest, PatternVH)
 {
-	ASSERT_EQ(pattern_vh.IsCodiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_vh.IsDiagonallySymmetric(), false);
-	ASSERT_EQ(pattern_vh.IsHorizontallySymmetric(), true);
-	ASSERT_EQ(pattern_vh.IsVerticallySymmetric(), true);
+	EXPECT_FALSE(IsCodiagonallySymmetric(pattern_vh));
+	EXPECT_FALSE(IsDiagonallySymmetric(pattern_vh));
+	EXPECT_TRUE(IsHorizontallySymmetric(pattern_vh));
+	EXPECT_TRUE(IsVerticallySymmetric(pattern_vh));
 }
 
 TEST(Metatest, PatternDC)
 {
-	ASSERT_EQ(pattern_dc.IsCodiagonallySymmetric(), true);
-	ASSERT_EQ(pattern_dc.IsDiagonallySymmetric(), true);
-	ASSERT_EQ(pattern_dc.IsHorizontallySymmetric(), false);
-	ASSERT_EQ(pattern_dc.IsVerticallySymmetric(), false);
+	EXPECT_TRUE(IsCodiagonallySymmetric(pattern_dc));
+	EXPECT_TRUE(IsDiagonallySymmetric(pattern_dc));
+	EXPECT_FALSE(IsHorizontallySymmetric(pattern_dc));
+	EXPECT_FALSE(IsVerticallySymmetric(pattern_dc));
 }
 
 TEST(Metatest, PatternVHDC)
 {
-	ASSERT_EQ(pattern_vhdc.IsCodiagonallySymmetric(), true);
-	ASSERT_EQ(pattern_vhdc.IsDiagonallySymmetric(), true);
-	ASSERT_EQ(pattern_vhdc.IsHorizontallySymmetric(), true);
-	ASSERT_EQ(pattern_vhdc.IsVerticallySymmetric(), true);
+	EXPECT_TRUE(IsCodiagonallySymmetric(pattern_vhdc));
+	EXPECT_TRUE(IsDiagonallySymmetric(pattern_vhdc));
+	EXPECT_TRUE(IsHorizontallySymmetric(pattern_vhdc));
+	EXPECT_TRUE(IsVerticallySymmetric(pattern_vhdc));
 }
 
 TEST(Metatest, SymmetricVariants)
 {
-	ASSERT_EQ(SymmetricVariants(pattern_h).size(), std::size_t(4));
-	ASSERT_EQ(SymmetricVariants(pattern_d).size(), std::size_t(4));
-	ASSERT_EQ(SymmetricVariants(pattern_a).size(), std::size_t(8));
+	EXPECT_EQ(SymmetricVariants(pattern_h).size(), std::size_t(4));
+	EXPECT_EQ(SymmetricVariants(pattern_d).size(), std::size_t(4));
+	EXPECT_EQ(SymmetricVariants(pattern_a).size(), std::size_t(8));
 }

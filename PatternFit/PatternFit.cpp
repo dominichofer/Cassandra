@@ -16,7 +16,7 @@ ScoreEstimator CreateScoreEstimator(
     std::size_t rows = pos.size();
     std::size_t cols = indexer.index_space_size;
 
-    MatrixCSR<int> matrix{ elements_per_row, cols, rows };
+    MatrixCSR matrix{ elements_per_row, rows, cols };
     #pragma omp parallel for schedule(static)
     for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
         indexer.InsertIndices(pos[i], matrix.Row(i));
@@ -43,17 +43,17 @@ std::vector<Position> EmptyCountFilter(
     return ret;
 }
 
-MSSE CreateMultiStageScoreEstimator(
+MultiStageScoreEstimator CreateMultiStageScoreEstimator(
     int stage_size,
     const std::vector<BitBoard>& pattern,
     const std::vector<Position>& pos,
     Intensity eval_intensity)
 {
-    AAMSSE model{ stage_size, pattern };
+    PatternBasedEstimator model{ stage_size, pattern };
     HT tt{ 10'000'000 };
     IDAB<PVS> alg{ tt, model };
 
-    for (int stage = 0; stage < model.score_estimator.Stages(); stage++)
+    for (int stage = 0; stage < model.score.Stages(); stage++)
     {
         alg.clear();
 
@@ -74,13 +74,13 @@ MSSE CreateMultiStageScoreEstimator(
         auto new_e = CreateScoreEstimator(pattern, stage_train_pos, train_score);
         stop = std::chrono::high_resolution_clock::now();
         std::cout << "Fitting: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start) << std::endl;
-        model.score_estimator.Weights(stage, new_e.Weights());
+        model.score.Weights(stage, new_e.Weights());
     }
 
-    return model.score_estimator;
+    return model.score;
 }
 
-std::pair<AM, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore> data)
+std::pair<AccuracyModel, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore> data)
 {
     struct XY {
         int D, d, e, score_diff;
@@ -108,9 +108,9 @@ std::pair<AM, double> CreateAccuracyModel(std::span<const PositionMultiDepthScor
     if (x_size != y_size)
         throw std::runtime_error("Size mismatch!");
 
-    AM blank;
+    AccuracyModel blank;
     auto param_values = NonLinearLeastSquaresFit(blank.Function(), blank.Parameters(), blank.Variables(), x, y, blank.ParameterValues(), /*steps*/ 1'000, /*damping_factor*/ 0.1);
-    AM model(param_values);
+    AccuracyModel model(param_values);
 
     std::vector<double> error(x_size);
     #pragma omp parallel for
@@ -121,7 +121,7 @@ std::pair<AM, double> CreateAccuracyModel(std::span<const PositionMultiDepthScor
     return std::make_pair(model, R_sq);
 }
 
-std::pair<AAMSSE, double> CreateAAMSSE(
+std::pair<PatternBasedEstimator, double> CreatePatternBasedEstimator(
     int stage_size,
     const std::vector<BitBoard>& pattern,
     const std::vector<Position>& train_pos,
@@ -129,11 +129,11 @@ std::pair<AAMSSE, double> CreateAAMSSE(
     Intensity eval_intensity,
     int accuracy_max_depth)
 {
-    MSSE msse = CreateMultiStageScoreEstimator(stage_size, pattern, train_pos, eval_intensity);
+    MultiStageScoreEstimator msse = CreateMultiStageScoreEstimator(stage_size, pattern, train_pos, eval_intensity);
     if (accuracy_pos.empty())
-        return std::make_pair(AAMSSE{ msse, {} }, 0);
+        return std::make_pair(PatternBasedEstimator{ msse, {} }, 0);
 
-    AAMSSE model{ msse, AM{} };
+    PatternBasedEstimator model{ msse, AccuracyModel{} };
     HT tt{ 10'000'000 };
     IDAB<PVS> alg{ tt, model };
 
@@ -147,5 +147,5 @@ std::pair<AAMSSE, double> CreateAAMSSE(
     }
 
     auto [am, R_sq] = CreateAccuracyModel(accuracy_data);
-    return std::make_pair(AAMSSE{ msse, am }, R_sq);
+    return std::make_pair(PatternBasedEstimator{ msse, am }, R_sq);
 }

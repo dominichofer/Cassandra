@@ -2,39 +2,27 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="HashTable.cpp" />
-    <ClCompile Include="AlphaBetaFailHard.cpp" />
     <ClCompile Include="NegaMax.cpp" />
-    <ClCompile Include="PrincipalVariation2.cpp" />
-    <ClCompile Include="Algorithm.cpp" />
+    <ClCompile Include="Result.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Stability.cpp" />
-    <ClCompile Include="Interval.cpp" />
-    <ClCompile Include="Intensity.cpp" />
-    <ClCompile Include="AlphaBetaFailSuperSoft.cpp" />
-    <ClCompile Include="AlphaBetaFailSoft.cpp" />
+    <ClCompile Include="AlphaBeta.cpp" />
     <ClCompile Include="PrincipalVariation.cpp" />
     <ClCompile Include="SortedMoves.cpp" />
+    <ClCompile Include="MTDf.cpp" />
+    <ClCompile Include="IDAB.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="SortedMoves.h" />
-    <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="Result.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="NegaMax.h" />
-    <ClInclude Include="AlphaBetaFailHard.h" />
-    <ClInclude Include="Confidence.h" />
-    <ClInclude Include="Interval.h" />
-    <ClInclude Include="FForum.h" />
     <ClInclude Include="Stability.h" />
     <ClInclude Include="IDAB.h" />
-    <ClInclude Include="Intensity.h" />
-    <ClInclude Include="AlphaBetaFailSuperSoft.h" />
-    <ClInclude Include="AlphaBetaFailSoft.h" />
+    <ClInclude Include="AlphaBeta.h" />
     <ClInclude Include="MTDf.h" />
     <ClInclude Include="PrincipalVariation.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="Search.natvis" />
   </ItemGroup>
 </Project>

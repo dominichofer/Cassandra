@@ -8,7 +8,6 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;G:\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -17,7 +16,6 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <OpenMPSupport>true</OpenMPSupport>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <AdditionalOptions>/Zc:twoPhase- /await %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PreprocessorDefinitions>_MBCS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -28,6 +26,7 @@
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <OptimizeReferences>true</OptimizeReferences>

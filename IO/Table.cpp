@@ -1,5 +1,5 @@
 #include "Table.h"
-#include <ranges>
+#include <iostream>
 
 Table::Table(std::string title, std::string format) noexcept
 	: title(std::move(title))
@@ -8,11 +8,16 @@ Table::Table(std::string title, std::string format) noexcept
 
 void Table::PrintHeader() const
 {
-	fmt::print("{}\n", title);
+	std::cout << title << '\n';
 	PrintSeparator();
 }
 
 void Table::PrintSeparator() const
 {
-	fmt::print("{}\n", fmt::join(title | std::views::transform([](char c) { return c == '|' ? '+' : '-'; }), ""));
+	for (char c : title)
+		if (c == '|')
+			std::cout << '+';
+		else
+			std::cout << '-';
+	std::cout << '\n';
 }

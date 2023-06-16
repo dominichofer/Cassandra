@@ -1,103 +1,68 @@
 #pragma once
 #include "Bit.h"
-#include "BitBoard.h"
 #include "Moves.h"
-#include "Algorithms.h"
+#include <cassert>
 #include <cstdint>
-#include <ranges>
 #include <string>
-#include <tuple>
-#include <vector>
+#include <string_view>
 
-constexpr int min_score = -32;
-constexpr int max_score = +32;
-constexpr int inf_score = +33;
-constexpr int undefined_score = +35;
-
-// A board where every field is either taken by exactly one player or is empty.
 class Position
 {
-	BitBoard P{}, O{};
+	// A board where no field is taken by both players.
+
+	uint64_t P{}, O{};
 public:
 	constexpr Position() noexcept = default;
-	CUDA_CALLABLE constexpr Position(BitBoard P, BitBoard O) noexcept : P(P), O(O) { assert((P & O).empty()); }
+	CUDA_CALLABLE constexpr Position(uint64_t P, uint64_t O) noexcept : P(P), O(O) { assert((P & O) == 0); }
 
 	static Position Start();
-	static Position StartETH();
 
-	CUDA_CALLABLE constexpr bool operator==(const Position& o) const noexcept { return std::tie(P, O) == std::tie(o.P, o.O); }
-	CUDA_CALLABLE constexpr bool operator!=(const Position& o) const noexcept { return std::tie(P, O) != std::tie(o.P, o.O); }
-	CUDA_CALLABLE constexpr bool operator<(const Position& o) const noexcept { return std::tie(P, O) < std::tie(o.P, o.O); }
+	CUDA_CALLABLE constexpr bool operator==(const Position& o) const noexcept { return P == o.P && O == o.O; }
+	CUDA_CALLABLE constexpr bool operator!=(const Position& o) const noexcept { return P != o.P || O != o.O; }
+	CUDA_CALLABLE constexpr bool operator<(const Position& o) const noexcept { return P < o.P || (P == o.P && O < o.O); }
 
-	CUDA_CALLABLE BitBoard Player() const noexcept { return P; }
-	CUDA_CALLABLE BitBoard Opponent() const noexcept { return O; }
+	CUDA_CALLABLE constexpr uint64_t Player() const noexcept { return P; }
+	CUDA_CALLABLE constexpr uint64_t Opponent() const noexcept { return O; }
 
-	CUDA_CALLABLE void FlipCodiagonal() noexcept;
-	CUDA_CALLABLE void FlipDiagonal() noexcept;
-	CUDA_CALLABLE void FlipHorizontal() noexcept;
-	CUDA_CALLABLE void FlipVertical() noexcept;
-	CUDA_CALLABLE void FlipToUnique() noexcept;
-
-	CUDA_CALLABLE BitBoard Discs() const noexcept { return P | O; }
-	CUDA_CALLABLE BitBoard Empties() const noexcept { return ~Discs(); }
-	CUDA_CALLABLE int EmptyCount() const noexcept { return popcount(Empties()); }
-
-	BitBoard ParityQuadrants() const; // TODO: Make this a free function!
+	CUDA_CALLABLE uint64_t Discs() const noexcept { return P | O; }
+	CUDA_CALLABLE uint64_t Empties() const noexcept { return ~Discs(); }
+	CUDA_CALLABLE int EmptyCount() const noexcept { return std::popcount(Empties()); }
 };
-
-CUDA_CALLABLE Position FlipCodiagonal(Position) noexcept;
-CUDA_CALLABLE Position FlipDiagonal(Position) noexcept;
-CUDA_CALLABLE Position FlipHorizontal(Position) noexcept;
-CUDA_CALLABLE Position FlipVertical(Position) noexcept;
-CUDA_CALLABLE Position FlipToUnique(Position) noexcept;
-
-
-// TODO: Add tests for these 6 and the Neighbours!
-// CUDA_CALLABLE inline BitBoard PotentialMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Opponent()); }
-// CUDA_CALLABLE inline BitBoard PotentialCounterMoves(const Position& pos) noexcept { return pos.Empties() & EightNeighboursAndSelf(pos.Player()); }
-//
-// CUDA_CALLABLE inline BitBoard ExposedPlayers(const Position& pos) noexcept { return pos.Player() & EightNeighboursAndSelf(pos.Empties()); }
-// CUDA_CALLABLE inline BitBoard ExposedOpponents(const Position& pos) noexcept { return pos.Opponent() & EightNeighboursAndSelf(pos.Empties()); }
-//
-// CUDA_CALLABLE inline BitBoard IsolatedPlayers(const Position& pos) noexcept { return pos.Player() & ~EightNeighboursAndSelf(pos.Empties()); }
-// CUDA_CALLABLE inline BitBoard IsolatedOpponents(const Position& pos) noexcept { return pos.Opponent() & ~EightNeighboursAndSelf(pos.Empties()); }
 
 std::string SingleLine(const Position&);
 std::string MultiLine(const Position&);
-inline std::string to_string(const Position& pos) { return SingleLine(pos); }
+std::string to_string(const Position&);
 
-#ifndef __NVCC__
-template <> struct fmt::formatter<Position> : to_string_formatter<Position> {};
-#endif
+Position PositionFromString(std::string_view);
 
 constexpr Position operator""_pos(const char* c, std::size_t size)
 {
 	assert(size == 120);
 
-	BitBoard P{0};
-	BitBoard O{0};
+	uint64_t P{0};
+	uint64_t O{0};
 	for (int j = 0; j < 8; j++)
 		for (int i = 0; i < 8; i++)
 		{
 			char symbol = c[119 - 15 * j - 2 * i];
 			if (symbol == 'X')
-				P.Set(i, j);
+				P |= 1ULL << (i + 8 * j);
 			if (symbol == 'O')
-				O.Set(i, j);
+				O |= 1ULL << (i + 8 * j);
 		}
 	return { P, O };
 }
 
-CUDA_CALLABLE int EvalGameOver(const Position&) noexcept;
+CUDA_CALLABLE int EndScore(const Position&) noexcept;
 
-CUDA_CALLABLE Position Play(const Position&, Field move, BitBoard flips) noexcept;
+CUDA_CALLABLE Position Play(const Position&, Field move, uint64_t flips) noexcept;
 CUDA_CALLABLE Position Play(const Position&, Field move) noexcept;
 
 CUDA_CALLABLE Position PlayPass(const Position&) noexcept;
 
 CUDA_CALLABLE Position PlayOrPass(const Position&, Field move) noexcept;
 
-CUDA_CALLABLE BitBoard Flips(const Position&, Field move) noexcept;
+CUDA_CALLABLE uint64_t Flips(const Position&, Field move) noexcept;
 
 int CountLastFlip(const Position&, Field move) noexcept;
 
@@ -116,17 +81,8 @@ namespace detail
 	CUDA_CALLABLE Moves PossibleMoves_x64(const Position&) noexcept;
 }
 
-CUDA_CALLABLE bool HasMoves(const Position&) noexcept;
-
-namespace detail
-{
-	#ifdef __AVX512F__
-		bool HasMoves_AVX512(const Position&) noexcept;
-	#endif
-
-	#ifdef __AVX2__
-		bool HasMoves_AVX2(const Position&) noexcept;
-	#endif
-
-	CUDA_CALLABLE bool HasMoves_x64(const Position&) noexcept;
-}
+Position FlippedCodiagonal(const Position&) noexcept;
+Position FlippedDiagonal(const Position&) noexcept;
+Position FlippedHorizontal(const Position&) noexcept;
+Position FlippedVertical(const Position&) noexcept;
+Position FlippedToUnique(Position) noexcept;

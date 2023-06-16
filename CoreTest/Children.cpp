@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <ranges>
+#include <numeric>
 
 std::size_t NumberOfChildren(int empty_count)
 {
@@ -18,7 +19,7 @@ TEST(Children, NumberOfChildren_e51) { ASSERT_EQ(NumberOfChildren(51), 3'005'320
 
 std::size_t NumberOfUniqueChildren(int empty_count)
 {
-	return ranges::distance(UniqueChildren(Position::Start(), empty_count));
+	return std::size(UniqueChildren(Position::Start(), empty_count));
 }
 
 TEST(Children, unique_positions_at_ply_1) { ASSERT_EQ(NumberOfUniqueChildren(59), 1); }
@@ -50,7 +51,9 @@ TEST(Children, possible_games_at_ply_9) { ASSERT_EQ(NumberOfPossibleGames(9), 3'
 // Number of different Othello positions at the end of the n-th ply. (https://oeis.org/A124005)
 std::size_t NumberOfDifferentPositions(int plies)
 {
-	std::vector<Position> all = ranges::to_vector(Children(Position::Start(), plies, true));
+	std::vector<Position> all;
+	for (Position child : Children(Position::Start(), plies, true))
+		all.push_back(child);
 	std::sort(all.begin(), all.end());
 	return std::inner_product(all.begin() + 1, all.end(), all.begin(), 1, std::plus(), std::not_equal_to());
 }
@@ -66,7 +69,9 @@ TEST(Children, different_positions_at_ply_8) { ASSERT_EQ(NumberOfDifferentPositi
 // Number of Othello positions with unique realization at the end of the n-th ply. (https://oeis.org/A124006)
 std::size_t NumberOfUniqueRealizations(int plies)
 {
-	std::vector<Position> all = Children(Position::Start(), plies, true) | ranges::to_vector;
+	std::vector<Position> all;
+	for (Position child : Children(Position::Start(), plies, true))
+		all.push_back(child);
 	std::sort(all.begin(), all.end());
 
 	// Counts Othello positions that occure once and only once in the list.
@@ -109,7 +114,7 @@ TEST(Children, zero_plies_is_self)
 
 TEST(Children, zero_plies_of_unplayable_is_self)
 {
-	Position unplayable{ ~BitBoard{}, BitBoard{} };
+	Position unplayable{ 0xFFFFFFFFFFFFFFFFULL, 0 };
 
 	auto gen1 = Children(unplayable, 0, true);
 	ASSERT_EQ(std::ranges::distance(gen1), 1);
@@ -147,7 +152,7 @@ TEST(pass_is_no_ply, passable_position_has_children)
 		"- - - X X - - -"
 		"O O O O O O O O"_pos;
 	auto gen = Children(pos, 1, false);
-	ASSERT_EQ(ranges::distance(gen), PossibleMoves(PlayPass(pos)).size());
+	ASSERT_EQ(std::ranges::distance(gen), PossibleMoves(PlayPass(pos)).size());
 }
 TEST(pass_is_a_ply, end_position_has_no_children)
 {

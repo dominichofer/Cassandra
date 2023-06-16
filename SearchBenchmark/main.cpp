@@ -1,36 +1,52 @@
-#include "Core/Core.h"
 #include "IO/IO.h"
-#include "Math/Math.h"
-#include "Pattern/Pattern.h"
-#include "PatternIO/PatternIO.h"
 #include "Search/Search.h"
+#include <cstdint>
 #include <vector>
 #include <iostream>
+
+class RandomPositionGeneratorWithEmptyCount
+{
+	const int empty_count;
+	std::mt19937_64 rnd_engine;
+	std::uniform_int_distribution<int> boolean{ 0, 1 };
+public:
+	RandomPositionGeneratorWithEmptyCount(int empty_count, unsigned int seed = std::random_device{}())
+		: empty_count(empty_count), rnd_engine(seed)
+	{
+		if (empty_count < 0 or empty_count > 64)
+			throw std::runtime_error("'empty_count' out of bounds.");
+	}
+
+	Position operator()() noexcept
+	{
+		Position pos;
+		while (pos.EmptyCount() > empty_count)
+		{
+			int rnd = std::uniform_int_distribution<int>(0, pos.EmptyCount() - 1)(rnd_engine);
+
+			// deposit bit on an empty field
+			uint64_t bit = PDep(1ULL << rnd, pos.Empties());
+
+			if (boolean(rnd_engine))
+				pos = Position{ pos.Player() | bit, pos.Opponent() };
+			else
+				pos = Position{ pos.Player(), pos.Opponent() | bit };
+		}
+		return pos;
+	}
+};
 
 class TimingTable : public Table
 {
 public:
-	TimingTable(std::string title, std::string format)
-		: Table(std::move(title), std::move(format))
+	TimingTable(std::string title)
+		: Table(std::format("{:^22}|Empties|  TTS   |   Nodes/s   |    Nodes     ", title), "                      |{:>7}|{:>8}|{:>13L}|{:>14L}")
 	{}
 
-	void PrintHeader(std::string_view name) const
-	{
-		PrintSeparator();
-		fmt::print(title, name);
-		fmt::print("\n");
-		PrintSeparator();
-	}
-
-	void PrintSeparator() const
-	{
-		fmt::print("{}\n", fmt::join(fmt::format(title, "") | std::views::transform([](char c) { return c == '|' ? '+' : '-'; }), ""));
-	}
-
-	void PrintRow(int col2, int sample_size, uint64 nodes, std::chrono::duration<double> duration)
+	void PrintRow(int empties, int sample_size, uint64_t nodes, std::chrono::duration<double> duration)
 	{
 		Table::PrintRow(
-			col2,
+			empties,
 			short_time_format(duration / sample_size),
 			std::size_t(nodes / duration.count()),
 			nodes,
@@ -42,88 +58,152 @@ public:
 
 void TimeEndgame()
 {
-	std::vector<std::vector<Position>> positions;
-	for (int e = 0; e <= 7; e++)
-		positions.push_back(RandomlyPlayedPositionsWithEmptyCount(/*count*/ 100'000, e));
+	//std::vector<std::vector<Position>> positions;
+	//for (int e = 0; e <= 18; e++)
+	//{
+	//	std::vector<Position> p;
+	//	p.reserve(100'000);
+	//	RandomPositionGeneratorWithEmptyCount gen(e, /*seed*/ 13);
+	//	for (int i = 0; i < 1'000; i++)
+	//		p.push_back(gen());
+	//	positions.push_back(std::move(p));
+	//}
 
-	std::vector<std::pair<std::string, std::unique_ptr<Algorithm>>> algs;
-	algs.emplace_back("NegaMax", std::make_unique<NegaMax>());
-	algs.emplace_back("AlphaBetaFailHard", std::make_unique<AlphaBetaFailHard>());
-	algs.emplace_back("AlphaBetaFailSoft", std::make_unique<AlphaBetaFailSoft>());
-	algs.emplace_back("AlphaBetaFailSuperSoft", std::make_unique<AlphaBetaFailSuperSoft>());
+	//NegaMax nega_max;
+	//TimingTable table("NegaMax");
+	//table.PrintHeader();
+	//for (int e = 0; e < 7; e++)
+	//{
+	//	uint64_t nodes = 0;
+	//	auto start = std::chrono::high_resolution_clock::now();
+	//	for (Position pos : positions[e])
+	//	{
+	//		nega_max.Eval(pos);
+	//		nodes += nega_max.Nodes();
+	//	}
+	//	auto stop = std::chrono::high_resolution_clock::now();
+
+	//	table.PrintRow(e, positions[e].size(), nodes, stop - start);
+	//}
+	//table.PrintSeparator();
+
+	//AlphaBeta ab;
+	//table = TimingTable("AlphaBeta");
+	//table.PrintHeader();
+	//for (int e = 0; e < 9; e++)
+	//{
+	//	uint64_t nodes = 0;
+	//	auto start = std::chrono::high_resolution_clock::now();
+	//	for (Position pos : positions[e])
+	//	{
+	//		ab.Eval(pos);
+	//		nodes += ab.Nodes();
+	//	}
+	//	auto stop = std::chrono::high_resolution_clock::now();
+
+	//	table.PrintRow(e, positions[e].size(), nodes, stop - start);
+	//}
+	//table.PrintSeparator();
+
+	//HT tt{ 10'000'000 };
+	//PVS pvs(tt);
+	//TimingTable table = TimingTable("PVS");
+	//table.PrintHeader();
+	//for (int e = 0; e < positions.size(); e++)
+	//{
+	//	uint64_t nodes = 0;
+	//	auto start = std::chrono::high_resolution_clock::now();
+	//	for (Position pos : positions[e])
+	//	{
+	//		pvs.Eval(pos);
+	//		nodes += pvs.Nodes();
+	//	}
+	//	auto stop = std::chrono::high_resolution_clock::now();
+
+	//	table.PrintRow(e, positions[e].size(), nodes, stop - start);
+	//}
+	//table.PrintSeparator();
+
+
+	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\fforum-1-19.ps");
+	PatternBasedEstimator evaluator = LoadPatternBasedEstimator("G:\\Reversi2\\iteration16.model");
 
 	HT tt{ 10'000'000 };
-	AAGLEM model;
-	algs.emplace_back("PVS", std::make_unique<PVS>(tt, model));
+	IDAB search(tt, evaluator);
+	ResultTable table;
+	table.PrintHeader();
+	for (const PosScore& ps : data)
+		table.PrintRow(search.Eval(ps.pos), ps.score);
+	table.PrintSeparator();
+	table.PrintSummary();
+	std::cout << std::endl;
 
-	TimingTable table("{:^22}|Empties|  TTS   |   Nodes/s   |    Nodes     ", "                      |{:>7}|{:>8}|{:>13L}|{:>14L}");
-
-	for (auto&& [name, alg] : algs)
-	{
-		table.PrintHeader(name);
-
-		for (int e = 0; e < positions.size(); e++)
-		{
-			alg->clear();
-			uint64 nodes = 0;
-			auto start = std::chrono::high_resolution_clock::now();
-			for (Position pos : positions[e])
-			{
-				alg->Eval(pos);
-				nodes += alg->Nodes();
-			}
-			auto stop = std::chrono::high_resolution_clock::now();
-
-			table.PrintRow(e, positions[e].size(), nodes, stop - start);
-		}
-	}
+	data = LoadPosScoreFile("..\\data\\fforum-20-39.ps");
+	tt.clear();
+	table.clear();
+	table.PrintHeader();
+	for (const PosScore& ps : data)
+		table.PrintRow(search.Eval(ps.pos), ps.score);
+	table.PrintSeparator();
+	table.PrintSummary();
 }
 
-void TimeMidgame()
-{
-	std::vector<Position> positions = RandomlyPlayedPositionsWithEmptyCount(100'000, 30);
-
-	std::vector<std::pair<std::string, std::unique_ptr<Algorithm>>> algs;
-
-	HT tt{ 10'000'000 };
-	AAGLEM model{ pattern::cassandra, 5 };
-	algs.emplace_back("PVS", std::make_unique<PVS>(tt, model));
-	algs.emplace_back("IDAB", std::make_unique<IDAB<PVS>>(tt, model));
-
-	TimingTable table("{:^4}|Depth|  TTS   |   Nodes/s   |    Nodes     ", "    |{:<5}|{:>8}|{:>13L}|{:>14L}");
-
-	for (auto&& [name, alg] : algs)
-	{
-		table.PrintHeader(name);
-		for (int d = 0; d <= 5; d++)
-		{
-			alg->clear();
-			uint64 nodes = 0;
-			auto start = std::chrono::high_resolution_clock::now();
-			for (Position pos : positions)
-			{
-				alg->Eval(pos, d);
-				nodes += alg->Nodes();
-			}
-			auto stop = std::chrono::high_resolution_clock::now();
-
-			table.PrintRow(d, positions.size(), nodes, stop - start);
-		}
-	}
-}
 
 int main(int argc, char* argv[])
 {
 	std::locale::global(std::locale(""));
 
-	fmt::print("Endgame\n");
+	std::cout << "Endgame\n";
 	TimeEndgame();
-
-	fmt::print("\nMidgame\n");
-	TimeMidgame();
 
 	return 0;
 }
+
+//void TimeMidgame()
+//{
+//	std::vector<Position> positions = RandomlyPlayedPositionsWithEmptyCount(100'000, 30);
+//
+//	std::vector<std::pair<std::string, std::unique_ptr<Algorithm>>> algs;
+//
+//	HT tt{ 10'000'000 };
+//	AAGLEM model{ pattern::cassandra, 5 };
+//	algs.emplace_back("PVS", std::make_unique<PVS>(tt, model));
+//	algs.emplace_back("IDAB", std::make_unique<IDAB<PVS>>(tt, model));
+//
+//	TimingTable table("{:^4}|Depth|  TTS   |   Nodes/s   |    Nodes     ", "    |{:<5}|{:>8}|{:>13L}|{:>14L}");
+//
+//	for (auto&& [name, alg] : algs)
+//	{
+//		table.PrintHeader(name);
+//		for (int d = 0; d <= 5; d++)
+//		{
+//			alg->clear();
+//			uint64 nodes = 0;
+//			auto start = std::chrono::high_resolution_clock::now();
+//			for (Position pos : positions)
+//			{
+//				alg->Eval(pos, d);
+//				nodes += alg->Nodes();
+//			}
+//			auto stop = std::chrono::high_resolution_clock::now();
+//
+//			table.PrintRow(d, positions.size(), nodes, stop - start);
+//		}
+//	}
+//}
+//
+//int main(int argc, char* argv[])
+//{
+//	std::locale::global(std::locale(""));
+//
+//	fmt::print("Endgame\n");
+//	TimeEndgame();
+//
+//	fmt::print("\nMidgame\n");
+//	TimeMidgame();
+//
+//	return 0;
+//}
 
 //
 //void Test(std::ranges::range auto&& puzzles, Algorithm& alg)

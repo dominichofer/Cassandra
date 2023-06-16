@@ -1,22 +1,25 @@
 #pragma once
 #include "Core/Core.h"
-#include "Algorithm.h"
+#include <chrono>
+#include <cstdint>
 
-class NegaMax : public Algorithm
+struct ScoreTimeNodes
+{
+	int score;
+	std::chrono::duration<double> time;
+	uint64_t nodes;
+};
+
+class NegaMax
 {
 protected:
-	static inline thread_local uint64 nodes;
+	static inline thread_local uint64_t nodes;
 public:
-	uint64 Nodes() const override { return nodes; }
-
-	using Algorithm::Eval;
-	ContextualResult Eval(const Position&, Intensity, OpenInterval) override;
-private:
-	ContextualResult eval(const Position&);
+	ScoreTimeNodes Eval(const Position&);
+protected:
 	int Eval_N(const Position&);
 	int Eval_3(const Position&, Field, Field, Field);
 	int Eval_2(const Position&, Field, Field);
-protected:
 	int Eval_1(const Position&, Field);
 	int Eval_0(const Position&);
 };

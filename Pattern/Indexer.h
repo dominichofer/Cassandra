@@ -9,19 +9,22 @@
 // Interface
 struct Indexer
 {
-	BitBoard pattern;
-	int symmetry_group_order; // mathematical order of the group
+	uint64_t pattern;
+	int symmetry_group_order;
 	int index_space_size = 0;
 
-	Indexer(BitBoard pattern, int symmetry_group_order) noexcept : pattern(pattern), symmetry_group_order(symmetry_group_order) {}
+	Indexer(uint64_t pattern, int symmetry_group_order) noexcept;
 
 	virtual int Index(Position) const = 0;
 	std::vector<int> Indices(Position) const;
 	virtual void InsertIndices(Position, std::span<int> location, int offset = 0) const = 0;
-	virtual std::vector<BitBoard> Variations() const = 0;
+	virtual std::vector<uint64_t> Variations() const = 0;
 };
 
-std::unique_ptr<Indexer> CreateIndexer(BitBoard pattern);
+std::unique_ptr<Indexer> CreateIndexer(uint64_t pattern);
+
+std::size_t ConfigurationsOfPattern(uint64_t pattern);
+std::size_t ConfigurationsOfPattern(std::vector<uint64_t> pattern);
 
 class GroupIndexer
 {
@@ -29,9 +32,9 @@ class GroupIndexer
 public:
 	int index_space_size;
 
-	GroupIndexer(std::vector<BitBoard> pattern);
+	GroupIndexer(std::vector<uint64_t> pattern);
 
 	std::vector<int> Indices(Position) const;
 	void InsertIndices(Position, std::span<int> location) const;
-	std::vector<BitBoard> Variations() const;
+	std::vector<uint64_t> Variations() const;
 };

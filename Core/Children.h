@@ -2,6 +2,7 @@
 #include "Position.h"
 #include <iterator>
 #include <set>
+#include <vector>
 
 namespace children
 {

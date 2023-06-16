@@ -1,5 +1,4 @@
 #include "GameGenerator.h"
-#include "Player.h"
 
 Game PlayedGame(Player& first, Player& second, Position start)
 {
@@ -15,11 +14,15 @@ Game PlayedGame(Player& first, Player& second, Position start)
 		Field move = player.ChooseMove(pos);
 		pos = PlayOrPass(pos, move);
 
-		if (move != Field::invalid)
+		if (move == Field::PS)
+			pass_count++;
+		else
+		{
 			game.Play(move);
+			pass_count = 0;
+		}
 
 		first_to_play = not first_to_play;
-		pass_count = (move == Field::invalid) ? pass_count + 1 : 0;
 	}
 	return game;
 }
@@ -31,31 +34,5 @@ std::vector<Game> PlayedGamesFrom(Player& first, Player& second, const std::vect
 	#pragma omp parallel for
 	for (int64_t i = 0; i < count; i++)
 		ret[i] = PlayedGame(first, second, starts[i]);
-	return ret;
-}
-
-Game SelfPlayedGame(Player& player, Position start)
-{
-	return PlayedGame(player, player, start);
-}
-
-std::vector<Game> SelfPlayedGamesFrom(Player& player, const std::vector<Position>& starts)
-{
-	return PlayedGamesFrom(player, player, starts);
-}
-
-Game RandomGame(Position start, unsigned int seed)
-{
-	RandomPlayer player{ seed };
-	return SelfPlayedGame(player, start);
-}
-
-std::vector<Game> RandomGamesFrom(const std::vector<Position>& starts, unsigned int seed)
-{
-	int64_t count = static_cast<int64_t>(starts.size());
-	std::vector<Game> ret(count, Game{});
-	#pragma omp parallel for
-	for (int64_t i = 0; i < count; i++)
-		ret[i] = RandomGame(starts[i], seed + i);
 	return ret;
 }

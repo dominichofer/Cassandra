@@ -1,325 +1,284 @@
 #include "PrincipalVariation.h"
 #include "Stability.h"
+#include <chrono>
+#include <limits>
+#include <iostream>
 
-ContextualResult PVS::Eval(const Position& pos, Intensity intensity, OpenInterval window)
+Status::Status(int alpha)
+	: alpha(alpha)
+	, best_score(-inf_score)
+	, best_move(Field::PS)
+	, worst_confidence_level(std::numeric_limits<float>::infinity())
+	, smallest_depth(64)
+{}
+
+void Status::Update(Result result, Field move)
+{
+	worst_confidence_level = std::min(worst_confidence_level, result.confidence_level);
+	smallest_depth = std::min(smallest_depth, result.depth + 1);
+	if (-result.score > best_score)
+	{
+		best_score = -result.score;
+		best_move = move;
+	}
+}
+
+Result Status::GetResult()
+{
+	ResultType type = (best_score > alpha) ? ResultType::exact : ResultType::fail_low;
+	return Result(type, best_score, smallest_depth, worst_confidence_level, best_move);
+}
+
+PVS::PVS(HT& tt, const Estimator& estimator) noexcept : tt(tt), estimator(estimator) {}
+
+ResultTimeNodes PVS::Eval(const Position& pos)
+{
+	return Eval(pos, { -inf_score, +inf_score }, pos.EmptyCount(), std::numeric_limits<float>::infinity());
+}
+
+ResultTimeNodes PVS::Eval(const Position& pos, OpenInterval window, int depth, float confidence_level)
 {
 	nodes = 0;
-	return PVS_N(pos, intensity, window);
+	auto start = std::chrono::high_resolution_clock::now();
+	auto result = PVS_N(pos, window, depth, confidence_level);
+	auto time = std::chrono::high_resolution_clock::now() - start;
+	return { result, time, nodes };
 }
 
-void PVS::clear()
+Result PVS::PVS_N(const Position& pos, OpenInterval window, int depth, float confidence_level)
 {
-	tt.clear();
-}
-
-//ScoreMove PVS::Eval_BestMove_N(const Position& pos, Intensity intensity, OpenInterval window)
-//{
-//	nodes++;
-//	Moves moves = PossibleMoves(pos);
-//	if (!moves)
-//	{
-//		auto passed = PlayPass(pos);
-//		if (HasMoves(passed))
-//			return -Eval_BestMove_N(passed, intensity, -window);
-//		return EvalGameOver(pos);
-//	}
-//
-//	ScoreMove best;
-//	for (Field move : SortMoves(moves, pos, intensity.depth))
-//	{
-//		int score = -PVS_N(Play(pos, move), intensity - 1, -window);
-//		if (score > window)
-//			return { score, move };
-//		best.ImproveWith(score, move);
-//		window.TryIncreaseLower(score);
-//	}
-//	return best;
-//}
-
-ContextualResult PVS::PVS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
-{
-	const bool endgame = (intensity.depth >= pos.EmptyCount());
-	if (pos.EmptyCount() <= 7 and endgame)
-		return AlphaBetaFailSuperSoft::Eval(pos, window);
-	if (intensity.depth <= 2)
-		return Eval_dN(pos, intensity, window);
-	//if (pos.EmptyCount() <= 10 and not endgame)
-	//	return PVS_N(pos, pos.EmptyCount(), window);
-
 	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{
 		auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -PVS_N(passed, intensity, -window);
-		return EvalGameOver(pos);
+		if (PossibleMoves(passed))
+			return -PVS_N(passed, -window, depth, confidence_level);
+		return EndScore(pos);
 	}
-	if (moves.size() == 1)
-		return -PVS_N(Play(pos, moves.front()), intensity - 1, -window) + 1;
+	//if (moves.size() == 1)
+	//	return -PVS_N(Play(pos, moves.front()), -window, depth - 1, confidence_level); // TODO: This needs to return depth + 1!
 
-	Findings findings(intensity, window);
-	if (auto look_up = tt.LookUp(pos); look_up.has_value())
-		if (findings.Add(look_up.value()))
-			return findings;
+	if (depth == 0)
+		return Eval_d0(pos);
+	if (pos.EmptyCount() <= 7)
+		return Result::Exact(AlphaBeta::Eval_N(pos, window), depth, std::numeric_limits<float>::infinity(), Field::PS);
+		
+	// Transposition table
+	if (auto look_up = tt.LookUp(pos); look_up.has_value()) {
+		auto t = look_up.value();
+		if (t.depth >= depth and t.confidence_level >= confidence_level and (t.IsExact() or not t.Window().Overlaps(window)))
+			return t;
+	}
 
-	Finally finally([&]() { tt.Update(pos, findings); });
+	auto status = Status(window.lower);
 	bool first = true;
-	//if (findings.Move() == Field::invalid and intensity.depth > 14)
-	//	findings.SetMove(PVS_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move);
-	if (findings.Move() != Field::invalid)
-	{
-		auto ret = -PVS_N(Play(pos, findings.Move()), intensity - 1, -findings.NextFullWindow());
-		if (findings.AddOption(ret, findings.Move()))
-			return findings;
-		first = false;
-		moves.erase(findings.Move());
-	}
-
-	for (Field move : SortMoves(moves, pos, intensity.depth))
+	for (Field move : Sorted(pos, window, depth, confidence_level))
 	{
 		if (not first)
 		{
-			auto zero_window = findings.NextZeroWindow();
-			auto ret = -ZWS_N(Play(pos, move), intensity - 1, -zero_window);
-			if (findings.AddOption(ret, move))
-				return findings;
-			if (ret < zero_window)
+			auto zero_window = OpenInterval(window.lower, window.lower + 1);
+			auto result = ZWS_N(Play(pos, move), -zero_window, depth - 1, confidence_level);
+			if (-result.score < zero_window) {
+				status.Update(result, move);
 				continue;
+			}
+			if (-result.score > window) { // beta cut
+				auto ret = result.BetaCut(move);
+				tt.Update(pos, ret);
+				return ret;
+			}
 		}
+
+		auto result = PVS_N(Play(pos, move), -window, depth - 1, confidence_level);
+		if (-result.score > window) { // beta cut
+			auto ret = result.BetaCut(move);
+			tt.Update(pos, ret);
+			return ret;
+		}
+		status.Update(result, move);
+		window.lower = std::max(window.lower, -result.score);
 		first = false;
-
-		auto ret = -PVS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
-		if (findings.AddOption(ret, move))
-			return findings;
 	}
-	return findings;
+	auto ret = status.GetResult();
+	tt.Update(pos, ret);
+	return ret;
 }
 
-ContextualResult PVS::ZWS_N(const Position& pos, Intensity intensity, const OpenInterval& window)
+Result PVS::ZWS_N(const Position& pos, OpenInterval window, int depth, float confidence_level)
 {
-	const bool endgame = (intensity.depth >= pos.EmptyCount());
-	if (pos.EmptyCount() <= 7 and endgame)
-		return AlphaBetaFailSuperSoft::Eval_N(pos, window);
-	if (intensity.depth <= 2)
-		return Eval_dN(pos, intensity, window);
-
 	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{
 		auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -ZWS_N(passed, intensity, -window);
-		return EvalGameOver(pos);
+		if (PossibleMoves(passed))
+			return -ZWS_N(passed, -window, depth, std::numeric_limits<float>::infinity());
+		return EndScore(pos);
 	}
-	if (moves.size() == 1)
-		return -ZWS_N(Play(pos, moves.front()), intensity - 1, -window) + 1;
+	//if (moves.size() == 1)
+	//	return -ZWS_N(Play(pos, moves.front()), -window, depth - 1, confidence_level); // TODO: This needs to return depth + 1!
 
+	switch (depth)
+	{
+	case 0: return Eval_d0(pos);
+	//case 1: return Eval_d1(pos);
+	}
+	if (pos.EmptyCount() <= 7)
+		return Result::Exact(AlphaBeta::Eval_N(pos, window), pos.EmptyCount(), std::numeric_limits<float>::infinity(), Field::PS);
+
+	// Stability
 	if (auto max = StabilityBasedMaxScore(pos); max < window)
-		return max;
+		return Result::FailLow(max, pos.EmptyCount(), std::numeric_limits<float>::infinity(), Field::PS);
 
-	Findings findings(intensity, window);
-	if (auto look_up = tt.LookUp(pos); look_up.has_value())
-		if (findings.Add(look_up.value()))
-			return findings;
-	if (auto mpc = MPC(pos, intensity, window); mpc.has_value())
+	// Transposition table
+	if (auto look_up = tt.LookUp(pos); look_up.has_value()) {
+		auto t = look_up.value();
+		if (t.depth >= depth and t.confidence_level >= confidence_level and (t.IsExact() or not t.Window().Overlaps(window)))
+			return t;
+	}
+
+	// Multi Prob Cut
+	if (auto mpc = MPC(pos, window, depth, confidence_level); mpc.has_value())
 		return mpc.value();
-	//if (findings.Move() == Field::invalid)
-	//	if (auto look_up = tt.LookUp(pos); look_up.has_value())
-	//		if (findings.Add(look_up.value()))
-	//			return findings;
-	
-	// ETC
-	//if (intensity.depth > 5 and intensity.depth < pos.EmptyCount())
-	//{
-	//	for (Field move : moves)
-	//	{
-	//		Position next = Play(pos, move);
-	//		if (auto max = -StabilityBasedMaxScore(next); max > window)
-	//			return max;
-	//		if (auto look_up = tt.LookUp(next); look_up.has_value())
-	//			if (look_up.value().intensity + 1 >= intensity and -look_up.value().window > window)
-	//				return { look_up.value().intensity + 1, -look_up.value().window.Upper() };
-	//	}
-	//}
 
-	Finally finally([&]() { tt.Update(pos, findings); });
-	if (findings.Move() == Field::invalid and intensity.depth > 14)
-		findings.SetMove(PVS_N(pos, intensity.depth / 4, { -inf_score, +inf_score }).move);
-	if (findings.Move() != Field::invalid)
+	auto status = Status(window.lower);
+	for (Field move : Sorted(pos, window, depth, confidence_level))
 	{
-		Field move = findings.Move();
-		auto ret = -ZWS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
-		if (findings.AddOption(ret, move))
-			return findings;
-		moves.erase(findings.Move());
+		auto result = ZWS_N(Play(pos, move), -window, depth - 1, confidence_level);
+		if (-result.score > window) { // beta cut
+			auto ret = result.BetaCut(move);
+			tt.Update(pos, ret);
+			return ret;
+		}
+		status.Update(result, move);
 	}
-
-	for (Field move : SortMoves(moves, pos, intensity.depth))
-	{
-		auto ret = -ZWS_N(Play(pos, move), intensity - 1, -findings.NextFullWindow());
-		if (findings.AddOption(ret, move))
-			return findings;
-	}
-	return findings;
+	auto ret = status.GetResult();
+	tt.Update(pos, ret);
+	return ret;
 }
 
-std::optional<ContextualResult> PVS::MPC(const Position& pos, Intensity intensity, const OpenInterval& window)
+Result PVS::EndScore(const Position& pos)
 {
-	if (intensity.IsCertain())
-		return std::nullopt;
-
-	int D = intensity.depth;
-	int d = D / 2;
-	int E = pos.EmptyCount();
-
-	float t = intensity.certainty.sigmas();
-
-	float eval_0 = evaluator.Score(pos);
-	float sd_0 = evaluator.Accuracy(D, 0, E);
-
-	if (eval_0 >= window.Upper() + t * sd_0) // fail high
-		return ContextualResult{ intensity, window.Upper() };
-	if (eval_0 <= window.Lower() - t * sd_0) // fail low
-		return ContextualResult{ intensity, window.Lower() };
-
-	// confidence of reduced search
-	Confidence c = Confidence::Certain();
-	if (intensity.certainty == 0.8_sigmas)
-		c = 1.1_sigmas;
-	if (intensity.certainty == 1.1_sigmas)
-		c = 1.5_sigmas;
-	if (intensity.certainty == 1.5_sigmas)
-		c = 2.0_sigmas;
-	if (intensity.certainty == 1.5_sigmas)
-		c = 2.6_sigmas;
-
-	float sd_d = evaluator.Accuracy(D, d, E);
-	int lower_limit = std::round(window.Lower() - t * sd_d);
-	int upper_limit = std::round(window.Upper() + t * sd_d);
-
-	if (eval_0 >= upper_limit and upper_limit <= max_score)
-	{
-		int shallow_result = ZWS_N(pos, { d, c }, { upper_limit - 1, upper_limit });
-		if (shallow_result >= upper_limit) // fail high
-			return ContextualResult{ intensity, window.Upper() };
-	}
-
-	if (eval_0 <= lower_limit and lower_limit >= min_score)
-	{
-		int shallow_result = ZWS_N(pos, { d, c }, { lower_limit, lower_limit + 1 });
-		if (shallow_result <= lower_limit) // fail low
-			return ContextualResult{ intensity, window.Lower() };
-	}
-
-	return std::nullopt;
+	nodes++;
+	return Result::Exact(::EndScore(pos), pos.EmptyCount(), std::numeric_limits<float>::infinity(), Field::PS);
 }
 
-ContextualResult PVS::Eval_dN(const Position& pos, Intensity intensity, OpenInterval window)
+Result PVS::Eval_d1(const Position& pos)
 {
-	if (intensity.depth == 0)
-		return Eval_d0(pos);
-
 	nodes++;
 	Moves moves = PossibleMoves(pos);
 	if (!moves)
 	{
 		auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -Eval_dN(passed, intensity, -window);
-		return EvalGameOver(pos);
+		if (PossibleMoves(passed))
+			return -Eval_d1(passed);
+		return EndScore(pos);
 	}
+
 	int best_score = -inf_score;
+	Field best_move = Field::PS;
 	for (Field move : moves)
 	{
-		int score = -Eval_dN(Play(pos, move), intensity - 1, -window);
-		if (score > window)
-			return { intensity.depth, score };
-		best_score = std::max(best_score, score);
-		window.TryIncreaseLower(score);
+		int score = -Eval_0(Play(pos, move));
+		if (score > best_score)
+		{
+			best_score = score;
+			best_move = move;
+		}
 	}
-	return { intensity.depth, best_score };
+	return Result::Exact(best_score, 1, std::numeric_limits<float>::infinity(), best_move);
 }
 
-int to_score(float value)
-{
-	return std::clamp(static_cast<int>(std::round(value)), min_score, max_score);
-}
-
-ContextualResult PVS::Eval_d0(const Position& pos)
+Result PVS::Eval_d0(const Position& pos)
 {
 	nodes++;
-	return { /*depth*/ 0, to_score(evaluator.Score(pos)) };
+	return Result::Exact(estimator.Score(pos), 0, std::numeric_limits<float>::infinity(), Field::PS);
 }
 
-SortedMoves PVS::SortMoves(Moves moves, const Position& pos, int depth)
+const uint32_t SquareValue[] = {
+	9, 2, 8, 6, 6, 8, 2, 9,
+	2, 1, 3, 4, 4, 3, 1, 2,
+	8, 3, 7, 5, 5, 7, 3, 8,
+	6, 4, 5, 0, 0, 5, 4, 6,
+	6, 4, 5, 0, 0, 5, 4, 6,
+	8, 3, 7, 5, 5, 7, 3, 8,
+	2, 1, 3, 4, 4, 3, 1, 2,
+	9, 2, 8, 6, 6, 8, 2, 9,
+};
+
+int double_corner_popcount(uint64_t b)
 {
-	//int sort_depth;
-	//int min_depth = 9;
-	//if (pos.EmptyCount() <= 27)
-	//	min_depth += (30 - pos.EmptyCount()) / 3;
-	//if (depth >= min_depth)
+	return std::popcount(b) + std::popcount(b & 0x8100000000000081ULL);
+}
+
+SortedMoves PVS::Sorted(const Position& pos, OpenInterval window, int depth, float confidence_level)
+{
+	Field tt_move = Field::PS;
+	if (auto look_up = tt.LookUp(pos); look_up.has_value())
+		tt_move = look_up.value().best_move;
+
+	auto metric = [&](Field move) -> uint32_t
+	{
+		if (move == tt_move)
+			return 0x800000U;
+
+		Position next = Play(pos, move);
+		uint64_t O = next.Opponent();
+		uint64_t E = next.Empties();
+
+		uint32_t score = SquareValue[static_cast<uint8_t>(move)];
+		score += (36 - double_corner_popcount(EightNeighboursAndSelf(O) & E)) << 4; // potential mobility, with corner bonus
+		score += std::popcount(StableEdges(next) & O) << 10;
+		score += (36 - double_corner_popcount(PossibleMoves(next))) << 15; // possible moves, with corner bonus
+		return score;
+	};
+	return SortedMoves(PossibleMoves(pos), metric);
+}
+
+std::optional<Result> PVS::MPC(const Position& pos, OpenInterval window, int depth, float confidence_level)
+{
+	if (confidence_level == std::numeric_limits<float>::infinity())
+		return std::nullopt;
+	if (depth < 5)
+		return std::nullopt;
+
+	float eval_0 = estimator.Score(pos);
+
+	float sd_0 = estimator.Accuracy(pos, 0, depth);
+	int confidence_margin_d0 = std::ceil(confidence_level * sd_0);
+	OpenInterval conficence_window_d0(window.lower - confidence_margin_d0, window.upper + confidence_margin_d0);
+
+	if (eval_0 > conficence_window_d0)
+		return Result::FailHigh(window.upper, depth, (eval_0 - window.upper) / sd_0, Field::PS);
+	if (eval_0 < conficence_window_d0)
+		return Result::FailLow(window.lower, depth, (window.lower - eval_0) / sd_0, Field::PS);
+
+	//if (depth < 6)
+	//	return std::nullopt;
+	//int reduced_depth = depth / 3;
+	////if (pos.EmptyCount() - reduced_depth < 10)
+	////	return std::nullopt;
+
+	//float sd = estimator.Accuracy(pos, reduced_depth, depth);
+	//int confidence_margin = std::ceil(confidence_level * sd);
+	//OpenInterval conficence_window(window.lower - confidence_margin, window.upper + confidence_margin);
+
+	//if (eval_0 > window and conficence_window < max_score)
 	//{
-	//	sort_depth = (depth - 15) / 3;
-	//	if (pos.EmptyCount() >= 27)
-	//		++sort_depth;
-	//	if (sort_depth < 0)
-	//		sort_depth = 0;
-	//	else if (sort_depth > 6)
-	//		sort_depth = 6;
+	//	OpenInterval zero_window(conficence_window.upper - 1, conficence_window.upper);
+	//	Result shallow_result = ZWS_N(pos, zero_window, reduced_depth, std::numeric_limits<float>::infinity());
+	//	if (-shallow_result.score > zero_window)
+	//		return Result::FailHigh(conficence_window.upper, depth, (-shallow_result.score - window.upper) / sd, shallow_result.best_move);
 	//}
-	//else
-	//	sort_depth = -1;
 
-	return SortedMoves(moves, [pos](Field move)
-		{
-			Position next = Play(pos, move);
-			auto P = next.Player();
-			auto O = next.Opponent();
-			auto E = next.Empties();
-			auto P9 = EightNeighboursAndSelf(P);
-			auto O9 = EightNeighboursAndSelf(O);
-			auto E9 = EightNeighboursAndSelf(E);
-			auto pm = PossibleMoves(next);
-			int sc = ((((0x0100000000000001ULL & O) << 1) | ((0x8000000000000080ULL & O) >> 1) | ((0x0000000000000081ULL & O) << 8) | ((0x8100000000000000ULL & O) >> 8) | 0x8100000000000081ULL) & O);
-			auto se = StableEdges(next);
-			int potential_mobility = popcount(E & O9) + popcount(E & O9 & BitBoard::Corners());
+	//if (eval_0 < window and conficence_window > min_score)
+	//{
+	//	OpenInterval zero_window(conficence_window.lower, conficence_window.lower + 1);
+	//	Result shallow_result = ZWS_N(pos, zero_window, reduced_depth, std::numeric_limits<float>::infinity());
+	//	if (-shallow_result.score < zero_window)
+	//		return Result::FailLow(conficence_window.lower, depth, (window.lower + shallow_result.score) / sd, shallow_result.best_move);
+	//}
 
-			uint32_t score = 0;
-			//if (sort_depth < 0)
-			//{
-				//score += potential_mobility << 8;
-				//score += (64 - popcount(sc)) << 13;
-				//score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
-			//}
-			//else
-			//{
-				//score += potential_mobility << 8;
-				//score += (64 - popcount(se & O)) << 13;
-				//score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
-			//	//switch (sort_depth)
-			//	//{
-			//	//	case 0:
-			//	//		score += (Eval_d0(next) >> 1) << 18; // 1 level score bonus
-			//	//		break;
-			//	//	case 1:
-			//	//	case 2:
-			//	//		score += ((Eval_dN(next, sort_depth, { -inf_score, +inf_score }))) << 18;  // 2 level score bonus
-			//	//		break;
-			//	//	default:
-			//	//		//score += 1 << 18;
-			//	//		//if (tt.LookUp(pos).has_value())
-			//	//		//	score -= 1 << 18; // bonus if the position leads to a position stored in the hash-table
-			//	//		score += ((Eval_dN(next, sort_depth, { -inf_score, +inf_score }))) << 18; // > 3 level bonus
-			//	//		break;
-			//	//}
-				score += (popcount(O & E9) + popcount(O & E9 & BitBoard::Corners())) << 8;
-				score += potential_mobility << 9; // get_potential_moves
-				score += (64 - popcount(se & O)) << 14;
-				score += (pm.size() + (pm & BitBoard::Corners()).size()) << 18;
-			//}
-
-			return score;
-		});
+	return std::nullopt;
 }

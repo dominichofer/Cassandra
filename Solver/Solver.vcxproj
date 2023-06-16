@@ -82,20 +82,14 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CoreIO\CoreIO.vcxproj">
-      <Project>{e694a211-602c-44ed-83bb-51579cffeaef}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\PatternIO\PatternIO.vcxproj">
-      <Project>{fa291aac-324c-4273-8feb-96c25d1c2e04}</Project>
+    <ProjectReference Include="..\IO\IO.vcxproj">
+      <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SearchIO\SearchIO.vcxproj">
-      <Project>{47b2cd6e-fc2f-4830-a279-9185ab122546}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Search\Search.vcxproj">
       <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>

@@ -1,77 +1,58 @@
 #pragma once
-#include <cstdint>
-#include <stdexcept>
-#include "Vector.h"
+#include <cstddef>
+#include <span>
+#include <string>
+#include <vector>
 
-namespace
+// Forward declaration
+class Vector;
+
+class Matrix
 {
-	// Proxy
-	template <typename T>
-	requires requires (const T& t) { t.Rows(); t.Cols(); }
-	struct TransposedMatrix
-	{
-		const T& m;
+	std::size_t cols;
+	std::vector<double> data;
+public:
+	Matrix(std::size_t rows, std::size_t cols) noexcept : cols(cols), data(rows * cols, 0.0) {}
 
-		explicit TransposedMatrix(const T& m) noexcept : m(m) {}
+	Matrix(const Matrix& o) noexcept : cols(o.cols), data(o.data) {}
+	Matrix(Matrix&& o) noexcept : cols(o.cols), data(std::move(o.data)) {}
 
-		std::size_t Rows() const { return m.Cols(); }
-		std::size_t Cols() const { return m.Rows(); }
-	};
-}
+	Matrix operator=(const Matrix&) noexcept;
+	Matrix operator=(Matrix&&) noexcept;
 
-template <typename T, typename U>
-std::vector<U> operator*(const TransposedMatrix<T>& mat, const std::vector<U>& x)
-{
-	return x * mat.m;
-}
+	// Identity matrix
+	static Matrix Id(std::size_t size);
 
-template <typename T, typename U>
-std::vector<U> operator*(const std::vector<U>& x, const TransposedMatrix<T>& mat)
-{
-	return mat.m * x;
-}
+	bool operator==(const Matrix& o) const noexcept { return (cols == o.cols) and (data == o.data); }
+	bool operator!=(const Matrix& o) const noexcept { return !(*this == o); }
 
-template <typename T>
-auto transposed(const T& m) { return TransposedMatrix(m); }
+	std::size_t Rows() const noexcept { return data.size() / cols; }
+	std::size_t Cols() const noexcept { return cols; }
 
-template <typename T>
-auto transposed(const TransposedMatrix<T>& m) { return m.m; }
+	std::span<      double> Row(std::size_t index)       noexcept;
+	std::span<const double> Row(std::size_t index) const noexcept;
 
+	      double& operator()(std::size_t row, std::size_t col)       { return data[row * cols + col]; }
+	const double& operator()(std::size_t row, std::size_t col) const { return data[row * cols + col]; }
 
-namespace
-{
-	// Proxy
-	template <typename L, typename R>
-	requires requires (L l, R r) { l.Rows(); l.Cols(); r.Rows(); r.Cols(); }
-	struct TwoMatrix
-	{
-		const L& l;
-		const R& r;
+	Matrix& operator+=(const Matrix&);
+	Matrix& operator-=(const Matrix&);
+	Matrix& operator*=(double);
+	Matrix& operator/=(double);
+};
 
-		TwoMatrix(const L& l, const R& r) : l(l), r(r)
-		{
-			if (l.Cols() != r.Rows())
-				throw std::runtime_error("Size mismatch.");
-		}
-		operator L() const { return fallback::operator*(l, r); }
+Matrix operator+(Matrix, const Matrix&);
+Matrix operator+(const Matrix&, Matrix&&);
+Matrix operator-(Matrix, const Matrix&);
+Matrix operator-(const Matrix&, Matrix&&);
+Matrix operator*(Matrix, double);
+Matrix operator*(double, Matrix);
+Matrix operator/(Matrix, double);
 
-		std::size_t Rows() const { return l.Rows(); }
-		std::size_t Cols() const { return r.Cols(); }
-	};
-}
+Vector operator*(const Matrix&, const Vector&);
+Vector operator*(const Vector&, const Matrix&);
 
-template <typename L, typename R, typename T>
-std::vector<T> operator*(const TwoMatrix<L, R>& mat, const std::vector<T>& x)
-{
-	return mat.l * (mat.r * x);
-}
+Matrix operator*(const Matrix&, const Matrix&);
 
-template <typename L, typename R, typename T>
-std::vector<T> operator*(const std::vector<T>& x, const TwoMatrix<L, R>& mat)
-{
-	return (x * mat.l) * mat.r;
-}
-
-template <typename L, typename R>
-requires requires (L l, R r) { l.Rows(); l.Cols(); r.Rows(); r.Cols(); }
-auto operator*(const L& l, const R& r) { return TwoMatrix(l, r); }
+Matrix transposed(const Matrix&);
+std::string to_string(const Matrix&);

@@ -1,8 +1,11 @@
 #include "pch.h"
+#include <cstdint>
 #include <random>
 #include <numeric>
+#include <format>
+#include <iostream>
 
-BitBoard RandomBitBoard()
+uint64_t RandomBitBoard()
 {
 	static std::mt19937_64 rng;
 	static std::uniform_int_distribution<uint64_t> dist{ 0, 0xFFFFFFFFFFFFFFFFULL };
@@ -11,10 +14,10 @@ BitBoard RandomBitBoard()
 
 void popcount(benchmark::State& state)
 {
-	BitBoard b = RandomBitBoard();
+	uint64_t b = RandomBitBoard();
 	for (auto _ : state)
 	{
-		auto value = popcount(b);
+		auto value = std::popcount(b);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
@@ -22,65 +25,65 @@ void popcount(benchmark::State& state)
 BENCHMARK(popcount);
 
 
-void FlipVertical(benchmark::State& state)
+void FlippedCodiagonal(benchmark::State& state)
 {
-	BitBoard b = RandomBitBoard();
+	uint64_t b = RandomBitBoard();
 	for (auto _ : state)
 	{
-		auto value = FlipVertical(b);
+		auto value = FlippedCodiagonal(b);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(FlipVertical);
+BENCHMARK(FlippedCodiagonal);
 
-void FlipCodiagonal(benchmark::State& state)
+void FlippedDiagonal(benchmark::State& state)
 {
-	BitBoard b = RandomBitBoard();
+	uint64_t b = RandomBitBoard();
 	for (auto _ : state)
 	{
-		auto value = FlipCodiagonal(b);
+		auto value = FlippedDiagonal(b);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(FlipCodiagonal);
+BENCHMARK(FlippedDiagonal);
 
-void FlipDiagonal(benchmark::State& state)
+void FlippedHorizontal(benchmark::State& state)
 {
-	BitBoard b = RandomBitBoard();
+	uint64_t b = RandomBitBoard();
 	for (auto _ : state)
 	{
-		auto value = FlipDiagonal(b);
+		auto value = FlippedHorizontal(b);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(FlipDiagonal);
+BENCHMARK(FlippedHorizontal);
 
-void FlipHorizontal(benchmark::State& state)
+void FlippedVertical(benchmark::State& state)
 {
-	BitBoard b = RandomBitBoard();
+	uint64_t b = RandomBitBoard();
 	for (auto _ : state)
 	{
-		auto value = FlipHorizontal(b);
+		auto value = FlippedVertical(b);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(FlipHorizontal);
+BENCHMARK(FlippedVertical);
 
-void FlipToUnique(benchmark::State& state)
+void FlippedToUnique(benchmark::State& state)
 {
 	Position pos = RandomPosition();
 	for (auto _ : state)
 	{
-		auto value = FlipToUnique(pos);
+		auto value = FlippedToUnique(pos);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(FlipToUnique);
+BENCHMARK(FlippedToUnique);
 
 void EmptyCount(benchmark::State& state)
 {
@@ -160,53 +163,17 @@ void PossibleMoves(benchmark::State& state)
 }
 BENCHMARK(PossibleMoves);
 
-void HasMoves_x64(benchmark::State& state)
+void EndScore(benchmark::State& state)
 {
 	Position pos = RandomPosition();
 	for (auto _ : state)
 	{
-		auto value = detail::HasMoves_x64(pos);
+		auto value = EndScore(pos);
 		benchmark::DoNotOptimize(value);
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(HasMoves_x64);
-
-void HasMoves_AVX2(benchmark::State& state)
-{
-	Position pos = RandomPosition();
-	for (auto _ : state)
-	{
-		auto value = detail::HasMoves_AVX2(pos);
-		benchmark::DoNotOptimize(value);
-	}
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(HasMoves_AVX2);
-
-void HasMoves(benchmark::State& state)
-{
-	Position pos = RandomPosition();
-	for (auto _ : state)
-	{
-		auto value = HasMoves(pos);
-		benchmark::DoNotOptimize(value);
-	}
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(HasMoves);
-
-void EvalGameOver(benchmark::State& state)
-{
-	Position pos = RandomPosition();
-	for (auto _ : state)
-	{
-		auto value = EvalGameOver(pos);
-		benchmark::DoNotOptimize(value);
-	}
-	state.SetItemsProcessed(state.iterations());
-}
-BENCHMARK(EvalGameOver);
+BENCHMARK(EndScore);
 
 //void StableEdges(benchmark::State& state)
 //{
@@ -240,7 +207,7 @@ void Children(int empty_count)
 	benchmark::DoNotOptimize(value);
 	auto stop = std::chrono::high_resolution_clock::now();
 
-	fmt::print("Children empty_count {:<14}{:>3} ms\n", empty_count, std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+	std::cout << std::format("Children empty_count={:<14}{:>3} ms\n", empty_count, std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 }
 
 void UniqueChildren(int empty_count)
@@ -250,22 +217,7 @@ void UniqueChildren(int empty_count)
 	benchmark::DoNotOptimize(value);
 	auto stop = std::chrono::high_resolution_clock::now();
 
-	fmt::print("Unique children empty_count {:<7}{:>3} ms\n", empty_count, std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
-}
-
-void RandomGame()
-{
-	int size = 100'000;
-
-	auto start = std::chrono::high_resolution_clock::now();
-	for (int i = 0; i < size; i++)
-	{
-		Game value = RandomGame(Position::Start());
-		benchmark::DoNotOptimize(value);
-	}
-	auto stop = std::chrono::high_resolution_clock::now();
-
-	fmt::print("RandomGamesFrom {:>22} ns\n", std::chrono::duration_cast<std::chrono::nanoseconds>((stop - start) / size).count());
+	std::cout << std::format("Unique children empty_count={:<7}{:>3} ms\n", empty_count, std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
 }
 
 
@@ -279,6 +231,5 @@ int main(int argc, char** argv)
 
 	Children(/*empty_count*/ 51);
 	UniqueChildren(/*empty_count*/ 51);
-	RandomGame();
 	return 0;
 }

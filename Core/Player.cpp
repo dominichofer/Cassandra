@@ -4,7 +4,7 @@ Field RandomPlayer::ChooseMove(const Position& pos)
 {
 	Moves possible_moves = PossibleMoves(pos);
 	if (possible_moves.empty())
-		return Field::invalid;
+		return Field::PS;
 
 	auto dst = std::uniform_int_distribution<std::size_t>(0, possible_moves.size() - 1);
 

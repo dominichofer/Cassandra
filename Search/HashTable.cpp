@@ -5,7 +5,7 @@
 void OneNode::Update(const key_type& new_key, const value_type& new_value)
 {
 	std::scoped_lock lock{ mutex };
-	if (new_value.intensity >= value.intensity)
+	if (new_value.depth >= value.depth and new_value.confidence_level >= value.confidence_level)
 	{
 		key = new_key;
 		value = new_value;
@@ -30,12 +30,12 @@ void OneNode::Clear()
 void TwoNodes::Update(const key_type& new_key, const value_type& new_value)
 {
 	std::scoped_lock lock{ mutex };
-	if (new_value.intensity >= value1.intensity)
+	if (new_value.depth >= value1.depth and new_value.confidence_level >= value1.confidence_level)
 	{
 		key1 = new_key;
 		value1 = new_value;
 	}
-	else if (new_value.intensity >= value2.intensity)
+	else if (new_value.depth >= value2.depth and new_value.confidence_level >= value2.confidence_level)
 	{
 		key2 = new_key;
 		value2 = new_value;

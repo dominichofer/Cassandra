@@ -23,7 +23,7 @@ ScoreEstimator CreateScoreEstimator(
     int iterations = 10);
 
 // Creates a MultiStage Score Estimator by bootstrapping from the given positions.
-MSSE CreateMultiStageScoreEstimator(
+MultiStageScoreEstimator CreateMultiStageScoreEstimator(
     int stage_size,
     const std::vector<BitBoard>& pattern,
     const std::vector<Position>& pos,
@@ -31,11 +31,11 @@ MSSE CreateMultiStageScoreEstimator(
 
 // Creates an accuracy model, fitted to the given data.
 // Returns accuracy model and R^2.
-std::pair<AM, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore>);
+std::pair<AccuracyModel, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore>);
 
 // Create Accuracy Aware MultiStage Score Estimator by bootstrapping from the given data.
-// Returns AAMSSE and R^2.
-std::pair<AAMSSE, double> CreateAAMSSE(
+// Returns PatternBasedEstimator and R^2.
+std::pair<PatternBasedEstimator, double> CreatePatternBasedEstimator(
     int stage_size,
     const std::vector<BitBoard>& pattern,
     const std::vector<Position>& train_pos,

@@ -1,19 +1,18 @@
 #pragma once
 #include "Core/Core.h"
-#include <functional>
 #include <iterator>
 
 int pown(int base, unsigned int exponent);
 
-int FastIndex(Position, BitBoard pattern) noexcept;
+int FastIndex(Position, uint64_t pattern) noexcept;
 
 class Configurations
 {
-	BitBoard pattern;
+	uint64_t mask;
 public:
 	class Iterator
 	{
-		BitBoard pattern{};
+		uint64_t mask{};
 		uint64_t size{0}, p{0}, o{0};
 	public:
 		using difference_type = std::ptrdiff_t;
@@ -23,29 +22,19 @@ public:
 		using iterator_category = std::forward_iterator_tag;
 
 		Iterator() noexcept = default;
-		Iterator(BitBoard pattern) noexcept : pattern(pattern), size(1ULL << popcount(pattern)) {}
+		Iterator(uint64_t mask) noexcept;
 
-		Iterator& operator++() {
-			o++;
-			for (; p < size; p++) {
-				for (; o < size; o++)
-					if ((p & o) == 0u) // fields can only be taken by one player.
-						return *this;
-				o = 0;
-			}
-			*this = end(); // marks generator as depleted.
-			return *this;
-		}
-		Position operator*() const { return { PDep(p, pattern), PDep(o, pattern) }; }
+		Iterator& operator++();
+		Position operator*() const;
 
 		bool operator==(const Iterator&) const noexcept = default;
 		bool operator!=(const Iterator&) const noexcept = default;
 	};
 
-	Configurations(BitBoard pattern) noexcept : pattern(pattern) {}
+	Configurations(uint64_t mask) noexcept : mask(mask) {}
 
-	Iterator begin() const noexcept { return pattern; }
-	Iterator cbegin() const noexcept { return pattern; }
+	Iterator begin() const noexcept { return mask; }
+	Iterator cbegin() const noexcept { return mask; }
 	static Iterator end() noexcept { return {}; }
 	static Iterator cend() noexcept { return {}; }
 };

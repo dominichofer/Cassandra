@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 
 	Table table{
 		"depth|      Positions      |correct|    Time [s]    |     Pos/s      ",
-		"{:>5}|{:>21L}|{:^7}|{:>#16.3f}|{:>16.0Lf}"
+		"{:>5}|{:>21L}|{:^7}|{:>#16.3f}|{:>16L}"
 	};
 	table.PrintHeader();
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1'000.0;
 		bool correct = (Correct(d) == result);
 
-		table.PrintRow(d, result, correct, duration, duration ? std::optional(result / duration) : std::nullopt);
+		table.PrintRow(d, result, correct, duration, (uint64_t)(duration ? result / duration : 0));
 	}
 	return 0;
 }

@@ -1,6 +1,6 @@
 #include "pch.h"
 
-TEST(EvalGameOver, full_of_player)
+TEST(EndScore, full_of_player)
 {
 	Position pos =
 		"X X X X X X X X"
@@ -12,10 +12,10 @@ TEST(EvalGameOver, full_of_player)
 		"X X X X X X X X"
 		"X X X X X X X X"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), +64 / 2);
+	ASSERT_EQ(EndScore(pos), +64 / 2);
 }
 
-TEST(EvalGameOver, full_of_opponent)
+TEST(EndScore, full_of_opponent)
 {
 	Position pos =
 		"O O O O O O O O"
@@ -27,10 +27,10 @@ TEST(EvalGameOver, full_of_opponent)
 		"O O O O O O O O"
 		"O O O O O O O O"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), -64 / 2);
+	ASSERT_EQ(EndScore(pos), -64 / 2);
 }
 
-TEST(EvalGameOver, half_half)
+TEST(EndScore, half_half)
 {
 	Position pos =
 		"X X X X X X X X"
@@ -42,10 +42,10 @@ TEST(EvalGameOver, half_half)
 		"O O O O O O O O"
 		"O O O O O O O O"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), 0 / 2);
+	ASSERT_EQ(EndScore(pos), 0 / 2);
 }
 
-TEST(EvalGameOver, empties_count_toward_player)
+TEST(EndScore, empties_count_toward_player)
 {
 	Position pos =
 		"- - - - - - - -"
@@ -57,10 +57,10 @@ TEST(EvalGameOver, empties_count_toward_player)
 		"- - - - - - - -"
 		"- - - - - - - -"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), +62 / 2);
+	ASSERT_EQ(EndScore(pos), +62 / 2);
 }
 
-TEST(EvalGameOver, empties_count_toward_opponent)
+TEST(EndScore, empties_count_toward_opponent)
 {
 	Position pos =
 		"- - - - - - - -"
@@ -72,5 +72,5 @@ TEST(EvalGameOver, empties_count_toward_opponent)
 		"- - - - - - - -"
 		"- - - - - - - -"_pos;
 
-	ASSERT_EQ(EvalGameOver(pos), -62 / 2);
+	ASSERT_EQ(EndScore(pos), -62 / 2);
 }

@@ -12,13 +12,12 @@
       </FunctionLevelLinking>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <OpenMPSupport>false</OpenMPSupport>
-      <AdditionalOptions>/Zc:twoPhase- /await %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnforceTypeConversionRules>true</EnforceTypeConversionRules>
-      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;G:\range-v3\include\;$(SolutionDir)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>G:\fmt-8.1.1\out\build\x64-Debug\fmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -1,10 +1,8 @@
 #include "pch.h"
-
+using namespace std::string_literals;
+using namespace std::chrono_literals;
 TEST(short_time_format, positive)
 {
-	using namespace std::string_literals;
-	using namespace std::chrono_literals;
-
 	EXPECT_EQ("1.000 s"s, short_time_format(1s));
 	EXPECT_EQ("100.0 ms"s, short_time_format(100ms));
 	EXPECT_EQ("10.00 ms"s, short_time_format(10ms));
@@ -19,9 +17,6 @@ TEST(short_time_format, positive)
 
 TEST(short_time_format, negative)
 {
-	using namespace std::string_literals;
-	using namespace std::chrono_literals;
-
 	EXPECT_EQ("-1.000 s"s, short_time_format(-1s));
 	EXPECT_EQ("-100.0 ms"s, short_time_format(-100ms));
 	EXPECT_EQ("-10.00 ms"s, short_time_format(-10ms));
@@ -36,8 +31,5 @@ TEST(short_time_format, negative)
 
 TEST(short_time_format, zero)
 {
-	using namespace std::string_literals;
-	using namespace std::chrono_literals;
-
 	EXPECT_EQ("0.000 s"s, short_time_format(0s));
 }

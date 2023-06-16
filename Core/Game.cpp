@@ -1,18 +1,21 @@
 #include "Game.h"
+#include <regex>
 
 Position PassIfNeeded(const Position& pos) noexcept
 {
-	if (not HasMoves(pos))
-	{
-		Position passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return passed;
-	}
-	return pos;
+	if (PossibleMoves(pos))
+		return pos;
+
+	Position passed = PlayPass(pos);
+	if (PossibleMoves(passed))
+		return passed;
+	else
+		return pos;
 }
 
 Game::Game(Position start, std::vector<Field> moves) noexcept
-	: start(PassIfNeeded(start)), moves(std::move(moves))
+	: start(PassIfNeeded(start))
+	, moves(std::move(moves))
 {}
 
 std::vector<Position> Game::Positions() const
@@ -25,14 +28,6 @@ std::vector<Position> Game::Positions() const
 		pos = PassIfNeeded(::Play(pos, move));
 		ret.push_back(pos);
 	}
-	return ret;
-}
-
-std::string to_string(const Game& game)
-{
-	std::string ret = to_string(game.StartPosition());
-	for (Field move : game.Moves())
-		ret += ' ' + to_string(move);
 	return ret;
 }
 

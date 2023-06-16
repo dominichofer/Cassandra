@@ -2,10 +2,10 @@
 
 TEST(Moves, range_based_for_loop)
 {
-	const Moves moves = PossibleMoves(Position::Start());
+	Moves moves = PossibleMoves(Position::Start());
 
 	std::vector<Field> possible_moves;
-	for (const Field move : moves)
+	for (Field move : moves)
 		possible_moves.push_back(move);
 
 	std::sort(possible_moves.begin(), possible_moves.end());

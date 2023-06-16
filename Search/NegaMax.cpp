@@ -1,55 +1,17 @@
 #include "NegaMax.h"
 #include <algorithm>
+#include <cassert>
+#include <chrono>
 
-ContextualResult NegaMax::Eval(const Position& pos, Intensity, OpenInterval)
+ScoreTimeNodes NegaMax::Eval(const Position& pos)
 {
 	nodes = 0;
-	return eval(pos);
+	auto start = std::chrono::high_resolution_clock::now();
+	int score = Eval_N(pos);
+	auto time = std::chrono::high_resolution_clock::now() - start;
+	return { score, time, nodes };
 }
 
-ContextualResult NegaMax::eval(const Position& pos)
-{
-	nodes++;
-	Moves moves = PossibleMoves(pos);
-	if (!moves)
-	{
-		auto passed = PlayPass(pos);
-		if (HasMoves(passed))
-			return -eval(passed);
-		return EvalGameOver(pos);
-	}
-	
-	ContextualResult res;
-	for (Field move : moves)
-		res.ImproveWith(-Eval_N(Play(pos, move)), move);
-	return res;
-}
-
-//ScoreMove NegaMax::Eval_BestMove(const Position& pos, Intensity, OpenInterval)
-//{
-//	nodes = 0;
-//	return Eval_BestMove_N(pos);
-//}
-//
-//ScoreMove NegaMax::Eval_BestMove_N(const Position& pos)
-//{
-//	nodes++;
-//	Moves moves = PossibleMoves(pos);
-//	if (!moves)
-//	{
-//		auto passed = PlayPass(pos);
-//		if (HasMoves(passed))
-//			return -Eval_BestMove_N(passed);
-//		return EvalGameOver(pos);
-//	}
-//
-//	ScoreMove best;
-//	for (Field move : moves)
-//		best.ImproveWith(-Eval_N(Play(pos, move)), move);
-//	return best;
-//}
-
-// Returns the score of pos.
 int NegaMax::Eval_N(const Position& pos)
 {
 	if (pos.EmptyCount() <= 3)
@@ -72,9 +34,9 @@ int NegaMax::Eval_N(const Position& pos)
 	if (!moves)
 	{
 		auto passed = PlayPass(pos);
-		if (HasMoves(passed))
+		if (PossibleMoves(passed))
 			return -Eval_N(passed);
-		return EvalGameOver(pos);
+		return EndScore(pos);
 	}
 
 	int score = -inf_score;
@@ -83,13 +45,9 @@ int NegaMax::Eval_N(const Position& pos)
 	return score;
 }
 
-// Returns the score of pos.
 int NegaMax::Eval_3(const Position& pos, Field move1, Field move2, Field move3)
 {
 	assert(pos.EmptyCount() == 3);
-	assert(pos.Empties().Get(move1));
-	assert(pos.Empties().Get(move2));
-	assert(pos.Empties().Get(move3));
 	nodes++;
 	int score = -inf_score;
 
@@ -106,17 +64,14 @@ int NegaMax::Eval_3(const Position& pos, Field move1, Field move2, Field move3)
 		return score;
 
 	auto passed = PlayPass(pos);
-	if (HasMoves(passed))
+	if (PossibleMoves(passed))
 		return -Eval_3(passed, move1, move2, move3);
-	return EvalGameOver(pos);
+	return EndScore(pos);
 }
 
-// Returns the score of pos.
 int NegaMax::Eval_2(const Position& pos, Field move1, Field move2)
 {
 	assert(pos.EmptyCount() == 2);
-	assert(pos.Empties().Get(move1));
-	assert(pos.Empties().Get(move2));
 	nodes++;
 	int score = -inf_score;
 
@@ -130,17 +85,15 @@ int NegaMax::Eval_2(const Position& pos, Field move1, Field move2)
 		return score;
 
 	auto passed = PlayPass(pos);
-	if (HasMoves(passed))
+	if (PossibleMoves(passed))
 		return -Eval_2(passed, move1, move2);
-	return EvalGameOver(pos);
+	return EndScore(pos);
 }
 
-// Returns the score of pos.
 int NegaMax::Eval_1(const Position& pos, Field move1)
 {
 	assert(pos.EmptyCount() == 1);
-	assert(pos.Empties().Get(move1));
-	int score = popcount(pos.Player()) - 31; // Assumes Player can play.
+	int score = std::popcount(pos.Player()) - 31; // Assumes Player can play.
 
 	if (auto diff = CountLastFlip(pos, move1))
 	{
@@ -156,10 +109,9 @@ int NegaMax::Eval_1(const Position& pos, Field move1)
 	return score - (score <= 0);
 }
 
-// Returns the score of pos.
 int NegaMax::Eval_0(const Position& pos)
 {
 	assert(pos.EmptyCount() == 0);
 	nodes++;
-	return EvalGameOver(pos);
+	return EndScore(pos);
 }

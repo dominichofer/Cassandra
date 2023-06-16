@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <omp.h>
 
-int64 Correct(int depth)
+int64_t Correct(int depth)
 {
-	const int64 correct[] =
+	const int64_t correct[] =
 	{
 								1,
 								4,
@@ -37,7 +37,7 @@ int64 Correct(int depth)
 }
 
 
-int64 BasicPerft::calculate(const Position& pos, const int depth)
+int64_t BasicPerft::calculate(const Position& pos, const int depth)
 {
 	if (depth == 0)
 		return 1;
@@ -46,18 +46,18 @@ int64 BasicPerft::calculate(const Position& pos, const int depth)
 	if (!moves)
 	{
 		Position passed = PlayPass(pos);
-		if (HasMoves(passed))
+		if (PossibleMoves(passed))
 			return calculate(passed, depth-1);
 		return 0;
 	}
 
-	int64 sum = 0;
+	int64_t sum = 0;
 	for (Field move : moves)
 		sum += calculate(Play(pos, move), depth-1);
 	return sum;
 }
 
-int64 BasicPerft::calculate(const int depth)
+int64_t BasicPerft::calculate(const int depth)
 {
 	if (depth == 0)
 		return calculate(Position::Start(), depth);
@@ -69,34 +69,34 @@ int64 BasicPerft::calculate(const int depth)
 }
 
 // for 0 plies left
-int64 UnrolledPerft::calculate_0()
+int64_t UnrolledPerft::calculate_0()
 {
 	return 1;
 }
 
 // for 1 ply left
-int64 UnrolledPerft::calculate_1(const Position& pos)
+int64_t UnrolledPerft::calculate_1(const Position& pos)
 {
 	auto moves = PossibleMoves(pos);
 	if (moves)
 		return moves.size();
-	return HasMoves(PlayPass(pos)) ? 1 : 0;
+	return PossibleMoves(PlayPass(pos)) ? 1 : 0;
 }
 
 // for 2 plies left
-int64 UnrolledPerft::calculate_2(const Position& pos)
+int64_t UnrolledPerft::calculate_2(const Position& pos)
 {
 	auto moves = PossibleMoves(pos);
 	if (!moves)
 		return PossibleMoves(PlayPass(pos)).size();
 
-	int64 sum = 0;
+	int64_t sum = 0;
 	for (Field move : moves)
 		sum += calculate_1(Play(pos, move));
 	return sum;
 }
 
-int64 UnrolledPerft::calculate_n(const Position& pos, const int depth)
+int64_t UnrolledPerft::calculate_n(const Position& pos, const int depth)
 {
 	switch (depth)
 	{
@@ -110,35 +110,35 @@ int64 UnrolledPerft::calculate_n(const Position& pos, const int depth)
 	if (!moves)
 	{
 		Position passed = PlayPass(pos);
-		if (HasMoves(passed))
+		if (PossibleMoves(passed))
 			return calculate_n(passed, depth-1);
 		return 0;
 	}
 
-	int64 sum = 0;
+	int64_t sum = 0;
 	for (Field move : moves)
 		sum += calculate_n(Play(pos, move), depth-1);
 	return sum;
 }
 
-int64 UnrolledPerft::calculate(const Position& pos, const int depth)
+int64_t UnrolledPerft::calculate(const Position& pos, const int depth)
 {
 	if (initial_unroll == 0 || depth - initial_unroll <= 2)
 		return calculate_n(pos, depth);
 
 	std::vector<Position> work;
 	for (const auto& pos : Children(pos, initial_unroll, true))
-		work.push_back(FlipToUnique(pos));
+		work.push_back(FlippedToUnique(pos));
 
-	int64 sum = 0;
-	int64 size = static_cast<int64_t>(work.size());
+	int64_t sum = 0;
+	int64_t size = static_cast<int64_t>(work.size());
 	#pragma omp parallel for schedule(dynamic,1) reduction(+:sum)
-	for (int64 i = 0; i < size; i++)
+	for (int64_t i = 0; i < size; i++)
 		sum += calculate_n(work[i], depth - initial_unroll);
 	return sum;
 }
 
-int64 UnrolledPerft::calculate(const int depth)
+int64_t UnrolledPerft::calculate(const int depth)
 {
 	if (depth == 0)
 		return calculate(Position::Start(), depth);
@@ -155,7 +155,7 @@ HashTablePerft::HashTablePerft(std::size_t bytes, int initial_unroll)
 	, hash_table(bytes / sizeof(BigNodeHashTable::node_type))
 {}
 
-int64 HashTablePerft::calculate_n(const Position& pos, const int depth)
+int64_t HashTablePerft::calculate_n(const Position& pos, const int depth)
 {
 	if (depth <= 3)
 		return UnrolledPerft::calculate_n(pos, depth);
@@ -167,12 +167,12 @@ int64 HashTablePerft::calculate_n(const Position& pos, const int depth)
 	if (!moves)
 	{
 		Position passed = PlayPass(pos);
-		if (HasMoves(passed))
+		if (PossibleMoves(passed))
 			return calculate_n(passed, depth-1);
 		return 0;
 	}
 
-	int64 sum = 0;
+	int64_t sum = 0;
 	for (Field move : moves)
 		sum += calculate_n(Play(pos, move), depth-1);
 
@@ -180,24 +180,24 @@ int64 HashTablePerft::calculate_n(const Position& pos, const int depth)
 	return sum;
 }
 
-int64 HashTablePerft::calculate(const Position& pos, const int depth)
+int64_t HashTablePerft::calculate(const Position& pos, const int depth)
 {
 	if (initial_unroll == 0 || depth <= initial_unroll + 2)
 		return calculate_n(pos, depth);
 
 	std::vector<Position> work;
-	for (const auto& pos : Children(pos, initial_unroll, true))
-		work.push_back(FlipToUnique(pos));
+	for (const Position& pos : Children(pos, initial_unroll, true))
+		work.push_back(FlippedToUnique(pos));
 
-	int64 sum = 0;
-	int64 size = static_cast<int64>(work.size());
+	int64_t sum = 0;
+	int64_t size = static_cast<int64_t>(work.size());
 	#pragma omp parallel for schedule(dynamic,1) reduction(+:sum)
 	for (int64_t i = 0; i < size; i++)
 		sum += calculate_n(work[i], depth - initial_unroll);
 	return sum;
 }
 
-int64 HashTablePerft::calculate(const int depth)
+int64_t HashTablePerft::calculate(const int depth)
 {
 	if (depth == 0)
 		return calculate(Position::Start(), depth);

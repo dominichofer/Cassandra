@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 
-const BitBoard pattern_a =
+const uint64_t pattern_a =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -9,9 +9,9 @@ const BitBoard pattern_a =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
-	"- - - - - - # #"_BitBoard;
+	"- - - - - - # #"_pattern;
 
-const BitBoard pattern_c =
+const uint64_t pattern_c =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -19,9 +19,9 @@ const BitBoard pattern_c =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"# - - - - - - -"
-	"- # - - - - - -"_BitBoard;
+	"- # - - - - - -"_pattern;
 
-const BitBoard pattern_d =
+const uint64_t pattern_d =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -29,9 +29,9 @@ const BitBoard pattern_d =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - #"
-	"- - - - - - # -"_BitBoard;
+	"- - - - - - # -"_pattern;
 
-const BitBoard pattern_h =
+const uint64_t pattern_h =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -39,9 +39,9 @@ const BitBoard pattern_h =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
-	"# - - - - - - #"_BitBoard;
+	"# - - - - - - #"_pattern;
 
-const BitBoard pattern_v =
+const uint64_t pattern_v =
 	"- - - - - - - #"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -49,9 +49,9 @@ const BitBoard pattern_v =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
-	"- - - - - - - #"_BitBoard;
+	"- - - - - - - #"_pattern;
 
-const BitBoard pattern_vh =
+const uint64_t pattern_vh =
 	"- # - - - - # -"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -59,9 +59,9 @@ const BitBoard pattern_vh =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
-	"- # - - - - # -"_BitBoard;
+	"- # - - - - # -"_pattern;
 
-const BitBoard pattern_dc =
+const uint64_t pattern_dc =
 	"- # - - - - - -"
 	"# - - - - - - -"
 	"- - - - - - - -"
@@ -69,9 +69,9 @@ const BitBoard pattern_dc =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - #"
-	"- - - - - - # -"_BitBoard;
+	"- - - - - - # -"_pattern;
 
-const BitBoard pattern_vhdc =
+const uint64_t pattern_vhdc =
 	"# - - - - - - #"
 	"- - - - - - - -"
 	"- - - - - - - -"
@@ -79,9 +79,9 @@ const BitBoard pattern_vhdc =
 	"- - - - - - - -"
 	"- - - - - - - -"
 	"- - - - - - - -"
-	"# - - - - - - #"_BitBoard;
+	"# - - - - - - #"_pattern;
 
-const std::vector<BitBoard> pattern_mix{
+const std::vector<uint64_t> pattern_mix{
 	pattern_a,
 	pattern_c,
 	pattern_d,
@@ -97,12 +97,12 @@ std::set<T> SymmetricVariants(const T& t)
 {
 	return {
 		t,
-		FlipCodiagonal(t),
-		FlipDiagonal(t),
-		FlipHorizontal(t),
-		FlipVertical(t),
-		FlipCodiagonal(FlipHorizontal(t)),
-		FlipDiagonal(FlipHorizontal(t)),
-		FlipVertical(FlipHorizontal(t))
+		FlippedCodiagonal(t),
+		FlippedDiagonal(t),
+		FlippedHorizontal(t),
+		FlippedVertical(t),
+		FlippedCodiagonal(FlippedHorizontal(t)),
+		FlippedDiagonal(FlippedHorizontal(t)),
+		FlippedVertical(FlippedHorizontal(t))
 	};
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "Core/Core.h"
-#include "Algorithm.h"
+#include "Result.h"
 #include <atomic>
 #include <optional>
 
@@ -19,13 +19,13 @@ class OneNode
 {
 public:
 	using key_type = Position;
-	using value_type = ContextfreeResult;
+	using value_type = Result;
 private:
 	mutable Spinlock mutex{};
 	key_type key{};
 	value_type value = DefaultValue();
 
-	static value_type DefaultValue() noexcept { return { Intensity::None(), {-inf_score, +inf_score}, Field::invalid }; }
+	static value_type DefaultValue() noexcept { return Result::Exact(0, -1, 0, Field::PS); }
 public:
 	OneNode() noexcept = default;
 
@@ -40,14 +40,14 @@ class TwoNodes
 {
 public:
 	using key_type = Position;
-	using value_type = ContextfreeResult;
+	using value_type = Result;
 private:
 	mutable Spinlock mutex{};
 	key_type key1{}, key2{};
 	value_type value1 = DefaultValue();
 	value_type value2 = DefaultValue();
 
-	static value_type DefaultValue() noexcept { return { Intensity::None(), {-inf_score, +inf_score}, Field::invalid }; }
+	static value_type DefaultValue() noexcept { return Result::Exact(0, -1, 0, Field::PS); }
 public:
 	TwoNodes() noexcept = default;
 

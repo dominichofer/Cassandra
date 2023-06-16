@@ -1,24 +1,10 @@
+#include "Bit.h"
+#include "BitBoard.h"
+#include "Field.h"
+#include "Moves.h"
 #include "Position.h"
-#include "Format.h"
-
-void Position::FlipCodiagonal() noexcept { P.FlipCodiagonal(); O.FlipCodiagonal(); }
-void Position::FlipDiagonal  () noexcept { P.FlipDiagonal  (); O.FlipDiagonal  (); }
-void Position::FlipHorizontal() noexcept { P.FlipHorizontal(); O.FlipHorizontal(); }
-void Position::FlipVertical  () noexcept { P.FlipVertical  (); O.FlipVertical  (); }
-
-void Position::FlipToUnique() noexcept
-{
-	Position candidate = *this;
-	Position min = candidate;
-	candidate.FlipVertical();		if (candidate < min) min = candidate;
-	candidate.FlipHorizontal();		if (candidate < min) min = candidate;
-	candidate.FlipVertical();		if (candidate < min) min = candidate;
-	candidate.FlipCodiagonal();		if (candidate < min) min = candidate;
-	candidate.FlipVertical();		if (candidate < min) min = candidate;
-	candidate.FlipHorizontal();		if (candidate < min) min = candidate;
-	candidate.FlipVertical();		if (candidate < min) min = candidate;
-	*this = min;
-}
+#include <cassert>
+#include <stdexcept>
 
 Position Position::Start()
 {
@@ -33,70 +19,15 @@ Position Position::Start()
 		"- - - - - - - -"_pos;
 }
 
-Position Position::StartETH()
-{
-	return
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - X X - - -"
-		"- - - O O - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"
-		"- - - - - - - -"_pos;
-}
-
-BitBoard Position::ParityQuadrants() const
-{
-	// 4 x SHIFT, 4 x XOR, 1 x AND, 1 x NOT, 1x OR, 1 x MUL
-	// = 12 OPs
-	BitBoard E = Empties();
-	E ^= E >> 1;
-	E ^= E >> 2;
-	E ^= E >> 8;
-	E ^= E >> 16;
-	E &= 0x0000'0011'0000'0011ULL;
-	return BitBoard{ E * 0x0000'0000'0F0F'0F0FULL };
-}
-
-Position FlipCodiagonal(Position pos) noexcept
-{
-	pos.FlipCodiagonal();
-	return pos;
-}
-
-Position FlipDiagonal(Position pos) noexcept
-{
-	pos.FlipDiagonal();
-	return pos;
-}
-
-Position FlipHorizontal(Position pos) noexcept
-{
-	pos.FlipHorizontal();
-	return pos;
-}
-
-Position FlipVertical(Position pos) noexcept
-{
-	pos.FlipVertical();
-	return pos;
-}
-
-Position FlipToUnique(Position pos) noexcept
-{
-	pos.FlipToUnique();
-	return pos;
-}
-
 std::string SingleLine(const Position& pos)
 {
 	std::string str = "---------------------------------------------------------------- X";
 	for (int i = 0; i < 64; i++)
 	{
-		if (pos.Player().Get(static_cast<Field>(63 - i)))
+		uint64_t mask = 1ULL << (63 - i);
+		if (pos.Player() & mask)
 			str[i] = 'X';
-		else if (pos.Opponent().Get(static_cast<Field>(63 - i)))
+		else if (pos.Opponent() & mask)
 			str[i] = 'O';
 	}
 	return str;
@@ -105,37 +36,56 @@ std::string SingleLine(const Position& pos)
 std::string MultiLine(const Position& pos)
 {
 	Moves moves = PossibleMoves(pos);
-	std::string board =
-		"  H G F E D C B A  \n"
-		"8 - - - - - - - - 8\n"
-		"7 - - - - - - - - 7\n"
-		"6 - - - - - - - - 6\n"
-		"5 - - - - - - - - 5\n"
-		"4 - - - - - - - - 4\n"
-		"3 - - - - - - - - 3\n"
-		"2 - - - - - - - - 2\n"
-		"1 - - - - - - - - 1\n"
-		"  H G F E D C B A  ";
+	auto character = [pos, moves](int index) -> std::string {
+		uint64_t mask = 1ULL << (63 - index);
+		if (pos.Player() & mask)
+			return "X";
+		if (pos.Opponent() & mask)
+			return "O";
+		if (moves & mask)
+			return "+";
+		return "-";
+	};
 
-	for (int i = 0; i < 64; i++)
+	std::string board = "  A B C D E F G H  \n";
+	for (int i = 0; i < 8; i++)
 	{
-		Field field = static_cast<Field>(63 - i);
-		char symbol = '-';
-		if (pos.Player().Get(field))
-			symbol = 'X';
-		else if (pos.Opponent().Get(field))
-			symbol = 'O';
-		else if (moves.contains(field))
-			symbol = '+';
-		board[22 + 2 * i + 4 * (i / 8)] = symbol;
+		board += std::to_string(i + 1) + " ";
+		for (int j = 0; j < 8; j++)
+			board += character(i * 8 + j) + " ";
+		board += std::to_string(i + 1) + "\n";
 	}
+	board += "  A B C D E F G H  ";
 	return board;
 }
 
-int EvalGameOver(const Position& pos) noexcept
+std::string to_string(const Position& pos)
 {
-	int P = popcount(pos.Player());
-	int O = popcount(pos.Opponent());
+	return SingleLine(pos);
+}
+
+Position PositionFromString(std::string_view s)
+{
+	if (s.length() < 66)
+		throw std::runtime_error("Invalid position format");
+
+	uint64_t P{ 0 }, O{ 0 };
+	for (int i = 0; i < 64; i++)
+		if (s[i] == 'X')
+			P |= 1ULL << (63 - i);
+		else if (s[i] == 'O')
+			O |= 1ULL << (63 - i);
+
+	if (s[65] == 'X')
+		return { P, O };
+	else
+		return { O, P };
+}
+
+int EndScore(const Position& pos) noexcept
+{
+	int P = std::popcount(pos.Player());
+	int O = std::popcount(pos.Opponent());
 	if (P > O)
 		return 32 - O;
 	if (P < O)
@@ -143,16 +93,16 @@ int EvalGameOver(const Position& pos) noexcept
 	return 0;
 }
 
-CUDA_CALLABLE Position Play(const Position& pos, Field move, BitBoard flips) noexcept
+CUDA_CALLABLE Position Play(const Position& pos, Field move, uint64_t flips) noexcept
 {
-	assert((pos.Opponent() & flips) == flips); // only flipping opponent stones.
+	assert((pos.Opponent() & flips) == flips); // only flips opponent discs.
 
-	return { pos.Opponent() ^ flips, pos.Player() ^ flips ^ BitBoard(move) };
+	return { pos.Opponent() ^ flips, pos.Player() ^ flips ^ Bit(move) };
 }
 
 CUDA_CALLABLE Position Play(const Position& pos, Field move) noexcept
 {
-	//assert(pos.Empties().Get(move)); // move field is free.
+	//assert(pos.Empties().Get(move)); // move field is free. //TODO: Use it?
 
 	auto flips = Flips(pos, move);
 	return Play(pos, move, flips);
@@ -165,7 +115,40 @@ CUDA_CALLABLE Position PlayPass(const Position& pos) noexcept
 
 CUDA_CALLABLE Position PlayOrPass(const Position& pos, Field move) noexcept
 {
-	if (move == Field::invalid)
+	if (move == Field::PS)
 		return PlayPass(pos);
 	return Play(pos, move);
+}
+
+Position FlippedCodiagonal(const Position& pos) noexcept
+{
+	return { FlippedCodiagonal(pos.Player()), FlippedCodiagonal(pos.Opponent()) };
+}
+
+Position FlippedDiagonal(const Position& pos) noexcept
+{
+	return { FlippedDiagonal(pos.Player()), FlippedDiagonal(pos.Opponent()) };
+}
+
+Position FlippedHorizontal(const Position& pos) noexcept
+{
+	return { FlippedHorizontal(pos.Player()), FlippedHorizontal(pos.Opponent()) };
+}
+
+Position FlippedVertical(const Position& pos) noexcept
+{
+	return { FlippedVertical(pos.Player()), FlippedVertical(pos.Opponent()) };
+}
+
+Position FlippedToUnique(Position pos) noexcept
+{
+	Position min = pos;
+	pos = FlippedVertical(pos);		if (pos < min) min = pos;
+	pos = FlippedHorizontal(pos);	if (pos < min) min = pos;
+	pos = FlippedVertical(pos);		if (pos < min) min = pos;
+	pos = FlippedCodiagonal(pos);	if (pos < min) min = pos;
+	pos = FlippedVertical(pos);		if (pos < min) min = pos;
+	pos = FlippedHorizontal(pos);	if (pos < min) min = pos;
+	pos = FlippedVertical(pos);		if (pos < min) min = pos;
+	return min;
 }

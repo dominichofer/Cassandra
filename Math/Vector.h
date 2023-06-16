@@ -1,129 +1,55 @@
 #pragma once
-#include <cmath>
-#include <numeric>
 #include <vector>
 
-template <typename T>
-std::vector<T>& operator+=(std::vector<T>& l, const std::vector<T>& r)
+class Vector
 {
-	if (l.size() != r.size())
-		throw std::runtime_error("Size mismatch");
+	std::vector<double> data;
+public:
+	Vector(std::size_t count, double value) noexcept : data(count, value) {}
+	Vector(const std::vector<double>& o) noexcept : data(o) {}
+	Vector(std::vector<double>&& o) noexcept : data(std::move(o)) {}
 
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		l[i] += r[i];
-	return l;
-}
+	Vector(const Vector& o) noexcept : data(o.data) {}
+	Vector(Vector&& o) noexcept : data(std::move(o.data)) {}
 
-template <typename T>
-std::vector<T>& operator-=(std::vector<T>& l, const std::vector<T>& r)
-{
-	if (l.size() != r.size())
-		throw std::runtime_error("Size mismatch");
+	Vector operator=(const Vector& o) noexcept { data = o.data; }
+	Vector operator=(Vector&& o) noexcept { data = std::move(o.data); }
 
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		l[i] -= r[i];
-	return l;
-}
+	bool operator==(const Vector& o) const noexcept { return data == o.data; }
+	bool operator!=(const Vector& o) const noexcept { return !(*this == o); }
 
-template <typename T>
-std::vector<T>& operator*=(std::vector<T>& l, double factor)
-{
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		l[i] *= factor;
-	return l;
-}
+	      double& operator[](std::size_t index)       { return data[index]; }
+	const double& operator[](std::size_t index) const { return data[index]; }
 
-template <typename T>
-std::vector<T>& operator/=(std::vector<T>& l, double factor)
-{
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		l[i] /= factor;
-	return l;
-}
+	std::size_t size() const noexcept { return data.size(); }
 
-template <typename T>
-std::vector<T> elementwise_multiplication(std::vector<T> l, const std::vector<T>& r)
-{
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		l[i] *= r[i];
-	return l;
-}
+	auto begin() noexcept { return data.begin(); }
+	auto begin() const noexcept { return data.begin(); }
+	auto end() noexcept { return data.end(); }
+	auto end() const noexcept { return data.end(); }
 
-template <typename T>
-std::vector<T> elementwise_division(std::vector<T> l, const std::vector<T>& r)
-{
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for schedule(static)
-	for (int64_t i = 0; i < size; i++)
-		l[i] /= r[i];
-	return l;
-}
+	Vector& operator+=(const Vector&);
+	Vector& operator-=(const Vector&);
+	Vector& operator*=(double);
+	Vector& operator/=(double);
+	Vector& elementwise_multiplication(const Vector&);
+	Vector& elementwise_division(const Vector&);
+};
 
-template <typename T> std::vector<T> operator+(std::vector<T> l, const std::vector<T>& r) { return l += r; }
-template <typename T> std::vector<T> operator+(const std::vector<T>& l, std::vector<T>&& r) { return r += l; }
+Vector operator+(Vector, const Vector&);
+Vector operator+(const Vector&, Vector&&);
 
-template <typename T> std::vector<T> operator-(std::vector<T> l, const std::vector<T>& r) { return l -= r; }
-template <typename T> std::vector<T> operator-(const std::vector<T>& l, std::vector<T>&& r)
-{
-	if (l.size() != r.size())
-		throw std::runtime_error("Size mismatch");
+Vector operator-(Vector, const Vector&);
+Vector operator-(const Vector&, Vector&&);
 
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for
-	for (int64_t i = 0; i < size; i++)
-		r[i] = l[i] - r[i];
-	return r;
-}
+Vector operator*(Vector, double);
+Vector operator*(double, Vector);
 
-template <typename T> std::vector<T> operator*(std::vector<T> vec, double factor) { return vec *= factor; }
-template <typename T> std::vector<T> operator*(double factor, std::vector<T> vec) { return vec *= factor; }
+Vector operator/(Vector, double);
 
-template <typename T> std::vector<T> operator/(std::vector<T> vec, double factor) { return vec /= factor; }
-
-//template <typename T>
-//double inv(const std::vector<T>& l, T infinity)
-//{
-//	return std::inner_product(std::begin(l), std::end(l), std::begin(r), 0.0);
-//}
-
-template <typename T>
-double dot(const std::vector<T>& l, const std::vector<T>& r)
-{
-	return std::inner_product(std::begin(l), std::end(l), std::begin(r), 0.0);
-}
-
-template <typename T>
-double norm(const std::vector<T>& x)
-{
-	using std::sqrt;
-	return sqrt(dot(x, x));
-}
-
-template <typename T>
-double sum(const std::vector<T>& x)
-{
-	return std::accumulate(std::begin(x), std::end(x), 0.0);
-}
-
-template <typename T>
-double L1_norm(const std::vector<T>& x)
-{
-	using std::abs;
-	return std::accumulate(std::begin(x), std::end(x), 0.0, [](const T& t) { return abs(t); });
-}
-
-template <typename T>
-double L2_norm(const std::vector<T>& x)
-{
-	return norm(x);
-}
+Vector inv(Vector);
+double dot(const Vector&, const Vector&);
+double norm(const Vector&);
+double L1_norm(const Vector&);
+double L2_norm(const Vector&);
+double sum(const Vector&);

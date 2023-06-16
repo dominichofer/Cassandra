@@ -93,6 +93,6 @@ std::set<Position> UniqueChildren(Position start, int empty_count)
 {
 	std::set<Position> ret;
 	for (Position pos : Children(start, empty_count))
-		ret.insert(FlipToUnique(pos));
+		ret.insert(FlippedToUnique(pos));
 	return ret;
 }

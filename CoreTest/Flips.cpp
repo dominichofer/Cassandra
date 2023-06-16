@@ -1,19 +1,20 @@
 #include "pch.h"
+#include <cstdint>
 
 namespace Flips_test
 {
-	BitBoard FlipsInOneDirection(const Position& pos, const Field move, const int dx, const int dy)
+	uint64_t FlipsInOneDirection(const Position& pos, Field move, int dx, int dy)
 	{
-		BitBoard flips = 0;
-		int x = (static_cast<int>(move) % 8) + dx;
-		int y = (static_cast<int>(move) / 8) + dy;
+		uint64_t flips = 0;
+		int x = (static_cast<uint8_t>(move) % 8) + dx;
+		int y = (static_cast<uint8_t>(move) / 8) + dy;
 
 		while ((x >= 0) && (x < 8) && (y >= 0) && (y < 8)) // In between boundaries
 		{
-			const uint64_t bit = 1ULL << (x + 8 * y);
-			if (pos.Opponent().Get(x, y)) // The field belongs to the opponent
-				flips.Set(x, y); // Add to potential flips
-			else if (pos.Player().Get(x, y)) // The field belongs to the player
+			uint64_t bit = 1ULL << (x + 8 * y);
+			if (pos.Opponent() & bit) // The field belongs to the opponent
+				flips |= bit; // Add to potential flips
+			else if (pos.Player() & bit) // The field belongs to the player
 				return flips; // All potential flips become real flips
 			else // The field belongs to no player
 				break; // There are no possible flips
@@ -23,7 +24,7 @@ namespace Flips_test
 		return 0;
 	}
 
-	BitBoard Flip_loop(const Position& pos, const Field move)
+	uint64_t Flip_loop(const Position& pos, Field move)
 	{
 		return FlipsInOneDirection(pos, move, -1, -1)
 		     | FlipsInOneDirection(pos, move, -1, +0)
@@ -35,7 +36,7 @@ namespace Flips_test
 		     | FlipsInOneDirection(pos, move, +1, +1);
 	}
 
-	void TestField(const Field move)
+	void TestField(Field move)
 	{
 		RandomPositionGenerator rnd(/*seed*/ 14);
 

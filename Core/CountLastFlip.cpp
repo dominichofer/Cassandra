@@ -1,60 +1,86 @@
-#include "Position.h"
 #include "Bit.h"
+#include "Field.h"
+#include "Position.h"
 #include <array>
+#include <cstdint>
+
+uint64_t HorizontalLine(uint8_t field) noexcept
+{
+	return 0xFFULL << (field & 0xF8);
+}
+
+uint64_t VerticalLine(uint8_t field) noexcept
+{
+	return 0x0101010101010101ULL << (field % 8);
+}
+
+uint64_t DiagonalLine(uint8_t field) noexcept
+{
+	int offset = (field / 8) - (field % 8);
+	if (offset > 0)
+		return 0x8040201008040201ULL << (offset * 8); // upper half
+	else
+		return 0x8040201008040201ULL >> (-offset * 8); // lower half
+}
+
+uint64_t CodiagonalLine(uint8_t field) noexcept
+{
+	int offset = (field / 8) + (field % 8) - 7;
+	if (offset > 0)
+		return 0x0102040810204080ULL << (offset * 8); // upper half
+	else
+		return 0x0102040810204080ULL >> (-offset * 8); // lower half
+}
+
 
 class CLF
 {
-	std::array<std::array<BitBoard, 4>, 64> mask;
-	std::array<std::array<uint8, 256>, 8> flip_count;
+	std::array<std::array<uint64_t, 4>, 64> mask;
+	std::array<std::array<uint8_t, 256>, 8> flip_count;
 public:
 	constexpr CLF() noexcept
 	{
-		for (uint8 i = 0; i < 64; i++)
+		for (uint8_t move = 0; move < 64; move++)
 		{
-			Field move = static_cast<Field>(i);
-
-			const BitBoard relevant = BitBoard::HorizontalLine(move)
-				| BitBoard::VerticalLine(move)
-				| BitBoard::DiagonalLine(move)
-				| BitBoard::CodiagonalLine(move);
+			const uint64_t relevant = HorizontalLine(move) | VerticalLine(move) | DiagonalLine(move) | CodiagonalLine(move);
 			
-			BitBoard r = ~relevant;
-			BitBoard codiagonal = BitBoard::CodiagonalLine(move);
-			while (PExt(BitBoard(move), codiagonal) != 1ULL << (i / 8))
+			uint64_t irrelevant = ~relevant;
+			uint64_t codiagonal = CodiagonalLine(move);
+			while (PExt(1ULL << move, codiagonal) != 1ULL << (move / 8))
 			{
-				codiagonal |= r.FirstSet();
-				r.ClearFirstSet();
+				codiagonal |= GetLSB(irrelevant);
+				RemoveLSB(irrelevant);
 			}
 
-			r = ~relevant;
-			BitBoard diagonal = BitBoard::DiagonalLine(move);
-			while (PExt(BitBoard(move), diagonal) != 1ULL << (i / 8))
+			irrelevant = ~relevant;
+			uint64_t diagonal = DiagonalLine(move);
+			while (PExt(1ULL << move, diagonal) != 1ULL << (move / 8))
 			{
-				diagonal |= r.FirstSet();
-				r.ClearFirstSet();
+				diagonal |= GetLSB(irrelevant);
+				RemoveLSB(irrelevant);
 			}
 
-			mask[i][0] = relevant;
-			mask[i][1] = codiagonal;
-			mask[i][2] = diagonal;
-			mask[i][3] = BitBoard::VerticalLine(move);
+			mask[move][0] = relevant;
+			mask[move][1] = codiagonal;
+			mask[move][2] = diagonal;
+			mask[move][3] = VerticalLine(move); // TODO: Inline this, it could be faster!
 		}
 
-		for (Field move : {Field::H8, Field::G8, Field::F8, Field::E8, Field::D8, Field::C8, Field::B8, Field::A8})
-			for (uint64 r = 0; r < 256; r++)
+		for (uint8_t move = 0; move < 8; move++)
+			for (uint64_t r = 0; r < 256; r++)
 			{
-				Position pos(r & ~BitBoard(move), ~r & ~BitBoard(move));
-				flip_count[static_cast<uint8>(move)][r] = popcount(Flips(pos, move));
+				Position pos(r & ~(1ULL << move), ~r & ~(1ULL << move));
+				flip_count[static_cast<uint8_t>(move)][r] = std::popcount(Flips(pos, static_cast<Field>(move)));
 			}
 	}
 
 	int Count(const Position& pos, Field f) const noexcept
 	{
-		auto move = static_cast<uint8>(f);
+		auto move = static_cast<uint8_t>(f);
 		auto x = move % 8;
 		auto y = move / 8;
 
-		auto P = pos.Player() & mask[move][0]; // mask out unrelated bits to make dummy 0 bits for outside
+		auto P = pos.Player() & mask[move][0]; // mask out unrelated bits to make them dummy 0 bits
 
 		return flip_count[x][BExtr(P, move & 0xF8, 8)]
 			+ flip_count[y][PExt(P, mask[move][1])]

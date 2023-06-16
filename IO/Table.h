@@ -1,5 +1,6 @@
 #pragma once
-#include "Format.h"
+#include <format>
+#include <iostream>
 #include <string>
 
 class Table
@@ -14,6 +15,6 @@ public:
 	void PrintSeparator() const;
 	void PrintRow(auto... content) const
 	{
-		fmt::print(format + '\n', content...);
+		std::cout << std::vformat(format, std::make_format_args(content...)) << std::endl;
 	}
 };

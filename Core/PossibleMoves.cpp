@@ -1,5 +1,6 @@
 #include "Bit.h"
 #include "Position.h"
+#include <cstdint>
 
 CUDA_CALLABLE Moves PossibleMoves(const Position& pos) noexcept
 {
@@ -21,20 +22,20 @@ Moves detail::PossibleMoves_AVX512(const Position& pos) noexcept
 	// = 19 OPs
 
 	// 1 x AND
-	const __m512i maskO = _mm512_set1_epULL(pos.Opponent()) & _mm512_set_epULL(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL, 0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
-	const __m512i shift1 = _mm512_set_epULL(1, 8, 7, 9, -1, -8, -7, -9);
+	const __m512i maskO = _mm512_set1_epi64(pos.Opponent()) & _mm512_set_epULL(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL, 0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
+	const __m512i shift1 = _mm512_set_epi64(1, 8, 7, 9, -1, -8, -7, -9);
 	const __m512i shift2 = shift1 + shift1;
 
 	// 6 x SHIFT, 5 x AND, 3 x OR
-	__m512i flip = maskO & _mm512_rolv_epULL(_mm512_set1_epULL(pos.Player()), shift1);
-	__m512i mask = maskO & _mm512_rolv_epULL(maskO, shift1);
-	flip |= maskO & _mm512_rolv_epULL(flip, shift1);
-	flip |= mask & _mm512_rolv_epULL(flip, shift2);
-	flip |= mask & _mm512_rolv_epULL(flip, shift2);
-	flip = _mm512_rolv_epULL(flip, shift1);
+	__m512i flip = maskO & _mm512_rolv_epi64(_mm512_set1_epULL(pos.Player()), shift1);
+	__m512i mask = maskO & _mm512_rolv_epi64(maskO, shift1);
+	flip |= maskO & _mm512_rolv_epi64(flip, shift1);
+	flip |= mask & _mm512_rolv_epi64(flip, shift2);
+	flip |= mask & _mm512_rolv_epi64(flip, shift2);
+	flip = _mm512_rolv_epi64(flip, shift1);
 
 	// 1 x NOT, 2 x OR, 1 x AND
-	return Moves{ ~(P | O) & _mm512_reduce_or_epULL(flip) };
+	return Moves{ ~(P | O) & _mm512_reduce_or_epi64(flip) };
 }
 #endif
 
@@ -45,35 +46,42 @@ Moves detail::PossibleMoves_AVX2(const Position& pos) noexcept
 	// = 22 OPs + reduce_or
 
 	// 1 x AND
-	const int64x4 maskO = int64x4(pos.Opponent()) & int64x4(0x7E7E7E7E7E7E7E7EULL, 0x00FFFFFFFFFFFF00ULL, 0x007E7E7E7E7E7E00ULL, 0x007E7E7E7E7E7E00ULL);
-	const int64x4 P(pos.Player());
+	const __m256i P = _mm256_set1_epi64x(pos.Player());
+	const __m256i O = _mm256_set1_epi64x(pos.Opponent());
+	const __m256i maskO = _mm256_and_si256(O, _mm256_set_epi64x(0x7E7E7E7E7E7E7E7EULL, 0xFFFFFFFFFFFFFFFFULL, 0x7E7E7E7E7E7E7E7EULL, 0x7E7E7E7E7E7E7E7EULL));
+	const __m256i shift1 = _mm256_set_epi64x(1, 8, 7, 9);
+	const __m256i shift2 = _mm256_set_epi64x(2, 16, 14, 18);
 
 	// 2 x SHIFT, 2 x AND
-	int64x4 flip1 = maskO & (P << int64x4(1, 8, 7, 9));
-	int64x4 flip2 = maskO & (P >> int64x4(1, 8, 7, 9));
+	__m256i flip1 = _mm256_and_si256(maskO, _mm256_sllv_epi64(P, shift1)); // flips1 = maskO & (P << shift1)
+	__m256i flip2 = _mm256_and_si256(maskO, _mm256_srlv_epi64(P, shift1)); // flips1 = maskO & (P >> shift1)
 
 	// 2 x SHIFT, 2 x AND, 2 x OR
-	flip1 |= maskO & (flip1 << int64x4(1, 8, 7, 9));
-	flip2 |= maskO & (flip2 >> int64x4(1, 8, 7, 9));
+	flip1 = _mm256_or_si256(flip1, _mm256_and_si256(maskO, _mm256_sllv_epi64(flip1, shift1))); // flip1 |= maskO & (flips1 << shift1)
+	flip2 = _mm256_or_si256(flip2, _mm256_and_si256(maskO, _mm256_srlv_epi64(flip2, shift1))); // flip2 |= maskO & (flips2 >> shift1)
 
 	// 2 x SHIFT, 1 x AND
-	const int64x4 mask1 = maskO & (maskO << int64x4(1, 8, 7, 9));
-	const int64x4 mask2 = mask1 >> int64x4(1, 8, 7, 9);
+	const __m256i mask1 = _mm256_and_si256(maskO, _mm256_sllv_epi64(maskO, shift1)); // mask1 = maskO & (maskO << shift1);
+	const __m256i mask2 = _mm256_srlv_epi64(mask1, shift1); // mask2 = mask1 >> shift1;
 
 	// 2 x SHIFT, 2 x AND, 2 x OR
-	flip1 |= mask1 & (flip1 << int64x4(2, 16, 14, 18));
-	flip2 |= mask2 & (flip2 >> int64x4(2, 16, 14, 18));
+	flip1 = _mm256_or_si256(flip1, _mm256_and_si256(mask1, _mm256_sllv_epi64(flip1, shift2))); // flip1 |= mask1 & (flips1 << shift2)
+	flip2 = _mm256_or_si256(flip2, _mm256_and_si256(mask2, _mm256_srlv_epi64(flip2, shift2))); // flip2 |= mask2 & (flips2 >> shift2)
 
 	// 2 x SHIFT, 2 x AND, 2 x OR
-	flip1 |= mask1 & (flip1 << int64x4(2, 16, 14, 18));
-	flip2 |= mask2 & (flip2 >> int64x4(2, 16, 14, 18));
+	flip1 = _mm256_or_si256(flip1, _mm256_and_si256(mask1, _mm256_sllv_epi64(flip1, shift2))); // flip1 |= mask1 & (flips1 << shift2)
+	flip2 = _mm256_or_si256(flip2, _mm256_and_si256(mask2, _mm256_srlv_epi64(flip2, shift2))); // flip2 |= mask2 & (flips2 >> shift2)
 
 	// 2 x SHIFT
-	flip1 <<= int64x4(1, 8, 7, 9);
-	flip2 >>= int64x4(1, 8, 7, 9);
+	flip1 = _mm256_sllv_epi64(flip1, shift1); // flip1 <<= shift1;
+	flip2 = _mm256_srlv_epi64(flip2, shift1); // flip2 >>= shift1;
 	
-	// 1 x NOT, 2 x OR, 1 x AND, 1 x function call
-	return Moves{ pos.Empties() & static_cast<uint64>(reduce_or(flip1 | flip2)) };
+	// 3 x OR, 4 x Extract
+	// flip_64 = reduce_or(flip1 | flip2)
+	const uint64_t flip = reduce_or(_mm256_or_si256(flip1, flip2));
+
+	// 1 x NOT, 2 x OR, 1 x AND
+	return Moves{ pos.Empties() & flip };
 }
 #endif
 

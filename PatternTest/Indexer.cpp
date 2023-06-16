@@ -24,13 +24,13 @@ namespace
 		}
 	}
 
-	void SymmetryIndependent(BitBoard pattern)
+	void SymmetryIndependent(uint64_t pattern)
 	{
 		auto indexer = CreateIndexer(pattern);
 		SymmetryIndependent(*indexer);
 	}
 
-	void SymmetryIndependent(std::vector<BitBoard> pattern)
+	void SymmetryIndependent(std::vector<uint64_t> pattern)
 	{
 		auto indexer = GroupIndexer(pattern);
 		SymmetryIndependent(indexer);
@@ -49,7 +49,7 @@ namespace
 
 	// Tests that the indexer covers the index space when it is called with all configurations of the pattern.
 	template <typename T>
-	void ConfigurationsCoverIndexSpace(BitBoard pattern, const T& indexer)
+	void ConfigurationsCoverIndexSpace(uint64_t pattern, const T& indexer)
 	{
 		// Collect index of all configurations.
 		std::set<int> set;
@@ -63,17 +63,17 @@ namespace
 	}
 
 	// Tests that the indexer covers the index space when it is called with all configurations of the pattern.
-	void ConfigurationsCoverIndexSpace(BitBoard pattern)
+	void ConfigurationsCoverIndexSpace(uint64_t pattern)
 	{
 		auto indexer = CreateIndexer(pattern);
 		ConfigurationsCoverIndexSpace(pattern, *indexer);
 	}
 
 	// Tests that the indexer covers the index space when it is called with all configurations of the pattern.
-	void ConfigurationsCoverIndexSpace(std::vector<BitBoard> pattern)
+	void ConfigurationsCoverIndexSpace(std::vector<uint64_t> pattern)
 	{
-		BitBoard pattern_union = BitBoard::Empty();
-		for (BitBoard p : pattern)
+		uint64_t pattern_union = 0;
+		for (uint64_t p : pattern)
 			pattern_union |= p;
 
 		auto indexer = GroupIndexer(pattern);

@@ -2,6 +2,11 @@
 #include <stdexcept>
 #include <numeric>
 
+Indexer::Indexer(uint64_t pattern, int symmetry_group_order) noexcept
+	: pattern(pattern)
+	, symmetry_group_order(symmetry_group_order)
+{}
+
 std::vector<int> Indexer::Indices(Position pos) const
 {
 	std::vector<int> ret(symmetry_group_order, 0);
@@ -13,9 +18,9 @@ std::vector<int> Indexer::Indices(Position pos) const
 class A_Indexer final : public Indexer
 {
 public:
-	A_Indexer(BitBoard pattern) : Indexer(pattern, 8)
+	A_Indexer(uint64_t pattern) : Indexer(pattern, 8)
 	{
-		index_space_size = pown(3, popcount(pattern));
+		index_space_size = pown(3, std::popcount(pattern));
 	}
 
 	int Index(Position pos) const override
@@ -26,26 +31,26 @@ public:
 	void InsertIndices(Position pos, std::span<int> location, int offset) const override
 	{
 		location[0] = offset + Index(pos);
-		location[1] = offset + Index(FlipCodiagonal(pos));
-		location[2] = offset + Index(FlipDiagonal(pos));
-		location[3] = offset + Index(FlipHorizontal(pos));
-		location[4] = offset + Index(FlipVertical(pos));
-		location[5] = offset + Index(FlipHorizontal(FlipCodiagonal(pos)));
-		location[6] = offset + Index(FlipHorizontal(FlipDiagonal(pos)));
-		location[7] = offset + Index(FlipHorizontal(FlipVertical(pos)));
+		location[1] = offset + Index(FlippedCodiagonal(pos));
+		location[2] = offset + Index(FlippedDiagonal(pos));
+		location[3] = offset + Index(FlippedHorizontal(pos));
+		location[4] = offset + Index(FlippedVertical(pos));
+		location[5] = offset + Index(FlippedHorizontal(FlippedCodiagonal(pos)));
+		location[6] = offset + Index(FlippedHorizontal(FlippedDiagonal(pos)));
+		location[7] = offset + Index(FlippedHorizontal(FlippedVertical(pos)));
 	}
 
-	std::vector<BitBoard> Variations() const override
+	std::vector<uint64_t> Variations() const override
 	{
 		return {
 			pattern,
-			FlipCodiagonal(pattern),
-			FlipDiagonal(pattern),
-			FlipHorizontal(pattern),
-			FlipVertical(pattern),
-			FlipCodiagonal(FlipHorizontal(pattern)),
-			FlipDiagonal(FlipHorizontal(pattern)),
-			FlipVertical(FlipHorizontal(pattern))
+			FlippedCodiagonal(pattern),
+			FlippedDiagonal(pattern),
+			FlippedHorizontal(pattern),
+			FlippedVertical(pattern),
+			FlippedCodiagonal(FlippedHorizontal(pattern)),
+			FlippedDiagonal(FlippedHorizontal(pattern)),
+			FlippedVertical(FlippedHorizontal(pattern))
 		};
 	}
 };
@@ -53,22 +58,22 @@ public:
 // Indexer of vertically symmetric patterns
 class V_Indexer final : public Indexer
 {
-	static constexpr BitBoard half = BitBoard::LowerHalf();
+	static constexpr uint64_t half = 0x00000000FFFFFFFFULL; // lower half
 	int half_size;
 public:
-	V_Indexer(BitBoard pattern) : Indexer(pattern, 4)
+	V_Indexer(uint64_t pattern) : Indexer(pattern, 4)
 	{
-		if (not pattern.IsVerticallySymmetric())
+		if (not IsVerticallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no vertical symmetry.");
 
-		half_size = pown(3, popcount(pattern & half));
+		half_size = pown(3, std::popcount(pattern & half));
 		index_space_size = half_size * (half_size + 1) / 2;
 	}
 
 	int Index(Position pos) const override
 	{
 		int min = FastIndex(pos, pattern & half);
-		int max = FastIndex(FlipVertical(pos), pattern & half);
+		int max = FastIndex(FlippedVertical(pos), pattern & half);
 		if (min > max)
 			std::swap(min, max);
 		return min * half_size + max - (min * (min + 1) / 2);
@@ -77,18 +82,18 @@ public:
 	void InsertIndices(Position pos, std::span<int> location, int offset) const override
 	{
 		location[0] = offset + Index(pos);
-		location[1] = offset + Index(FlipCodiagonal(pos));
-		location[2] = offset + Index(FlipDiagonal(pos));
-		location[3] = offset + Index(FlipHorizontal(pos));
+		location[1] = offset + Index(FlippedCodiagonal(pos));
+		location[2] = offset + Index(FlippedDiagonal(pos));
+		location[3] = offset + Index(FlippedHorizontal(pos));
 	}
 
-	std::vector<BitBoard> Variations() const override
+	std::vector<uint64_t> Variations() const override
 	{
 		return {
 			pattern,
-			FlipCodiagonal(pattern),
-			FlipDiagonal(pattern),
-			FlipHorizontal(pattern)
+			FlippedCodiagonal(pattern),
+			FlippedDiagonal(pattern),
+			FlippedHorizontal(pattern)
 		};
 	}
 };
@@ -96,17 +101,17 @@ public:
 // Indexer of diagonally symmetric patterns
 class D_Indexer final : public Indexer
 {
-	static constexpr BitBoard half = BitBoard::StrictlyLeftLowerTriangle();
-	static constexpr BitBoard diag = BitBoard::DiagonalLine(0);
+	static constexpr uint64_t half = 0x0080C0E0F0F8FCFEULL; // strictly left lower triangle
+	static constexpr uint64_t diag = 0x8040201008040201ULL; // diagonal line
 	int half_size, diag_size;
 public:
-	D_Indexer(BitBoard pattern) : Indexer(pattern, 4)
+	D_Indexer(uint64_t pattern) : Indexer(pattern, 4)
 	{
-		if (not pattern.IsDiagonallySymmetric())
+		if (not IsDiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no diagonal symmetry.");
 
-		half_size = pown(3, popcount(pattern & half));
-		diag_size = pown(3, popcount(pattern & diag));
+		half_size = pown(3, std::popcount(pattern & half));
+		diag_size = pown(3, std::popcount(pattern & diag));
 		index_space_size = diag_size * half_size * (half_size + 1) / 2;
 	}
 
@@ -114,7 +119,7 @@ public:
 	{
 		int d = FastIndex(pos, pattern & diag);
 		int min = FastIndex(pos, pattern & half);
-		int max = FastIndex(FlipDiagonal(pos), pattern & half);
+		int max = FastIndex(FlippedDiagonal(pos), pattern & half);
 		if (min > max)
 			std::swap(min, max);
 		return (min * half_size + max - (min * (min + 1) / 2)) * diag_size + d;
@@ -123,18 +128,18 @@ public:
 	void InsertIndices(Position pos, std::span<int> location, int offset) const override
 	{
 		location[0] = offset + Index(pos);
-		location[1] = offset + Index(FlipCodiagonal(pos));
-		location[2] = offset + Index(FlipHorizontal(pos));
-		location[3] = offset + Index(FlipVertical(pos));
+		location[1] = offset + Index(FlippedCodiagonal(pos));
+		location[2] = offset + Index(FlippedHorizontal(pos));
+		location[3] = offset + Index(FlippedVertical(pos));
 	}
 
-	std::vector<BitBoard> Variations() const override
+	std::vector<uint64_t> Variations() const override
 	{
 		return {
 			pattern,
-			FlipCodiagonal(pattern),
-			FlipHorizontal(pattern),
-			FlipVertical(pattern)
+			FlippedCodiagonal(pattern),
+			FlippedHorizontal(pattern),
+			FlippedVertical(pattern)
 		};
 	}
 };
@@ -144,14 +149,14 @@ class VH_Indexer final : public Indexer
 {
 	std::vector<int> dense_index;
 public:
-	VH_Indexer(BitBoard pattern) : Indexer(pattern, 2)
+	VH_Indexer(uint64_t pattern) : Indexer(pattern, 2)
 	{
-		if (not pattern.IsVerticallySymmetric())
+		if (not IsVerticallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no vertical symmetry.");
-		if (not pattern.IsHorizontallySymmetric())
+		if (not IsHorizontallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no horizontal symmetry.");
 
-		dense_index = std::vector<int>(pown(3, popcount(pattern)), -1);
+		dense_index = std::vector<int>(pown(3, std::popcount(pattern)), -1);
 		int index = 0;
 		for (Position config : Configurations(pattern))
 		{
@@ -159,9 +164,9 @@ public:
 				continue; // already indexed
 
 			Position var1 = config;
-			Position var2 = FlipVertical(config);
-			Position var3 = FlipHorizontal(config);
-			Position var4 = FlipHorizontal(FlipVertical(config));
+			Position var2 = FlippedVertical(config);
+			Position var3 = FlippedHorizontal(config);
+			Position var4 = FlippedHorizontal(FlippedVertical(config));
 
 			dense_index[FastIndex(var1, pattern)] = index;
 			dense_index[FastIndex(var2, pattern)] = index;
@@ -181,14 +186,14 @@ public:
 	void InsertIndices(Position pos, std::span<int> location, int offset) const override
 	{
 		location[0] = offset + Index(pos);
-		location[1] = offset + Index(FlipDiagonal(pos));
+		location[1] = offset + Index(FlippedDiagonal(pos));
 	}
 
-	std::vector<BitBoard> Variations() const override
+	std::vector<uint64_t> Variations() const override
 	{
 		return {
 			pattern,
-			FlipDiagonal(pattern)
+			FlippedDiagonal(pattern)
 		};
 	}
 };
@@ -198,14 +203,14 @@ class DC_Indexer final : public Indexer
 {
 	std::vector<int> dense_index;
 public:
-	DC_Indexer(BitBoard pattern) : Indexer(pattern, 2)
+	DC_Indexer(uint64_t pattern) : Indexer(pattern, 2)
 	{
-		if (not pattern.IsDiagonallySymmetric())
+		if (not IsDiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no diagonal symmetry.");
-		if (not pattern.IsCodiagonallySymmetric())
+		if (not IsCodiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no codiagonal symmetry.");
 
-		dense_index = std::vector<int>(pown(3, popcount(pattern)), -1);
+		dense_index = std::vector<int>(pown(3, std::popcount(pattern)), -1);
 		int index = 0;
 		for (Position config : Configurations(pattern))
 		{
@@ -213,9 +218,9 @@ public:
 				continue; // already indexed
 
 			Position var1 = config;
-			Position var2 = FlipDiagonal(config);
-			Position var3 = FlipCodiagonal(config);
-			Position var4 = FlipCodiagonal(FlipDiagonal(config));
+			Position var2 = FlippedDiagonal(config);
+			Position var3 = FlippedCodiagonal(config);
+			Position var4 = FlippedCodiagonal(FlippedDiagonal(config));
 
 			dense_index[FastIndex(var1, pattern)] = index;
 			dense_index[FastIndex(var2, pattern)] = index;
@@ -235,14 +240,14 @@ public:
 	void InsertIndices(Position pos, std::span<int> location, int offset) const override
 	{
 		location[0] = offset + Index(pos);
-		location[1] = offset + Index(FlipVertical(pos));
+		location[1] = offset + Index(FlippedVertical(pos));
 	}
 
-	std::vector<BitBoard> Variations() const override
+	std::vector<uint64_t> Variations() const override
 	{
 		return {
 			pattern,
-			FlipVertical(pattern)
+			FlippedVertical(pattern)
 		};
 	}
 };
@@ -252,18 +257,18 @@ class VHDC_Indexer final : public Indexer
 {
 	std::vector<int> dense_index;
 public:
-	VHDC_Indexer(BitBoard pattern) : Indexer(pattern, 1)
+	VHDC_Indexer(uint64_t pattern) : Indexer(pattern, 1)
 	{
-		if (not pattern.IsVerticallySymmetric())
+		if (not IsVerticallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no vertical symmetry.");
-		if (not pattern.IsHorizontallySymmetric())
+		if (not IsHorizontallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no horizontal symmetry.");
-		if (not pattern.IsDiagonallySymmetric())
+		if (not IsDiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no diagonal symmetry.");
-		if (not pattern.IsCodiagonallySymmetric())
+		if (not IsCodiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no codiagonal symmetry.");
 
-		dense_index = std::vector<int>(pown(3, popcount(pattern)), -1);
+		dense_index = std::vector<int>(pown(3, std::popcount(pattern)), -1);
 		int index = 0;
 		for (Position config : Configurations(pattern))
 		{
@@ -271,13 +276,13 @@ public:
 				continue; // already indexed
 
 			Position var1 = config;
-			Position var2 = FlipCodiagonal(config);
-			Position var3 = FlipDiagonal(config);
-			Position var4 = FlipHorizontal(config);
-			Position var5 = FlipVertical(config);
-			Position var6 = FlipCodiagonal(FlipHorizontal(config));
-			Position var7 = FlipDiagonal(FlipHorizontal(config));
-			Position var8 = FlipVertical(FlipHorizontal(config));
+			Position var2 = FlippedCodiagonal(config);
+			Position var3 = FlippedDiagonal(config);
+			Position var4 = FlippedHorizontal(config);
+			Position var5 = FlippedVertical(config);
+			Position var6 = FlippedCodiagonal(FlippedHorizontal(config));
+			Position var7 = FlippedDiagonal(FlippedHorizontal(config));
+			Position var8 = FlippedVertical(FlippedHorizontal(config));
 
 			dense_index[FastIndex(var1, pattern)] = index;
 			dense_index[FastIndex(var2, pattern)] = index;
@@ -303,7 +308,7 @@ public:
 		location[0] = offset + Index(pos);
 	}
 
-	std::vector<BitBoard> Variations() const override
+	std::vector<uint64_t> Variations() const override
 	{
 		return {
 			pattern
@@ -311,7 +316,7 @@ public:
 	}
 };
 
-std::unique_ptr<Indexer> CreateIndexer(BitBoard pattern)
+std::unique_ptr<Indexer> CreateIndexer(uint64_t pattern)
 {
 	// The symmetry group of a Reversi board is D_4.
 	// A pattern can have:
@@ -337,10 +342,10 @@ std::unique_ptr<Indexer> CreateIndexer(BitBoard pattern)
 	// - (h+d) symmetries implies (v+h+d+c)
 	// - (h+c) symmetries implies (v+h+d+c)
 
-	bool v = pattern.IsVerticallySymmetric();
-	bool h = pattern.IsHorizontallySymmetric();
-	bool d = pattern.IsDiagonallySymmetric();
-	bool c = pattern.IsCodiagonallySymmetric();
+	bool v = IsVerticallySymmetric(pattern);
+	bool h = IsHorizontallySymmetric(pattern);
+	bool d = IsDiagonallySymmetric(pattern);
+	bool c = IsCodiagonallySymmetric(pattern);
 
 	if (v and h and d and c)
 		return std::make_unique<VHDC_Indexer>(pattern);
@@ -351,21 +356,34 @@ std::unique_ptr<Indexer> CreateIndexer(BitBoard pattern)
 	if (v)
 		return std::make_unique<V_Indexer>(pattern);
 	if (h)
-		return std::make_unique<V_Indexer>(FlipDiagonal(pattern));
+		return std::make_unique<V_Indexer>(FlippedDiagonal(pattern));
 	if (d)
 		return std::make_unique<D_Indexer>(pattern);
 	if (c)
-		return std::make_unique<D_Indexer>(FlipVertical(pattern));
+		return std::make_unique<D_Indexer>(FlippedVertical(pattern));
 	return std::make_unique<A_Indexer>(pattern);
+}
+
+std::size_t ConfigurationsOfPattern(uint64_t pattern)
+{
+	return CreateIndexer(pattern)->index_space_size;
+}
+
+std::size_t ConfigurationsOfPattern(std::vector<uint64_t> pattern)
+{
+	std::size_t size = 0;
+	for (uint64_t p : pattern)
+		size += ConfigurationsOfPattern(p);
+	return size;
 }
 
 
 
-GroupIndexer::GroupIndexer(std::vector<BitBoard> pattern)
+GroupIndexer::GroupIndexer(std::vector<uint64_t> pattern)
 {
 	index_space_size = 0;
 	indexers.reserve(pattern.size());
-	for (BitBoard p : pattern)
+	for (uint64_t p : pattern)
 	{
 		auto i = CreateIndexer(p);
 		index_space_size += i->index_space_size;
@@ -373,9 +391,9 @@ GroupIndexer::GroupIndexer(std::vector<BitBoard> pattern)
 	}
 }
 
-std::vector<BitBoard> GroupIndexer::Variations() const
+std::vector<uint64_t> GroupIndexer::Variations() const
 {
-	std::vector<BitBoard> ret;
+	std::vector<uint64_t> ret;
 	for (const auto& i : indexers)
 	{
 		auto novum = i->Variations();

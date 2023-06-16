@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?> 
-<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="OpenInterval">
-    <DisplayString>({m_lower}, {m_upper})</DisplayString>
-  </Type>
-  <Type Name="ClosedInterval">
-    <DisplayString>[{m_lower}, {m_upper}]</DisplayString>
-  </Type>
-</AutoVisualizer>

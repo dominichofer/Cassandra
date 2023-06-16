@@ -4,7 +4,7 @@ TEST(StableStonesOpponent, start_position_has_none)
 {
 	const auto stables = StableStonesOpponent(Position::Start());
 
-	ASSERT_EQ(stables, BitBoard{0});
+	ASSERT_EQ(stables, 0ULL);
 }
 
 TEST(StableStonesOpponent, corners_are_stable)
@@ -27,7 +27,7 @@ TEST(StableStonesOpponent, corners_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
-		"# - - - - - - #"_BitBoard;
+		"# - - - - - - #"_pattern;
 
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
@@ -52,7 +52,7 @@ TEST(StableStonesOpponent, filled_edges_are_stable)
 		"- - - - - - - #"
 		"- - - - - - - #"
 		"- - - - - - - #"
-		"# # # # - - - -"_BitBoard;
+		"# # # # - - - -"_pattern;
 
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
@@ -77,7 +77,7 @@ TEST(StableStonesOpponent, unatackables_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
-		"- - - - - - - -"_BitBoard;
+		"- - - - - - - -"_pattern;
 
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
@@ -89,7 +89,7 @@ TEST(StableStonesOpponent, undisturbed_skylines_are_stable)
 		"O O - - - - - -"
 		"O O - - - - - -"
 		"O O - - - - - -"
-		"O - - - - - - -"
+		"O O - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"_pos;
@@ -102,7 +102,7 @@ TEST(StableStonesOpponent, undisturbed_skylines_are_stable)
 		"# - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
-		"- - - - - - - -"_BitBoard;
+		"- - - - - - - -"_pattern;
 
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
@@ -127,7 +127,7 @@ TEST(StableStonesOpponent, disturbed_skylines_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - -"
-		"- - - - - - - -"_BitBoard;
+		"- - - - - - - -"_pattern;
 
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
@@ -152,7 +152,7 @@ TEST(StableStonesOpponent, undisturbed_corner_triangles_are_stable)
 		"- - - - - - - #"
 		"- - - - - - # #"
 		"- - - - - # # #"
-		"- - - - # # # #"_BitBoard;
+		"- - - - # # # #"_pattern;
 
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
@@ -177,7 +177,7 @@ TEST(StableStonesOpponent, disturbed_corner_triangles_are_stable)
 		"- - - - - - - -"
 		"- - - - - - - -"
 		"- - - - - - - #"
-		"- - - - - - # #"_BitBoard;
+		"- - - - - - # #"_pattern;
 
 	ASSERT_TRUE((StableStonesOpponent(pos) & stables) == stables);
 }

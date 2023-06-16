@@ -1,6 +1,6 @@
 #pragma once
+#include "Field.h"
 #include "Position.h"
-#include "BitBoard.h"
 #include <random>
 #include <mutex>
 

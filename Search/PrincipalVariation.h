@@ -1,34 +1,42 @@
 #pragma once
 #include "Core/Core.h"
-#include "Pattern/Pattern.h"
-#include "Algorithm.h"
-#include "AlphaBetaFailHard.h"
-#include "AlphaBetaFailSoft.h"
-#include "AlphaBetaFailSuperSoft.h"
+#include "AlphaBeta.h"
 #include "HashTable.h"
+#include "Result.h"
 #include "SortedMoves.h"
 #include <optional>
 
-class PVS : public AlphaBetaFailSuperSoft
+class Status
+{
+	int alpha;
+	int best_score;
+	Field best_move;
+	float worst_confidence_level;
+	int smallest_depth;
+public:
+	Status(int alpha);
+
+	void Update(Result, Field move);
+	Result GetResult();
+};
+
+class PVS : public AlphaBeta
 {
 protected:
 	HT& tt;
-	const AAMSSE& evaluator;
+	const Estimator& estimator;
 public:
-	static inline uint64_t counter = 0; // TODO: Remove!
-	PVS(HT& tt, const AAMSSE& evaluator) noexcept : tt(tt), evaluator(evaluator) {}
+	PVS(HT&, const Estimator&) noexcept;
 
-	using AlphaBetaFailSuperSoft::Eval;
-	ContextualResult Eval(const Position&, Intensity, OpenInterval) override;
-
-	void clear() override;
+	ResultTimeNodes Eval(const Position&);
+	ResultTimeNodes Eval(const Position&, OpenInterval window, int depth, float confidence_level);
 protected:
-	ContextualResult PVS_N(const Position&, Intensity, const OpenInterval&);
-	ContextualResult ZWS_N(const Position&, Intensity, const OpenInterval&);
+	Result PVS_N(const Position&, OpenInterval window, int depth, float confidence_level);
+	Result ZWS_N(const Position&, OpenInterval window, int depth, float confidence_level);
 private:
-	std::optional<ContextualResult> MPC(const Position&, Intensity, const OpenInterval&);
-	ContextualResult Eval_dN(const Position&, Intensity, OpenInterval);
-	ContextualResult Eval_d0(const Position&);
-
-	SortedMoves SortMoves(Moves, const Position&, int depth);
+	Result EndScore(const Position&);
+	Result Eval_d1(const Position&);
+	Result Eval_d0(const Position&);
+	SortedMoves Sorted(const Position&, OpenInterval window, int depth, float confidence_level);
+	std::optional<Result> MPC(const Position&, OpenInterval window, int depth, float confidence_level);
 };

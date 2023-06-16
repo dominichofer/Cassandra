@@ -44,9 +44,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PatternIO\PatternIO.vcxproj">
-      <Project>{fa291aac-324c-4273-8feb-96c25d1c2e04}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
     </ProjectReference>

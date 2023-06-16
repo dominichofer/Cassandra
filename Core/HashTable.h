@@ -11,7 +11,7 @@
 // - typename value_type
 // - void Update(const key_type&, const value_type&)
 // - std::optional<value_type> LookUp(const key_type&)
-// - void Clear()
+// - void clear()
 template <typename Node>
 class HashTable
 {
@@ -69,23 +69,22 @@ public:
 	{
 		lookups++;
 		auto index = hash_fkt(key) % buckets.size();
-		const auto ret = buckets[index].LookUp(key);
+		auto ret = buckets[index].LookUp(key);
 		if (ret.has_value())
-			++hits;
+			hits++;
 		return ret;
 	}
 
 	void clear()
 	{
-		//updates = 0;
-		//lookups = 0;
-		//hits = 0;
+		updates = 0;
+		lookups = 0;
+		hits = 0;
 		for (auto& bucket : buckets)
 			bucket.Clear();
 	}
 
 	std::size_t Buckets() const { return buckets.size(); }
-	std::size_t MemoryFootprint() const { return buckets.size() * sizeof(Node); }
 	std::size_t UpdateCounter() const { return updates; }
 	std::size_t LookUpCounter() const { return lookups; }
 	std::size_t HitCounter() const { return hits; }
