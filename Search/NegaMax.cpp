@@ -1,15 +1,12 @@
-#include "NegaMax.h"
+#include "Game/Game.h"
+#include "CountLastFlip.h"
+#include "Algorithm.h"
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 
-ScoreTimeNodes NegaMax::Eval(const Position& pos)
+Result NegaMax::Eval(const Position& pos, OpenInterval window, int depth, float confidence_level)
 {
-	nodes = 0;
-	auto start = std::chrono::high_resolution_clock::now();
-	int score = Eval_N(pos);
-	auto time = std::chrono::high_resolution_clock::now() - start;
-	return { score, time, nodes };
+	return Result::Exact(Eval_N(pos), pos.EmptyCount(), inf, Field::PS);
 }
 
 int NegaMax::Eval_N(const Position& pos)

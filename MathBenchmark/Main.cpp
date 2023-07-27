@@ -18,7 +18,7 @@ public:
 		Table::PrintRow(
 			name == last_name ? "" : name,
 			size,
-			short_time_format(duration),
+			ShortTimeString(duration),
 			bytes / 1024 / 1024,
 			flops / duration.count(),
 			bytes / duration.count()

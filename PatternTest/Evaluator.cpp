@@ -6,7 +6,7 @@ namespace
 {
 	void SymmetryIndependent(uint64_t pattern)
 	{
-		std::vector<float> weights(ConfigurationsOfPattern(pattern));
+		std::vector<float> weights(ConfigurationCount(pattern));
 		std::ranges::iota(weights, 1);
 		ScoreEstimator estimator({ pattern }, weights);
 

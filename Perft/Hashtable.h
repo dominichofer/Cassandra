@@ -1,6 +1,5 @@
 #pragma once
-#include "Core/HashTable.h"
-#include "Core/Position.h"
+#include "Board/Board.h"
 #include <atomic>
 #include <cassert>
 #include <cstdint>

@@ -5,7 +5,17 @@
 void OneNode::Update(const key_type& new_key, const value_type& new_value)
 {
 	std::scoped_lock lock{ mutex };
-	if (new_value.depth >= value.depth and new_value.confidence_level >= value.confidence_level)
+	if (new_value.depth < value.depth or (new_value.depth == value.depth and new_value.confidence_level < value.confidence_level))
+		return;
+
+	if (key == new_key and new_value.depth == value.depth and new_value.confidence_level == value.confidence_level)
+	{
+		value.best_move = new_value.best_move;
+		value.window = Intersection(value.window, new_value.window);
+		if (value.window.lower > value.window.upper)
+			value.window = { min_score, max_score };
+	}
+	else
 	{
 		key = new_key;
 		value = new_value;
@@ -24,7 +34,7 @@ void OneNode::Clear()
 {
 	std::scoped_lock lock{ mutex };
 	key = {};
-	value = DefaultValue();
+	value = {};
 }
 
 void TwoNodes::Update(const key_type& new_key, const value_type& new_value)

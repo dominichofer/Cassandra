@@ -1,0 +1,23 @@
+Edax:
+e20_level_20_from_e54.ps 0:01.468 d9
+e20_level_20_from_e54.ps 0:10.638 d20
+
+e21_level_20_from_e54.ps 0:21.877
+
+e22_level_20_from_e54.ps 0:22.073 d22@98%
+e22_level_20_from_e54.ps 0:50.227
+
+e23_level_20_from_e54.ps 1:41.824
+
+e24_level_20_from_e54.ps 3:32.844
+
+e25_level_20_from_e54.ps 0:01.892 d12@73%
+e25_level_20_from_e54.ps 0:59.052 d25@87%
+e25_level_20_from_e54.ps 7:45.922
+
+e20: 11.7
+e21: 
+e22:
+e23: 
+e24:
+e25: 11:30

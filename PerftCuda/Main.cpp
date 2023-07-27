@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 {
 	ResetCudaDevices();
 
-	int depth = 19;
+	int depth = 17;
 	std::size_t RAM = 48'000'000'000;
 	bool cuda = true;
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 		std::cout << std::setw(6) << (Correct(d) == result) << " |";
 		std::cout << std::setw(17) << duration << " |";
 		if (duration)
-			std::cout << std::setw(17) << int64(result / duration);
+			std::cout << std::setw(17) << static_cast<int64_t>(result / duration);
 		std::cout << '\n';
 	}
 

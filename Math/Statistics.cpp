@@ -15,7 +15,7 @@ Matrix Correlation(const Matrix& X)
 {
 	// From https://en.wikipedia.org/wiki/Correlation
 
-	std::vector<double> sd(X.Rows());
+	std::vector<float> sd(X.Rows());
 	for (std::size_t i = 0; i < sd.size(); i++)
 		sd[i] = StandardDeviation(X.Row(i));
 

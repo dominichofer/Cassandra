@@ -3,20 +3,16 @@
   <ItemGroup>
     <ClInclude Include="MatrixCSR.h" />
     <ClInclude Include="Solver.h" />
-    <ClInclude Include="Algorithm.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Statistics.h" />
-    <ClInclude Include="SymExp.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SymExp.cpp" />
     <ClCompile Include="Vector.cpp" />
-    <ClCompile Include="TransposedMatrix.h" />
+    <ClCompile Include="MatrixProxy.h" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MatrixCSR.cpp" />
     <ClCompile Include="Statistics.cpp" />
-    <ClCompile Include="Algorithm.cpp" />
   </ItemGroup>
 </Project>

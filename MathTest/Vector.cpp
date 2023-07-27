@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "Vector.h"
 
-Vector CreateVector(double a)
+Vector CreateVector(float a)
 {
-    return Vector(std::vector<double>{a});
+    return Vector(std::vector{a});
 }
 
-Vector CreateVector(double a, double b)
+Vector CreateVector(float a, float b)
 {
-    return Vector(std::vector<double>{a, b});
+    return Vector(std::vector{a, b});
 }
 
 TEST(VectorTest, Constructor)
@@ -92,7 +92,7 @@ TEST(VectorTest, ElementwiseDivision)
 
 TEST(VectorTest, Inverse)
 {
-    Vector v(std::vector{1.0, 2.0, 4.0});
+    Vector v(std::vector{1.0f, 2.0f, 4.0f});
     Vector inverse = inv(v);
 
     EXPECT_EQ(inverse.size(), 3);
@@ -120,7 +120,7 @@ TEST(VectorTest, L1Norm)
 
 TEST(VectorTest, L2Norm)
 {
-    Vector v(std::vector<double>{3.0, 4.0});
+    Vector v(std::vector{3.0f, 4.0f});
     double l2Norm = L2_norm(v);
 
     EXPECT_DOUBLE_EQ(l2Norm, 5.0);

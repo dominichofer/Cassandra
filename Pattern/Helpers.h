@@ -1,10 +1,11 @@
 #pragma once
-#include "Core/Core.h"
+#include "Board/Board.h"
+#include <cstdint>
 #include <iterator>
 
 int pown(int base, unsigned int exponent);
 
-int FastIndex(Position, uint64_t pattern) noexcept;
+uint32_t FastIndex(Position, uint64_t pattern) noexcept;
 
 class Configurations
 {

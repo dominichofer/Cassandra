@@ -3,6 +3,11 @@
 #include "Indexer.h"
 #include <cmath>
 
+std::size_t Stages(int stage_size)
+{
+	return static_cast<std::size_t>(std::ceil(65.0 / stage_size));
+}
+
 ScoreEstimator::ScoreEstimator(std::vector<uint64_t> pattern, std::span<const float> weights)
 {
 	for (uint64_t p : pattern)
@@ -20,6 +25,23 @@ ScoreEstimator::ScoreEstimator(std::vector<uint64_t> pattern, std::span<const fl
 				w.back()[FastIndex(config, variations[i])] = weights[dense_indexer->Indices(config)[i]];
 		}
 		weights = weights.subspan(dense_indexer->index_space_size); // offset weights span
+	}
+}
+
+ScoreEstimator::ScoreEstimator(std::vector<uint64_t> pattern)
+{
+	for (uint64_t p : pattern)
+	{
+		auto dense_indexer = CreateIndexer(p);
+		auto variations = dense_indexer->Variations();
+		auto expanded_size = pown(3, std::popcount(p));
+		this->pattern.push_back(dense_indexer->pattern);
+
+		for (int i = 0; i < static_cast<int>(variations.size()); i++)
+		{
+			masks.push_back(variations[i]);
+			w.emplace_back(expanded_size, 0.0f);
+		}
 	}
 }
 
@@ -52,88 +74,52 @@ std::vector<float> ScoreEstimator::Weights() const
 
 
 
-MultiStageScoreEstimator::MultiStageScoreEstimator(int stage_size, std::vector<uint64_t> pattern, std::span<const float> weights)
+MultiStageScoreEstimator::MultiStageScoreEstimator(std::size_t stage_size, std::vector<uint64_t> pattern)
 	: stage_size(stage_size)
 {
 	int stages = static_cast<int>(std::ceil(65.0 / stage_size));
-	for (int stage = 0; stage < stages; stage++)
-	{
-		estimators.emplace_back(pattern, weights);
-		weights = weights.subspan(ConfigurationsOfPattern(pattern)); // offset weights span
-	}
+	for (int i = 0; i < stages; i++)
+		estimators.emplace_back(pattern);
 }
 
 float MultiStageScoreEstimator::Eval(const Position& pos) const noexcept
 {
-	int stage = static_cast<int>(pos.EmptyCount() / stage_size);
-	return estimators[stage].Eval(pos);
-}
-
-std::vector<float> MultiStageScoreEstimator::Weights() const
-{
-	std::vector<float> ret;
-	for (const ScoreEstimator& e : estimators)
-	{
-		auto weights = e.Weights();
-		ret.insert(ret.end(), weights.begin(), weights.end());
-	}
-	return ret;
-}
-
-std::vector<float> MultiStageScoreEstimator::Weights(int stage) const
-{
-	return estimators[stage].Weights();
+	return estimators[pos.EmptyCount() / stage_size].Eval(pos);
 }
 
 
 
-Vars AccuracyModel::Variables() const
-{
-	return { Var{"D"}, Var{"d"}, Var{"E"} };
-}
-
-Vars AccuracyModel::Parameters() const
-{
-	return { Var{"alpha"}, Var{"beta"}, Var{"gamma"}, Var{"delta"}, Var{"epsilon"} };
-}
-
-SymExp AccuracyModel::Function() const
-{
-	return Eval(Var{ "D" }, Var{ "d" }, Var{ "E" }, Var{ "alpha" }, Var{ "beta" }, Var{ "gamma" }, Var{ "delta" }, Var{ "epsilon" });
-}
-
-const std::vector<double>& AccuracyModel::ParameterValues() const
+const std::vector<float>& AccuracyModel::ParameterValues() const
 {
 	return param_values;
 }
 
-double AccuracyModel::Eval(int D, int d, int E) const noexcept
-{
-	return Eval(D, d, E,
-		param_values[0],
-		param_values[1],
-		param_values[2],
-		param_values[3],
-		param_values[4]);
-}
 
-double AccuracyModel::Eval(std::vector<int> values) const noexcept
+float AccuracyModel::Eval(int D, int d, int E) const noexcept
 {
-	return Eval(values[0], values[1], values[2]);
+	float alpha = param_values[0];
+	float beta = param_values[1];
+	float gamma = param_values[2];
+	float delta = param_values[3];
+	float epsilon = param_values[4];
+	return (std::exp(alpha * d) + beta) * std::pow(static_cast<float>(D - d), gamma) * (delta * E + epsilon);
 }
-
 
 
 PatternBasedEstimator::PatternBasedEstimator(MultiStageScoreEstimator score, AccuracyModel accuracy)
 	: score(std::move(score)), accuracy(std::move(accuracy))
 {}
 
-int PatternBasedEstimator::Stages() const noexcept
+PatternBasedEstimator::PatternBasedEstimator(std::size_t stage_size, std::vector<uint64_t> pattern)
+	: score({ stage_size, pattern })
+{}
+
+std::size_t PatternBasedEstimator::Stages() const noexcept
 {
-	return score.Stages();
+	return score.estimators.size();
 }
 
-int PatternBasedEstimator::StageSize() const noexcept
+std::size_t PatternBasedEstimator::StageSize() const noexcept
 {
 	return score.StageSize();
 }
@@ -143,22 +129,12 @@ std::vector<uint64_t> PatternBasedEstimator::Pattern() const noexcept
 	return score.Pattern();
 }
 
-int PatternBasedEstimator::Score(const Position& pos) const noexcept
+float PatternBasedEstimator::Score(const Position& pos) const noexcept
 {
-	return static_cast<int>(score.Eval(pos));
+	return score.Eval(pos);
 }
 
-float PatternBasedEstimator::Accuracy(const Position& pos, int small_depth, int big_depth) const noexcept
+float PatternBasedEstimator::Accuracy(int empty_count, int small_depth, int big_depth) const noexcept
 {
-	return accuracy.Eval(big_depth, small_depth, pos.EmptyCount());
-}
-
-std::vector<float> PatternBasedEstimator::Weights() const
-{
-	return score.Weights();
-}
-
-std::vector<float> PatternBasedEstimator::Weights(int stage) const
-{
-	return score.Weights(stage);
+	return accuracy.Eval(big_depth, small_depth, empty_count);
 }

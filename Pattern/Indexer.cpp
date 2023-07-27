@@ -7,9 +7,9 @@ Indexer::Indexer(uint64_t pattern, int symmetry_group_order) noexcept
 	, symmetry_group_order(symmetry_group_order)
 {}
 
-std::vector<int> Indexer::Indices(Position pos) const
+std::vector<uint32_t> Indexer::Indices(Position pos) const
 {
-	std::vector<int> ret(symmetry_group_order, 0);
+	std::vector<uint32_t> ret(symmetry_group_order, 0);
 	InsertIndices(pos, ret);
 	return ret;
 }
@@ -23,12 +23,12 @@ public:
 		index_space_size = pown(3, std::popcount(pattern));
 	}
 
-	int Index(Position pos) const override
+	uint32_t Index(Position pos) const override
 	{
 		return FastIndex(pos, pattern);
 	}
 
-	void InsertIndices(Position pos, std::span<int> location, int offset) const override
+	void InsertIndices(Position pos, std::span<uint32_t> location, uint32_t offset) const override
 	{
 		location[0] = offset + Index(pos);
 		location[1] = offset + Index(FlippedCodiagonal(pos));
@@ -70,16 +70,16 @@ public:
 		index_space_size = half_size * (half_size + 1) / 2;
 	}
 
-	int Index(Position pos) const override
+	uint32_t Index(Position pos) const override
 	{
-		int min = FastIndex(pos, pattern & half);
-		int max = FastIndex(FlippedVertical(pos), pattern & half);
+		uint32_t min = FastIndex(pos, pattern & half);
+		uint32_t max = FastIndex(FlippedVertical(pos), pattern & half);
 		if (min > max)
 			std::swap(min, max);
 		return min * half_size + max - (min * (min + 1) / 2);
 	}
 
-	void InsertIndices(Position pos, std::span<int> location, int offset) const override
+	void InsertIndices(Position pos, std::span<uint32_t> location, uint32_t offset) const override
 	{
 		location[0] = offset + Index(pos);
 		location[1] = offset + Index(FlippedCodiagonal(pos));
@@ -115,17 +115,17 @@ public:
 		index_space_size = diag_size * half_size * (half_size + 1) / 2;
 	}
 
-	int Index(Position pos) const override
+	uint32_t Index(Position pos) const override
 	{
-		int d = FastIndex(pos, pattern & diag);
-		int min = FastIndex(pos, pattern & half);
-		int max = FastIndex(FlippedDiagonal(pos), pattern & half);
+		uint32_t d = FastIndex(pos, pattern & diag);
+		uint32_t min = FastIndex(pos, pattern & half);
+		uint32_t max = FastIndex(FlippedDiagonal(pos), pattern & half);
 		if (min > max)
 			std::swap(min, max);
 		return (min * half_size + max - (min * (min + 1) / 2)) * diag_size + d;
 	}
 
-	void InsertIndices(Position pos, std::span<int> location, int offset) const override
+	void InsertIndices(Position pos, std::span<uint32_t> location, uint32_t offset) const override
 	{
 		location[0] = offset + Index(pos);
 		location[1] = offset + Index(FlippedCodiagonal(pos));
@@ -147,7 +147,7 @@ public:
 // Indexer of vertically and horizontally symmetric patterns
 class VH_Indexer final : public Indexer
 {
-	std::vector<int> dense_index;
+	std::vector<uint32_t> dense_index;
 public:
 	VH_Indexer(uint64_t pattern) : Indexer(pattern, 2)
 	{
@@ -156,8 +156,8 @@ public:
 		if (not IsHorizontallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no horizontal symmetry.");
 
-		dense_index = std::vector<int>(pown(3, std::popcount(pattern)), -1);
-		int index = 0;
+		dense_index = std::vector<uint32_t>(pown(3, std::popcount(pattern)), -1);
+		uint32_t index = 0;
 		for (Position config : Configurations(pattern))
 		{
 			if (dense_index[FastIndex(config, pattern)] != -1)
@@ -178,12 +178,12 @@ public:
 		index_space_size = index;
 	}
 
-	int Index(Position pos) const override
+	uint32_t Index(Position pos) const override
 	{
 		return dense_index[FastIndex(pos, pattern)];
 	}
 
-	void InsertIndices(Position pos, std::span<int> location, int offset) const override
+	void InsertIndices(Position pos, std::span<uint32_t> location, uint32_t offset) const override
 	{
 		location[0] = offset + Index(pos);
 		location[1] = offset + Index(FlippedDiagonal(pos));
@@ -201,7 +201,7 @@ public:
 // Indexer of diagonally and codiagonally symmetric patterns
 class DC_Indexer final : public Indexer
 {
-	std::vector<int> dense_index;
+	std::vector<uint32_t> dense_index;
 public:
 	DC_Indexer(uint64_t pattern) : Indexer(pattern, 2)
 	{
@@ -210,8 +210,8 @@ public:
 		if (not IsCodiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no codiagonal symmetry.");
 
-		dense_index = std::vector<int>(pown(3, std::popcount(pattern)), -1);
-		int index = 0;
+		dense_index = std::vector<uint32_t>(pown(3, std::popcount(pattern)), -1);
+		uint32_t index = 0;
 		for (Position config : Configurations(pattern))
 		{
 			if (dense_index[FastIndex(config, pattern)] != -1)
@@ -232,12 +232,12 @@ public:
 		index_space_size = index;
 	}
 
-	int Index(Position pos) const override
+	uint32_t Index(Position pos) const override
 	{
 		return dense_index[FastIndex(pos, pattern)];
 	}
 
-	void InsertIndices(Position pos, std::span<int> location, int offset) const override
+	void InsertIndices(Position pos, std::span<uint32_t> location, uint32_t offset) const override
 	{
 		location[0] = offset + Index(pos);
 		location[1] = offset + Index(FlippedVertical(pos));
@@ -255,7 +255,7 @@ public:
 // Indexer of vertically, horizontally, diagonally and codiagonally symmetric patterns
 class VHDC_Indexer final : public Indexer
 {
-	std::vector<int> dense_index;
+	std::vector<uint32_t> dense_index;
 public:
 	VHDC_Indexer(uint64_t pattern) : Indexer(pattern, 1)
 	{
@@ -268,8 +268,8 @@ public:
 		if (not IsCodiagonallySymmetric(pattern))
 			throw std::runtime_error("Pattern has no codiagonal symmetry.");
 
-		dense_index = std::vector<int>(pown(3, std::popcount(pattern)), -1);
-		int index = 0;
+		dense_index = std::vector<uint32_t>(pown(3, std::popcount(pattern)), -1);
+		uint32_t index = 0;
 		for (Position config : Configurations(pattern))
 		{
 			if (dense_index[FastIndex(config, pattern)] != -1)
@@ -298,12 +298,12 @@ public:
 		index_space_size = index;
 	}
 
-	int Index(Position pos) const override
+	uint32_t Index(Position pos) const override
 	{
 		return dense_index[FastIndex(pos, pattern)];
 	}
 
-	void InsertIndices(Position pos, std::span<int> location, int offset) const override
+	void InsertIndices(Position pos, std::span<uint32_t> location, uint32_t offset) const override
 	{
 		location[0] = offset + Index(pos);
 	}
@@ -364,16 +364,16 @@ std::unique_ptr<Indexer> CreateIndexer(uint64_t pattern)
 	return std::make_unique<A_Indexer>(pattern);
 }
 
-std::size_t ConfigurationsOfPattern(uint64_t pattern)
+std::size_t ConfigurationCount(uint64_t pattern)
 {
 	return CreateIndexer(pattern)->index_space_size;
 }
 
-std::size_t ConfigurationsOfPattern(std::vector<uint64_t> pattern)
+std::size_t ConfigurationCount(std::vector<uint64_t> pattern)
 {
 	std::size_t size = 0;
 	for (uint64_t p : pattern)
-		size += ConfigurationsOfPattern(p);
+		size += ConfigurationCount(p);
 	return size;
 }
 
@@ -403,14 +403,14 @@ std::vector<uint64_t> GroupIndexer::Variations() const
 }
 
 
-std::vector<int> GroupIndexer::Indices(Position pos) const
+std::vector<uint32_t> GroupIndexer::Indices(Position pos) const
 {
-	std::vector<int> ret(Variations().size(), 0);
+	std::vector<uint32_t> ret(Variations().size(), 0);
 	InsertIndices(pos, ret);
 	return ret;
 }
 
-void GroupIndexer::InsertIndices(Position pos, std::span<int> location) const
+void GroupIndexer::InsertIndices(Position pos, std::span<uint32_t> location) const
 {
 	int offset = 0;
 	for (const auto& i : indexers)

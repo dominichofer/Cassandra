@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Matrix.h"
 
-Matrix CreateMatrix2x2(double a, double b, double c, double d)
+Matrix CreateMatrix2x2(float a, float b, float c, float d)
 {
     Matrix m(2, 2);
     m(0, 0) = a;
@@ -11,7 +11,7 @@ Matrix CreateMatrix2x2(double a, double b, double c, double d)
     return m;
 }
 
-Matrix CreateMatrix2x3(double a, double b, double c, double d, double e, double f)
+Matrix CreateMatrix2x3(float a, float b, float c, float d, float e, float f)
 {
     Matrix m(2, 3);
     m(0, 0) = a;
@@ -23,7 +23,7 @@ Matrix CreateMatrix2x3(double a, double b, double c, double d, double e, double 
     return m;
 }
 
-Matrix CreateMatrix3x2(double a, double b, double c, double d, double e, double f)
+Matrix CreateMatrix3x2(float a, float b, float c, float d, float e, float f)
 {
     Matrix m(3, 2);
     m(0, 0) = a;
@@ -35,7 +35,7 @@ Matrix CreateMatrix3x2(double a, double b, double c, double d, double e, double 
     return m;
 }
 
-Matrix CreateMatrix3x3(double a, double b, double c, double d, double e, double f, double g, double h, double i)
+Matrix CreateMatrix3x3(float a, float b, float c, float d, float e, float f, float g, float h, float i)
 {
     Matrix m(3, 3);
     m(0, 0) = a;
@@ -118,7 +118,7 @@ TEST(MatrixTest, ScalarDivision)
 TEST(MatrixTest, MatrixVectorMultiplication)
 {
     Matrix matrix = CreateMatrix2x3(1, 2, 3, 4, 5, 6);
-    Vector vector(std::vector{7.0, 8.0, 9.0});
+    Vector vector(std::vector{7.0f, 8.0f, 9.0f});
 
     Vector product = matrix * vector;
 
@@ -130,7 +130,7 @@ TEST(MatrixTest, MatrixVectorMultiplication)
 TEST(MatrixTest, VectorMatrixMultiplication)
 {
     Matrix matrix = CreateMatrix3x2(4, 5, 6, 7, 8, 9);
-    Vector vector(std::vector{1.0, 2.0, 3.0});
+    Vector vector(std::vector{1.0f, 2.0f, 3.0f});
 
     Vector product = vector * matrix;
 

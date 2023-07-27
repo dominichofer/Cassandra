@@ -1,11 +1,17 @@
 #include "PatternFit.h"
+#include "Core/Core.h"
 #include "Math/Math.h"
-#include <iostream>
+#include "Pattern/Pattern.h"
+#include "Search/Search.h"
+#include <algorithm>
+#include <execution>
+#include <map>
+#include <stdexcept>
 
-ScoreEstimator CreateScoreEstimator(
-    const std::vector<BitBoard>& pattern,
+Vector FitWeights(
+    const std::vector<uint64_t>& pattern,
     const std::vector<Position>& pos,
-    const std::vector<float>& score,
+    const Vector& score,
     int iterations)
 {
     if (pos.size() != score.size())
@@ -21,131 +27,45 @@ ScoreEstimator CreateScoreEstimator(
     for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
         indexer.InsertIndices(pos[i], matrix.Row(i));
 
-    std::vector<float> weights(cols, 0.0f);
-
-    DiagonalPreconditioner P(matrix.JacobiPreconditionerSquare(100.0f));
-
+    Vector weights(cols, 0.0f);
+    DiagonalPreconditioner P(JacobiPreconditionerOfATA(matrix));
     PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
     solver.Iterate(iterations);
-
-    return ScoreEstimator(pattern, solver.X());
+    return solver.X();
 }
 
-std::vector<Position> EmptyCountFilter(
+void ImproveScoreEstimator(
+    PatternBasedEstimator& estimator,
     const std::vector<Position>& pos,
-    int min_empty_count,
-    int max_empty_count)
+    int depth, float confidence_level,
+    int fitting_iterations)
 {
-    std::vector<Position> ret;
-    for (Position p : pos)
-        if (min_empty_count <= p.EmptyCount() and p.EmptyCount() <= max_empty_count)
-            ret.push_back(p);
-    return ret;
-}
+    LoggingTimer timer;
+    const auto pattern = estimator.Pattern();
 
-MultiStageScoreEstimator CreateMultiStageScoreEstimator(
-    int stage_size,
-    const std::vector<BitBoard>& pattern,
-    const std::vector<Position>& pos,
-    Intensity eval_intensity)
-{
-    PatternBasedEstimator model{ stage_size, pattern };
     HT tt{ 10'000'000 };
-    IDAB<PVS> alg{ tt, model };
+    PVS alg{ tt, estimator };
 
-    for (int stage = 0; stage < model.score.Stages(); stage++)
+    for (int stage = 0; stage < estimator.score.estimators.size(); stage++)
     {
-        alg.clear();
+        tt.clear();
 
+        int stage_size = estimator.score.StageSize();
         int min = stage * stage_size;
         int max = (stage + 1) * stage_size - 1;
+        std::vector<Position> stage_pos = EmptyCountFiltered(pos, min, max);
 
-        std::vector<Position> stage_train_pos = EmptyCountFilter(pos, min, max);
-
-        auto start = std::chrono::high_resolution_clock::now();
-        std::vector<float> train_score(stage_train_pos.size());
+        timer.Start(std::format("Stage {}, evaluated {} pos e{} to e{}", stage, stage_pos.size(), min, max));
+        Vector score(stage_pos.size(), 0);
         #pragma omp parallel for
-        for (int i = 0; i < static_cast<int>(stage_train_pos.size()); i++)
-            train_score[i] = alg.Eval(stage_train_pos[i], eval_intensity).score;
-        auto stop = std::chrono::high_resolution_clock::now();
-        std::cout << "Eval: " << stage_train_pos.size() << " : " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start) << std::endl;
+        for (int i = 0; i < static_cast<int>(stage_pos.size()); i++)
+            score[i] = alg.Eval(stage_pos[i], { -inf_score, +inf_score }, depth, confidence_level).score;
+        timer.Stop();
 
-        start = std::chrono::high_resolution_clock::now();
-        auto new_e = CreateScoreEstimator(pattern, stage_train_pos, train_score);
-        stop = std::chrono::high_resolution_clock::now();
-        std::cout << "Fitting: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start) << std::endl;
-        model.score.Weights(stage, new_e.Weights());
+        timer.Start(std::format("Stage {}, fitting", stage));
+        Vector weights = FitWeights(pattern, stage_pos, score, fitting_iterations);
+        timer.Stop();
+
+        estimator.score.estimators[stage] = ScoreEstimator(pattern, weights);
     }
-
-    return model.score;
-}
-
-std::pair<AccuracyModel, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore> data)
-{
-    struct XY {
-        int D, d, e, score_diff;
-
-        auto operator<=>(const XY&) const noexcept = default;
-
-        std::vector<int> x() const { return { D, d, e }; }
-        int y() const { return score_diff; }
-    };
-
-    std::vector<XY> xy;
-    for (const PositionMultiDepthScore& datum : data)
-        for (int D = 0; D < datum.score_of_depth.size(); D++)
-            if (datum.score_of_depth[D] != undefined_score)
-                for (int d = 0; d < D; d++)
-                    if (datum.score_of_depth[d] != undefined_score)
-                        xy.emplace_back(D, d, datum.pos.EmptyCount(), datum.score_of_depth[D] - datum.score_of_depth[d]);
-
-    std::sort(std::execution::par, xy.begin(), xy.end());
-    auto chunks = xy | ranges::views::chunk_by([](const XY& l, const XY& r) { return l.x() == r.x(); });
-    auto x = chunks | ranges::views::transform([](auto&& rng) { return ranges::front(rng).x(); }) | ranges::to_vector;
-    auto y = chunks | ranges::views::transform([](auto&& rng) { return StandardDeviation(rng | ranges::views::transform(&XY::y)); }) | ranges::to_vector;
-    std::size_t x_size = std::ranges::size(x);
-    std::size_t y_size = std::ranges::size(y);
-    if (x_size != y_size)
-        throw std::runtime_error("Size mismatch!");
-
-    AccuracyModel blank;
-    auto param_values = NonLinearLeastSquaresFit(blank.Function(), blank.Parameters(), blank.Variables(), x, y, blank.ParameterValues(), /*steps*/ 1'000, /*damping_factor*/ 0.1);
-    AccuracyModel model(param_values);
-
-    std::vector<double> error(x_size);
-    #pragma omp parallel for
-    for (int i = 0; i < static_cast<int>(x_size); i++)
-        error[i] = model.Eval(x[i]) - y[i];
-
-    float R_sq = 1.0f - Variance(error) / Variance(y);
-    return std::make_pair(model, R_sq);
-}
-
-std::pair<PatternBasedEstimator, double> CreatePatternBasedEstimator(
-    int stage_size,
-    const std::vector<BitBoard>& pattern,
-    const std::vector<Position>& train_pos,
-    const std::vector<Position>& accuracy_pos,
-    Intensity eval_intensity,
-    int accuracy_max_depth)
-{
-    MultiStageScoreEstimator msse = CreateMultiStageScoreEstimator(stage_size, pattern, train_pos, eval_intensity);
-    if (accuracy_pos.empty())
-        return std::make_pair(PatternBasedEstimator{ msse, {} }, 0);
-
-    PatternBasedEstimator model{ msse, AccuracyModel{} };
-    HT tt{ 10'000'000 };
-    IDAB<PVS> alg{ tt, model };
-
-    std::vector<PositionMultiDepthScore> accuracy_data(accuracy_pos.begin(), accuracy_pos.end());
-    #pragma omp parallel for
-    for (int i = 0; i < static_cast<int>(accuracy_data.size()); i++)
-    {
-        int e = accuracy_data[i].pos.EmptyCount();
-        for (int d = 0; d <= e and d <= accuracy_max_depth; d++)
-            accuracy_data[i].score_of_depth[d] = alg.Eval(accuracy_data[i].pos, d).score;
-    }
-
-    auto [am, R_sq] = CreateAccuracyModel(accuracy_data);
-    return std::make_pair(PatternBasedEstimator{ msse, am }, R_sq);
 }

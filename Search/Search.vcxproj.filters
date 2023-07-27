@@ -3,26 +3,24 @@
   <ItemGroup>
     <ClCompile Include="HashTable.cpp" />
     <ClCompile Include="NegaMax.cpp" />
-    <ClCompile Include="Result.cpp" />
-    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Stability.cpp" />
     <ClCompile Include="AlphaBeta.cpp" />
     <ClCompile Include="PrincipalVariation.cpp" />
     <ClCompile Include="SortedMoves.cpp" />
-    <ClCompile Include="MTDf.cpp" />
-    <ClCompile Include="IDAB.cpp" />
+    <ClCompile Include="CountLastFlip.cpp" />
+    <ClCompile Include="Algorithm.cpp" />
+    <ClCompile Include="Result.cpp" />
+    <ClCompile Include="Solver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="SortedMoves.h" />
-    <ClInclude Include="Result.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="NegaMax.h" />
     <ClInclude Include="Stability.h" />
-    <ClInclude Include="IDAB.h" />
-    <ClInclude Include="AlphaBeta.h" />
-    <ClInclude Include="MTDf.h" />
-    <ClInclude Include="PrincipalVariation.h" />
+    <ClInclude Include="Estimator.h" />
+    <ClInclude Include="CountLastFlip.h" />
+    <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="Result.h" />
+    <ClInclude Include="Solver.h" />
   </ItemGroup>
 </Project>

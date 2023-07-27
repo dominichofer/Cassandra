@@ -34,7 +34,7 @@ TEST(Statistics, Covariance_X_Y)
 {
 	std::vector<int> X{1, 2, 3, 4, 5};
 	std::vector<int> Y{2, 4, 6, 8, 10};
-	double result = Covariance(X, Y);
+	float result = Covariance(X, Y);
 	EXPECT_DOUBLE_EQ(result, 4);
 }
 
@@ -62,14 +62,14 @@ TEST(Statistics, Correlation)
 
 TEST(Statistics, AIC)
 {
-	std::vector<double> errors{1, 2, 3, 4, 5};
-	double result = AIC(errors, 2);
-	EXPECT_DOUBLE_EQ(result, 7.4657359027997261);
+	std::vector<float> errors{1, 2, 3, 4, 5};
+	float result = AIC(errors, 2);
+	EXPECT_FLOAT_EQ(result, 7.4657359027997261);
 }
 
 TEST(Statistics, BIC)
 {
-	std::vector<double> errors{1, 2, 3, 4, 5};
-	double result = BIC(errors, 2);
-	EXPECT_DOUBLE_EQ(result, 6.6846117276679271);
+	std::vector<float> errors{1, 2, 3, 4, 5};
+	float result = BIC(errors, 2);
+	EXPECT_FLOAT_EQ(result, 6.6846117276679271);
 }

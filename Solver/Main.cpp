@@ -6,6 +6,7 @@
 void PrintHelp()
 {
 	std::cout
+		<< "   -w <int> <int>     Window, bounds not included\n"
 		<< "   -d <int[@float]>   Depth [Confidence Level]\n"
 		<< "   -m <file>          Model\n"
 		<< "   -tt <int>          Buckets in Transposition Table\n"
@@ -19,6 +20,7 @@ int main(int argc, char* argv[])
 {
 	std::locale::global(std::locale(""));
 	
+	OpenInterval window{ -inf_score, +inf_score };
 	int depth = 64;
 	float confidence_level = std::numeric_limits<float>::infinity();
 	std::string model;
@@ -30,10 +32,14 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < argc; i++)
 	{
 		auto arg = std::string(argv[i]);
-		if (arg == "-d") {
+		if (arg == "-w") {
+			int lower = std::stoi(argv[++i]);
+			int upper = std::stoi(argv[++i]);
+			window = OpenInterval(lower, upper);
+		}
+		else if (arg == "-d") {
 			arg = std::string(argv[++i]);
-			depth = DepthFromString(arg);
-			confidence_level = ConfidenceLevelFromString(arg);
+			std::tie(depth, confidence_level) = DepthClFromString(arg);
 		}
 		else if (arg == "-m") model = std::string(argv[++i]);
 		else if (arg == "-tt") buckets = std::stoull(argv[++i]);
@@ -42,16 +48,14 @@ int main(int argc, char* argv[])
 		else if (arg == "-h") { PrintHelp(); return 0; }
 	}
 
-	std::vector<PosScore> data = LoadPosScoreFile(file);
 	PatternBasedEstimator evaluator = LoadPatternBasedEstimator(model);
 	HT tt{ buckets };
-	PVS pvs(tt, evaluator);
-
-	ResultTable table;
-	table.PrintHeader();
-	for (const PosScore& ps : data)
-		table.PrintRow(pvs.Eval(ps.pos));
-	table.PrintSeparator();
-	table.PrintSummary();
+	PVS pvs{ tt, evaluator };
+	IDAB idab{ pvs };
+	Solver solver{ idab };
+	if (solve)
+		solver.Solve(LoadPosFile(file));
+	else if (test)
+		solver.Solve(LoadPosScoreFile(file));
 	return 0;
 }

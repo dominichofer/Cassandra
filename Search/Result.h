@@ -1,6 +1,5 @@
 #pragma once
-#include "Core/Core.h"
-#include <chrono>
+#include "Board/Board.h"
 #include <cstdint>
 #include <string>
 
@@ -35,16 +34,8 @@ public:
 	bool IsExact() const noexcept;
 	bool IsFailHigh() const noexcept;
 
-	ClosedInterval Window() const noexcept;
+	ClosedInterval<> Window() const noexcept;
 	Result BetaCut(Field move) const noexcept;
 };
 
 std::string to_string(const Result&);
-
-
-struct ResultTimeNodes
-{
-	Result result;
-	std::chrono::duration<double> time;
-	uint64_t nodes;
-};

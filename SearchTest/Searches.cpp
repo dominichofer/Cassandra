@@ -44,7 +44,7 @@ TEST(NegaMax, Endgame)
 	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\endgame.ps");
 	for (const PosScore& ps : data)
 	{
-		int score = NegaMax{}.Eval(ps.pos);
+		int score = NegaMax{}.Eval(ps.pos).score;
 		EXPECT_EQ(score, ps.score);
 	}
 }
@@ -54,7 +54,7 @@ TEST(AlphaBeta, Endgame)
 	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\endgame.ps");
 	for (const PosScore& ps : data)
 	{
-		int score = AlphaBeta{}.Eval(ps.pos);
+		int score = AlphaBeta{}.Eval(ps.pos).score;
 		EXPECT_EQ(score, ps.score);
 	}
 }
@@ -65,7 +65,7 @@ TEST(PVS, Endgame)
 	for (const PosScore& ps : data)
 	{
 		HT tt{ 1'000'000 };
-		Result result = PVS{tt}.Eval(ps.pos);
+		Result result = PVS{ tt, EstimatorStub{} }.Eval(ps.pos);
 		EXPECT_EQ(result.score, ps.score);
 	}
 }
@@ -76,7 +76,7 @@ TEST(PVS, FForum1)
 	for (const PosScore& ps : data)
 	{
 		HT tt{ 1'000'000 };
-		Result result = PVS{ tt }.Eval(ps.pos);
+		Result result = PVS{ tt, EstimatorStub{} }.Eval(ps.pos);
 		EXPECT_EQ(result.score, ps.score);
 	}
 }

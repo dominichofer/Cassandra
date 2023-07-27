@@ -1,5 +1,5 @@
 #include "Result.h"
-#include <limits>
+#include "Game/Game.h"
 
 ResultType operator-(ResultType type)
 {
@@ -49,14 +49,17 @@ bool Result::IsFailHigh() const noexcept
 	return score_type == ResultType::fail_high;
 }
 
-ClosedInterval Result::Window() const noexcept
+ClosedInterval<> Result::Window() const noexcept
 {
-	if (IsFailLow())
-		return ClosedInterval(min_score, score);
-	if (IsExact())
-		return ClosedInterval(score, score);
-	if (IsFailHigh())
-		return ClosedInterval(score, max_score);
+	switch (score_type)
+	{
+	case ResultType::fail_low:
+		return ClosedInterval<>{ min_score, score };
+	case ResultType::exact:
+		return ClosedInterval<>{ score, score };
+	case ResultType::fail_high:
+		return ClosedInterval<>{ score, max_score };
+	}
 }
 
 Result Result::BetaCut(Field move) const noexcept

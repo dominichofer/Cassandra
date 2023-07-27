@@ -1,10 +1,10 @@
 #pragma once
 #include <atomic>
 #include <functional>
-#include <vector>
-#include <optional>
 #include <new>
+#include <optional>
 #include <type_traits>
+#include <vector>
 
 // "Node" needs to provide:
 // - typename key_type
@@ -15,12 +15,18 @@
 template <typename Node>
 class HashTable
 {
+#ifndef __NVCC__
 	static_assert(std::is_default_constructible_v<Node>);
+#endif
 public:
 	using node_type = Node;
 	using key_type = Node::key_type;
 	using value_type = Node::value_type;
-
+private:
+	mutable std::atomic<uint64_t> updates{0}, lookups{ 0 }, hits{ 0 };
+	std::function<std::size_t(const key_type&)> hash_fkt;
+	/*alignas(std::hardware_destructive_interference_size)*/ std::vector<Node> buckets;
+public:
 	HashTable(std::size_t buckets, std::function<std::size_t(const key_type&)> hash_fkt)
 		: hash_fkt(std::move(hash_fkt))
 		, buckets(buckets)
@@ -88,8 +94,4 @@ public:
 	std::size_t UpdateCounter() const { return updates; }
 	std::size_t LookUpCounter() const { return lookups; }
 	std::size_t HitCounter() const { return hits; }
-private:
-	mutable std::atomic<uint64_t> updates{0}, lookups{0}, hits{0};
-	std::function<std::size_t(const key_type&)> hash_fkt;
-	/*alignas(std::hardware_destructive_interference_size)*/ std::vector<Node> buckets;
 };

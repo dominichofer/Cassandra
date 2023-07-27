@@ -1,8 +1,6 @@
 #pragma once
-#include "Core/Core.h"
+#include "Board/Board.h"
 #include <cstdint>
-
-//uint64_t StableC2(uint64_t); //TODO: Remove!
 
 uint64_t StableEdges(const Position&);
 

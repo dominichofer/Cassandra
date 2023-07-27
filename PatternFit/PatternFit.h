@@ -1,10 +1,10 @@
 #pragma once
-#include "Core/Core.h"
+#include "Board/Board.h"
+#include "Math/Math.h"
 #include "Pattern/Pattern.h"
 #include "Search/Search.h"
 #include <array>
-#include <span>
-#include <tuple>
+#include <cstdint>
 #include <vector>
 
 struct PositionMultiDepthScore
@@ -15,30 +15,14 @@ struct PositionMultiDepthScore
     PositionMultiDepthScore(Position pos) : pos(pos) { score_of_depth.fill(undefined_score); }
 };
 
-// Creates a score estimator, fitted to the given data.
-ScoreEstimator CreateScoreEstimator(
-    const std::vector<BitBoard>& pattern,
+Vector FitWeights(
+    const std::vector<uint64_t>& pattern,
     const std::vector<Position>& pos,
-    const std::vector<float>& score,
-    int iterations = 10);
+    const Vector& score,
+    int iterations);
 
-// Creates a MultiStage Score Estimator by bootstrapping from the given positions.
-MultiStageScoreEstimator CreateMultiStageScoreEstimator(
-    int stage_size,
-    const std::vector<BitBoard>& pattern,
+void ImproveScoreEstimator(
+    PatternBasedEstimator& estimator,
     const std::vector<Position>& pos,
-    Intensity eval_intensity);
-
-// Creates an accuracy model, fitted to the given data.
-// Returns accuracy model and R^2.
-std::pair<AccuracyModel, double> CreateAccuracyModel(std::span<const PositionMultiDepthScore>);
-
-// Create Accuracy Aware MultiStage Score Estimator by bootstrapping from the given data.
-// Returns PatternBasedEstimator and R^2.
-std::pair<PatternBasedEstimator, double> CreatePatternBasedEstimator(
-    int stage_size,
-    const std::vector<BitBoard>& pattern,
-    const std::vector<Position>& train_pos,
-    const std::vector<Position>& accuracy_pos,
-    Intensity eval_intensity,
-    int accuracy_max_depth);
+    int depth, float confidence_level,
+    int fitting_iterations);

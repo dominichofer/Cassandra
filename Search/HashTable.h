@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Core.h"
+#include "Game/Game.h"
 #include "Result.h"
 #include <atomic>
 #include <optional>
@@ -14,21 +14,35 @@ public:
 	void unlock() noexcept { locked.clear(std::memory_order_release); }
 };
 
+class TranspositionValue
+{
+public:
+	ClosedInterval<> window{ min_score, max_score };
+	int8_t depth = -1;
+	Field best_move = Field::PS;
+	float confidence_level = 0.0f;
+
+	TranspositionValue() noexcept = default;
+	TranspositionValue(ClosedInterval<> window, int8_t depth, float confidence_level, Field best_move)
+		: window(window), depth(depth), confidence_level(confidence_level), best_move(best_move)
+	{}
+	TranspositionValue(const Result& result)
+		: TranspositionValue(result.Window(), result.depth, result.confidence_level, result.best_move)
+	{}
+
+	bool IsExact() const noexcept { return window.lower == window.upper; }
+};
 
 class OneNode
 {
 public:
 	using key_type = Position;
-	using value_type = Result;
+	using value_type = TranspositionValue;
 private:
 	mutable Spinlock mutex{};
 	key_type key{};
-	value_type value = DefaultValue();
-
-	static value_type DefaultValue() noexcept { return Result::Exact(0, -1, 0, Field::PS); }
+	value_type value{};
 public:
-	OneNode() noexcept = default;
-
 	void Update(const key_type&, const value_type&);
 	std::optional<value_type> LookUp(const key_type&) const;
 	void Clear();

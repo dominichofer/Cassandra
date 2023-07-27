@@ -1,5 +1,4 @@
 #include "Perft.h"
-#include "Core/Children.h"
 #include <algorithm>
 #include <omp.h>
 

@@ -15,16 +15,16 @@ struct Indexer
 
 	Indexer(uint64_t pattern, int symmetry_group_order) noexcept;
 
-	virtual int Index(Position) const = 0;
-	std::vector<int> Indices(Position) const;
-	virtual void InsertIndices(Position, std::span<int> location, int offset = 0) const = 0;
+	virtual uint32_t Index(Position) const = 0;
+	std::vector<uint32_t> Indices(Position) const;
+	virtual void InsertIndices(Position, std::span<uint32_t> location, uint32_t offset = 0) const = 0;
 	virtual std::vector<uint64_t> Variations() const = 0;
 };
 
 std::unique_ptr<Indexer> CreateIndexer(uint64_t pattern);
 
-std::size_t ConfigurationsOfPattern(uint64_t pattern);
-std::size_t ConfigurationsOfPattern(std::vector<uint64_t> pattern);
+std::size_t ConfigurationCount(uint64_t pattern);
+std::size_t ConfigurationCount(std::vector<uint64_t> pattern);
 
 class GroupIndexer
 {
@@ -34,7 +34,7 @@ public:
 
 	GroupIndexer(std::vector<uint64_t> pattern);
 
-	std::vector<int> Indices(Position) const;
-	void InsertIndices(Position, std::span<int> location) const;
+	std::vector<uint32_t> Indices(Position) const;
+	void InsertIndices(Position, std::span<uint32_t> location) const;
 	std::vector<uint64_t> Variations() const;
 };

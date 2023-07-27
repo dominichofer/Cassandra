@@ -12,6 +12,9 @@ inline constexpr bool is_specialization = false;
 template<template<class...> class T, class... Args>
 inline constexpr bool is_specialization<T<Args...>, T> = true;
 
+template <typename T>
+T Deserialize(std::istream&);
+
 // File
 template <typename T>
 void Serialize(const T& t, const std::filesystem::path& file)
@@ -67,19 +70,23 @@ T Deserialize(std::istream& stream)
 
 // ScoreEstimator
 void Serialize(const ScoreEstimator&, std::ostream&);
-ScoreEstimator Deserialize_ScoreEstimator(std::istream&);
+template <>
+ScoreEstimator Deserialize<ScoreEstimator>(std::istream&);
 
 // MSSE
 void Serialize(const MultiStageScoreEstimator&, std::ostream&);
-MultiStageScoreEstimator Deserialize_MSSE(std::istream&);
+template <>
+MultiStageScoreEstimator Deserialize<MultiStageScoreEstimator>(std::istream&);
 
 // AccuracyModel
 void Serialize(const AccuracyModel&, std::ostream&);
-AccuracyModel Deserialize_AM(std::istream&);
+template <>
+AccuracyModel Deserialize<AccuracyModel>(std::istream&);
 
 // PatternBasedEstimator
 void Serialize(const PatternBasedEstimator&, std::ostream&);
-PatternBasedEstimator Deserialize_PatternBasedEstimator(std::istream&);
+template <>
+PatternBasedEstimator Deserialize<PatternBasedEstimator>(std::istream&);
 
 void Save(const PatternBasedEstimator&, const std::filesystem::path&);
 PatternBasedEstimator LoadPatternBasedEstimator(const std::filesystem::path&);

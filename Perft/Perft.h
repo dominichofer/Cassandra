@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Position.h"
+#include "Board/Board.h"
 #include "Hashtable.h"
 #include <cstdint>
 

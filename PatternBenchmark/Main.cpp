@@ -3,21 +3,11 @@
 
 ScoreEstimator CreateScoreEstimator(std::vector<uint64_t> pattern)
 {
-	std::size_t count = ConfigurationsOfPattern(pattern);
-	std::vector<float> w(count, 0);
-	return ScoreEstimator(pattern, w);
+	return ScoreEstimator(pattern);
 }
 ScoreEstimator CreateScoreEstimator(uint64_t pattern)
 {
 	return CreateScoreEstimator(std::vector{ pattern });
-}
-
-MultiStageScoreEstimator CreateMSSE(int stage_size, std::vector<uint64_t> pattern)
-{
-	int stages = static_cast<int>(std::ceil(65.0 / stage_size));
-	std::size_t count = ConfigurationsOfPattern(pattern) * stages;
-	std::vector<float> w(count, 0);
-	return MultiStageScoreEstimator(stage_size, pattern, w);
 }
 
 void PatternEvalH(benchmark::State& state)
@@ -104,9 +94,9 @@ void PatternEdax(benchmark::State& state)
 }
 BENCHMARK(PatternEdax);
 
-void MSSE_Edax(benchmark::State& state)
+void MultiStageScoreEstimator_Edax(benchmark::State& state)
 {
-	auto evaluator = CreateMSSE(/*stage_size*/ 5, pattern::edax);
+	auto evaluator = MultiStageScoreEstimator(/*stage_size*/ 5, pattern::edax);
 	Position pos = RandomPosition();
 
 	for (auto _ : state)
@@ -116,6 +106,6 @@ void MSSE_Edax(benchmark::State& state)
 	}
 	state.SetItemsProcessed(state.iterations());
 }
-BENCHMARK(MSSE_Edax);
+BENCHMARK(MultiStageScoreEstimator_Edax);
 
 BENCHMARK_MAIN();

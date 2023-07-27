@@ -28,7 +28,7 @@ Vector& Vector::operator-=(const Vector& o)
 	return *this;
 }
 
-Vector& Vector::operator*=(double factor)
+Vector& Vector::operator*=(float factor)
 {
 	const int64_t size = static_cast<int64_t>(data.size());
 	#pragma omp parallel for schedule(static)
@@ -37,7 +37,7 @@ Vector& Vector::operator*=(double factor)
 	return *this;
 }
 
-Vector& Vector::operator/=(double factor)
+Vector& Vector::operator/=(float factor)
 {
 	const int64_t size = static_cast<int64_t>(data.size());
 	#pragma omp parallel for schedule(static)
@@ -97,19 +97,29 @@ Vector operator-(const Vector& l, Vector&& r)
 	return r;
 }
 
-Vector operator*(Vector v, double factor)
+Vector operator*(Vector v, float factor)
 {
 	return v *= factor;
 }
 
-Vector operator*(double factor, Vector v)
+Vector operator*(float factor, Vector v)
 {
 	return v *= factor;
 }
 
-Vector operator/(Vector v, double factor)
+Vector operator/(Vector v, float factor)
 {
 	return v /= factor;
+}
+
+Vector elementwise_multiplication(Vector l, const Vector& r)
+{
+	return l.elementwise_multiplication(r);
+}
+
+Vector elementwise_division(Vector l, const Vector& r)
+{
+	return l.elementwise_division(r);
 }
 
 Vector inv(Vector v)
@@ -117,34 +127,45 @@ Vector inv(Vector v)
 	const int64_t size = static_cast<int64_t>(v.size());
 	#pragma omp parallel for
 	for (int64_t i = 0; i < size; i++)
-		v[i] = 1.0 / v[i];
+		v[i] = 1.0f / v[i];
 	return v;
 }
 
-double dot(const Vector& l, const Vector& r)
+float dot(const Vector& l, const Vector& r)
 {
 	if (l.size() != r.size())
 		throw std::runtime_error("Size mismatch");
 
-	return std::inner_product(std::begin(l), std::end(l), std::begin(r), 0.0);
+	return std::inner_product(std::begin(l), std::end(l), std::begin(r), 0.0f);
 }
 
-double norm(const Vector& x)
+float norm(const Vector& x)
 {
 	return std::sqrt(dot(x, x));
 }
 
-double L1_norm(const Vector& x)
+float L1_norm(const Vector& x)
 {
-	return std::transform_reduce(std::begin(x), std::end(x), 0, std::plus<>{}, static_cast<double (*)(double)>(std::abs));
+	return std::transform_reduce(std::begin(x), std::end(x), 0.0f, std::plus<>{}, static_cast<float (*)(float)>(std::abs));
 }
 
-double L2_norm(const Vector& x)
+float L2_norm(const Vector& x)
 {
 	return norm(x);
 }
 
-double sum(const Vector& x)
+float sum(const Vector& x)
 {
-	return std::accumulate(std::begin(x), std::end(x), 0.0);
+	return std::accumulate(std::begin(x), std::end(x), 0.0f);
+}
+
+std::string to_string(const Vector& v)
+{
+	using std::to_string;
+	auto begin = v.begin();
+	auto end = v.end();
+	std::string str = "(" + to_string(*begin++);
+	while (begin != end)
+		str += "," + to_string(*begin++);
+	return str + ")";
 }

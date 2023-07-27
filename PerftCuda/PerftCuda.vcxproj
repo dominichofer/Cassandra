@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -10,8 +10,32 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Chronosity.h" />
+    <ClInclude Include="DeviceVector.cuh" />
+    <ClInclude Include="HostVector.cuh" />
+    <ClInclude Include="kernel.cuh" />
+    <ClInclude Include="PerftCuda.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="kernel.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Perft\Hashtable.cpp" />
+    <ClCompile Include="..\Perft\Perft.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="PerftCuda.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Board\Board.vcxproj">
+      <Project>{32d787bd-7a9d-4992-9a48-2f5d0a9cf323}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Perft\Perft.vcxproj">
+      <Project>{d33b85bb-24c3-4f9c-a26d-d77bfe0d3eae}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A6D7EE3C-234B-46AB-B963-DAEDEB80E266}</ProjectGuid>
+    <ProjectGuid>{E70BBAD2-B95C-4DC4-857D-45C2E63C1079}</ProjectGuid>
     <RootNamespace>PerftCuda</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -20,18 +44,18 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>NotSet</CharacterSet>
-    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.2.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -49,9 +73,6 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;WIN64;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <OpenMPSupport>false</OpenMPSupport>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -60,29 +81,21 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>
-      </Include>
+      <AdditionalOptions>--default-stream per-thread --std=c++20 --expt-relaxed-constexpr -diag-suppress 20199 %(AdditionalOptions)</AdditionalOptions>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <PtxAsOptionV>true</PtxAsOptionV>
+      <CudaRuntime>Shared</CudaRuntime>
     </CudaCompile>
-    <CudaLink>
-      <AdditionalDependencies>cudadevrt.lib</AdditionalDependencies>
-    </CudaLink>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;WIN64;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(SolutionDir)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <OpenMPSupport>true</OpenMPSupport>
-      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <OmitFramePointers>true</OmitFramePointers>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>G:\fmt-8.1.1\include\;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir);$(SolutionDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -93,43 +106,14 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
-      <Include>
-      </Include>
+      <AdditionalOptions>--default-stream per-thread --std=c++20 --expt-relaxed-constexpr -diag-suppress 20199 %(AdditionalOptions)</AdditionalOptions>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
-      <FastMath>true</FastMath>
-      <AdditionalCompilerOptions>
-      </AdditionalCompilerOptions>
-      <AdditionalOptions>--default-stream per-thread %(AdditionalOptions)</AdditionalOptions>
+      <PtxAsOptionV>true</PtxAsOptionV>
+      <CudaRuntime>Shared</CudaRuntime>
     </CudaCompile>
-    <CudaLink>
-      <AdditionalDependencies>cudadevrt.lib</AdditionalDependencies>
-    </CudaLink>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CudaCompile Include="kernel.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\Perft\Hashtable.h" />
-    <ClInclude Include="..\Perft\Perft.h" />
-    <ClInclude Include="Chronosity.h" />
-    <ClInclude Include="DeviceVector.cuh" />
-    <ClInclude Include="HostVector.cuh" />
-    <ClInclude Include="kernel.cuh" />
-    <ClInclude Include="PerftCuda.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\Perft\Hashtable.cpp" />
-    <ClCompile Include="..\Perft\Perft.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="PerftCuda.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
-      <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.2.targets" />
   </ImportGroup>
 </Project>

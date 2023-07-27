@@ -69,25 +69,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="File.h" />
-    <ClInclude Include="Integers.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="Binary.h" />
-    <ClInclude Include="ResultTable.h" />
-    <ClInclude Include="String.h" />
-    <ClInclude Include="Table.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="File.cpp" />
-    <ClCompile Include="Integers.cpp" />
-    <ClCompile Include="IO.cpp" />
     <ClCompile Include="Binary.cpp" />
-    <ClCompile Include="ResultTable.cpp" />
-    <ClCompile Include="String.cpp" />
-    <ClCompile Include="Table.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
-      <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
+    <ProjectReference Include="..\Board\Board.vcxproj">
+      <Project>{32d787bd-7a9d-4992-9a48-2f5d0a9cf323}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Game\Game.vcxproj">
+      <Project>{86631341-af9e-4248-b776-8fbfc48b5df2}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>

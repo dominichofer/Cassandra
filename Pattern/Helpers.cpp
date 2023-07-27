@@ -4,11 +4,11 @@
 
 class SumPow3Cache
 {
-	std::array<int, (1ULL << 16)> cache{};
+	std::array<uint32_t, (1ULL << 16)> cache{};
 
-	static int sum_pow3(uint64_t exp)
+	static uint32_t sum_pow3(uint64_t exp)
 	{
-		int sum = 0;
+		uint32_t sum = 0;
 		while (exp)
 		{
 			sum += pown(3, std::countr_zero(exp));
@@ -41,7 +41,7 @@ int pown(int base, unsigned int exponent)
 	return result;
 }
 
-int FastIndex(Position pos, uint64_t pattern) noexcept
+uint32_t FastIndex(Position pos, uint64_t pattern) noexcept
 {
 	return sum_pow_3_cache.SumPow3(PExt(pos.Player(), pattern))
 		+ sum_pow_3_cache.SumPow3(PExt(pos.Opponent(), pattern)) * 2;

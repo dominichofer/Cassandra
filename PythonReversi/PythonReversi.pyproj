@@ -76,6 +76,7 @@
     </Compile>
     <Compile Include="neural_network.py" />
     <Compile Include="self_play_edax.py" />
+    <Compile Include="tmp.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="cassandra\" />

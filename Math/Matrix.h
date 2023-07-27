@@ -10,7 +10,7 @@ class Vector;
 class Matrix
 {
 	std::size_t cols;
-	std::vector<double> data;
+	std::vector<float> data;
 public:
 	Matrix(std::size_t rows, std::size_t cols) noexcept : cols(cols), data(rows * cols, 0.0) {}
 
@@ -29,25 +29,25 @@ public:
 	std::size_t Rows() const noexcept { return data.size() / cols; }
 	std::size_t Cols() const noexcept { return cols; }
 
-	std::span<      double> Row(std::size_t index)       noexcept;
-	std::span<const double> Row(std::size_t index) const noexcept;
+	std::span<      float> Row(std::size_t index)       noexcept;
+	std::span<const float> Row(std::size_t index) const noexcept;
 
-	      double& operator()(std::size_t row, std::size_t col)       { return data[row * cols + col]; }
-	const double& operator()(std::size_t row, std::size_t col) const { return data[row * cols + col]; }
+	      float& operator()(std::size_t row, std::size_t col)       { return data[row * cols + col]; }
+	const float& operator()(std::size_t row, std::size_t col) const { return data[row * cols + col]; }
 
 	Matrix& operator+=(const Matrix&);
 	Matrix& operator-=(const Matrix&);
-	Matrix& operator*=(double);
-	Matrix& operator/=(double);
+	Matrix& operator*=(float);
+	Matrix& operator/=(float);
 };
 
 Matrix operator+(Matrix, const Matrix&);
 Matrix operator+(const Matrix&, Matrix&&);
 Matrix operator-(Matrix, const Matrix&);
 Matrix operator-(const Matrix&, Matrix&&);
-Matrix operator*(Matrix, double);
-Matrix operator*(double, Matrix);
-Matrix operator/(Matrix, double);
+Matrix operator*(Matrix, float);
+Matrix operator*(float, Matrix);
+Matrix operator/(Matrix, float);
 
 Vector operator*(const Matrix&, const Vector&);
 Vector operator*(const Vector&, const Matrix&);

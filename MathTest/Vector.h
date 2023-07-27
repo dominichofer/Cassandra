@@ -1,5 +1,5 @@
 #pragma once
 #include "pch.h"
 
-Vector CreateVector(double a);
-Vector CreateVector(double a, double b);
+Vector CreateVector(float a);
+Vector CreateVector(float a, float b);

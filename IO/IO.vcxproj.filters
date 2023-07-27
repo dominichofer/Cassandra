@@ -1,21 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Integers.h" />
     <ClInclude Include="IO.h" />
-    <ClInclude Include="Table.h" />
-    <ClInclude Include="String.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Binary.h" />
-    <ClInclude Include="ResultTable.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Integers.cpp" />
-    <ClCompile Include="IO.cpp" />
-    <ClCompile Include="Table.cpp" />
-    <ClCompile Include="String.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Binary.cpp" />
-    <ClCompile Include="ResultTable.cpp" />
   </ItemGroup>
 </Project>

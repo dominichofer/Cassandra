@@ -35,7 +35,6 @@
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="MatrixCSR.cpp" />
     <ClCompile Include="Statistics.cpp" />

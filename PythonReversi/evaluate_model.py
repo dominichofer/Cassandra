@@ -35,10 +35,10 @@ if __name__ == '__main__':
         cassandra_engine(r'G:\Reversi2\iteration4.model', 0),
         cassandra_engine(r'G:\Reversi2\iteration5.model', 0),
         cassandra_engine(r'G:\Reversi2\iteration6.model', 0),
-        cassandra_engine(r'G:\Reversi2\iteration7.model', 0),
-        cassandra_engine(r'G:\Reversi2\iteration8.model', 0),
-        cassandra_engine(r'G:\Reversi2\iteration9.model', 0),
-        cassandra_engine(r'G:\Reversi2\iteration10.model', 0),
+        #cassandra_engine(r'G:\Reversi2\iteration7.model', 0),
+        #cassandra_engine(r'G:\Reversi2\iteration8.model', 0),
+        #cassandra_engine(r'G:\Reversi2\iteration9.model', 0),
+        #cassandra_engine(r'G:\Reversi2\iteration10.model', 0),
         #cassandra_engine(r'G:\Reversi2\it1.model', 0),
         #cassandra_engine(r'G:\Reversi2\it2.model', 0),
         #cassandra_engine(r'G:\Reversi2\it3.model', 0),
@@ -64,11 +64,11 @@ if __name__ == '__main__':
 
     files = [
         #r'G:\Reversi2\Random_vs_Random_from_e54.gs',
-        r'G:\Reversi2\Edax4.4_level_0_vs_Edax4.4_level_0_from_e54.gs',
-        r'G:\Reversi2\Edax4.4_level_5_vs_Edax4.4_level_5_from_e54.gs',
-        r'G:\Reversi2\Edax4.4_level_10_vs_Edax4.4_level_10_from_e54.gs',
-        r'G:\Reversi2\Edax4.4_level_15_vs_Edax4.4_level_15_from_e54.gs',
-        r'G:\Reversi2\Edax4.4_level_20_vs_Edax4.4_level_20_from_e54.gs',
+        r'G:\Edax4.4_level_0_vs_Edax4.4_level_0_from_e54.gs',
+        r'G:\Edax4.4_level_5_vs_Edax4.4_level_5_from_e54.gs',
+        r'G:\Edax4.4_level_10_vs_Edax4.4_level_10_from_e54.gs',
+        r'G:\Edax4.4_level_15_vs_Edax4.4_level_15_from_e54.gs',
+        r'G:\Edax4.4_level_20_vs_Edax4.4_level_20_from_e54.gs',
     ]
     pos_scores = [
         (pos, score)
@@ -97,8 +97,7 @@ if __name__ == '__main__':
                 stdev_err.append(SD(len(diff), s))
         plt.plot(x, stdev, label=name)
         plt.fill_between(x, [s - 2 * e for s, e in zip(stdev, stdev_err)], [s + 2 * e for s, e in zip(stdev, stdev_err)], alpha=.25)
-        mad = statistics.mean(abs(d) for d in diff)
-        print(f'{eng.name} stdev:{statistics.stdev(diff)} mad:{mad}')
+        print(f'{eng.name} stdev:{statistics.stdev(full_diff)} mad:{statistics.mean(abs(d) for d in full_diff)}')
     
     plt.xlabel('empty fields')
     plt.ylabel('standard deviation')

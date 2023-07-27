@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Core.h"
+#include "Board/Board.h"
 #include <algorithm>
 #include <cstdint>
 #include <functional>

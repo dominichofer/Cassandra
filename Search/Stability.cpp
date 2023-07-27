@@ -1,4 +1,5 @@
 #include "Stability.h"
+#include "Game/Game.h"
 #include <array>
 
 class StabilityAnalyzer
@@ -153,13 +154,6 @@ uint64_t StabilityAnalyzer::FullLineCodiagonal(const uint64_t discs)
 }
 
 static StabilityAnalyzer sa;
-
-//uint64_t StableC2(uint64_t b)
-//{
-//	uint64_t corners = 0x8100000000000081ULL;
-//	uint64_t corners_adjacent_of_b = ((0x0100000000000001ULL & b) << 1) | ((0x8000000000000080ULL & b) >> 1) | ((corners & b) << 8) | ((corners & b) >> 8);
-//	return (corners_adjacent_of_b | corners) & b;
-//}
 
 uint64_t StableEdges(const Position& pos)
 {

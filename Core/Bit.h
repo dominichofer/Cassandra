@@ -1,31 +1,24 @@
 #pragma once
 #include "Cuda.h"
+#include "Intrin.h"
 #include <cstdint>
 
-#if defined(_MSC_VER)
-	#include <intrin.h>
-#elif defined(__GNUC__)
-	#include <x86intrin.h>
-#else
-	#error compiler not supported!
-#endif
-
 #ifdef __AVX2__
-inline __m256i not_si256(__m256i b)
-{
-	return _mm256_andnot_si256(b, _mm256_set1_epi64x(-1));
-}
+	inline __m256i not_si256(__m256i b)
+	{
+		return _mm256_andnot_si256(b, _mm256_set1_epi64x(-1));
+	}
 
-inline __m256i neg_epi64(__m256i b)
-{
-	return _mm256_sub_epi64(__m256i{0}, b);
-}
+	inline __m256i neg_epi64(__m256i b)
+	{
+		return _mm256_sub_epi64(__m256i{0}, b);
+	}
 
-inline uint64_t reduce_or(__m256i b)
-{
-	const __m128i or_128 = _mm_or_si128(_mm256_extracti128_si256(b, 0), _mm256_extracti128_si256(b, 1));
-	return _mm_extract_epi64(or_128, 0) | _mm_extract_epi64(or_128, 1);
-}
+	inline uint64_t reduce_or(__m256i b)
+	{
+		const __m128i or_128 = _mm_or_si128(_mm256_extracti128_si256(b, 0), _mm256_extracti128_si256(b, 1));
+		return _mm_extract_epi64(or_128, 0) | _mm_extract_epi64(or_128, 1);
+	}
 #endif
 
 // Workaround for nvcc's missing <bit>
@@ -72,7 +65,7 @@ namespace std
 CUDA_CALLABLE inline uint64_t GetLSB(uint64_t b) noexcept
 {
 	#pragma warning(suppress : 4146)
-	return b & -b;
+	return b & (0 - b);
 }
 
 CUDA_CALLABLE inline void RemoveLSB(uint64_t& b) noexcept

@@ -79,29 +79,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="IDAB.cpp" />
-    <ClCompile Include="Result.cpp" />
+    <ClCompile Include="CountLastFlip.cpp" />
+    <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="AlphaBeta.cpp" />
     <ClCompile Include="HashTable.cpp" />
-    <ClCompile Include="MTDf.cpp" />
     <ClCompile Include="NegaMax.cpp" />
     <ClCompile Include="PrincipalVariation.cpp" />
-    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Result.cpp" />
+    <ClCompile Include="Solver.cpp" />
     <ClCompile Include="SortedMoves.cpp" />
     <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Result.h" />
-    <ClInclude Include="AlphaBeta.h" />
+    <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="CountLastFlip.h" />
+    <ClInclude Include="Estimator.h" />
     <ClInclude Include="HashTable.h" />
-    <ClInclude Include="IDAB.h" />
-    <ClInclude Include="MTDf.h" />
-    <ClInclude Include="NegaMax.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="PrincipalVariation.h" />
+    <ClInclude Include="Result.h" />
     <ClInclude Include="Search.h" />
+    <ClInclude Include="Solver.h" />
     <ClInclude Include="SortedMoves.h" />
     <ClInclude Include="Stability.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Game\Game.vcxproj">
+      <Project>{86631341-af9e-4248-b776-8fbfc48b5df2}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

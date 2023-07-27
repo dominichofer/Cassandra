@@ -24,12 +24,12 @@ Matrix Matrix::Id(std::size_t size)
 	return m;
 }
 
-std::span<double> Matrix::Row(std::size_t index) noexcept
+std::span<float> Matrix::Row(std::size_t index) noexcept
 {
 	return std::span(data.begin() + index * cols, data.begin() + (index + 1) * cols);
 }
 
-std::span<const double> Matrix::Row(std::size_t index) const noexcept
+std::span<const float> Matrix::Row(std::size_t index) const noexcept
 {
 	return std::span(data.begin() + index * cols, data.begin() + (index + 1) * cols);
 }
@@ -58,7 +58,7 @@ Matrix& Matrix::operator-=(const Matrix& o)
 	return *this;
 }
 
-Matrix& Matrix::operator*=(double factor)
+Matrix& Matrix::operator*=(float factor)
 {
 	const int64_t size = static_cast<int64_t>(data.size());
 	#pragma omp parallel for schedule(static)
@@ -67,7 +67,7 @@ Matrix& Matrix::operator*=(double factor)
 	return *this;
 }
 
-Matrix& Matrix::operator/=(double factor)
+Matrix& Matrix::operator/=(float factor)
 {
 	const int64_t size = static_cast<int64_t>(data.size());
 	#pragma omp parallel for schedule(static)
@@ -96,17 +96,17 @@ Matrix operator-(const Matrix& l, Matrix&& r)
 	return r = l - r;
 }
 
-Matrix operator*(Matrix m, double factor)
+Matrix operator*(Matrix m, float factor)
 {
 	return m *= factor;
 }
 
-Matrix operator*(double factor, Matrix m)
+Matrix operator*(float factor, Matrix m)
 {
 	return m *= factor;
 }
 
-Matrix operator/(Matrix m, double factor)
+Matrix operator/(Matrix m, float factor)
 {
 	return m /= factor;
 }
@@ -122,7 +122,7 @@ Vector operator*(const Matrix& mat, const Vector& x)
 	#pragma omp parallel for schedule(static) if (cols * rows > 64 * 64)
 	for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
 	{
-		double sum = 0;
+		float sum = 0;
 		for (std::size_t j = 0; j < cols; j++)
 			sum += mat(i, j) * x[j];
 		result[i] = sum;
@@ -174,7 +174,7 @@ Matrix operator*(const Matrix& l, const Matrix& r)
 	for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
 		for (std::size_t j = 0; j < cols; j++)
 		{
-			double sum = 0;
+			float sum = 0;
 			for (std::size_t k = 0; k < K; k++)
 				sum += l(i, k) * r(k, j);
 			ret(i, j) = sum;
