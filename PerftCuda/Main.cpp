@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < argc; i++)
 	{
 		if (std::string(argv[i]) == "-d") depth = std::stoi(argv[++i]);
-		//else if (std::string(argv[i]) == "-RAM") RAM = ParseBytes(argv[++i]);
+		else if (std::string(argv[i]) == "-RAM") RAM = ParseBytes(argv[++i]);
 		else if (std::string(argv[i]) == "-cuda") cuda = true;
 		else if (std::string(argv[i]) == "-h") { PrintHelp(); return 0; }
 	}

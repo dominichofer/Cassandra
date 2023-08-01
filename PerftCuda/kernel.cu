@@ -57,7 +57,7 @@ __host__ __device__ int64_t perft_3(const Position& pos)
     return sum;
 }
 
-__global__ void perft_3(const CudaVector_view<Position> pos, CudaVector_view<uint64_t> result)
+__global__ void perft_3(const CudaVector_view<Position> pos, CudaVector_view<int64_t> result)
 {
     unsigned int gridSize = blockDim.x * gridDim.x;
     for (unsigned int i = threadIdx.x + blockIdx.x * blockDim.x; i < pos.size(); i += gridSize)
@@ -68,9 +68,9 @@ __host__ int64_t perft_cuda(const Position& pos, const int depth, const int cuda
 {
     static thread_local int tid = []() { int n; cudaGetDeviceCount(&n); int tid = omp_get_thread_num() % n; cudaSetDevice(tid); return tid; }();
     static thread_local PinnedVector<Position> positions;
-    static thread_local PinnedVector<uint64_t> result;
+    static thread_local PinnedVector<int64_t> result;
     static thread_local CudaVector<Position> cuda_pos;
-    static thread_local CudaVector<uint64_t> cuda_result;
+    static thread_local CudaVector<int64_t> cuda_result;
 
     auto gen = Children(pos, depth - cuda_depth, true);
     positions.store(gen.begin(), gen.end());
@@ -82,5 +82,5 @@ __host__ int64_t perft_cuda(const Position& pos, const int depth, const int cuda
     result.store(cuda_result, asyn);
     cudaDeviceSynchronize();
 
-    return std::accumulate(result.begin(), result.end(), 0);
+    return std::accumulate(result.begin(), result.end(), static_cast<int64_t>(0));
 }
