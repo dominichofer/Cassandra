@@ -16,3 +16,23 @@ auto Sample(int size, R&& pool, uint64_t seed = std::random_device{}())
 		size, rnd_engine);
 	return samples;
 }
+
+template <class Iterable>
+std::string join(const std::string& delimiter, const Iterable& iterable)
+{
+    using std::to_string;
+
+    if (std::empty(iterable))
+        return {};
+
+    std::string ret = to_string(*std::begin(iterable));
+    for (auto it = std::begin(iterable) + 1; it != std::end(iterable); ++it)
+        ret += delimiter + to_string(*it);
+    return ret;
+}
+
+template <class Iterable>
+std::string join(char delimiter, const Iterable& iterable)
+{
+    return join(std::string{delimiter}, iterable);
+}
