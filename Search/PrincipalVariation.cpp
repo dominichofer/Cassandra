@@ -197,17 +197,6 @@ Result PVS::EndScore(const Position& pos)
 	return Result::Exact(::EndScore(pos), pos.EmptyCount(), inf, Field::PS);
 }
 
-const uint32_t SquareValue[] = {
-	9, 2, 8, 6, 6, 8, 2, 9,
-	2, 1, 3, 4, 4, 3, 1, 2,
-	8, 3, 7, 5, 5, 7, 3, 8,
-	6, 4, 5, 0, 0, 5, 4, 6,
-	6, 4, 5, 0, 0, 5, 4, 6,
-	8, 3, 7, 5, 5, 7, 3, 8,
-	2, 1, 3, 4, 4, 3, 1, 2,
-	9, 2, 8, 6, 6, 8, 2, 9,
-};
-
 int double_corner_popcount(uint64_t b)
 {
 	return std::popcount(b) + std::popcount(b & 0x8100000000000081ULL);
@@ -229,7 +218,7 @@ SortedMoves PVS::Sorted(const Position& pos, int depth, float confidence_level)
 		uint64_t O = next.Opponent();
 		uint64_t E = next.Empties();
 
-		uint32_t score = SquareValue[static_cast<uint8_t>(move)];
+		uint32_t score = 0;
 		score += (36 - double_corner_popcount(EightNeighboursAndSelf(O) & E)) << 4; // potential mobility, with corner bonus
 		score += std::popcount(StableEdges(next) & O) << 10;
 		score += (36 - double_corner_popcount(PossibleMoves(next))) << 15; // possible moves, with corner bonus
