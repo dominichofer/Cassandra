@@ -1,6 +1,8 @@
 #pragma once
+#include <functional>
 #include <random>
 #include <ranges>
+#include <string>
 #include <vector>
 
 template <std::ranges::input_range R>
@@ -17,22 +19,21 @@ auto Sample(int size, R&& pool, uint64_t seed = std::random_device{}())
 	return samples;
 }
 
-template <class Iterable>
-std::string join(const std::string& delimiter, const Iterable& iterable)
+template <typename Iterable, typename Projection = std::identity>
+std::string join(const std::string& separator, const Iterable& iterable, Projection proj = {})
 {
-    using std::to_string;
+	if (std::empty(iterable))
+		return {};
 
-    if (std::empty(iterable))
-        return {};
-
-    std::string ret = to_string(*std::begin(iterable));
-    for (auto it = std::begin(iterable) + 1; it != std::end(iterable); ++it)
-        ret += delimiter + to_string(*it);
-    return ret;
+	std::string ret = proj(*std::begin(iterable));
+	for (auto it = std::begin(iterable) + 1; it != std::end(iterable); ++it)
+		ret += separator + proj(*it);
+	return ret;
 }
 
-template <class Iterable>
-std::string join(char delimiter, const Iterable& iterable)
+
+template <typename Iterable, typename Projection = std::identity>
+std::string join(char separator, const Iterable& iterable, Projection proj = {})
 {
-    return join(std::string{delimiter}, iterable);
+	return join(std::string{separator}, iterable, proj);
 }

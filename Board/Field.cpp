@@ -3,7 +3,7 @@
 #include <regex>
 #include <unordered_map>
 
-CUDA_CALLABLE uint64_t Bit(Field f)
+CUDA_CALLABLE uint64_t Bit(Field f) noexcept
 {
 	return 1ULL << std::to_underlying(f);
 }

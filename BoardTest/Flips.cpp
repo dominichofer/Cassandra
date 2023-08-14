@@ -6,8 +6,8 @@ namespace Flips_test
 	uint64_t FlipsInOneDirection(const Position& pos, Field move, int dx, int dy)
 	{
 		uint64_t flips = 0;
-		int x = (static_cast<uint8_t>(move) % 8) + dx;
-		int y = (static_cast<uint8_t>(move) / 8) + dy;
+		int x = (std::to_underlying(move) % 8) + dx;
+		int y = (std::to_underlying(move) / 8) + dy;
 
 		while ((x >= 0) && (x < 8) && (y >= 0) && (y < 8)) // In between boundaries
 		{

@@ -30,8 +30,8 @@ class Moves
 {
 	uint64_t b{0};
 public:
-	constexpr Moves() noexcept = default;
-	CUDA_CALLABLE constexpr explicit Moves(uint64_t moves) noexcept : b(moves) {}
+	Moves() noexcept = default;
+	CUDA_CALLABLE explicit Moves(uint64_t moves) noexcept : b(moves) {}
 
 	CUDA_CALLABLE bool operator==(const Moves& o) const noexcept { return b == o.b; }
 	CUDA_CALLABLE bool operator!=(const Moves& o) const noexcept { return b != o.b; }

@@ -8,7 +8,7 @@ class Spinlock
 {
 	std::atomic_flag locked{};
 public:
-	[[nodiscard]] Spinlock() = default;
+	[[nodiscard]] Spinlock() noexcept = default;
 	[[nodiscard]] bool try_lock() noexcept { return locked.test_and_set(std::memory_order_acquire); }
 	void lock() noexcept { while (try_lock()) continue; }
 	void unlock() noexcept { locked.clear(std::memory_order_release); }
@@ -48,20 +48,15 @@ public:
 	void Clear();
 };
 
-static_assert(sizeof(OneNode) <= std::hardware_constructive_interference_size);
-
 class TwoNodes
 {
 public:
 	using key_type = Position;
-	using value_type = Result;
+	using value_type = TranspositionValue;
 private:
 	mutable Spinlock mutex{};
 	key_type key1{}, key2{};
-	value_type value1 = DefaultValue();
-	value_type value2 = DefaultValue();
-
-	static value_type DefaultValue() noexcept { return Result::Exact(0, -1, 0, Field::PS); }
+	value_type value1{}, value2{};
 public:
 	TwoNodes() noexcept = default;
 
@@ -69,8 +64,6 @@ public:
 	std::optional<value_type> LookUp(const key_type&) const;
 	void Clear();
 };
-
-//static_assert(sizeof(TwoNodes) <= std::hardware_constructive_interference_size);
 
 
 class HT : public HashTable<OneNode>
@@ -84,7 +77,7 @@ public:
 				uint64_t O = key.Opponent();
 				P ^= P >> 36;
 				O ^= O >> 21;
-				return P * O; 
+				return P * O;
 			})
 	{}
 };

@@ -8,13 +8,11 @@ namespace CountLastFlip_test
 		std::mt19937_64 rnd_engine(seed);
 		auto rnd = [&rnd_engine]() { return std::uniform_int_distribution<uint64_t>(0, -1)(rnd_engine); };
 
-		uint64_t move_bit = 1ULL << static_cast<uint8_t>(move);
+		uint64_t mask = ~Bit(move);
 		for (int i = 0; i < 100'000; i++)
 		{
-			const auto r = rnd();
-			const auto P = r & ~move_bit;
-			const auto O = ~r & ~move_bit;
-			Position pos(P, O);
+			uint64_t r = rnd();
+			Position pos{ r & mask, ~r & mask };
 			ASSERT_EQ(std::popcount(Flips(pos, move)), CountLastFlip(pos, move));
 		}
 	}

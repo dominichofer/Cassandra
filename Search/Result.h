@@ -22,6 +22,7 @@ public:
 	float confidence_level;
 	Field best_move;
 
+	Result() noexcept = default;
 	Result(ResultType, int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept;
 
 	static Result FailLow(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept;

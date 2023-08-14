@@ -36,7 +36,7 @@ class CLF
 	std::array<std::array<uint64_t, 4>, 64> mask;
 	std::array<std::array<uint8_t, 256>, 8> flip_count;
 public:
-	constexpr CLF() noexcept
+	CLF() noexcept
 	{
 		for (uint8_t move = 0; move < 64; move++)
 		{
@@ -67,14 +67,15 @@ public:
 		for (uint8_t move = 0; move < 8; move++)
 			for (uint64_t r = 0; r < 256; r++)
 			{
-				Position pos(r & ~(1ULL << move), ~r & ~(1ULL << move));
-				flip_count[static_cast<uint8_t>(move)][r] = std::popcount(Flips(pos, static_cast<Field>(move)));
+				uint64_t mask = ~(1ULL << move);
+				Position pos(r & mask, ~r & mask);
+				flip_count[move][r] = std::popcount(Flips(pos, static_cast<Field>(move)));
 			}
 	}
 
 	int Count(const Position& pos, Field f) const noexcept
 	{
-		auto move = static_cast<uint8_t>(f);
+		auto move = std::to_underlying(f);
 		auto x = move % 8;
 		auto y = move / 8;
 

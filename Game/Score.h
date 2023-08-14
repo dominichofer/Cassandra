@@ -6,12 +6,12 @@
 #include <string_view>
 #include <tuple>
 
-constexpr int min_score{ -32 };
-constexpr int max_score{ +32 };
-constexpr int inf_score{ +33 };
-constexpr int undefined_score{ +35 };
+inline constexpr int min_score{ -32 };
+inline constexpr int max_score{ +32 };
+inline constexpr int inf_score{ +33 };
+inline constexpr int undefined_score{ +35 };
 
-constexpr float inf{ std::numeric_limits<float>::infinity() };
+inline constexpr float inf{ std::numeric_limits<float>::infinity() };
 
 CUDA_CALLABLE int EndScore(const Position&) noexcept;
 

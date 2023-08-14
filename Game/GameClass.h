@@ -11,8 +11,8 @@ class Game
 public:
 	Game(Position start = Position::Start(), std::vector<Field> moves = {}) noexcept;
 
-	constexpr bool operator==(const Game& o) const noexcept { return (start == o.start) and (moves == o.moves); }
-	constexpr bool operator!=(const Game& o) const noexcept { return !(*this == o); }
+	bool operator==(const Game& o) const noexcept { return (start == o.start) and (moves == o.moves); }
+	bool operator!=(const Game& o) const noexcept { return !(*this == o); }
 
 	Position StartPosition() const noexcept { return start; }
 	const std::vector<Field>& Moves() const noexcept { return moves; }

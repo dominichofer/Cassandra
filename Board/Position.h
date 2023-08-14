@@ -14,17 +14,17 @@ class Position
 
 	uint64_t P{}, O{};
 public:
-	constexpr Position() noexcept = default;
+	Position() noexcept = default;
 	CUDA_CALLABLE constexpr Position(uint64_t P, uint64_t O) noexcept : P(P), O(O) { assert((P & O) == 0); }
 
 	static Position Start();
 
-	CUDA_CALLABLE constexpr bool operator==(const Position& o) const noexcept { return P == o.P && O == o.O; }
-	CUDA_CALLABLE constexpr bool operator!=(const Position& o) const noexcept { return P != o.P || O != o.O; }
-	CUDA_CALLABLE constexpr bool operator<(const Position& o) const noexcept { return P < o.P || (P == o.P && O < o.O); }
+	CUDA_CALLABLE bool operator==(const Position& o) const noexcept { return P == o.P && O == o.O; }
+	CUDA_CALLABLE bool operator!=(const Position& o) const noexcept { return P != o.P || O != o.O; }
+	CUDA_CALLABLE bool operator<(const Position& o) const noexcept { return P < o.P || (P == o.P && O < o.O); }
 
-	CUDA_CALLABLE constexpr uint64_t Player() const noexcept { return P; }
-	CUDA_CALLABLE constexpr uint64_t Opponent() const noexcept { return O; }
+	CUDA_CALLABLE uint64_t Player() const noexcept { return P; }
+	CUDA_CALLABLE uint64_t Opponent() const noexcept { return O; }
 
 	CUDA_CALLABLE uint64_t Discs() const noexcept { return P | O; }
 	CUDA_CALLABLE uint64_t Empties() const noexcept { return ~Discs(); }

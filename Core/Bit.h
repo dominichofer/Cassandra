@@ -4,17 +4,17 @@
 #include <cstdint>
 
 #ifdef __AVX2__
-	inline __m256i not_si256(__m256i b)
+	inline __m256i not_si256(__m256i b) noexcept
 	{
 		return _mm256_andnot_si256(b, _mm256_set1_epi64x(-1));
 	}
 
-	inline __m256i neg_epi64(__m256i b)
+	inline __m256i neg_epi64(__m256i b) noexcept
 	{
 		return _mm256_sub_epi64(__m256i{0}, b);
 	}
 
-	inline uint64_t reduce_or(__m256i b)
+	inline uint64_t reduce_or(__m256i b) noexcept
 	{
 		const __m128i or_128 = _mm_or_si128(_mm256_extracti128_si256(b, 0), _mm256_extracti128_si256(b, 1));
 		return _mm_extract_epi64(or_128, 0) | _mm_extract_epi64(or_128, 1);

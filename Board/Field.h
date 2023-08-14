@@ -17,7 +17,7 @@ enum class Field : uint8_t
 	PS
 };
 
-CUDA_CALLABLE uint64_t Bit(Field f);
+CUDA_CALLABLE uint64_t Bit(Field f) noexcept;
 
 std::string to_string(Field);
 

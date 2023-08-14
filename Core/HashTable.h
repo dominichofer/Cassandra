@@ -23,46 +23,14 @@ public:
 	using key_type = Node::key_type;
 	using value_type = Node::value_type;
 private:
-	mutable std::atomic<uint64_t> updates{0}, lookups{ 0 }, hits{ 0 };
+	mutable std::atomic<uint64_t> updates{ 0 }, lookups{ 0 }, hits{ 0 };
 	std::function<std::size_t(const key_type&)> hash_fkt;
-	/*alignas(std::hardware_destructive_interference_size)*/ std::vector<Node> buckets;
+	std::vector<Node> buckets;
 public:
 	HashTable(std::size_t buckets, std::function<std::size_t(const key_type&)> hash_fkt)
 		: hash_fkt(std::move(hash_fkt))
 		, buckets(buckets)
 	{}
-	HashTable(const HashTable<Node>& o)
-		: updates(o.updates.load())
-		, lookups(o.lookups.load())
-		, hits(o.hits.load())
-		, hash_fkt(o.hash_fkt)
-		, buckets(o.buckets)
-	{}
-	HashTable(HashTable<Node>&& o)
-		: updates(o.updates.load())
-		, lookups(o.lookups.load())
-		, hits(o.hits.load())
-		, hash_fkt(o.hash_fkt)
-		, buckets(std::move(o.buckets))
-	{}
-	HashTable<Node> operator=(const HashTable<Node>& o)
-	{
-		updates.store(o.updates.load());
-		lookups.store(o.lookups.load());
-		hits.store(o.hits.load());
-		hash_fkt = o.hash_fkt;
-		buckets = o.buckets;
-		return *this;
-	}
-	HashTable<Node> operator=(HashTable<Node>&& o)
-	{
-		updates.store(o.updates.load());
-		lookups.store(o.lookups.load());
-		hits.store(o.hits.load());
-		hash_fkt = o.hash_fkt;
-		buckets = std::move(o.buckets);
-		return *this;
-	}
 
 	void Update(const key_type& key, const value_type& value)
 	{

@@ -19,7 +19,7 @@ TEST(PossibleMoves, AVX512_random_samples)
 
 		for (Field move : potential_moves)
 			if (Flips(pos, move))
-				possible_moves |= 1ULL << static_cast<uint8_t>(move);
+				possible_moves |= Bit(move);
 
 		ASSERT_EQ(detail::PossibleMoves_AVX512(pos), possible_moves);
 	}
@@ -44,7 +44,7 @@ TEST(PossibleMoves, AVX2_random_samples)
 
 		for (Field move : potential_moves)
 			if (Flips(pos, move))
-				possible_moves |= 1ULL << static_cast<uint8_t>(move);
+				possible_moves |= Bit(move);
 
 		ASSERT_EQ(detail::PossibleMoves_AVX2(pos), possible_moves);
 	}
@@ -68,7 +68,7 @@ TEST(PossibleMoves, x64_random_samples)
 
 		for (Field move : potential_moves)
 			if (Flips(pos, move))
-				possible_moves |= 1ULL << static_cast<uint8_t>(move);
+				possible_moves |= Bit(move);
 
 		ASSERT_EQ(detail::PossibleMoves_x64(pos), possible_moves);
 	}

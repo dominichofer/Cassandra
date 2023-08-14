@@ -36,7 +36,7 @@ Result IDAB::Eval(const Position& pos, OpenInterval window, int depth, float con
 		result = MTD::Eval(result.score, pos, window, d, 1.0);
 
 	// Iterative broadening
-	for (float cl : std::vector{ 1.0, 1.5 })
+	for (float cl : std::vector{ 1.0f, 1.5f })
 		if (cl < confidence_level)
 			result = MTD::Eval(result.score, pos, window, depth, cl);
 

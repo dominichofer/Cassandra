@@ -67,6 +67,6 @@ void TwoNodes::Clear()
 	std::scoped_lock lock{ mutex };
 	key1 = {};
 	key2 = {};
-	value1 = DefaultValue();
-	value2 = DefaultValue();
+	value1 = {};
+	value2 = {};
 }
