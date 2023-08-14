@@ -246,10 +246,21 @@ std::optional<Result> PVS::TTC(const Position& pos, OpenInterval window, int dep
 
 std::optional<Result> PVS::ETC(const Position& pos, OpenInterval window, int depth, float confidence_level)
 {
+	bool all_lower = true;
 	for (Field move : PossibleMoves(pos))
+	{
 		if (auto look_up = tt.LookUp(Play(pos, move)); look_up.has_value())
-			if (auto t = look_up.value(); t.depth >= depth - 1 and t.confidence_level >= confidence_level and t.window < -window)
-				return Result::FailHigh(-t.window.upper, t.depth + 1, confidence_level, move);
+			if (auto t = look_up.value(); t.depth + 1 >= depth and t.confidence_level >= confidence_level)
+			{
+				if (-t.window > window)
+					return Result::FailHigh(-t.window.upper, t.depth + 1, confidence_level, move);
+				if (-t.window < window)
+					continue;
+			}
+		all_lower = false;
+	}
+	if (all_lower)
+		return Result::FailLow(window.lower, depth, confidence_level, Field::PS);
 	return std::nullopt;
 }
 
