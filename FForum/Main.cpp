@@ -12,8 +12,6 @@ int main(int argc, char* argv[])
 	IDAB idab{ pvs };
 	auto solver = Solver{ idab, false };
 
-	std::vector<Position> pos{ Position::Start() };
-
 	solver.PrintHeader();
 	solver.Solve(LoadPosScoreFile("..\\data\\fforum-1-19.ps"));
 	solver.PrintSummary(); std::cout << std::endl;
