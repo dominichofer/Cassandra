@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <cstdint>
 
-#if defined(__AVX512F__)
+#ifdef __AVX512F__
 TEST(PossibleMoves, AVX512_start_position)
 {
 	ASSERT_EQ(detail::PossibleMoves_AVX512(Position::Start()), Moves{ 0x0000102004080000ULL });
@@ -26,7 +26,7 @@ TEST(PossibleMoves, AVX512_random_samples)
 }
 #endif
 
-#if defined(__AVX512F__) || defined(__AVX2__)
+#ifdef __AVX2__
 TEST(PossibleMoves, AVX2_start_position)
 {
 	ASSERT_EQ(detail::PossibleMoves_AVX2(Position::Start()), Moves{ 0x0000102004080000ULL });

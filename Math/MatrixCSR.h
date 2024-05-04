@@ -6,7 +6,8 @@
 #include <vector>
 
 // Compressed Sparse Row Matrix
-// With fixed number of non-zero elements per row. With only 1 as element but the matrix can have multiple entries per element.
+// With fixed number of non-zero elements per row.
+// With only 1 as element but the matrix can have multiple entries per element.
 class MatrixCSR
 {
 	const std::size_t elements_per_row; // number of non-zero elements in a row

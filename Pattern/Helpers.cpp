@@ -1,4 +1,4 @@
-#include "Core/Core.h"
+#include "Base/Base.h"
 #include "Helpers.h"
 #include <array>
 
@@ -12,7 +12,7 @@ class SumPow3Cache
 		while (exp)
 		{
 			sum += pown(3, std::countr_zero(exp));
-			RemoveLSB(exp);
+			ClearLSB(exp);
 		}
 		return sum;
 	}

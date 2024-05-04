@@ -1,83 +1,69 @@
 #pragma once
 #include "Game/Game.h"
 #include "Result.h"
-#include <atomic>
+#include <array>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <optional>
+#include <shared_mutex>
+#include <vector>
 
-class Spinlock
+uint64_t Hash(const Position&);
+
+// Interface
+struct HashTable
 {
-	std::atomic_flag locked{};
-public:
-	[[nodiscard]] Spinlock() noexcept = default;
-	[[nodiscard]] bool try_lock() noexcept { return locked.test_and_set(std::memory_order_acquire); }
-	void lock() noexcept { while (try_lock()) continue; }
-	void unlock() noexcept { locked.clear(std::memory_order_release); }
+	virtual void Insert(const Position&, const Result&) = 0;
+	virtual std::optional<Result> LookUp(const Position&) const = 0;
+	virtual void Clear() = 0;
 };
 
-class TranspositionValue
+struct Bucket
 {
-public:
-	ClosedInterval<> window{ min_score, max_score };
-	int8_t depth = -1;
-	Field best_move = Field::PS;
-	float confidence_level = 0.0f;
+	Position pos{ 0, 0 };
+	Result result{};
 
-	TranspositionValue() noexcept = default;
-	TranspositionValue(ClosedInterval<> window, int8_t depth, float confidence_level, Field best_move)
-		: window(window), depth(depth), confidence_level(confidence_level), best_move(best_move)
-	{}
-	TranspositionValue(const Result& result)
-		: TranspositionValue(result.Window(), result.depth, result.confidence_level, result.best_move)
-	{}
-
-	bool IsExact() const noexcept { return window.lower == window.upper; }
-};
-
-class OneNode
-{
-public:
-	using key_type = Position;
-	using value_type = TranspositionValue;
-private:
-	mutable Spinlock mutex{};
-	key_type key{};
-	value_type value{};
-public:
-	void Update(const key_type&, const value_type&);
-	std::optional<value_type> LookUp(const key_type&) const;
+	void Insert(const Position&, const Result&);
+	std::optional<Result> LookUp(const Position&) const;
 	void Clear();
 };
 
-class TwoNodes
+class RAM_HashTable final : public HashTable
 {
+	mutable std::array<std::shared_mutex, 256> mutexes;
+	std::vector<Bucket> buckets;
 public:
-	using key_type = Position;
-	using value_type = TranspositionValue;
-private:
-	mutable Spinlock mutex{};
-	key_type key1{}, key2{};
-	value_type value1{}, value2{};
-public:
-	TwoNodes() noexcept = default;
+	RAM_HashTable(std::size_t size) : buckets(size) {}
 
-	void Update(const key_type&, const value_type&);
-	std::optional<value_type> LookUp(const key_type&) const;
-	void Clear();
+	void Insert(const Position&, const Result&) override;
+	std::optional<Result> LookUp(const Position&) const override;
+	void Clear() override;
 };
 
-
-class HT : public HashTable<OneNode>
+class FileHashTable final : public HashTable
 {
+	std::size_t file_size;
+	mutable std::vector<std::fstream> streams;
+	mutable std::array<std::shared_mutex, 256> mutexes;
 public:
-	HT(std::size_t buckets)
-		: HashTable(buckets, 
-			[](const Position& key) noexcept
-			{ 
-				uint64_t P = key.Player();
-				uint64_t O = key.Opponent();
-				P ^= P >> 36;
-				O ^= O >> 21;
-				return P * O;
-			})
-	{}
+	FileHashTable(std::filesystem::path config);
+	static void Create(std::filesystem::path config, std::size_t file_size, const std::vector<std::filesystem::path> files);
+	static void Delete(std::filesystem::path config);
+
+	void Insert(const Position&, const Result&) override;
+	std::optional<Result> LookUp(const Position&) const override;
+	void Clear() override;
+	void Close();
+};
+
+class MultiLevelHashTable final : public HashTable
+{
+	std::vector<std::reference_wrapper<HashTable>> levels;
+public:
+	MultiLevelHashTable(std::vector<std::reference_wrapper<HashTable>> levels) : levels(levels) {}
+
+	void Insert(const Position&, const Result&) override;
+	std::optional<Result> LookUp(const Position&) const override;
+	void Clear() override;
 };

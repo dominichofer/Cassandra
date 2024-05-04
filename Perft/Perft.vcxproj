@@ -80,8 +80,8 @@
     <ProjectReference Include="..\Board\Board.vcxproj">
       <Project>{32d787bd-7a9d-4992-9a48-2f5d0a9cf323}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\IO\IO.vcxproj">
-      <Project>{5942be07-41ef-4cf8-b990-978e7b63ef06}</Project>
+    <ProjectReference Include="..\PerftCuda\PerftCuda.vcxproj">
+      <Project>{e70bbad2-b95c-4dc4-857d-45c2e63c1079}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

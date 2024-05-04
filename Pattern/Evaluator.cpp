@@ -74,7 +74,7 @@ std::vector<float> ScoreEstimator::Weights() const
 
 
 
-MultiStageScoreEstimator::MultiStageScoreEstimator(std::size_t stage_size, std::vector<uint64_t> pattern)
+MultiStageScoreEstimator::MultiStageScoreEstimator(int stage_size, std::vector<uint64_t> pattern)
 	: stage_size(stage_size)
 {
 	int stages = static_cast<int>(std::ceil(65.0 / stage_size));
@@ -110,16 +110,16 @@ PatternBasedEstimator::PatternBasedEstimator(MultiStageScoreEstimator score, Acc
 	: score(std::move(score)), accuracy(std::move(accuracy))
 {}
 
-PatternBasedEstimator::PatternBasedEstimator(std::size_t stage_size, std::vector<uint64_t> pattern)
+PatternBasedEstimator::PatternBasedEstimator(int stage_size, std::vector<uint64_t> pattern)
 	: score({ stage_size, pattern })
 {}
 
-std::size_t PatternBasedEstimator::Stages() const noexcept
+int PatternBasedEstimator::Stages() const noexcept
 {
-	return score.estimators.size();
+	return static_cast<int>(score.estimators.size());
 }
 
-std::size_t PatternBasedEstimator::StageSize() const noexcept
+int PatternBasedEstimator::StageSize() const noexcept
 {
 	return score.StageSize();
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Position.h"
+#include <iterator>
 #include <random>
 #include <vector>
 

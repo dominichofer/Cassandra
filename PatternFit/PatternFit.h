@@ -2,11 +2,12 @@
 #include "Board/Board.h"
 #include "Math/Math.h"
 #include "Pattern/Pattern.h"
-#include "Search/Search.h"
+#include "Game/Game.h"
 #include <array>
 #include <cstdint>
 #include <vector>
 
+// TODO: Remove this?
 struct PositionMultiDepthScore
 {
     Position pos;
@@ -15,14 +16,9 @@ struct PositionMultiDepthScore
     PositionMultiDepthScore(Position pos) : pos(pos) { score_of_depth.fill(undefined_score); }
 };
 
-Vector FitWeights(
-    const std::vector<uint64_t>& pattern,
-    const std::vector<Position>& pos,
-    const Vector& score,
-    int iterations);
-
-void ImproveScoreEstimator(
-    PatternBasedEstimator& estimator,
-    const std::vector<Position>& pos,
-    int depth, float confidence_level,
-    int fitting_iterations);
+void EvaluateIteratively(
+	PatternBasedEstimator& estimator,
+	std::vector<ScoredPosition>&,
+	Intensity intensity,
+    int fitting_iterations,
+    bool reevaluate);

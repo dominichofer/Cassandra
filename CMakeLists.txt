@@ -31,40 +31,42 @@ FetchContent_Declare(googlebenchmark
 )
 FetchContent_MakeAvailable(googlebenchmark)
 
-# Range v3
-FetchContent_Declare(range-v3
-        GIT_REPOSITORY https://github.com/ericniebler/range-v3.git
-        GIT_TAG 0.11.0
-)
-FetchContent_MakeAvailable(range-v3)
-link_libraries(range-v3)
-
-# FMT
-FetchContent_Declare(fmt
-        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-        GIT_TAG 8.0.1
-)
-FetchContent_MakeAvailable(fmt)
-link_libraries(fmt)
-
 # OpenMP
 find_package(OpenMP)
 link_libraries(OpenMP::OpenMP_CXX)
 
+#grpc
+FetchContent_Declare(
+  gRPC
+  GIT_REPOSITORY https://github.com/grpc/grpc
+  GIT_TAG        v1.59.3
+)
+set(FETCHCONTENT_QUIET OFF)
+FetchContent_MakeAvailable(gRPC)
+
 include_directories(.)
-add_subdirectory(Core)
-add_subdirectory(CoreTest)
-add_subdirectory(CoreBenchmark)
-add_subdirectory(Math)
-add_subdirectory(MathTest)
-add_subdirectory(Pattern)
-add_subdirectory(PatternTest)
+add_subdirectory(Base)
+add_subdirectory(BaseTest)
+add_subdirectory(BaseBenchmark)
+add_subdirectory(Board)
+add_subdirectory(BoardTest)
+add_subdirectory(BoardBenchmark)
+add_subdirectory(Game)
+add_subdirectory(GameTest)
+add_subdirectory(GameBenchmark)
 add_subdirectory(Search)
 add_subdirectory(SearchTest)
 add_subdirectory(SearchBenchmark)
+add_subdirectory(Math)
+add_subdirectory(MathTest)
+add_subdirectory(MathBenchmark)
+add_subdirectory(Pattern)
+add_subdirectory(PatternTest)
+add_subdirectory(PatternBenchmark)
+add_subdirectory(PatternFit)
 add_subdirectory(IO)
 add_subdirectory(IoTest)
+add_subdirectory(PerftCuda)
 
-add_subdirectory(PatternFit)
 add_subdirectory(OEIS)
 add_subdirectory(Perft)

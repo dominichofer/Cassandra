@@ -12,5 +12,6 @@ bool IsHorizontallySymmetric(uint64_t) noexcept;
 bool IsVerticallySymmetric(uint64_t) noexcept;
 
 uint64_t ParityQuadrants(uint64_t) noexcept;
-
 uint64_t EightNeighboursAndSelf(uint64_t) noexcept;
+
+std::string MultiLine(uint64_t);

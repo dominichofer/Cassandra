@@ -1,71 +1,85 @@
 #include "PatternFit.h"
-#include "Core/Core.h"
-#include "Math/Math.h"
-#include "Pattern/Pattern.h"
+#include "Base/Base.h"
 #include "Search/Search.h"
 #include <algorithm>
-#include <execution>
-#include <map>
-#include <stdexcept>
+#include <format>
 
 Vector FitWeights(
     const std::vector<uint64_t>& pattern,
-    const std::vector<Position>& pos,
-    const Vector& score,
+    std::span<ScoredPosition> scored_pos,
     int iterations)
 {
-    if (pos.size() != score.size())
-        throw std::runtime_error("Size mismatch!");
-
     auto indexer = GroupIndexer(pattern);
     std::size_t elements_per_row = indexer.Variations().size();
-    std::size_t rows = pos.size();
+    std::size_t rows = scored_pos.size();
     std::size_t cols = indexer.index_space_size;
 
+    // Create matrix
     MatrixCSR matrix{ elements_per_row, rows, cols };
-    #pragma omp parallel for schedule(static)
+    #pragma omp parallel for
     for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
-        indexer.InsertIndices(pos[i], matrix.Row(i));
+        indexer.InsertIndices(scored_pos[i].pos, matrix.Row(i));
+
+    // Create vector
+	Vector score(rows);
+    #pragma omp parallel for
+	for (int64_t i = 0; i < static_cast<int64_t>(rows); i++)
+		score[i] = scored_pos[i].score;
 
     Vector weights(cols, 0.0f);
     DiagonalPreconditioner P(JacobiPreconditionerOfATA(matrix));
     PCG solver(transposed(matrix) * matrix, P, weights, transposed(matrix) * score);
     solver.Iterate(iterations);
+    //for (int i = 0; i < iterations; i++)
+    //{
+    //    solver.Iterate();
+    //    std::cout << std::format("Iteration {}, error: {}", i + 1, solver.Residuum()) << std::endl;
+    //}
     return solver.X();
 }
 
-void ImproveScoreEstimator(
+void EvaluateIteratively(
     PatternBasedEstimator& estimator,
-    const std::vector<Position>& pos,
-    int depth, float confidence_level,
-    int fitting_iterations)
+    std::vector<ScoredPosition>& scored_pos,
+    Intensity intensity,
+    int fitting_iterations,
+    bool reevaluate)
 {
     LoggingTimer timer;
-    const auto pattern = estimator.Pattern();
-
-    HT tt{ 10'000'000 };
+    RAM_HashTable tt{ 10'000'000 };
     PVS alg{ tt, estimator };
+    auto pattern = estimator.Pattern();
 
     for (int stage = 0; stage < estimator.score.estimators.size(); stage++)
     {
-        tt.clear();
+        alg.Clear();
 
-        int stage_size = estimator.score.StageSize();
+        int stage_size = estimator.StageSize();
         int min = stage * stage_size;
-        int max = (stage + 1) * stage_size - 1;
-        std::vector<Position> stage_pos = EmptyCountFiltered(pos, min, max);
+        int max = min + stage_size - 1;
 
-        timer.Start(std::format("Stage {}, evaluated {} pos e{} to e{}", stage, stage_pos.size(), min, max));
-        Vector score(stage_pos.size(), 0);
-        #pragma omp parallel for
-        for (int i = 0; i < static_cast<int>(stage_pos.size()); i++)
-            score[i] = alg.Eval(stage_pos[i], { -inf_score, +inf_score }, depth, confidence_level).score;
-        timer.Stop();
+        //timer.Start();
+        #pragma omp parallel for schedule(static, 1)
+        for (int i = 0; i < static_cast<int>(scored_pos.size()); i++)
+        {
+			ScoredPosition& sp = scored_pos[i];
+			int empty_count = sp.EmptyCount();
+            if (min <= empty_count and empty_count <= max)
+			    if (reevaluate or not sp.HasScore())
+                    sp.score = alg.Eval(sp.pos, intensity).window.lower;
+        }
+        //timer.Stop(std::format("Stage {}, evaluated e{} to e{}.", stage, min, max));
 
-        timer.Start(std::format("Stage {}, fitting", stage));
-        Vector weights = FitWeights(pattern, stage_pos, score, fitting_iterations);
-        timer.Stop();
-
+        //timer.Start();
+        std::vector<ScoredPosition> stage_pos;
+        for (ScoredPosition& sp : scored_pos)
+        {
+            int empty_count = sp.EmptyCount();
+            if (min <= empty_count and empty_count <= max)
+                stage_pos.push_back(sp);
+        }
+        Vector weights = FitWeights(pattern, stage_pos, fitting_iterations);
         estimator.score.estimators[stage] = ScoreEstimator(pattern, weights);
+        //timer.Stop(std::format("Stage {}, fitted.", stage));
     }
 }

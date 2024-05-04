@@ -27,12 +27,11 @@ Game PlayedGame(Player& first, Player& second, Position start)
 	return game;
 }
 
-std::vector<Game> PlayedGamesFrom(Player& first, Player& second, const std::vector<Position>& starts)
+std::vector<Game> PlayedGames(Player& first, Player& second, const std::vector<Position>& starts)
 {
-	int64_t count = static_cast<int64_t>(starts.size());
-	std::vector<Game> ret(count);
+	std::vector<Game> ret(starts.size());
 	#pragma omp parallel for
-	for (int64_t i = 0; i < count; i++)
+	for (int64_t i = 0; i < static_cast<int64_t>(starts.size()); i++)
 		ret[i] = PlayedGame(first, second, starts[i]);
 	return ret;
 }

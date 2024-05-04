@@ -1,42 +1,27 @@
 #pragma once
-#include "Board/Board.h"
-#include <cstdint>
+#include "Game/Game.h"
 #include <string>
 
-enum class ResultType : int8_t
+struct Result
 {
-	fail_low = -1,
-	exact = 0,
-	fail_high = +1
-};
-
-ResultType operator-(ResultType);
-
-
-class Result
-{
-public:
-	ResultType score_type;
-	int8_t score;
-	int8_t depth;
-	float confidence_level;
-	Field best_move;
+	ClosedInterval window{ min_score, max_score };
+	Intensity intensity{ -1, 0.0f };
+	Field best_move = Field::PS;
 
 	Result() noexcept = default;
-	Result(ResultType, int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept;
+	Result(ClosedInterval window, Intensity intensity, Field best_move) noexcept;
+	static Result FailLow(Score, Intensity, Field best_move) noexcept;
+	static Result Exact(Score, Intensity, Field best_move) noexcept;
+	static Result FailHigh(Score, Intensity, Field best_move) noexcept;
 
-	static Result FailLow(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept;
-	static Result Exact(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept;
-	static Result FailHigh(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept;
-
+	bool operator==(const Result&) const noexcept = default;
+	bool operator!=(const Result&) const noexcept = default;
 	Result operator-() const noexcept;
+	Result operator+(int depth) const noexcept;
 
-	bool IsFailLow() const noexcept;
 	bool IsExact() const noexcept;
-	bool IsFailHigh() const noexcept;
 
-	ClosedInterval<> Window() const noexcept;
-	Result BetaCut(Field move) const noexcept;
+	Score GetScore() const noexcept;
 };
 
 std::string to_string(const Result&);

@@ -17,3 +17,12 @@ TEST(RandomPosition, is_deterministic)
 
 	ASSERT_EQ(pos_1, pos_2);
 }
+
+TEST(RandomPositionWithEmptyCount, is_deterministic)
+{
+	unsigned int seed = 42; // arbitrary
+	Position pos_1 = RandomPositionWithEmptyCount(3, seed);
+	Position pos_2 = RandomPositionWithEmptyCount(3, seed);
+
+	ASSERT_EQ(pos_1, pos_2);
+}

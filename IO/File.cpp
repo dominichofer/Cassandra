@@ -3,23 +3,23 @@
 #include <fstream>
 #include <iostream>
 
-std::vector<Position> LoadPosFile(const std::string& filename)
+std::vector<Position> LoadPositionFile(const std::string& filename)
 {
 	std::ifstream file(filename);
 	std::string line;
 	std::vector<Position> vec;
 	while (std::getline(file, line))
-		vec.push_back(PositionFromString(line));
+		vec.push_back(Position::FromString(line));
 	return vec;
 }
 
-std::vector<PosScore> LoadPosScoreFile(const std::string& filename)
+std::vector<ScoredPosition> LoadScoredPositionFile(const std::string& filename)
 {
 	std::ifstream file(filename);
 	std::string line;
-	std::vector<PosScore> vec;
+	std::vector<ScoredPosition> vec;
 	while (std::getline(file, line))
-		vec.push_back(PosScoreFromString(line));
+		vec.push_back(ScoredPosition::FromString(line));
 	return vec;
 }
 
@@ -29,16 +29,16 @@ std::vector<Game> LoadGameFile(const std::string& filename)
 	std::string line;
 	std::vector<Game> vec;
 	while (std::getline(file, line))
-		vec.push_back(GameFromString(line));
+		vec.push_back(Game::FromString(line));
 	return vec;
 }
 
-std::vector<GameScore> LoadGameScoreFile(const std::string& filename)
+std::vector<ScoredGame> LoadScoredGameFile(const std::string& filename)
 {
 	std::ifstream file(filename);
 	std::string line;
-	std::vector<GameScore> vec;
+	std::vector<ScoredGame> vec;
 	while (std::getline(file, line))
-		vec.push_back(GameScoreFromString(line));
+		vec.push_back(ScoredGame::FromString(line));
 	return vec;
 }

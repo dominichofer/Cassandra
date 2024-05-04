@@ -70,7 +70,7 @@ TEST(VectorTest, ElementwiseMultiplication)
 {
     Vector v1(3, 2.0);
     Vector v2(3, 3.0);
-    Vector elemMult = v1.elementwise_multiplication(v2);
+    Vector elemMult = elementwise_multiplication(v1, v2);
 
     EXPECT_EQ(elemMult.size(), 3);
     EXPECT_EQ(elemMult[0], 6.0);
@@ -82,7 +82,7 @@ TEST(VectorTest, ElementwiseDivision)
 {
     Vector v1(3, 6.0);
     Vector v2(3, 2.0);
-    Vector elemDiv = v1.elementwise_division(v2);
+    Vector elemDiv = elementwise_division(v1, v2);
 
     EXPECT_EQ(elemDiv.size(), 3);
     EXPECT_EQ(elemDiv[0], 3.0);
@@ -141,7 +141,7 @@ TEST(VectorTest, SizeMismatch)
 
     EXPECT_THROW(v1 += v2, std::runtime_error);
     EXPECT_THROW(v1 -= v2, std::runtime_error);
-    EXPECT_THROW(v1.elementwise_multiplication(v2), std::runtime_error);
-    EXPECT_THROW(v1.elementwise_division(v2), std::runtime_error);
+    EXPECT_THROW(elementwise_multiplication(v1, v2), std::runtime_error);
+    EXPECT_THROW(elementwise_division(v1, v2), std::runtime_error);
     EXPECT_THROW(dot(v1, v2), std::runtime_error);
 }

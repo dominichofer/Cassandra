@@ -41,8 +41,8 @@ Moves detail::PossibleMoves_AVX512(const Position& pos) noexcept
 #ifdef __AVX2__
 Moves detail::PossibleMoves_AVX2(const Position& pos) noexcept
 {
-	// 8 x OR, 12 x SHIFT, 11 x AND, 1 x NOT, 1 x reduce_or
-	// = 22 OPs + reduce_or
+	// 8 x OR, 12 x SHIFT, 11 x AND, 1 x NOT, 4 x Extract
+	// = 36 OPs
 
 	// 1 x AND
 	const __m256i P = _mm256_set1_epi64x(pos.Player());
@@ -76,18 +76,17 @@ Moves detail::PossibleMoves_AVX2(const Position& pos) noexcept
 	flip2 = _mm256_srlv_epi64(flip2, shift1); // flip2 >>= shift1;
 	
 	// 3 x OR, 4 x Extract
-	// flip_64 = reduce_or(flip1 | flip2)
-	const uint64_t flip = reduce_or(_mm256_or_si256(flip1, flip2));
+	const uint64_t flip = reduce_or(_mm256_or_si256(flip1, flip2)); // flip = reduce_or(flip1 | flip2)
 
-	// 1 x NOT, 2 x OR, 1 x AND
+	// 1 x AND, 1 x OR, 1 x NOT
 	return Moves{ pos.Empties() & flip };
 }
 #endif
 
 CUDA_CALLABLE Moves detail::PossibleMoves_x64(const Position& pos) noexcept
 {
-	// 48 x SHIFT, 42 x AND, 32 x OR, 1 x NOT
-	// = 123 OPs
+	// 48 x SHIFT, 38 x AND, 32 x OR, 1 x NOT
+	// = 119 OPs
 	
 	// 1 x AND
 	const uint64_t maskO = pos.Opponent() & 0x7E7E7E7E7E7E7E7EULL;
@@ -112,7 +111,7 @@ CUDA_CALLABLE Moves detail::PossibleMoves_x64(const Position& pos) noexcept
 	flip7 |= maskO & (flip7 << 9);
 	flip8 |= maskO & (flip8 >> 9);
 
-	// 8 x SHIFT, 8 x AND
+	// 8 x SHIFT, 4 x AND
 	uint64_t mask1 = maskO & (maskO << 1);
 	uint64_t mask2 = mask1 >> 1;
 	uint64_t mask3 = pos.Opponent() & (pos.Opponent() << 8);

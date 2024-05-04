@@ -77,17 +77,11 @@
     <ClCompile Include="Binary.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Board\Board.vcxproj">
-      <Project>{32d787bd-7a9d-4992-9a48-2f5d0a9cf323}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Game\Game.vcxproj">
       <Project>{86631341-af9e-4248-b776-8fbfc48b5df2}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Pattern\Pattern.vcxproj">
       <Project>{176ff1ea-baa3-4668-917c-0e8aee2c8cef}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Search\Search.vcxproj">
-      <Project>{eb2f9f10-aa8d-4693-8944-fa403d507b08}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,6 +1,6 @@
 #pragma once
-#include "Core/Core.h"
-#include "Moves.h"
+#include "Base/Base.h"
+#include "Field.h"
 #include <cassert>
 #include <cstdint>
 #include <span>
@@ -17,11 +17,12 @@ public:
 	Position() noexcept = default;
 	CUDA_CALLABLE constexpr Position(uint64_t P, uint64_t O) noexcept : P(P), O(O) { assert((P & O) == 0); }
 
+	static Position FromString(std::string_view);
 	static Position Start();
 
-	CUDA_CALLABLE bool operator==(const Position& o) const noexcept { return P == o.P && O == o.O; }
-	CUDA_CALLABLE bool operator!=(const Position& o) const noexcept { return P != o.P || O != o.O; }
-	CUDA_CALLABLE bool operator<(const Position& o) const noexcept { return P < o.P || (P == o.P && O < o.O); }
+	CUDA_CALLABLE bool operator==(const Position& o) const noexcept { return P == o.P and O == o.O; }
+	CUDA_CALLABLE bool operator!=(const Position& o) const noexcept { return P != o.P or O != o.O; }
+	CUDA_CALLABLE bool operator<(const Position& o) const noexcept { return P < o.P or (P == o.P and O < o.O); }
 
 	CUDA_CALLABLE uint64_t Player() const noexcept { return P; }
 	CUDA_CALLABLE uint64_t Opponent() const noexcept { return O; }
@@ -35,9 +36,6 @@ std::string SingleLine(const Position&);
 std::string MultiLine(const Position&);
 std::string to_string(const Position&);
 
-Position PositionFromString(std::string_view);
-
-bool IsPosition(std::string_view);
 
 constexpr Position operator""_pos(const char* c, std::size_t size)
 {
@@ -59,13 +57,11 @@ constexpr Position operator""_pos(const char* c, std::size_t size)
 
 CUDA_CALLABLE Position Play(const Position&, Field move, uint64_t flips) noexcept;
 CUDA_CALLABLE Position Play(const Position&, Field move) noexcept;
-
 CUDA_CALLABLE Position PlayPass(const Position&) noexcept;
-
 CUDA_CALLABLE Position PlayOrPass(const Position&, Field move) noexcept;
 
 Position FlippedCodiagonal(const Position&) noexcept;
 Position FlippedDiagonal(const Position&) noexcept;
 Position FlippedHorizontal(const Position&) noexcept;
 Position FlippedVertical(const Position&) noexcept;
-Position FlippedToUnique(Position) noexcept;
+Position FlippedToUnique(const Position&) noexcept;

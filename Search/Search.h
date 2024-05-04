@@ -1,10 +1,10 @@
 #pragma once
 #include "Game/Game.h"
 #include "Algorithm.h"
-#include "CountLastFlip.h"
+#include "DTS.h"
 #include "Estimator.h"
 #include "HashTable.h"
+#include "MoveSorter.h"
 #include "Result.h"
 #include "Solver.h"
-#include "SortedMoves.h"
-#include "Stability.h"
+#include "Status.h"

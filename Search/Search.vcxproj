@@ -79,27 +79,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Algorithm.cpp" />
     <ClCompile Include="AlphaBeta.cpp" />
+    <ClCompile Include="AspirationSearch.cpp" />
+    <ClCompile Include="DTS.cpp" />
     <ClCompile Include="HashTable.cpp" />
+    <ClCompile Include="IDAB.cpp" />
+    <ClCompile Include="MTD.cpp" />
     <ClCompile Include="NegaMax.cpp" />
+    <ClCompile Include="PIDAB.cpp" />
     <ClCompile Include="PrincipalVariation.cpp" />
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="Solver.cpp" />
-    <ClCompile Include="SortedMoves.cpp" />
-    <ClCompile Include="Stability.cpp" />
+    <ClCompile Include="MoveSorter.cpp" />
+    <ClCompile Include="Status.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="CountLastFlip.h" />
+    <ClInclude Include="DTS.h" />
     <ClInclude Include="Estimator.h" />
     <ClInclude Include="HashTable.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="Search.h" />
     <ClInclude Include="Solver.h" />
-    <ClInclude Include="SortedMoves.h" />
-    <ClInclude Include="Stability.h" />
+    <ClInclude Include="MoveSorter.h" />
+    <ClInclude Include="Status.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Game\Game.vcxproj">

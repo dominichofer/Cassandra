@@ -1,12 +1,18 @@
 #pragma once
 #include "Board/Board.h"
-#include "PositionScore.h"
+#include "ScoredPosition.h"
 #include "GameClass.h"
-#include "GameScore.h"
-#include <span>
+#include "ScoredGame.h"
 #include <vector>
 
-std::vector<Position> Positions(std::vector<Game>::const_iterator begin, std::vector<Game>::const_iterator end);
-std::vector<Position> Positions(const std::vector<Game>&);
+std::vector<Position> Positions(const Game&);
+std::vector<Position> Positions(const ScoredGame&);
+std::vector<Position> Positions(std::span<const Game>);
+std::vector<Position> Positions(std::span<const ScoredGame>);
+std::vector<Position> Positions(std::span<const ScoredPosition>);
+std::vector<Score> Scores(const ScoredGame&);
+std::vector<Score> Scores(std::span<const ScoredPosition>);
 
-std::vector<PosScore> PosScoreFromGameScores(std::span<const GameScore>);
+std::vector<ScoredPosition> ScoredPositions(std::span<const Game>);
+std::vector<ScoredPosition> ScoredPositions(std::span<const ScoredGame>);
+std::vector<ScoredPosition> ScoredPositions(std::span<const Position>, std::span<const Score>);

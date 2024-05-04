@@ -1,88 +1,87 @@
 #include "Vector.h"
 #include <cmath>
 #include <numeric>
-#include <stdexcept>
 #include <omp.h>
+#include <stdexcept>
 
-Vector& Vector::operator+=(const Vector& o)
+void operator+=(Vector& l, const Vector& o)
 {
-	if (data.size() != o.size())
+	if (l.size() != o.size())
 		throw std::runtime_error("Size mismatch");
 
-	const int64_t size = static_cast<int64_t>(data.size());
+	int64_t size = static_cast<int64_t>(l.size());
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
-		data[i] += o[i];
-	return *this;
+		l[i] += o[i];
 }
 
-Vector& Vector::operator-=(const Vector& o)
+void operator-=(Vector& l, const Vector& o)
 {
-	if (data.size() != o.size())
+	if (l.size() != o.size())
 		throw std::runtime_error("Size mismatch");
 
-	const int64_t size = static_cast<int64_t>(data.size());
+	int64_t size = static_cast<int64_t>(l.size());
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
-		data[i] -= o[i];
-	return *this;
+		l[i] -= o[i];
 }
 
-Vector& Vector::operator*=(float factor)
+void operator*=(Vector& l, float factor)
 {
-	const int64_t size = static_cast<int64_t>(data.size());
+	int64_t size = static_cast<int64_t>(l.size());
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
-		data[i] *= factor;
-	return *this;
+		l[i] *= factor;
 }
 
-Vector& Vector::operator/=(float factor)
+void operator/=(Vector& l, float factor)
 {
-	const int64_t size = static_cast<int64_t>(data.size());
+	int64_t size = static_cast<int64_t>(l.size());
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
-		data[i] /= factor;
-	return *this;
+		l[i] /= factor;
 }
 
-Vector& Vector::elementwise_multiplication(const Vector& o)
+Vector elementwise_multiplication(Vector l, const Vector& o)
 {
-	if (data.size() != o.size())
+	if (l.size() != o.size())
 		throw std::runtime_error("Size mismatch");
 
-	const int64_t size = static_cast<int64_t>(data.size());
+	int64_t size = static_cast<int64_t>(l.size());
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
-		data[i] *= o[i];
-	return *this;
+		l[i] *= o[i];
+	return l;
 }
 
-Vector& Vector::elementwise_division(const Vector& o)
+Vector elementwise_division(Vector l, const Vector& o)
 {
-	if (data.size() != o.size())
+	if (l.size() != o.size())
 		throw std::runtime_error("Size mismatch");
 
-	const int64_t size = static_cast<int64_t>(data.size());
+	int64_t size = static_cast<int64_t>(l.size());
 	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
-		data[i] /= o[i];
-	return *this;
+		l[i] /= o[i];
+	return l;
 }
 
 Vector operator+(Vector l, const Vector& r)
 {
-	return l += r;
+	l += r;
+	return l;
 }
 
 Vector operator+(const Vector& l, Vector&& r)
 {
-	return r += l;
+	r += l;
+	return r;
 }
 
 Vector operator-(Vector l, const Vector& r)
 {
-	return l -= r;
+	l -= r;
+	return l;
 }
 
 Vector operator-(const Vector& l, Vector&& r)
@@ -90,8 +89,8 @@ Vector operator-(const Vector& l, Vector&& r)
 	if (l.size() != r.size())
 		throw std::runtime_error("Size mismatch");
 
-	const int64_t size = static_cast<int64_t>(l.size());
-	#pragma omp parallel for
+	int64_t size = static_cast<int64_t>(l.size());
+	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
 		r[i] = l[i] - r[i];
 	return r;
@@ -99,33 +98,26 @@ Vector operator-(const Vector& l, Vector&& r)
 
 Vector operator*(Vector v, float factor)
 {
-	return v *= factor;
+	v *= factor;
+	return v;
 }
 
 Vector operator*(float factor, Vector v)
 {
-	return v *= factor;
+	v *= factor;
+	return v;
 }
 
 Vector operator/(Vector v, float factor)
 {
-	return v /= factor;
-}
-
-Vector elementwise_multiplication(Vector l, const Vector& r)
-{
-	return l.elementwise_multiplication(r);
-}
-
-Vector elementwise_division(Vector l, const Vector& r)
-{
-	return l.elementwise_division(r);
+	v /= factor;
+	return v;
 }
 
 Vector inv(Vector v)
 {
-	const int64_t size = static_cast<int64_t>(v.size());
-	#pragma omp parallel for
+	int64_t size = static_cast<int64_t>(v.size());
+	#pragma omp parallel for schedule(static)
 	for (int64_t i = 0; i < size; i++)
 		v[i] = 1.0f / v[i];
 	return v;
@@ -136,7 +128,12 @@ float dot(const Vector& l, const Vector& r)
 	if (l.size() != r.size())
 		throw std::runtime_error("Size mismatch");
 
-	return std::inner_product(std::begin(l), std::end(l), std::begin(r), 0.0f);
+	int64_t size = static_cast<int64_t>(l.size());
+	float result = 0.0f;
+	#pragma omp parallel for schedule(static) reduction(+:result)
+	for (int64_t i = 0; i < size; i++)
+		result += l[i] * r[i];
+	return result;
 }
 
 float norm(const Vector& x)
@@ -146,7 +143,12 @@ float norm(const Vector& x)
 
 float L1_norm(const Vector& x)
 {
-	return std::transform_reduce(std::begin(x), std::end(x), 0.0f, std::plus<>{}, static_cast<float (*)(float)>(std::abs));
+	int64_t size = static_cast<int64_t>(x.size());
+	float result = 0.0f;
+	#pragma omp parallel for schedule(static) reduction(+:result)
+	for (int64_t i = 0; i < size; i++)
+		result += std::abs(x[i]);
+	return result;
 }
 
 float L2_norm(const Vector& x)
@@ -156,7 +158,12 @@ float L2_norm(const Vector& x)
 
 float sum(const Vector& x)
 {
-	return std::accumulate(std::begin(x), std::end(x), 0.0f);
+	int64_t size = static_cast<int64_t>(x.size());
+	float result = 0.0f;
+	#pragma omp parallel for schedule(static) reduction(+:result)
+	for (int64_t i = 0; i < size; i++)
+		result += x[i];
+	return result;
 }
 
 std::string to_string(const Vector& v)

@@ -100,7 +100,7 @@ void CSRMatVec(const BenchmarkTable& table, const std::string& name)
 {
 	table.PrintHeader();
 	auto elements_per_row = 32;
-	for (int size = 1024; size <= 2_MB; size *= 2)
+	for (int size = 1024; size <= 2'097'152; size *= 2)
 	{
 		auto A = RandomMatrixCSR(elements_per_row, size, size / 16);
 		auto x = RandomVector(size / 16);
@@ -118,7 +118,7 @@ void CSRVecMat(const BenchmarkTable& table, const std::string& name)
 {
 	table.PrintHeader();
 	auto elements_per_row = 32;
-	for (int size = 1024; size <= 2_MB; size *= 2)
+	for (int size = 1024; size <= 2'097'152; size *= 2)
 	{
 		auto A = RandomMatrixCSR(elements_per_row, size, size / 16);
 		auto x = RandomVector(size);

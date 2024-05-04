@@ -75,14 +75,24 @@
 };
 
 
-#ifdef __AVX2__
-
 CUDA_CALLABLE uint64_t Flips(const Position& pos, Field move) noexcept
+{
+	#ifdef __NVCC__
+		return detail::Flips_x64(pos, move);
+	#elif defined(__AVX2__)
+		return detail::Flips_AVX2(pos, move);
+	#else
+		return detail::Flips_x64(pos, move);
+	#endif
+}
+
+#ifdef __AVX2__
+CUDA_CALLABLE uint64_t detail::Flips_AVX2(const Position& pos, Field move) noexcept
 {
 	const __m256i P = _mm256_set1_epi64x(pos.Player());
 	const __m256i O = _mm256_set1_epi64x(pos.Opponent());
-	const __m256i mask1 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(masks.data() + std::to_underlying(move) * 8 + 0));
-	const __m256i mask2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(masks.data() + std::to_underlying(move) * 8 + 4));
+	const __m256i mask1 = _mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + std::to_underlying(move) * 8 + 0));
+	const __m256i mask2 = _mm256_load_si256(reinterpret_cast<const __m256i*>(masks.data() + std::to_underlying(move) * 8 + 4));
 
 	__m256i outflank1 = _mm256_andnot_si256(O, mask1);
 
@@ -104,14 +114,13 @@ CUDA_CALLABLE uint64_t Flips(const Position& pos, Field move) noexcept
 
 	return reduce_or(_mm256_or_si256(flip1, flip2)); // reduce_or(flip1 | flip2)
 }
+#endif
 
-#else
-
-CUDA_CALLABLE uint64_t Flips(const Position& pos, Field move) noexcept
+CUDA_CALLABLE uint64_t detail::Flips_x64(const Position& pos, Field move) noexcept
 {
 	const uint64_t P = pos.Player();
 	const uint64_t O = pos.Opponent();
-	const uint64_t m = static_cast<uint64_t>(move);
+	const auto m = std::to_underlying(move);
 
 	uint64_t outflank0 = ~O & masks[m * 8 + 0];
 	uint64_t outflank1 = ~O & masks[m * 8 + 1];
@@ -129,15 +138,15 @@ CUDA_CALLABLE uint64_t Flips(const Position& pos, Field move) noexcept
 	outflank2 &= P;
 	outflank3 &= P;
 
-	outflank0 -= static_cast<uint64_t>(outflank0 != 0);
-	outflank1 -= static_cast<uint64_t>(outflank1 != 0);
-	outflank2 -= static_cast<uint64_t>(outflank2 != 0);
-	outflank3 -= static_cast<uint64_t>(outflank3 != 0);
+	outflank0 -= outflank0 ? 1 : 0;
+	outflank1 -= outflank1 ? 1 : 0;
+	outflank2 -= outflank2 ? 1 : 0;
+	outflank3 -= outflank3 ? 1 : 0;
 
 	uint64_t flip = outflank0 & masks[m * 8 + 0]
-				| outflank1 & masks[m * 8 + 1]
-				| outflank2 & masks[m * 8 + 2]
-				| outflank3 & masks[m * 8 + 3];
+				  | outflank1 & masks[m * 8 + 1]
+				  | outflank2 & masks[m * 8 + 2]
+				  | outflank3 & masks[m * 8 + 3];
 
 	// isolate non-opponent MS1B by clearing lower bits
 	uint64_t outflank4 = (P & masks[m * 8 + 4]) << 1;
@@ -171,4 +180,3 @@ CUDA_CALLABLE uint64_t Flips(const Position& pos, Field move) noexcept
 				| -(~eraser6 & outflank6) & masks[m * 8 + 6]
 				| -(~eraser7 & outflank7) & masks[m * 8 + 7];
 }
-#endif

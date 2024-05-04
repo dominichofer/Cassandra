@@ -1,0 +1,184 @@
+Core
+	Algorithm:
+		Sample(int size, pool, seed) -> auto
+		join(separator, iterable, projection) -> auto
+	Bit:
+		not_si256(__m256i) -> __m256i
+		neg_epi64(__m256i) -> __m256i
+		reduce_or(__m256i) -> uint64
+		
+		countl_zero(uint64) -> int
+		countl_one(uint64) -> int
+		countr_zero(uint64) -> int
+		countr_one(uint64) -> int
+		popcount(uint64) -> int
+		
+		GetLSB(uint64) -> uint64
+		RemoveLSB(uint64&)
+		BExtr(uint64, uint start, uint len) -> uint64
+		PDep(uint64, uint64 mask) -> uint64
+		PExt(uint64, uint64 mask) -> uint64
+		BSwap(uint64) -> uint64
+	HashTable:
+		HashTable<Node>
+	Interval:
+		class OpenInterval:
+			int lower
+			int upper
+		class ClosedInterval:
+			int lower
+			int upper
+	String:
+		HH_MM_SS(duration) -> string
+		ShortTimeString(duration) -> string
+		
+		MetricPrefix(int magnitude) -> string
+		ParseBytes(string) -> std::size_t
+		
+		operator""_kB(uint64) -> int64
+		operator""_MB(uint64) -> int64
+		operator""_GB(uint64) -> int64
+		operator""_TB(uint64) -> int64
+		operator""_PB(uint64) -> int64
+		operator""_EB(uint64) -> int64
+		operator""_ZB(uint64) -> int64
+		operator""_YB(uint64) -> int64
+	Table:
+		class Table:
+			Table(string title, string format)
+			PrintHeader()
+			PrintSeparator()
+			PrintRow(content)
+	Utility:
+		to_underlying(value) -> auto
+		
+Board
+	BitBoard:
+		FlippedCodiagonal(uint64) -> uint64
+		FlippedDiagonal(uint64) -> uint64
+		FlippedHorizontal(uint64) -> uint64
+		FlippedVertical(uint64) -> uint64
+
+		IsCodiagonallySymmetric(uint64) -> bool
+		IsDiagonallySymmetric(uint64) -> bool
+		IsHorizontallySymmetric(uint64) -> bool
+		IsVerticallySymmetric(uint64) -> bool
+
+		ParityQuadrants(uint64) -> uint64
+		EightNeighboursAndSelf(uint64) -> uint64
+	Children:
+		Children(pos, int plies, bool pass_is_a_ply) -> generator
+		Children(pos, int empty_count) -> generator
+		UniqueChildren(pos, int empty_count) -> set
+	Field:
+		enum Field
+		Bit(Field) -> uint64
+		to_string(Field) -> string
+		IsField(string) -> bool
+		FieldFromString(string) -> Field
+	Flips:
+		Flips(pos, move) -> uint64
+	Moves:
+		class Moves:
+			Moves(uint64)
+			empty() -> bool
+			contains(Field) -> bool
+			erase(Field)
+			size() -> std::size_t
+			front() -> Field
+			pop_front()
+			begin() -> iterator
+			end() -> iterator
+	Position:
+		class Position:
+			Position(uint64 player, uint64 opponent)
+			Start() -> Position
+			Player() -> uint64
+			Opponent() -> uint64
+			Discs() -> uint64
+			Empties() -> uint64
+			EmptyCount() -> int
+			
+		SingleLine(pos) -> string
+		MultiLine(pos) -> string
+		to_string(pos) -> string
+		PositionFromString(string) -> pos
+		IsPosition(string) -> bool
+		operator""_pos(string) -> pos
+		
+		Play(pos, move, flips) -> pos
+		Play(pos, move) -> pos
+		PlayPass(pos) -> pos
+		PlayOrPass(pos, move) -> pos
+		
+		FlippedCodiagonal(pos) -> pos
+		FlippedDiagonal(pos) -> pos
+		FlippedHorizontal(pos) -> pos
+		FlippedVertical(pos) -> pos
+		FlippedToUnique(pos) -> pos
+	PositionGenerator:
+		class RandomPositionGenerator:
+			RandomPositionGenerator(seed)
+			operator() -> pos
+		RandomPosition(seed) -> pos
+		RandomPositionWithEmptyCount(int empty_count, seed) -> pos
+	PossibleMoves:
+		PossibleMoves(pos) -> Moves
+		
+Game
+	GameClass:
+		class Game:
+			Game(start_pos, moves)
+			StartPosition() -> pos
+			Moves() -> vector
+			Positions() -> positions
+		IsGame(string) -> bool
+		to_string(game) -> string
+		GameFromString(string) -> Game
+	GameGenerator:
+		PlayedGame(first_player, second_player, start_pos) -> Game
+		PlayedGamesFrom(first_player, second_player, start_positions) -> vector
+	GameScore:
+		class GameScore:
+			Game game
+			vector scores
+			GameScore(Game, scores)
+			clear_scores()
+		IsGameScore(string) -> bool
+		to_string(GameScore) -> string
+		GameScoreFromString(string) -> GameScore
+	Player:
+		Interface Player:
+			ChooseMove(pos) -> move
+		class RandomPlayer:
+			RandomPlayer(seed)
+			ChooseMove(pos) -> move
+	PositionScore:
+		class PosScore:
+			pos
+			int scores
+		IsPositionScore(string) -> bool
+		to_string(PosScore) -> string
+		PosScoreFromString(string) -> PosScore
+	Score:
+		int min_score
+		int max_score
+		int inf_score
+		int undefined_score
+		float inf
+		
+		EndScore(pos) -> int
+		DepthClToString(depth, confidence_level) -> string
+		DepthClFromString(string) -> tuple<int, float>
+		
+		IsScore(string) -> bool
+		ScoreToString(int) -> string
+		ScoreFromString(string) -> int
+	Filter:
+		EmptyCountFiltered(positions, int min_empty_count, int max_empty_count) -> vector
+		EmptyCountFiltered(positions, int empty_count) -> vector
+		EmptyCountFiltered(PosScores, int min_empty_count, int max_empty_count) -> vector
+		EmptyCountFiltered(PosScores, int empty_count) -> vector
+	Transformation:
+		Positions(games) -> vector
+		PosScoreFromGameScores(GameScores) -> PosScores

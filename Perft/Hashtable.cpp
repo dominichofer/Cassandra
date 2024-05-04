@@ -1,32 +1,37 @@
 #include "Hashtable.h"
 
-void BigNode::Update(const key_type& new_key, const value_type& new_value)
+uint64_t Hash(const Position& pos, int depth)
 {
-	ScopedLock lock{ m_value };
-	if (new_value > lock.value)
-	{
-		m_key = new_key;
-		lock.value = new_value;
-	}
+	const uint64_t kMul = 0x9ddfea08eb382d69ULL;
+	uint64_t a = pos.Player() * kMul + depth;
+	a ^= (a >> 47);
+	uint64_t b = (pos.Opponent() ^ a) * kMul;
+	b ^= (b >> 47);
+	return b;
 }
 
-std::optional<BigNode::value_type> BigNode::LookUp(const key_type& key) const
+void HashTable::Insert(const Position& pos, int depth, uint64_t value)
 {
-	const auto pair = Get();
-	if (pair.key == key)
-		return pair.value;
-	return {};
+	auto index = Hash(pos, depth);
+	std::unique_lock lock(mutexes[index & 0xFFULL]);
+	Bucket& bucket = buckets[index % buckets.size()];
+	if (value > bucket.value)
+		bucket = { pos, depth, value };
 }
 
-void BigNode::Clear()
+uint64_t HashTable::LookUp(const Position& pos, int depth) const
 {
-	ScopedLock lock{m_value};
-	m_key = key_type{};
-	lock.value = 0;
+	auto index = Hash(pos, depth);
+	std::shared_lock lock(mutexes[index & 0xFFULL]);
+	const Bucket& bucket = buckets[index % buckets.size()];
+	if (bucket.pos == pos and bucket.depth == depth)
+		return bucket.value;
+	return 0;
 }
 
-BigNode::KeyValuePair BigNode::Get() const
+void HashTable::Clear()
 {
-	ScopedLock lock{m_value};
-	return { m_key, lock.value };
+	#pragma omp parallel for
+	for (int64_t i = 0; i < static_cast<int64_t>(buckets.size()); i++)
+		buckets[i] = {};
 }

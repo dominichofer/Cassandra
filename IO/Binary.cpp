@@ -24,7 +24,7 @@ void Serialize(const MultiStageScoreEstimator& msse, std::ostream& stream)
 template <>
 MultiStageScoreEstimator Deserialize<MultiStageScoreEstimator>(std::istream& stream)
 {
-	auto stage_size = Deserialize<std::size_t>(stream);
+	auto stage_size = Deserialize<int>(stream);
 	auto pattern = Deserialize<std::vector<uint64_t>>(stream);
 	auto msse = MultiStageScoreEstimator(stage_size, std::move(pattern));
 	msse.estimators = Deserialize<std::vector<ScoreEstimator>>(stream);

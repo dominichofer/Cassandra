@@ -1,85 +1,223 @@
 #include "pch.h"
 
-//enum class Fail { hard, soft };
-//
-//void Test(Context& alg, PosScore pos_score, Fail fail = Fail::soft, OpenInterval w = { -inf_score, +inf_score })
-//{
-//	auto pos = pos_score.pos;
-//	auto correct = pos_score.score;
-//
-//	int result = alg.Eval(pos, w);
-//
-//	if (correct < w) // fail low
-//		if (fail == Fail::hard)
-//			ASSERT_EQ(result, w.Lower());
-//		else
-//			ASSERT_LE(result, w.Lower());
-//	else if (correct > w) // fail high
-//		if (fail == Fail::hard)
-//			ASSERT_EQ(result, w.Upper());
-//		else
-//			ASSERT_GE(result, w.Upper());
-//	else // score found
-//		ASSERT_EQ(result, correct);
-//}
-//void Test(Context&& alg, PosScore pos_score, Fail fail = Fail::soft, OpenInterval w = { -inf_score, +inf_score })
-//{
-//	Test(alg, pos_score, fail, w);
-//}
-//
-//void TestAllWindows(Algorithm& alg, PosScore pos_score, Fail fail = Fail::soft)
-//{
-//	for (int lower : std::views::iota(min_score, max_score + 1))
-//		for (int upper : std::views::iota(lower + 1, max_score + 1))
-//			Test(alg, pos_score, fail, { lower, upper });
-//}
-//void TestAllWindows(Algorithm&& alg, PosScore pos_score, Fail fail = Fail::soft)
-//{
-//	TestAllWindows(alg, pos_score, fail);
-//}
-//
-
-TEST(NegaMax, Endgame)
+struct AlgorithmTest : ::testing::TestWithParam<ScoredPosition>
 {
-	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\endgame.ps");
-	for (const PosScore& ps : data)
-	{
-		int score = NegaMax{}.Eval(ps.pos).score;
-		EXPECT_EQ(score, ps.score);
-	}
-}
+	std::vector<ScoredPosition> endgame, fforum;
 
-TEST(AlphaBeta, Endgame)
-{
-	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\endgame.ps");
-	for (const PosScore& ps : data)
+	void SetUp()
 	{
-		int score = AlphaBeta{}.Eval(ps.pos).score;
-		EXPECT_EQ(score, ps.score);
+		endgame = LoadScoredPositionFile("..\\data\\endgame.ps");
+		fforum = LoadScoredPositionFile("..\\data\\fforum-1-19.ps");
 	}
-}
 
-TEST(PVS, Endgame)
-{
-	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\endgame.ps");
-	for (const PosScore& ps : data)
+	void test_full_window(Algorithm&& alg, const ScoredPosition& scored_position)
 	{
-		HT tt{ 1'000'000 };
-		Result result = PVS{ tt, EstimatorStub{} }.Eval(ps.pos);
-		EXPECT_EQ(result.score, ps.score);
+		Result result = alg.Eval(scored_position.pos);
+		EXPECT_EQ(result.window, ClosedInterval(scored_position.score, scored_position.score));
 	}
-}
+	void test_full_window(Algorithm&& alg, const std::vector<ScoredPosition>& scored_positions)
+	{
+		for (const ScoredPosition& ps : scored_positions)
+		{
+			Result result = alg.Eval(ps.pos);
+			EXPECT_EQ(result.window, ClosedInterval(ps.score, ps.score));
+		}
+	}
 
-TEST(PVS, FForum1)
-{
-	std::vector<PosScore> data = LoadPosScoreFile("..\\data\\fforum-1-19.ps");
-	for (const PosScore& ps : data)
+	void test_fail_high(Algorithm&& alg, const ScoredPosition& ps)
 	{
-		HT tt{ 1'000'000 };
-		Result result = PVS{ tt, EstimatorStub{} }.Eval(ps.pos);
-		EXPECT_EQ(result.score, ps.score);
+		Result result = alg.Eval(ps.pos, OpenInterval{ min_score, std::min<Score>(ps.score, min_score + 1) });
+		EXPECT_TRUE(result.window.Contains(ps.score));
 	}
-}
+	void test_fail_high(Algorithm&& alg, const std::vector<ScoredPosition>& scored_positions)
+	{
+		for (const ScoredPosition& ps : scored_positions)
+		{
+			Result result = alg.Eval(ps.pos, OpenInterval{ min_score, std::min<Score>(ps.score, min_score + 1) });
+			EXPECT_TRUE(result.window.Contains(ps.score));
+		}
+	}
+
+	void test_fail_low(Algorithm&& alg, const ScoredPosition& ps)
+	{
+		Result result = alg.Eval(ps.pos, OpenInterval{ std::max<Score>(ps.score, max_score - 1), max_score });
+		EXPECT_TRUE(result.window.Contains(ps.score));
+	}
+	void test_fail_low(Algorithm&& alg, const std::vector<ScoredPosition>& scored_positions)
+	{
+		for (const ScoredPosition& ps : scored_positions)
+		{
+			Result result = alg.Eval(ps.pos, OpenInterval{ std::max<Score>(ps.score, max_score - 1), max_score });
+			EXPECT_TRUE(result.window.Contains(ps.score));
+		}
+	}
+};
+
+TEST_F(AlgorithmTest, NegaMax_Endgame_full_window) { test_full_window(NegaMax{}, endgame); }
+TEST_F(AlgorithmTest, NegaMax_Endgame_fail_high) { test_fail_high(NegaMax{}, endgame); }
+TEST_F(AlgorithmTest, NegaMax_Endgame_fail_low) { test_fail_low(NegaMax{}, endgame); }
+
+TEST_F(AlgorithmTest, AlphaBeta_Endgame_full_window) { test_full_window(AlphaBeta{}, endgame); }
+TEST_F(AlgorithmTest, AlphaBeta_Endgame_fail_high) { test_fail_high(AlphaBeta{}, endgame); }
+TEST_F(AlgorithmTest, AlphaBeta_Endgame_fail_low) { test_fail_low(AlphaBeta{}, endgame); }
+TEST_F(AlgorithmTest, AlphaBeta_FForum_full_window) { test_full_window(AlphaBeta{}, fforum); }
+TEST_F(AlgorithmTest, AlphaBeta_FForum_fail_high) { test_fail_high(AlphaBeta{}, fforum); }
+TEST_F(AlgorithmTest, AlphaBeta_FForum_fail_low) { test_fail_low(AlphaBeta{}, fforum); }
+
+TEST_F(AlgorithmTest, PVS_Endgame_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, endgame); }
+TEST_F(AlgorithmTest, PVS_Endgame_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, endgame); }
+TEST_F(AlgorithmTest, PVS_Endgame_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, endgame); }
+TEST_F(AlgorithmTest, PVS_FForum_00_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[0]); }
+TEST_F(AlgorithmTest, PVS_FForum_01_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[1]); }
+TEST_F(AlgorithmTest, PVS_FForum_02_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[2]); }
+TEST_F(AlgorithmTest, PVS_FForum_03_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[3]); }
+TEST_F(AlgorithmTest, PVS_FForum_04_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[4]); }
+TEST_F(AlgorithmTest, PVS_FForum_05_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[5]); }
+TEST_F(AlgorithmTest, PVS_FForum_06_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[6]); }
+TEST_F(AlgorithmTest, PVS_FForum_07_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[7]); }
+TEST_F(AlgorithmTest, PVS_FForum_08_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[8]); }
+TEST_F(AlgorithmTest, PVS_FForum_09_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[9]); }
+TEST_F(AlgorithmTest, PVS_FForum_10_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[10]); }
+TEST_F(AlgorithmTest, PVS_FForum_11_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[11]); }
+TEST_F(AlgorithmTest, PVS_FForum_12_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[12]); }
+TEST_F(AlgorithmTest, PVS_FForum_13_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[13]); }
+TEST_F(AlgorithmTest, PVS_FForum_14_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[14]); }
+TEST_F(AlgorithmTest, PVS_FForum_15_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[15]); }
+TEST_F(AlgorithmTest, PVS_FForum_16_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[16]); }
+TEST_F(AlgorithmTest, PVS_FForum_17_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[17]); }
+TEST_F(AlgorithmTest, PVS_FForum_18_full_window) { RAM_HashTable tt{ 1'000'000 }; test_full_window(PVS{ tt, EstimatorStub{} }, fforum[18]); }
+TEST_F(AlgorithmTest, PVS_FForum_00_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[0]); }
+TEST_F(AlgorithmTest, PVS_FForum_01_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[1]); }
+TEST_F(AlgorithmTest, PVS_FForum_02_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[2]); }
+TEST_F(AlgorithmTest, PVS_FForum_03_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[3]); }
+TEST_F(AlgorithmTest, PVS_FForum_04_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[4]); }
+TEST_F(AlgorithmTest, PVS_FForum_05_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[5]); }
+TEST_F(AlgorithmTest, PVS_FForum_06_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[6]); }
+TEST_F(AlgorithmTest, PVS_FForum_07_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[7]); }
+TEST_F(AlgorithmTest, PVS_FForum_08_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[8]); }
+TEST_F(AlgorithmTest, PVS_FForum_09_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[9]); }
+TEST_F(AlgorithmTest, PVS_FForum_10_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[10]); }
+TEST_F(AlgorithmTest, PVS_FForum_11_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[11]); }
+TEST_F(AlgorithmTest, PVS_FForum_12_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[12]); }
+TEST_F(AlgorithmTest, PVS_FForum_13_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[13]); }
+TEST_F(AlgorithmTest, PVS_FForum_14_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[14]); }
+TEST_F(AlgorithmTest, PVS_FForum_15_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[15]); }
+TEST_F(AlgorithmTest, PVS_FForum_16_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[16]); }
+TEST_F(AlgorithmTest, PVS_FForum_17_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[17]); }
+TEST_F(AlgorithmTest, PVS_FForum_18_fail_high) { RAM_HashTable tt{ 1'000'000 }; test_fail_high(PVS{ tt, EstimatorStub{} }, fforum[18]); }
+TEST_F(AlgorithmTest, PVS_FForum_00_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[0]); }
+TEST_F(AlgorithmTest, PVS_FForum_01_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[1]); }
+TEST_F(AlgorithmTest, PVS_FForum_02_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[2]); }
+TEST_F(AlgorithmTest, PVS_FForum_03_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[3]); }
+TEST_F(AlgorithmTest, PVS_FForum_04_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[4]); }
+TEST_F(AlgorithmTest, PVS_FForum_05_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[5]); }
+TEST_F(AlgorithmTest, PVS_FForum_06_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[6]); }
+TEST_F(AlgorithmTest, PVS_FForum_07_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[7]); }
+TEST_F(AlgorithmTest, PVS_FForum_08_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[8]); }
+TEST_F(AlgorithmTest, PVS_FForum_09_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[9]); }
+TEST_F(AlgorithmTest, PVS_FForum_10_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[10]); }
+TEST_F(AlgorithmTest, PVS_FForum_11_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[11]); }
+TEST_F(AlgorithmTest, PVS_FForum_12_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[12]); }
+TEST_F(AlgorithmTest, PVS_FForum_13_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[13]); }
+TEST_F(AlgorithmTest, PVS_FForum_14_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[14]); }
+TEST_F(AlgorithmTest, PVS_FForum_15_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[15]); }
+TEST_F(AlgorithmTest, PVS_FForum_16_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[16]); }
+TEST_F(AlgorithmTest, PVS_FForum_17_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[17]); }
+TEST_F(AlgorithmTest, PVS_FForum_18_fail_low) { RAM_HashTable tt{ 1'000'000 }; test_fail_low(PVS{ tt, EstimatorStub{} }, fforum[18]); }
+
+//TEST_F(AlgorithmTest, MTD_Endgame)
+//{
+//	for (const ScoredPosition& ps : endgame)
+//	{
+//		RAM_HashTable tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		Result result = MTD{ pvs }.Eval(ps.pos);
+//		EXPECT_EQ(result.GetScore(), ps.score);
+//	}
+//}
+//
+//TEST_F(AlgorithmTest, MTD_FForum1)
+//{
+//	for (const ScoredPosition& ps : fforum1)
+//	{
+//		RAM_HashTable tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		Result result = MTD{ pvs }.Eval(ps.pos);
+//		EXPECT_EQ(result.GetScore(), ps.score);
+//	}
+//}
+//
+//TEST_F(AlgorithmTest, IDAB_Endgame)
+//{
+//	for (const ScoredPosition& ps : endgame)
+//	{
+//		RAM_HashTable tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		Result result = IDAB{ pvs }.Eval(ps.pos);
+//		EXPECT_EQ(result.GetScore(), ps.score);
+//	}
+//}
+//
+//TEST_F(AlgorithmTest, IDAB_FForum1)
+//{
+//	for (const ScoredPosition& ps : fforum1)
+//	{
+//		RAM_HashTable tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		Result result = IDAB{ pvs }.Eval(ps.pos);
+//		EXPECT_EQ(result.GetScore(), ps.score);
+//	}
+//}
+
+//TEST_F(AlgorithmTest, DTS_Endgame)
+//{
+//	for (const ScoredPosition& ps : endgame)
+//	{
+//		RAM_HashTable tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		MoveSorter move_sorter{ tt, pvs };
+//		Result result = DTS{ tt, pvs, move_sorter, 3 }.Eval(ps.pos);
+//		EXPECT_EQ(result.score, ps.score);
+//	}
+//}
+
+//TEST_F(AlgorithmTest, DTS_FForum1)
+//{
+//	for (const ScoredPosition& ps : fforum1)
+//	{
+//		HT tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		MoveSorter move_sorter{ tt, pvs };
+//		Result result = DTS{ tt, pvs, move_sorter, 5 }.Eval(ps.pos);
+//		EXPECT_EQ(result.score, ps.score);
+//	}
+//}
+
+//TEST_F(AlgorithmTest, IDAB_DTS_Endgame)
+//{
+//	for (const ScoredPosition& ps : endgame)
+//	{
+//		HT tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		MoveSorter move_sorter{ tt, pvs };
+//		DTS dts{ tt, pvs, move_sorter, 3 };
+//		Result result = IDAB{ dts }.Eval(ps.pos);
+//		EXPECT_EQ(result.score, ps.score);
+//	}
+//}
+//
+//TEST_F(AlgorithmTest, IDAB_DTS_FForum1)
+//{
+//	for (const ScoredPosition& ps : fforum1)
+//	{
+//		HT tt{ 1'000'000 };
+//		PVS pvs{ tt, EstimatorStub{} };
+//		MoveSorter move_sorter{ tt, pvs };
+//		DTS dts{ tt, pvs, move_sorter, 3 };
+//		Result result = IDAB{ dts }.Eval(ps.pos);
+//		EXPECT_EQ(result.score, ps.score);
+//	}
+//}
 
 //TEST(NegaMax, Zero_empty_0) { ::Test(NegaMax{}, Zero_empty_0); }
 //TEST(NegaMax, Zero_empty_1) { ::Test(NegaMax{}, Zero_empty_1); }

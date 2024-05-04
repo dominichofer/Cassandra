@@ -1,5 +1,5 @@
+#include "Base/Base.h"
 #include "BitBoard.h"
-#include "Bit.h"
 
 uint64_t FlippedCodiagonal(uint64_t b) noexcept
 {
@@ -103,7 +103,7 @@ bool IsVerticallySymmetric(uint64_t b) noexcept
 	return FlippedVertical(b) == b;
 }
 
-
+// Mask the quadrants with odd number of set bits.
 uint64_t ParityQuadrants(uint64_t b) noexcept
 {
 	// 4 x SHIFT, 4 x XOR, 1 x AND, 1 x MUL
@@ -120,4 +120,21 @@ uint64_t EightNeighboursAndSelf(uint64_t b) noexcept
 {
 	b |= (b >> 8) | (b << 8);
 	return b | ((b << 1) & 0xFEFEFEFEFEFEFEFEULL) | ((b >> 1) & 0x7F7F7F7F7F7F7F7FULL);
+}
+
+std::string MultiLine(uint64_t b)
+{
+	std::string board = "  A B C D E F G H  \n";
+	for (int i = 0; i < 8; i++)
+	{
+		board += std::to_string(i + 1) + " ";
+		for (int j = 0; j < 8; j++)
+			if (b & 1ULL << (63 - i * 8 - j))
+				board += "X ";
+			else
+				board += "- ";
+		board += std::to_string(i + 1) + "\n";
+	}
+	board += "  A B C D E F G H  ";
+	return board;
 }

@@ -3,28 +3,29 @@
 #include <cstdint>
 #include <chrono>
 #include <span>
+#include <thread>
 
 class Solver
 {
 	Algorithm& alg;
-	bool parallel, silent;
+	bool silent;
+	int threads;
 	Table table;
-public:
 	int64_t abs_err;
+	int counter;
+public:
 	uint64_t nodes;
 	std::chrono::duration<double> time;
-	int counter;
 
-	Solver(Algorithm&, bool parallel = true, bool silent = false) noexcept;
+	Solver(Algorithm&, bool silent = false, int threads = std::thread::hardware_concurrency()) noexcept;
 
-	void Solve(std::span<const Position>, OpenInterval window, int depth, float confidence_level);
-	void Solve(std::span<const Position>);
-	void Solve(std::span<const PosScore>, OpenInterval window, int depth, float confidence_level);
-	void Solve(std::span<const PosScore>);
+	std::vector<Score> Solve(std::span<const Position>, OpenInterval window, Intensity);
+	std::vector<Score> Solve(std::span<const Position>);
+	std::vector<Score> Solve(std::span<const ScoredPosition>, OpenInterval window, Intensity);
+	std::vector<Score> Solve(std::span<const ScoredPosition>);
 	void Clear();
-
 	void PrintHeader() const;
 	void PrintSummary() const;
 private:
-	void PrintRow(int index, const Result& result, int score, std::chrono::duration<double> time, uint64_t nodes);
+	void PrintRow(int index, const Result&, Score, std::chrono::duration<double> time, uint64_t nodes);
 };

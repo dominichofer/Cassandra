@@ -57,7 +57,7 @@ TEST(StableStonesOpponent, filled_edges_are_stable)
 	ASSERT_EQ(StableStonesOpponent(pos), stables);
 }
 
-TEST(StableStonesOpponent, unatackables_are_stable)
+TEST(StableStonesOpponent, unattackables_are_stable)
 {
 	const auto pos =
 		"X - - X - - X -"

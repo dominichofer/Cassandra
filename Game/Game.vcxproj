@@ -74,23 +74,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ConfidenceLevel.h" />
     <ClInclude Include="GameClass.h" />
+    <ClInclude Include="Intensity.h" />
+    <ClInclude Include="Interval.h" />
     <ClInclude Include="Score.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameGenerator.h" />
-    <ClInclude Include="GameScore.h" />
+    <ClInclude Include="ScoredGame.h" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="PositionScore.h" />
+    <ClInclude Include="ScoredPosition.h" />
     <ClInclude Include="Transformation.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ConfidenceLevel.cpp" />
     <ClCompile Include="Filter.cpp" />
     <ClCompile Include="GameClass.cpp" />
     <ClCompile Include="GameGenerator.cpp" />
-    <ClCompile Include="GameScore.cpp" />
+    <ClCompile Include="Intensity.cpp" />
+    <ClCompile Include="ScoredGame.cpp" />
     <ClCompile Include="Player.cpp" />
-    <ClCompile Include="PositionScore.cpp" />
+    <ClCompile Include="ScoredPosition.cpp" />
     <ClCompile Include="Score.cpp" />
     <ClCompile Include="Transformation.cpp" />
   </ItemGroup>

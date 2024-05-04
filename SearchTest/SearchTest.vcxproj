@@ -33,8 +33,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CountLastFlip.cpp" />
-    <ClCompile Include="EndScore.cpp" />
+    <ClCompile Include="HashTable.cpp" />
     <ClCompile Include="Searches.cpp" />
     <ClCompile Include="Stability.cpp" />
     <ClCompile Include="pch.cpp">

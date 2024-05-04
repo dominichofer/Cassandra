@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Core.h"
+#include "Base/Base.h"
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -17,10 +17,7 @@ enum class Field : uint8_t
 	PS
 };
 
-CUDA_CALLABLE uint64_t Bit(Field f) noexcept;
-
+Field FieldFromString(std::string_view);
 std::string to_string(Field);
 
-bool IsField(std::string_view);
-
-Field FieldFromString(std::string_view);
+CUDA_CALLABLE uint64_t Bit(Field f) noexcept;

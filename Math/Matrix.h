@@ -4,8 +4,7 @@
 #include <string>
 #include <vector>
 
-// Forward declaration
-class Vector;
+using Vector = std::vector<float>;
 
 class Matrix
 {
@@ -32,8 +31,8 @@ public:
 	std::span<      float> Row(std::size_t index)       noexcept;
 	std::span<const float> Row(std::size_t index) const noexcept;
 
-	      float& operator()(std::size_t row, std::size_t col)       { return data[row * cols + col]; }
-	const float& operator()(std::size_t row, std::size_t col) const { return data[row * cols + col]; }
+	float& operator()(std::size_t row, std::size_t col)       { return data[row * cols + col]; }
+	float  operator()(std::size_t row, std::size_t col) const { return data[row * cols + col]; }
 
 	Matrix& operator+=(const Matrix&);
 	Matrix& operator-=(const Matrix&);

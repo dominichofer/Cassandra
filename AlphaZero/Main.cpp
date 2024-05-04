@@ -1,4 +1,4 @@
-#include "Core/Core.h"
+#include "Base/Base.h"
 #include "IO/IO.h"
 #include "Pattern/Pattern.h"
 #include "PatternFit/PatternFit.h"
@@ -10,23 +10,47 @@
 #include <vector>
 #include <random>
 
-std::vector<PosScore> LoadTestFiles()
+std::vector<ScoredPosition> LoadTestData()
 {
-	std::vector<GameScore> ret;
-	for (int level : {0, 5, 10, 15, 20})
-		ret.append_range(LoadGameScoreFile(std::format("G:\\Edax4.4_level_{}_vs_Edax4.4_level_{}_from_e54.gs", level, level)));
-	return PosScoreFromGameScores(ret);
+	std::vector<ScoredPosition> ret;
+	for (int level : {1, 5, 10, 15, 20})
+	{
+		auto file = std::format("C:\\Users\\Dominic\\source\\repos\\python-reversi\\data\\Edax4.4_selfplay_level_{}_from_e54.gs", level);
+		ret.append_range(ScoredPositions(LoadScoredGameFile(file)));
+	}
+	auto file = "C:\\Users\\Dominic\\source\\repos\\python-reversi\\data\\random_selfplay_from_e54.gs";
+	ret.append_range(ScoredPositions(LoadScoredGameFile(file)));
+	return ret;
+}
+
+void Test(const PatternBasedEstimator& estimator)
+{
+	auto test = LoadTestData();
+	RAM_HashTable tt{ 10'000'000 };
+	PVS alg{ tt, estimator };
+	std::vector<int> all_diff;
+	for (int empty_count = 0; empty_count <= 30; empty_count++)
+	{
+		std::vector<int> diff;
+		for (const ScoredPosition& ps : EmptyCountFiltered(test, empty_count))
+		{
+			auto eval = alg.Eval(ps.pos, 0).window.lower;
+			auto d = ps.score * 2 - eval * 2;
+			diff.push_back(d);
+			all_diff.push_back(d);
+		}
+		//std::cout << "E " << empty_count << " " << StandardDeviation(diff) << std::endl;
+	}
+	std::cout << StandardDeviation(all_diff) << std::endl;
 }
 
 class FixedDepthPlayer final : public Player
 {
-	PVS alg;
-	int depth;
-	float confidence_level;
-	std::mt19937_64 rnd_engine;
+	Algorithm& alg;
+	Intensity intensity;
 public:
-	FixedDepthPlayer(PVS alg, int depth, float confidence_level, uint64_t seed = std::random_device{}())
-		: alg(alg), depth(depth), confidence_level(confidence_level), rnd_engine(seed)
+	FixedDepthPlayer(Algorithm& alg, Intensity intensity)
+		: alg(alg), intensity(intensity)
 	{}
 
 	Field ChooseMove(const Position& pos) override
@@ -34,58 +58,49 @@ public:
 		Moves moves = PossibleMoves(pos);
 		if (moves.empty())
 			return Field::PS;
-		if (depth == 0)
-		{
-			std::size_t rnd = std::uniform_int_distribution<std::size_t>(0, moves.size() - 1)(rnd_engine);
-			return moves[rnd];
-		}
-		else
-			return alg.Eval(pos, { -inf_score, +inf_score }, depth, confidence_level).best_move;
+		return alg.Eval(pos, intensity).best_move;
 	}
 };
 
-void Test(const PatternBasedEstimator& estimator)
-{
-	auto test = LoadTestFiles();
-	HT tt{ 10'000'000 };
-	PVS alg{ tt, estimator };
-	for (int empty_count = 0; empty_count <= 30; empty_count++)
-	{
-		std::vector<int> diff;
-		for (const PosScore& ps : EmptyCountFiltered(test, empty_count))
-			diff.push_back(ps.score * 2 - alg.Eval(ps.pos, { -inf_score, +inf_score }, 0, inf).score * 2);
-		std::cout << "E " << empty_count << " " << StandardDeviation(diff) << std::endl;
-	}
-}
-
 int main()
 {
+	const int stage_size = 5;
+	const int play_depth = 5;
+	const int eval_depth = 5;
+	const int sample_size = 100'000;
+	std::mt19937_64 rnd(181086);
 	LoggingTimer timer;
 
-	timer.Start("Starting positions");
-	auto starting_pos = UniqueChildren(Position::Start(), 50);
-	timer.Stop();
+	timer.Start();
+	auto start_pos = UniqueChildren(Position::Start(), /*empty_count*/ 50);
+	timer.Stop(std::format("{} unique starting positions", start_pos.size()));
 
-	PatternBasedEstimator estimator(/*stage_size*/ 5, pattern::edax);
-	HT tt{ 100'000'000 };
+	PatternBasedEstimator estimator(stage_size, pattern::edax);
+	RAM_HashTable tt{ 100'000'000 };
 	PVS alg{ tt, estimator };
-	std::vector<Position> train;
+	std::vector<ScoredPosition> train;
 
-	for (int iteration = 1; iteration <= 10; iteration++)
+	for (int iteration = 1; iteration <= 100; iteration++)
 	{
-		tt.clear();
-		int depth = (iteration == 1 ? 0 : 5);
-		FixedDepthPlayer player(alg, depth, inf, /*seed*/ 18 + iteration);
+		alg.Clear();
 
-		timer.Start("Playing games");
-		train.append_range(Positions(PlayedGamesFrom(player, player, Sample(1'000'000, starting_pos, /*seed*/ 10 + iteration))));
-		timer.Stop();
+		std::unique_ptr<Player> player;
+		if (iteration == 1)
+			player = std::make_unique<RandomPlayer>(rnd());
+		else
+			player = std::make_unique<FixedDepthPlayer>(alg, play_depth);
 
-		timer.Start("Improving score estimator");
-		ImproveScoreEstimator(estimator, train, 5, inf, 10);
-		timer.Stop();
+		timer.Start();
+		std::vector<Game> new_games = PlayedGames(*player, *player, Sample(sample_size, start_pos, rnd()));
+		//timer.Stop("Playing games");
+
+		train.append_range(ScoredPositions(new_games));
+
+		//timer.Start();
+		EvaluateIteratively(estimator, train, eval_depth, 10, /*reevaluate*/ false);
+		timer.Stop("Improving score estimator");
 		 
-		//tt.clear();
+		//tt.Clear();
 		//timer.Start("Improving accuracy estimator");
 		//std::vector<PositionMultiDepthScore> accuracy_pos;
 		//for (int e : { 15, 16, 17, 18, 19, 20, 25, 30, 35, 40, 45 })
@@ -132,7 +147,7 @@ int main()
 		//	std::cout << s[0] << " " << s[1] << " " << s[2] << " " << StandardDeviation(d) << std::endl;
 		//}
 
-		Serialize(estimator, "G:\\Reversi2\\iteration" + std::to_string(iteration) + ".model");
+		Serialize(estimator, "G:\\Cassandra\\iteration" + std::to_string(iteration) + ".model");
 		Test(estimator);
 	}
 	return 0;

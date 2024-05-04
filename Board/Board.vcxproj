@@ -48,7 +48,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
@@ -60,7 +59,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -73,25 +71,28 @@
   <ItemGroup>
     <ClCompile Include="BitBoard.cpp" />
     <ClCompile Include="Children.cpp" />
+    <ClCompile Include="CountLastFlip.cpp" />
     <ClCompile Include="Field.cpp" />
     <ClCompile Include="Flips.cpp" />
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
+    <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Children.h" />
+    <ClInclude Include="CountLastFlip.h" />
     <ClInclude Include="Field.h" />
     <ClInclude Include="Flips.h" />
-    <ClInclude Include="Moves.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="PossibleMoves.h" />
+    <ClInclude Include="Stability.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
+    <ProjectReference Include="..\Base\Base.vcxproj">
       <Project>{211813c1-1e2e-47ed-b1cb-8547349c7b3a}</Project>
     </ProjectReference>
   </ItemGroup>

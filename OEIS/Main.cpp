@@ -1,13 +1,14 @@
-#include "Core/Core.h"
-#include "IO/IO.h"
+#include "Board/Board.h"
+#include "Search/Search.h"
 #include <algorithm>
 #include <execution>
 #include <iostream>
-#include <numeric>
-#include <vector>
-#include <set>
 #include <map>
+#include <numeric>
+#include <set>
+#include <vector>
 
+// std::set(pos).size()
 std::size_t NumberOfDifferentPositions(const std::vector<Position>& pos)
 {
 	if (pos.empty())
@@ -22,7 +23,7 @@ std::size_t NumberOfDifferentPositions(const std::vector<Position>& pos)
 	return sum;
 }
 
-// Counts positions that occure exactly once in the input.
+// Counts positions that occure exactly once.
 std::size_t NumberOfUniques(const std::vector<Position>& pos)
 {
 	int64_t size = static_cast<int64_t>(pos.size());
@@ -56,11 +57,10 @@ void PrintHelp()
 int main()
 {
 	std::locale::global(std::locale(""));
-	std::hash<uint64_t> hash;
 
 	Table table{
 		"Plies|    A124004    |   A124005   |   A124006   |   A125528   |   A125529   | Time [s]",
-		"{:>5}|{:>15L}|{:>13L}|{:>13L}|{:>13L}|{:>13L}|{:>9.3f}"
+		"{:>5}|{:>15L}|{:>13L}|{:>13L}|{:>13L}|{:>13L}| {}"
 	};
 	table.PrintHeader();
 
@@ -90,7 +90,7 @@ int main()
 			all.clear();
 			for (Position pos : Children(pos_1, plies, true))
 			{
-				if (hash(pos.Player() | pos.Opponent()) % part_count == part)
+				if (Hash(pos) % part_count == part)
 				{
 					games++;
 					all.push_back(pos);
@@ -127,7 +127,7 @@ int main()
 			symmetries * num_unique_pos,
 			symmetries * num_different_shapes,
 			symmetries * num_unique_shapes,
-			std::chrono::round<std::chrono::milliseconds>(stop - start).count() / 1000.0);
+			HH_MM_SS(stop - start));
 	}
 	return 0;
 }

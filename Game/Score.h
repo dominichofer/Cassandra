@@ -1,25 +1,27 @@
 #pragma once
 #include "Board/Board.h"
 #include <cstdint>
-#include <numeric>
 #include <string>
 #include <string_view>
-#include <tuple>
 
-inline constexpr int min_score{ -32 };
-inline constexpr int max_score{ +32 };
-inline constexpr int inf_score{ +33 };
-inline constexpr int undefined_score{ +35 };
+class Score
+{
+	int8_t value{};
+public:
+	constexpr Score() noexcept = default;
+	constexpr Score(int value) noexcept : value(value) {}
+	constexpr operator int8_t() const { return value; }
 
-inline constexpr float inf{ std::numeric_limits<float>::infinity() };
+	static Score FromString(std::string_view);
+	Score operator-() const noexcept { return -value; }
+};
 
-CUDA_CALLABLE int EndScore(const Position&) noexcept;
+std::string to_string(Score);
 
-// Depth + Confidence level
-std::string DepthClToString(int depth, float confidence_level);
-std::tuple<int, float> DepthClFromString(std::string_view);
+inline constexpr Score min_score{ -32 };
+inline constexpr Score max_score{ +32 };
+inline constexpr Score inf_score{ +33 };
+inline constexpr Score undefined_score{ +35 };
 
-// Score
-bool IsScore(std::string_view);
-std::string ScoreToString(int);
-int ScoreFromString(std::string_view);
+Score EndScore(const Position&) noexcept;
+Score StabilityBasedMaxScore(const Position&);

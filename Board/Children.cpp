@@ -6,16 +6,20 @@ using namespace children;
 Iterator::Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcept
 	: plies(plies), pass_is_a_ply(pass_is_a_ply)
 {
-	stack.reserve(plies);
+	pos_stack.reserve(plies);
+	moves_stack.reserve(plies);
 
-	if (stack.size() == plies) {
-		stack.emplace_back(start, Moves{});
+	if (pos_stack.size() == plies) {
+		pos_stack.push_back(start);
+		moves_stack.push_back({});
 		return;
 	}
 
 	const auto moves = PossibleMoves(start);
-	if (moves)
-		stack.emplace_back(start, moves);
+	if (moves) {
+		pos_stack.push_back(start);
+		moves_stack.push_back(moves);
+	}
 	else
 	{
 		const auto passed = PlayPass(start);
@@ -24,39 +28,45 @@ Iterator::Iterator(const Position& start, int plies, bool pass_is_a_ply) noexcep
 		{
 			if (pass_is_a_ply)
 			{
-				stack.emplace_back(start, Moves{});
-				if (stack.size() == plies + 1)
+				pos_stack.push_back(start);
+				moves_stack.push_back({});
+				if (pos_stack.size() == plies + 1)
 					return;
 			}
-			stack.emplace_back(passed, passed_moves);
+			pos_stack.push_back(passed);
+			moves_stack.push_back(passed_moves);
 		}
 	}
-	if (stack.size() == plies + 1)
+	if (pos_stack.size() == plies + 1)
 		return;
 	++(*this);
 }
 
 Iterator& Iterator::operator++()
 {
-	while (not stack.empty())
+	while (not pos_stack.empty())
 	{
-		if (stack.size() == plies + 1 || !stack.back().moves) {
-			stack.pop_back();
+		if (pos_stack.size() == plies + 1 || !moves_stack.back()) {
+			pos_stack.pop_back();
+			moves_stack.pop_back();
 			continue;
 		}
 
-		const auto move = stack.back().moves.front();
-		stack.back().moves.pop_front();
-		const auto pos = Play(stack.back().pos, move);
+		const auto move = moves_stack.back().front();
+		moves_stack.back().pop_front();
+		const auto pos = Play(pos_stack.back(), move);
 
-		if (stack.size() == plies) {
-			stack.emplace_back(pos, Moves{});
+		if (pos_stack.size() == plies) {
+			pos_stack.push_back(pos);
+			moves_stack.push_back({});
 			return *this;
 		}
 
 		const auto moves = PossibleMoves(pos);
-		if (moves)
-			stack.emplace_back(pos, moves);
+		if (moves) {
+			pos_stack.push_back(pos);
+			moves_stack.push_back(moves);
+		}
 		else
 		{
 			const auto passed = PlayPass(pos);
@@ -65,14 +75,16 @@ Iterator& Iterator::operator++()
 			{
 				if (pass_is_a_ply)
 				{
-					stack.emplace_back(pos, Moves{});
-					if (stack.size() == plies + 1)
+					pos_stack.push_back(pos);
+					moves_stack.push_back({});
+					if (pos_stack.size() == plies + 1)
 						return *this;
 				}
-				stack.emplace_back(passed, passed_moves);
+				pos_stack.push_back(passed);
+				moves_stack.push_back(passed_moves);
 			}
 		}
-		if (stack.size() == plies + 1)
+		if (pos_stack.size() == plies + 1)
 			return *this;
 	}
 	return *this;

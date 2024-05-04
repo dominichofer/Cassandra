@@ -1,12 +1,26 @@
 #include "Position.h"
 #include "BitBoard.h"
-#include "Field.h"
 #include "Flips.h"
-#include "Moves.h"
 #include "PossibleMoves.h"
-#include <cassert>
 #include <stdexcept>
-#include <regex>
+
+Position Position::FromString(std::string_view str)
+{
+	if (str.length() < 66)
+		throw std::runtime_error("Invalid position format");
+
+	uint64_t P{ 0 }, O{ 0 };
+	for (int i = 0; i < 64; i++)
+		if (str[i] == 'X')
+			P |= 1ULL << (63 - i);
+		else if (str[i] == 'O')
+			O |= 1ULL << (63 - i);
+
+	if (str[65] == 'X')
+		return { P, O };
+	else
+		return { O, P };
+}
 
 Position Position::Start()
 {
@@ -46,7 +60,8 @@ std::string MultiLine(const Position& pos)
 			return "O";
 		if (moves & mask)
 			return "+";
-		return "-";
+		else
+			return "-";
 	};
 
 	std::string board = "  A B C D E F G H  \n";
@@ -66,30 +81,6 @@ std::string to_string(const Position& pos)
 	return SingleLine(pos);
 }
 
-Position PositionFromString(std::string_view s)
-{
-	if (s.length() < 66)
-		throw std::runtime_error("Invalid position format");
-
-	uint64_t P{ 0 }, O{ 0 };
-	for (int i = 0; i < 64; i++)
-		if (s[i] == 'X')
-			P |= 1ULL << (63 - i);
-		else if (s[i] == 'O')
-			O |= 1ULL << (63 - i);
-
-	if (s[65] == 'X')
-		return { P, O };
-	else
-		return { O, P };
-}
-
-bool IsPosition(std::string_view str)
-{
-	std::regex pattern("[XO-]{64} [XO]");
-	return std::regex_match(str.begin(), str.end(), pattern);
-}
-
 CUDA_CALLABLE Position Play(const Position& pos, Field move, uint64_t flips) noexcept
 {
 	assert((pos.Opponent() & flips) == flips); // only flips opponent discs.
@@ -99,7 +90,7 @@ CUDA_CALLABLE Position Play(const Position& pos, Field move, uint64_t flips) noe
 
 CUDA_CALLABLE Position Play(const Position& pos, Field move) noexcept
 {
-	//assert(pos.Empties().Get(move)); // move field is free. //TODO: Use it?
+	assert((pos.Empties() & Bit(move)) == Bit(move)); // move field is free.
 
 	auto flips = Flips(pos, move);
 	return Play(pos, move, flips);
@@ -137,15 +128,14 @@ Position FlippedVertical(const Position& pos) noexcept
 	return { FlippedVertical(pos.Player()), FlippedVertical(pos.Opponent()) };
 }
 
-Position FlippedToUnique(Position pos) noexcept
+Position FlippedToUnique(const Position& pos1) noexcept
 {
-	Position min = pos;
-	pos = FlippedVertical(pos);		if (pos < min) min = pos;
-	pos = FlippedHorizontal(pos);	if (pos < min) min = pos;
-	pos = FlippedVertical(pos);		if (pos < min) min = pos;
-	pos = FlippedCodiagonal(pos);	if (pos < min) min = pos;
-	pos = FlippedVertical(pos);		if (pos < min) min = pos;
-	pos = FlippedHorizontal(pos);	if (pos < min) min = pos;
-	pos = FlippedVertical(pos);		if (pos < min) min = pos;
-	return min;
+	Position pos2 = FlippedCodiagonal(pos1);
+	Position pos3 = FlippedDiagonal(pos1);
+	Position pos4 = FlippedHorizontal(pos1);
+	Position pos5 = FlippedVertical(pos1);
+	Position pos6 = FlippedVertical(pos2);
+	Position pos7 = FlippedVertical(pos3);
+	Position pos8 = FlippedVertical(pos4);
+	return std::min({ pos1, pos2, pos3, pos4, pos5, pos6, pos7, pos8 });
 }

@@ -1,4 +1,6 @@
 #include "Perft.h"
+#include "PerftCuda/kernel.cuh"
+#include <cstdint>
 #include <algorithm>
 #include <omp.h>
 
@@ -36,54 +38,17 @@ int64_t Correct(int depth)
 }
 
 
-int64_t BasicPerft::calculate(const Position& pos, const int depth)
+// for 1 ply left
+int64_t Perft::calculate_1(const Position& pos) const
 {
-	if (depth == 0)
-		return 1;
-
 	auto moves = PossibleMoves(pos);
 	if (!moves)
-	{
-		Position passed = PlayPass(pos);
-		if (PossibleMoves(passed))
-			return calculate(passed, depth-1);
-		return 0;
-	}
-
-	int64_t sum = 0;
-	for (Field move : moves)
-		sum += calculate(Play(pos, move), depth-1);
-	return sum;
-}
-
-int64_t BasicPerft::calculate(const int depth)
-{
-	if (depth == 0)
-		return calculate(Position::Start(), depth);
-
-	// Makes use of 4-fold symmetrie.
-	Position pos = Position::Start();
-	pos = Play(pos, PossibleMoves(pos).front());
-	return 4 * calculate(pos, depth-1);
-}
-
-// for 0 plies left
-int64_t UnrolledPerft::calculate_0()
-{
-	return 1;
-}
-
-// for 1 ply left
-int64_t UnrolledPerft::calculate_1(const Position& pos)
-{
-	auto moves = PossibleMoves(pos);
-	if (moves)
-		return moves.size();
-	return PossibleMoves(PlayPass(pos)) ? 1 : 0;
+		return PossibleMoves(PlayPass(pos)) ? 1 : 0;
+	return moves.size();
 }
 
 // for 2 plies left
-int64_t UnrolledPerft::calculate_2(const Position& pos)
+int64_t Perft::calculate_2(const Position& pos) const
 {
 	auto moves = PossibleMoves(pos);
 	if (!moves)
@@ -95,114 +60,62 @@ int64_t UnrolledPerft::calculate_2(const Position& pos)
 	return sum;
 }
 
-int64_t UnrolledPerft::calculate_n(const Position& pos, const int depth)
+int64_t Perft::calculate_n(Position pos, const int depth)
 {
 	switch (depth)
 	{
-		case 0: return calculate_0();
+		case 0: return 1;
 		case 1: return calculate_1(pos);
 		case 2: return calculate_2(pos);
-		default: break;
+		default:
+			if (cuda and depth <= cuda_depth)
+				return perft_cuda(pos, depth);
+			break;
 	}
 
+	pos = FlippedToUnique(pos);
 	auto moves = PossibleMoves(pos);
 	if (!moves)
 	{
 		Position passed = PlayPass(pos);
 		if (PossibleMoves(passed))
-			return calculate_n(passed, depth-1);
+			return calculate_n(passed, depth - 1);
 		return 0;
 	}
 
+
+	if (uint64_t ret = tt.LookUp(pos, depth))
+		return ret;
+
 	int64_t sum = 0;
 	for (Field move : moves)
-		sum += calculate_n(Play(pos, move), depth-1);
+		sum += calculate_n(Play(pos, move), depth - 1);
+
+	tt.Insert(pos, depth, sum);
 	return sum;
 }
 
-int64_t UnrolledPerft::calculate(const Position& pos, const int depth)
+int64_t Perft::calculate(const Position& pos, const int depth)
 {
-	if (initial_unroll == 0 || depth - initial_unroll <= 2)
+	if (initial_unroll == 0 or depth <= initial_unroll + 2)
 		return calculate_n(pos, depth);
 
-	std::vector<Position> work;
-	for (const auto& pos : Children(pos, initial_unroll, true))
-		work.push_back(FlippedToUnique(pos));
+	std::vector<Position> work(std::from_range, Children(pos, initial_unroll, true));
 
 	int64_t sum = 0;
-	int64_t size = static_cast<int64_t>(work.size());
-	#pragma omp parallel for schedule(dynamic,1) reduction(+:sum)
-	for (int64_t i = 0; i < size; i++)
+	#pragma omp parallel for schedule(static,1) reduction(+:sum)
+	for (int64_t i = 0; i < static_cast<int64_t>(work.size()); i++)
 		sum += calculate_n(work[i], depth - initial_unroll);
 	return sum;
 }
 
-int64_t UnrolledPerft::calculate(const int depth)
+int64_t Perft::calculate(const int depth)
 {
 	if (depth == 0)
 		return calculate(Position::Start(), depth);
 
-	// Makes use of 4-fold symmetrie.
+	// Use 4-fold symmetry.
 	Position pos = Position::Start();
 	pos = Play(pos, PossibleMoves(pos).front());
-	return 4 * calculate(pos, depth-1);
-}
-
-
-HashTablePerft::HashTablePerft(std::size_t bytes, int initial_unroll)
-	: UnrolledPerft(initial_unroll)
-	, hash_table(bytes / sizeof(BigNodeHashTable::node_type))
-{}
-
-int64_t HashTablePerft::calculate_n(const Position& pos, const int depth)
-{
-	if (depth <= 3)
-		return UnrolledPerft::calculate_n(pos, depth);
-
-	if (auto ret = hash_table.LookUp({ pos, depth }); ret.has_value())
-		return ret.value();
-
-	auto moves = PossibleMoves(pos);
-	if (!moves)
-	{
-		Position passed = PlayPass(pos);
-		if (PossibleMoves(passed))
-			return calculate_n(passed, depth-1);
-		return 0;
-	}
-
-	int64_t sum = 0;
-	for (Field move : moves)
-		sum += calculate_n(Play(pos, move), depth-1);
-
-	hash_table.Update({ pos, depth }, sum);
-	return sum;
-}
-
-int64_t HashTablePerft::calculate(const Position& pos, const int depth)
-{
-	if (initial_unroll == 0 || depth <= initial_unroll + 2)
-		return calculate_n(pos, depth);
-
-	std::vector<Position> work;
-	for (const Position& pos : Children(pos, initial_unroll, true))
-		work.push_back(FlippedToUnique(pos));
-
-	int64_t sum = 0;
-	int64_t size = static_cast<int64_t>(work.size());
-	#pragma omp parallel for schedule(dynamic,1) reduction(+:sum)
-	for (int64_t i = 0; i < size; i++)
-		sum += calculate_n(work[i], depth - initial_unroll);
-	return sum;
-}
-
-int64_t HashTablePerft::calculate(const int depth)
-{
-	if (depth == 0)
-		return calculate(Position::Start(), depth);
-
-	// Makes use of 4-fold symmetrie.
-	Position pos = Position::Start();
-	pos = Play(pos, PossibleMoves(pos).front());
-	return 4 * calculate(pos, depth-1);
+	return 4 * calculate(pos, depth - 1);
 }

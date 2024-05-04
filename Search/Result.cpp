@@ -1,74 +1,61 @@
 #include "Result.h"
 #include "Game/Game.h"
+#include <cassert>
+#include <format>
 
-ResultType operator-(ResultType type)
-{
-	return static_cast<ResultType>(-static_cast<int8_t>(type));
-}
-
-Result::Result(ResultType score_type, int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept
-	: score_type(score_type)
-	, score(score)
-	, depth(depth)
-	, confidence_level(confidence_level)
+Result::Result(ClosedInterval window, Intensity intensity, Field best_move) noexcept
+	: window(window)
+	, intensity(intensity)
 	, best_move(best_move)
-{}
-
-Result Result::FailLow(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept
 {
-	return Result(ResultType::fail_low, score, depth, confidence_level, best_move);
+	assert(window.lower <= window.upper);
+	assert(window.lower >= min_score);
+	assert(window.upper <= max_score);
 }
 
-Result Result::Exact(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept
+Result Result::FailLow(Score score, Intensity intensity, Field best_move) noexcept
 {
-	return Result(ResultType::exact, score, depth, confidence_level, best_move);
+	return Result({ min_score, score }, intensity, best_move);
 }
 
-Result Result::FailHigh(int8_t score, int8_t depth, float confidence_level, Field best_move) noexcept
+Result Result::Exact(Score score, Intensity intensity, Field best_move) noexcept
 {
-	return Result(ResultType::fail_high, score, depth, confidence_level, best_move);
+	return Result({ score, score }, intensity, best_move);
+}
+
+Result Result::FailHigh(Score score, Intensity intensity, Field best_move) noexcept
+{
+	return Result({ score, max_score }, intensity, best_move);
 }
 
 Result Result::operator-() const noexcept
 {
-	return Result(-score_type, -score, depth, confidence_level, best_move);
+	return Result{ -window, intensity, best_move };
 }
 
-bool Result::IsFailLow() const noexcept
+Result Result::operator+(int depth) const noexcept
 {
-	return score_type == ResultType::fail_low;
+	return Result{ window, intensity + depth, best_move };
 }
 
 bool Result::IsExact() const noexcept
 {
-	return score_type == ResultType::exact;
+	return window.lower == window.upper;
 }
 
-bool Result::IsFailHigh() const noexcept
+Score Result::GetScore() const noexcept
 {
-	return score_type == ResultType::fail_high;
+	if (window.lower == min_score)
+		return window.upper;
+	else
+		return window.lower;
 }
 
-ClosedInterval<> Result::Window() const noexcept
-{
-	switch (score_type)
-	{
-	case ResultType::fail_low:
-		return ClosedInterval<>{ min_score, score };
-	case ResultType::exact:
-		return ClosedInterval<>{ score, score };
-	case ResultType::fail_high:
-		return ClosedInterval<>{ score, max_score };
-	}
-}
-
-Result Result::BetaCut(Field move) const noexcept
-{
-	return Result::FailHigh(-score, depth + 1, confidence_level, move);
-}
-
-std::string to_string(const Result& r)
+std::string to_string(const Result& result)
 {
 	using std::to_string;
-	return to_string(r.Window()) + " d" + to_string(r.depth) + "@" + to_string(r.confidence_level); // TODO: Add best_move!
+	return std::format("{} d{} {}",
+		to_string(result.window),
+		to_string(result.intensity),
+		to_string(result.best_move));
 }

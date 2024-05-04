@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 
-std::vector<Position> LoadPosFile(const std::string& filename);
-std::vector<PosScore> LoadPosScoreFile(const std::string& filename);
+std::vector<Position> LoadPositionFile(const std::string& filename);
+std::vector<ScoredPosition> LoadScoredPositionFile(const std::string& filename);
 std::vector<Game> LoadGameFile(const std::string& filename);
-std::vector<GameScore> LoadGameScoreFile(const std::string& filename);
+std::vector<ScoredGame> LoadScoredGameFile(const std::string& filename);
 
 template <std::ranges::range Range>
 void SaveFile(const std::string& filename, Range&& r)

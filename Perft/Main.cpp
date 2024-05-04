@@ -1,56 +1,55 @@
+#include "Base/Base.h"
 #include "Hashtable.h"
 #include "Perft.h"
-#include "Core/Core.h"
-#include "IO/IO.h"
-#include <numeric>
 #include <chrono>
-#include <string>
 #include <iostream>
+#include <numeric>
+#include <string>
 
 void PrintHelp()
 {
 	std::cout
-		<< "   -d    Depth of perft.\n"
-		<< "   -RAM  Number of hash table bytes.\n"
-		<< "   -h    Prints this help."
+		<< "   -d     Depth of perft.\n"
+		<< "   -tt    Number of hash table bits.\n"
+		<< "   -cuda  Use CUDA.\n"
+		<< "   -h     Prints this help."
 		<< std::endl;
 }
 
 int main(int argc, char* argv[])
 {
 	std::locale::global(std::locale(""));
-	int depth = 16;
-	std::size_t RAM = 4_GB;
+	int depth = 20;
+	std::size_t tt_size = 1'000'000'000;
+	bool cuda = false;
 
 	for (int i = 0; i < argc; i++)
 	{
-		if (std::string(argv[i]) == "-d") depth = std::stoi(argv[++i]);
-		else if (std::string(argv[i]) == "-RAM") RAM = ParseBytes(argv[++i]);
-		else if (std::string(argv[i]) == "-h") { PrintHelp(); return 0; }
+		std::string_view arg{ argv[i] };
+		if (arg == "-d") depth = std::stoi(argv[++i]);
+		else if (arg == "-tt") tt_size = std::stoi(argv[++i]);
+		else if (arg == "-cuda") cuda = true;
+		else if (arg == "-h") { PrintHelp(); return 0; }
 	}
 
-	std::unique_ptr<BasicPerft> engine;
-	if (RAM)
-		engine = std::make_unique<HashTablePerft>(RAM, 6);
-	else
-		engine = std::make_unique<UnrolledPerft>(6);
-
 	Table table{
-		"depth|      Positions      |correct|    Time [s]    |     Pos/s      ",
-		"{:>5}|{:>21L}|{:^7}|{:>#16.3f}|{:>16L}"
+		"depth|       Positions      |correct|    Time [s]    |      Pos/s      ",
+		"{:>5}|{:>22L}|{:^7}|{:>16}|{:>17L}"
 	};
 	table.PrintHeader();
 
-	for (int d = 4; d <= depth; d++)
+	HashTable tt{ tt_size };
+	Perft engine{ tt, cuda };
+	for (int d = 10; d <= depth; d++)
 	{
-		engine->clear();
+		tt.Clear();
 		auto start = std::chrono::high_resolution_clock::now();
-		auto result = engine->calculate(d);
+		auto result = engine.calculate(d);
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() / 1'000.0;
 		bool correct = (Correct(d) == result);
 
-		table.PrintRow(d, result, correct, duration, (uint64_t)(duration ? result / duration : 0));
+		table.PrintRow(d, result, correct, HH_MM_SS(stop - start), static_cast<uint64_t>(duration ? result / duration : 0));
 	}
 	return 0;
 }

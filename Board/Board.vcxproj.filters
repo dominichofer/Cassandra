@@ -8,16 +8,19 @@
     <ClCompile Include="Position.cpp" />
     <ClCompile Include="PositionGenerator.cpp" />
     <ClCompile Include="PossibleMoves.cpp" />
+    <ClCompile Include="CountLastFlip.cpp" />
+    <ClCompile Include="Stability.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BitBoard.h" />
     <ClInclude Include="Children.h" />
     <ClInclude Include="Field.h" />
-    <ClInclude Include="Moves.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="PositionGenerator.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="PossibleMoves.h" />
     <ClInclude Include="Flips.h" />
+    <ClInclude Include="CountLastFlip.h" />
+    <ClInclude Include="Stability.h" />
   </ItemGroup>
 </Project>

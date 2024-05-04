@@ -116,6 +116,7 @@ public:
 	Vector X() const override { return x; }
 };
 
+// Decomposes vector into a unit vector and its length.
 inline std::pair<float, Vector> decompose(const Vector& v)
 {
 	auto length = norm(v);

@@ -1,12 +1,10 @@
-#include "Game/Game.h"
-#include "CountLastFlip.h"
 #include "Algorithm.h"
 #include <algorithm>
 #include <cassert>
 
-Result NegaMax::Eval(const Position& pos, OpenInterval window, int depth, float confidence_level)
+Result NegaMax::Eval(const Position& pos, OpenInterval window, Intensity intensity)
 {
-	return Result::Exact(Eval_N(pos), pos.EmptyCount(), inf, Field::PS);
+	return Result::Exact(Eval_N(pos), pos.EmptyCount(), Field::PS);
 }
 
 int NegaMax::Eval_N(const Position& pos)
